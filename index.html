@@ -84,7 +84,7 @@
     <!-- 模組一：全隊戰力概覽看板 -->
     <section class="grid grid-cols-2 md:grid-cols-6 gap-3" id="teamSummaryCards"></section>
 
-    <!-- 模組二：個人深度檔案 (五維雷達採用 SDI 慢壘好球帶紀律) -->
+    <!-- 模組二：個人深度檔案 -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
@@ -111,7 +111,7 @@
       </div>
     </section>
 
-    <!-- 模組三：全隊排行榜模組 (整合選項即時指標百科，可伸縮) -->
+    <!-- 模組三：全隊排行榜模組 (可伸縮) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-3">
@@ -129,7 +129,6 @@
         </button>
       </div>
 
-      <!-- 預設收合的排行榜內容區塊 -->
       <div id="leaderboardContent" class="hidden space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 rounded-lg border border-slate-800/80">
           <div class="flex items-center space-x-2">
@@ -172,7 +171,6 @@
           </div>
         </div>
 
-        <!-- 所選指標專屬即時百科卡片 -->
         <div id="leaderboardMetricCard" class="bg-slate-950/80 border border-amber-500/30 rounded-xl p-3.5 space-y-1.5 transition"></div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="leaderboardPodium"></div>
@@ -281,7 +279,7 @@
       </div>
     </section>
 
-    <!-- 模組五：雙視圖總表 (具備 .stat-input 防跑版樣式) -->
+    <!-- 模組五：雙視圖總表 -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
@@ -364,7 +362,7 @@
       </div>
     </section>
 
-    <!-- 模組六：雙人選手數據對決比較 (置於總數據下方，可伸縮) -->
+    <!-- 模組六：雙人選手數據對決比較 (可伸縮) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-3">
@@ -509,7 +507,7 @@
             </div>
             <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
               <span class="font-bold text-white block text-sm">加權上壘率 (wOBA, Weighted On-Base Average)</span>
-              <p><span class="text-slate-400">定義：</span>依據賽伯計量得分期望值（Run Expectancy）賦予各進攻事件精確權重之上壘指標。</p>
+              <p><span class="text-slate-400">定義：</span>依據賽伯計量得分期望值（Run Expectancy）賦予各進攻事件精確線性權重之上壘指標。</p>
               <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA</span></p>
               <p><span class="text-slate-400">意義：</span>修正傳統 OBP 忽略長打深度、以及 SLG 線性疊加壘包的瑕疵，精確衡量每打席對團隊得分的實際邊際價值。</p>
             </div>
@@ -517,7 +515,7 @@
               <span class="font-bold text-white block text-sm">預估創造得分 (RC, Runs Created)</span>
               <p><span class="text-slate-400">定義：</span>由棒球統計之父 Bill James 發明，用於估算打者累計為球隊製造的實體得分數量。</p>
               <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">RC = (H + BB) × TB / (AB + BB)</span></p>
-              <p><span class="text-slate-400">意義：</span>將「上壘因子（H+BB）」乘上「壘包推進因子（TB）」，直觀評估球員在該時間區間內總共換取了多少球隊分數。</p>
+              <p><span class="text-slate-400">意義：</span>將「上壘因子（H+BB）」乘上「壘包推進因子（TB）」，直觀評估球員在該時間區間內總共為球隊換取了多少實體分數。</p>
             </div>
             <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
               <span class="font-bold text-white block text-sm">純長打率 (ISO, Isolated Power)</span>
@@ -689,7 +687,6 @@
     const CROP_RADIUS = 110;
     const CROP_CENTER = 150;
 
-    // 排行榜即時指標百科字典
     const leaderboardGlossary = {
       wrc_plus: {
         title: "加權得分創造 (wRC+, Weighted Runs Created Plus)",
@@ -861,7 +858,7 @@
           currentFileSha = data.sha;
           const decoded = base64ToUtf8(data.content);
           allLogs = JSON.parse(decoded);
-          statusBadge.textContent = `🟢 雲端資料庫：已即時同步 (${allLogs.length} 筆賽事)`;
+          statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (${allLogs.length} 筆賽事)`;
           statusBadge.className = 'text-emerald-400 font-mono';
         } else {
           throw new Error('API 回應異常');
@@ -871,10 +868,10 @@
           const res = await fetch(`./${DATA_FILE_PATH}?t=${Date.now()}`);
           if (!res.ok) throw new Error('靜態檔案未就緒');
           allLogs = await res.json();
-          statusBadge.textContent = '🟡 雲端資料庫：靜態備援讀取成功';
+          statusBadge.textContent = '[備援模式] 雲端資料庫：靜態備援讀取成功';
           statusBadge.className = 'text-amber-300 font-mono';
         } catch (staticErr) {
-          statusBadge.textContent = '🔴 雲端資料庫：載入失敗';
+          statusBadge.textContent = '[連線失敗] 雲端資料庫：載入失敗';
           statusBadge.className = 'text-rose-400 font-mono';
           return;
         }
@@ -931,13 +928,13 @@
         currentFileSha = resData.content.sha;
         allLogs = updatedLogs;
 
-        statusBadge.textContent = `🟢 雲端資料庫：已即時同步 (Commit: ${currentFileSha.substring(0,7)})`;
+        statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (Commit: ${currentFileSha.substring(0,7)})`;
         statusBadge.className = 'text-emerald-400 font-mono';
 
         renderAll();
         return true;
       } catch (err) {
-        statusBadge.textContent = `🔴 雲端寫入失敗: ${err.message}`;
+        statusBadge.textContent = `[寫入失敗] 雲端寫入失敗: ${err.message}`;
         statusBadge.className = 'text-rose-400 font-mono';
         alert(`寫入 GitHub 失敗：${err.message}`);
         return false;
@@ -1268,7 +1265,6 @@
       const metric = document.getElementById('leaderboardMetricSelect').value;
       const minPa = Number(document.getElementById('leaderboardMinPa').value) || 0;
 
-      // 更新即時指標百科資訊卡
       const info = leaderboardGlossary[metric] || { title: metric, formula: '', desc: '' };
       document.getElementById('leaderboardMetricCard').innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-1">
@@ -1650,6 +1646,7 @@
       });
     }
 
+    // 核心打擊型態象限分析 (已導入 afterDraw Canvas 插件，徹底根除手機端豎線消失)
     function renderQuadrantChart(agg) {
       const pList = agg.players;
       const ctx = document.getElementById('quadrantChart').getContext('2d');
@@ -1661,7 +1658,8 @@
           datasets: [{
             data: pList.map(d => ({ x: d.obp, y: d.slg, name: d.name })),
             backgroundColor: '#38bdf8',
-            pointRadius: 6
+            pointRadius: 6,
+            hoverRadius: 8
           }]
         },
         options: {
@@ -1674,14 +1672,56 @@
           scales: {
             x: {
               title: { display: true, text: `上壘率 (OBP) - 均值: ${agg.teamObp.toFixed(3)}`, color: '#64748b' },
-              grid: { color: c => Math.abs(c.tick.value - agg.teamObp) < 0.03 ? 'rgba(52, 211, 153, 0.7)' : 'rgba(255,255,255,0.05)' }
+              grid: { color: 'rgba(255,255,255,0.05)' }
             },
             y: {
               title: { display: true, text: `長打率 (SLG) - 均值: ${agg.teamSlg.toFixed(3)}`, color: '#64748b' },
-              grid: { color: c => Math.abs(c.tick.value - agg.teamSlg) < 0.05 ? 'rgba(52, 211, 153, 0.7)' : 'rgba(255,255,255,0.05)' }
+              grid: { color: 'rgba(255,255,255,0.05)' }
             }
           }
-        }
+        },
+        plugins: [{
+          id: 'quadrantCrosshair',
+          afterDraw(chart) {
+            const { ctx, chartArea, scales } = chart;
+            if (!chartArea || !scales.x || !scales.y) return;
+            const xPixel = scales.x.getPixelForValue(agg.teamObp);
+            const yPixel = scales.y.getPixelForValue(agg.teamSlg);
+
+            ctx.save();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#34d399';
+            ctx.setLineDash([4, 4]);
+
+            // 垂直均值線 (X = OBP 平均，獨立換算像素，手機端保證繪製)
+            if (xPixel >= chartArea.left && xPixel <= chartArea.right) {
+              ctx.beginPath();
+              ctx.moveTo(xPixel, chartArea.top);
+              ctx.lineTo(xPixel, chartArea.bottom);
+              ctx.stroke();
+
+              ctx.fillStyle = '#34d399';
+              ctx.font = 'bold 10px monospace';
+              ctx.textAlign = 'center';
+              ctx.fillText(`OBP: ${agg.teamObp.toFixed(3)}`, xPixel, chartArea.top + 12);
+            }
+
+            // 水平均值線 (Y = SLG 平均)
+            if (yPixel >= chartArea.top && yPixel <= chartArea.bottom) {
+              ctx.beginPath();
+              ctx.moveTo(chartArea.left, yPixel);
+              ctx.lineTo(chartArea.right, yPixel);
+              ctx.stroke();
+
+              ctx.fillStyle = '#34d399';
+              ctx.font = 'bold 10px monospace';
+              ctx.textAlign = 'left';
+              ctx.fillText(`SLG: ${agg.teamSlg.toFixed(3)}`, chartArea.left + 4, yPixel - 4);
+            }
+
+            ctx.restore();
+          }
+        }]
       });
     }
 
