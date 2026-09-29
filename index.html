@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>系壘進階數據庫 | 時間序列日誌與賽伯計量分析</title>
+  <title>系壘進階數據庫 | 賽伯計量分析與球員頭像系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -14,14 +14,14 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
   <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- 頂部導覽與功能按鈕 -->
+    <!-- 頂部導覽列 -->
     <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 gap-4">
       <div>
         <div class="flex items-center space-x-3">
-          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">LOG ARCHITECTURE</span>
-          <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">系壘賽事數據與歷史日誌系統</h1>
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">PLAYER AVATAR SYSTEM</span>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">系壘賽事數據與球員檔案庫</h1>
         </div>
-        <p class="text-sm text-slate-400 mt-1">支援依時間區間計算成績、新增單場紀錄、在線修改數值與批次刪除區間日誌</p>
+        <p class="text-sm text-slate-400 mt-1">支援個人頭像自訂、時間序列日誌分析、動態指標運算與區間批次操作</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button id="exportCsvBtn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-lg transition font-medium">匯出當前區間 CSV</button>
@@ -29,10 +29,9 @@
       </div>
     </header>
 
-    <!-- 時間範圍過濾與區間批次操作模組 -->
+    <!-- 時間過濾與批次操作 -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <!-- 日期選擇器 -->
         <div class="flex flex-wrap items-center gap-3">
           <span class="text-xs font-semibold text-slate-300">成績統計區間：</span>
           <div class="flex items-center space-x-2">
@@ -40,32 +39,29 @@
             <span class="text-slate-500 text-xs">至</span>
             <input type="date" id="filterEndDate" class="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-sky-500">
           </div>
-          <!-- 快捷過濾標籤 -->
           <div class="flex items-center space-x-1">
             <button onclick="setDateRange('all')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded transition">全部歷史</button>
             <button onclick="setDateRange('2025')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded transition">2025年度總結</button>
             <button onclick="setDateRange('2026')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded transition">2026年度</button>
           </div>
         </div>
-
-        <!-- 區間刪除按鈕 (砍特定時間範圍紀錄) -->
         <div>
-          <button id="batchDeleteBtn" class="bg-rose-900/40 hover:bg-rose-800 border border-rose-700/60 text-rose-200 text-xs px-3 py-1.5 rounded transition font-medium flex items-center gap-1">
+          <button id="batchDeleteBtn" class="bg-rose-900/40 hover:bg-rose-800 border border-rose-700/60 text-rose-200 text-xs px-3 py-1.5 rounded transition font-medium">
             砍掉目前時間範圍內的日誌
           </button>
         </div>
       </div>
     </section>
 
-    <!-- 模組一：全隊戰力概覽與排行榜 (隨時間區間動態運算) -->
+    <!-- 模組一：全隊戰力概覽與排行榜 -->
     <section class="grid grid-cols-2 md:grid-cols-6 gap-3" id="teamSummaryCards"></section>
 
-    <!-- 模組二：個人深度檔案與五維雷達圖 (隨時間區間動態運算) -->
+    <!-- 模組二：個人深度檔案（整合頭像管理系統） -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
-          <h2 class="text-base font-bold text-sky-400">球員深度檔案 (Player Profile)</h2>
-          <p class="text-xs text-slate-400">當前統計區間內的五維能力相對 PR 值與安打結構</p>
+          <h2 class="text-base font-bold text-sky-400">球員深度檔案與個人能力</h2>
+          <p class="text-xs text-slate-400">點擊頭像即可直接上傳本機照片或輸入圖片網址</p>
         </div>
         <div class="flex items-center space-x-2">
           <label class="text-xs text-slate-400">選取選手：</label>
@@ -74,10 +70,13 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-        <div class="md:col-span-4 space-y-3" id="playerStatsDetail"></div>
+        <!-- 個人基本資訊與頭像特寫 -->
+        <div class="md:col-span-4 space-y-4" id="playerProfileCard"></div>
+        <!-- 五維能力雷達圖 -->
         <div class="md:col-span-5 h-72">
           <canvas id="radarChart"></canvas>
         </div>
+        <!-- 安打組成環形圖 -->
         <div class="md:col-span-3 h-64 flex flex-col items-center">
           <span class="text-xs text-slate-400 mb-2 font-medium">區間安打分佈</span>
           <div class="h-52 w-full">
@@ -95,7 +94,7 @@
             <h3 class="text-sm font-bold text-slate-200">打擊型態象限分析 (OBP vs. SLG)</h3>
             <span class="text-[11px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded">十字線：區間團隊平均</span>
           </div>
-          <p class="text-xs text-slate-400 mb-4">反映該時間範圍內選手的進攻特性</p>
+          <p class="text-xs text-slate-400 mb-4">分析該區間內全隊打者的打擊品質落點</p>
         </div>
         <div class="h-80">
           <canvas id="quadrantChart"></canvas>
@@ -139,13 +138,12 @@
       </div>
     </section>
 
-    <!-- 模組四：雙視圖數據總表（匯總結算 vs. 詳細日誌清單） -->
+    <!-- 模組四：雙視圖總表（整合頭像微縮標籤） -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-        <!-- 分頁切換鈕 -->
         <div class="flex items-center space-x-2">
-          <button id="tabSummaryBtn" class="bg-sky-600 text-white text-xs px-3.5 py-1.5 rounded font-medium">區間成績匯總表 (可修改)</button>
-          <button id="tabLogsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded font-medium">詳細賽事日誌 (時間紀錄)</button>
+          <button id="tabSummaryBtn" class="bg-sky-600 text-white text-xs px-3.5 py-1.5 rounded font-medium">區間成績匯總表 (在線修改)</button>
+          <button id="tabLogsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded font-medium">詳細賽事日誌</button>
         </div>
         <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記新賽事日誌</button>
       </div>
@@ -153,7 +151,7 @@
       <!-- 新增日誌表單 -->
       <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-slate-800 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
         <div><label class="block text-slate-400 mb-1">比賽/記錄日期</label><input type="date" id="new_date" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">賽事標籤/備註</label><input type="text" id="new_tag" placeholder="例: 友誼賽G1" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">賽事標籤/備註</label><input type="text" id="new_tag" placeholder="例: 聯賽G1" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
         <div><label class="block text-slate-400 mb-1">球員姓名</label><input type="text" id="new_name" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
         <div><label class="block text-slate-400 mb-1">打席 (PA)</label><input type="number" id="new_pa" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
         <div><label class="block text-slate-400 mb-1">打數 (AB)</label><input type="number" id="new_ab" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
@@ -170,7 +168,7 @@
         </div>
       </form>
 
-      <!-- 視圖一：區間成績匯總表 -->
+      <!-- 匯總表格 -->
       <div id="viewSummary" class="overflow-x-auto rounded-lg border border-slate-800">
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-950 text-slate-400 uppercase select-none">
@@ -199,7 +197,7 @@
         </table>
       </div>
 
-      <!-- 視圖二：詳細日誌紀錄表 -->
+      <!-- 日誌表格 -->
       <div id="viewLogs" class="hidden overflow-x-auto rounded-lg border border-slate-800">
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-950 text-slate-400 uppercase select-none">
@@ -224,8 +222,10 @@
     </section>
   </div>
 
+  <!-- 隱藏檔案選取元件 -->
+  <input type="file" id="hiddenAvatarInput" accept="image/*" class="hidden">
+
   <script>
-    // 2025年度總結初始日誌資料庫 (共14筆)
     const baseline2025Logs = [
       {"id":"log_2025_1","date":"2025-12-31","tag":"2025年度總結","name":"洪銘駿","pa":31,"ab":27,"h":14,"h1":13,"h2":1,"h3":0,"hr":0,"bb":2,"sf":2,"k":5},
       {"id":"log_2025_2","date":"2025-12-31","tag":"2025年度總結","name":"陳威騏","pa":29,"ab":27,"h":14,"h1":13,"h2":1,"h3":0,"hr":0,"bb":2,"sf":0,"k":2},
@@ -244,9 +244,9 @@
     ];
 
     let allLogs = JSON.parse(localStorage.getItem('rebas_baseball_logs')) || baseline2025Logs;
+    let playerAvatars = JSON.parse(localStorage.getItem('rebas_player_avatars')) || {};
     let selectedPlayerName = allLogs[0].name;
 
-    // 圖表實例
     let radarChartInst = null;
     let donutChartInst = null;
     let quadrantChartInst = null;
@@ -254,23 +254,84 @@
 
     function saveState() {
       localStorage.setItem('rebas_baseball_logs', JSON.stringify(allLogs));
+      localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
       renderAll();
     }
 
-    // 時間範圍快捷設定
+    // 頭像渲染引擎 (自帶自適應首字向量徽章)
+    function renderAvatarElement(name, sizeClass = 'w-7 h-7 text-xs') {
+      const avatarUrl = playerAvatars[name];
+      if (avatarUrl) {
+        return `<img src="${avatarUrl}" alt="${name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0">`;
+      }
+      const char = name ? name.substring(0, 1) : '球';
+      return `
+        <div class="${sizeClass} rounded-full bg-gradient-to-br from-sky-600 to-indigo-800 border border-sky-400/40 text-white font-bold flex items-center justify-center shadow shrink-0 select-none">
+          ${char}
+        </div>
+      `;
+    }
+
+    // 圖片壓縮並寫入儲存庫 (中心裁剪為 160x160 JPEG)
+    function processAvatarFile(file, name) {
+      if (!file || !file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const size = 160;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+          playerAvatars[name] = canvas.toDataURL('image/jpeg', 0.82);
+          saveState();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    window.promptAvatarUrl = function(name) {
+      const url = prompt(`請輸入 ${name} 的圖片網址 (URL)：`, playerAvatars[name] || '');
+      if (url !== null) {
+        if (url.trim() === '') {
+          delete playerAvatars[name];
+        } else {
+          playerAvatars[name] = url.trim();
+        }
+        saveState();
+      }
+    };
+
+    window.triggerAvatarUpload = function() {
+      document.getElementById('hiddenAvatarInput').click();
+    };
+
+    document.getElementById('hiddenAvatarInput').addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        processAvatarFile(e.target.files[0], selectedPlayerName);
+        e.target.value = '';
+      }
+    });
+
+    window.clearAvatar = function(name) {
+      if (confirm(`確認清除 ${name} 的自訂頭像？`)) {
+        delete playerAvatars[name];
+        saveState();
+      }
+    };
+
     window.setDateRange = function(range) {
       const s = document.getElementById('filterStartDate');
       const e = document.getElementById('filterEndDate');
-      if (range === 'all') {
-        s.value = '';
-        e.value = '';
-      } else if (range === '2025') {
-        s.value = '2025-01-01';
-        e.value = '2025-12-31';
-      } else if (range === '2026') {
-        s.value = '2026-01-01';
-        e.value = '2026-12-31';
-      }
+      if (range === 'all') { s.value = ''; e.value = ''; }
+      else if (range === '2025') { s.value = '2025-01-01'; e.value = '2025-12-31'; }
+      else if (range === '2026') { s.value = '2026-01-01'; e.value = '2026-12-31'; }
       renderAll();
     };
 
@@ -284,16 +345,11 @@
       });
     }
 
-    // 依選取時間區間聚合各球員累計成績
     function getAggregatedStats(filteredLogs) {
       const grouped = {};
       filteredLogs.forEach(l => {
         if (!grouped[l.name]) {
-          grouped[l.name] = {
-            name: l.name,
-            pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0,
-            logIds: []
-          };
+          grouped[l.name] = { name: l.name, pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0 };
         }
         grouped[l.name].pa += Number(l.pa) || 0;
         grouped[l.name].ab += Number(l.ab) || 0;
@@ -305,7 +361,6 @@
         grouped[l.name].bb += Number(l.bb) || 0;
         grouped[l.name].sf += Number(l.sf) || 0;
         grouped[l.name].k += Number(l.k) || 0;
-        grouped[l.name].logIds.push(l.id);
       });
 
       const list = Object.values(grouped);
@@ -325,14 +380,14 @@
 
       list.forEach(p => {
         p.avg = p.ab > 0 ? p.h / p.ab : 0;
-        p.obp = (p.ab + p.bb + p.sf) > 0 ? (p.h + p.bb) / (p.ab + p.bb + p.sf) : (p.pa > 0 ? (p.h + p.bb) / p.pa : 0);
+        p.obp = (p.ab + p.bb + p.sf) > 0 ? (p.h + p.bb) / (p.ab + p.bb + p.sf) : 0;
         const tb = p.h1 + 2 * p.h2 + 3 * p.h3 + 4 * p.hr;
         p.slg = p.ab > 0 ? tb / p.ab : 0;
         p.ops = p.obp + p.slg;
         p.iso = p.slg - p.avg;
         p.ops_plus = teamOps > 0 ? (p.ops / teamOps) * 100 : 100;
         p.woba = p.pa > 0 ? (0.69 * p.bb + 0.89 * p.h1 + 1.27 * p.h2 + 1.62 * p.h3 + 2.10 * p.hr) / p.pa : 0;
-        p.wrc_plus = p.ops_plus; // 比例映射基準
+        p.wrc_plus = p.ops_plus;
       });
 
       return {
@@ -390,7 +445,7 @@
         selectedPlayerName = p.name;
       }
       if (!p) {
-        document.getElementById('playerStatsDetail').innerHTML = '<span class="text-xs text-slate-500">該時間區間無紀錄</span>';
+        document.getElementById('playerProfileCard').innerHTML = '<span class="text-xs text-slate-500">該時間區間無紀錄</span>';
         return;
       }
 
@@ -402,13 +457,22 @@
       const prControl = getPercentile(k_pct, 'k_pct', pList, true);
       const prWrc = getPercentile(p.wrc_plus, 'wrc_plus', pList);
 
-      document.getElementById('playerStatsDetail').innerHTML = `
-        <div class="border-b border-slate-800 pb-3">
-          <div class="text-2xl font-black text-white flex items-center gap-2">
-            ${p.name}
-            <span class="text-xs font-mono font-normal bg-sky-950 text-sky-400 border border-sky-800/60 px-2 py-0.5 rounded">區間 PA: ${p.pa}</span>
+      document.getElementById('playerProfileCard').innerHTML = `
+        <div class="flex items-center space-x-4 border-b border-slate-800 pb-3">
+          <div class="relative group cursor-pointer" onclick="triggerAvatarUpload()" title="點擊上傳大頭照">
+            ${renderAvatarElement(p.name, 'w-16 h-16 text-xl')}
+            <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white font-medium">更換</div>
           </div>
-          <p class="text-xs text-slate-400 mt-1">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 三振: ${p.k}</p>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xl font-black text-white">${p.name}</span>
+              <div class="flex space-x-1.5">
+                <button onclick="promptAvatarUrl('${p.name}')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded border border-slate-700">網址</button>
+                <button onclick="clearAvatar('${p.name}')" class="text-[10px] bg-rose-950/40 hover:bg-rose-900 text-rose-300 px-2 py-0.5 rounded border border-rose-800/40">重設</button>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 三振: ${p.k}</p>
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-2 text-xs">
           <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
@@ -430,7 +494,6 @@
         </div>
       `;
 
-      // 雷達圖
       const radarCtx = document.getElementById('radarChart').getContext('2d');
       if (radarChartInst) radarChartInst.destroy();
       radarChartInst = new Chart(radarCtx, {
@@ -461,7 +524,6 @@
         }
       });
 
-      // 安打分佈環形圖
       const donutCtx = document.getElementById('donutChart').getContext('2d');
       if (donutChartInst) donutChartInst.destroy();
       donutChartInst = new Chart(donutCtx, {
@@ -574,7 +636,6 @@
       }
     }
 
-    // 渲染匯總表（所有數值支援在線更新）
     function renderSummaryTable(agg) {
       const tbody = document.getElementById('summaryTableBody');
       tbody.innerHTML = '';
@@ -590,7 +651,10 @@
         };
 
         tr.innerHTML = `
-          <td class="p-2.5 font-bold text-white">${p.name}</td>
+          <td class="p-2.5 font-bold text-white flex items-center space-x-2">
+            ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px]')}
+            <span>${p.name}</span>
+          </td>
           <td class="p-2.5"><input type="number" value="${p.pa}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'pa', this.value)"></td>
           <td class="p-2.5"><input type="number" value="${p.ab}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'ab', this.value)"></td>
           <td class="p-2.5"><input type="number" value="${p.h}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'h', this.value)"></td>
@@ -613,13 +677,11 @@
       });
     }
 
-    // 在匯總表修改數值時，寫回該選手最近一筆日誌
     window.updateSummaryMetric = (name, key, val) => {
       const logs = allLogs.filter(l => l.name === name);
       if (logs.length > 0) {
         const targetLog = logs[logs.length - 1];
         targetLog[key] = Number(val) || 0;
-        // 安打自動配平
         if (key === 'h' && targetLog.h1 === 0 && targetLog.h2 === 0 && targetLog.h3 === 0 && targetLog.hr === 0) {
           targetLog.h1 = Number(val) || 0;
         }
@@ -627,7 +689,6 @@
       }
     };
 
-    // 渲染詳細賽事日誌清單
     function renderLogsTable(filteredLogs) {
       const tbody = document.getElementById('logsTableBody');
       tbody.innerHTML = '';
@@ -643,7 +704,10 @@
         tr.innerHTML = `
           <td class="p-2.5 font-mono text-sky-400">${l.date}</td>
           <td class="p-2.5 text-slate-300">${l.tag}</td>
-          <td class="p-2.5 font-bold text-white">${l.name}</td>
+          <td class="p-2.5 font-bold text-white flex items-center space-x-2">
+            ${renderAvatarElement(l.name, 'w-5 h-5 text-[9px]')}
+            <span>${l.name}</span>
+          </td>
           <td class="p-2.5">${l.pa}</td>
           <td class="p-2.5">${l.ab}</td>
           <td class="p-2.5">${l.h}</td>
@@ -665,7 +729,6 @@
       saveState();
     };
 
-    // 批次刪除選取區間內的日誌 (砍某時間範圍成績)
     document.getElementById('batchDeleteBtn').addEventListener('click', () => {
       const s = document.getElementById('filterStartDate').value;
       const e = document.getElementById('filterEndDate').value;
@@ -701,7 +764,6 @@
       renderLogsTable(filteredLogs);
     }
 
-    // 事件註冊
     document.getElementById('filterStartDate').addEventListener('change', renderAll);
     document.getElementById('filterEndDate').addEventListener('change', renderAll);
     document.getElementById('playerSelect').addEventListener('change', (e) => {
@@ -716,7 +778,6 @@
       });
     });
 
-    // 分頁切換
     document.getElementById('tabSummaryBtn').addEventListener('click', () => {
       document.getElementById('viewSummary').classList.remove('hidden');
       document.getElementById('viewLogs').classList.add('hidden');
@@ -731,7 +792,6 @@
       document.getElementById('tabSummaryBtn').className = 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded font-medium';
     });
 
-    // 新增日誌表單切換與送出
     document.getElementById('toggleAddLogBtn').addEventListener('click', () => {
       document.getElementById('addLogForm').classList.toggle('hidden');
     });
@@ -764,16 +824,14 @@
       saveState();
     });
 
-    // 重置資料
     document.getElementById('resetAllDataBtn').addEventListener('click', () => {
-      if (!confirm('確認將所有數據重置為2025年度總結初始狀態？')) return;
+      if (!confirm('確認將所有數據重置為2025年度總結初始狀態？（自訂頭像將保留）')) return;
       localStorage.removeItem('rebas_baseball_logs');
       allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
       selectedPlayerName = allLogs[0].name;
       saveState();
     });
 
-    // CSV 匯出
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
       const agg = getAggregatedStats(getFilteredLogs());
       const keys = ['name', 'pa', 'ab', 'h', 'h1', 'h2', 'h3', 'hr', 'bb', 'k', 'avg', 'obp', 'slg', 'ops', 'ops_plus', 'wrc_plus', 'iso'];
