@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>系壘進階數據庫 | 賽伯計量分析與自訂頭像裁切系統</title>
+  <title>淡江航太系壘 | 賽伯計量分析與球員檔案庫</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -35,14 +35,20 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
   <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- 頂部導覽列 -->
+    <!-- 頂部導覽列：更新為淡江航太系壘與作者盧宣嘉 -->
     <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 gap-4">
       <div>
         <div class="flex items-center space-x-3">
-          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">SDI SABERMETRICS</span>
-          <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">系壘賽事數據與球員檔案庫</h1>
+          <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">TKU AERO SOFTBALL</span>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">淡江航太系壘</h1>
         </div>
-        <p class="text-sm text-slate-400 mt-1">導入慢壘專用好球帶紀律指數 (SDI)、個人頭像裁切、時間序列分析與動態指標運算</p>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-400">
+          <span class="text-sky-300 font-medium">作者：盧宣嘉</span>
+          <span class="text-slate-600">|</span>
+          <span>賽伯計量學分析系統</span>
+          <span class="text-slate-600">|</span>
+          <span>好球帶紀律 (SDI) 評估架構</span>
+        </div>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button id="exportCsvBtn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-lg transition font-medium">匯出當前區間 CSV</button>
@@ -77,12 +83,12 @@
     <!-- 模組一：全隊戰力概覽與排行榜 -->
     <section class="grid grid-cols-2 md:grid-cols-6 gap-3" id="teamSummaryCards"></section>
 
-    <!-- 模組二：個人深度檔案 (五維雷達升級為 SDI 慢壘好球帶紀律) -->
+    <!-- 模組二：個人深度檔案 (五維雷達採用 SDI 慢壘好球帶紀律) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <h2 class="text-base font-bold text-sky-400">球員深度檔案與個人能力</h2>
-          <p class="text-xs text-slate-400">五維雷達圖採用慢壘加權選球指標 SDI：綜合四壞保送與三振懲罰評估好球帶辨識度</p>
+          <p class="text-xs text-slate-400">五維雷達圖採用慢壘專用 SDI 指標：結合四壞保送與三振懲罰評估好球帶判斷力</p>
         </div>
         <div class="flex items-center space-x-2">
           <label class="text-xs text-slate-400">選取選手：</label>
@@ -112,7 +118,7 @@
             <h3 class="text-sm font-bold text-slate-200">打擊型態象限分析 (OBP vs. SLG)</h3>
             <span class="text-[11px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded">十字線：區間團隊平均</span>
           </div>
-          <p class="text-xs text-slate-400 mb-4">分析該區間內全隊打者的打擊品質落點</p>
+          <p class="text-xs text-slate-400 mb-4">分析該區間內全隊打者的進攻型態與擊球品質落點</p>
         </div>
         <div class="h-80">
           <canvas id="quadrantChart"></canvas>
@@ -277,16 +283,13 @@
         </button>
       </div>
 
-      <!-- 操作按鈕 -->
+      <!-- 操作按鈕 (純本地即時儲存) -->
       <div class="flex items-center justify-end w-full space-x-2 border-t border-slate-800 pt-3">
-        <button onclick="closeCropperModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs transition">
+        <button onclick="closeCropperModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg text-xs transition">
           取消
         </button>
-        <button onclick="confirmCropAndSave(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-lg transition" title="下載為圖檔放入 avatars/ 資料夾推送到 GitHub">
-          下載為圖檔
-        </button>
-        <button onclick="confirmCropAndSave(false)" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-lg transition">
-          僅本機套用
+        <button onclick="confirmCropAndSave()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-1.5 rounded-lg text-xs shadow-lg transition">
+          完成裁切並儲存
         </button>
       </div>
     </div>
@@ -343,22 +346,18 @@
       renderAll();
     }
 
+    // 純本地頭像渲染引擎 (無外部網路依賴、無破圖 404 報錯)
     function renderAvatarElement(name, sizeClass = 'w-7 h-7 text-xs') {
-      const customUrl = playerAvatars[name];
-      const repoUrl = `avatars/${encodeURIComponent(name)}.jpg`;
-      const char = name ? name.substring(0, 1) : '球';
-
-      const fallbackHtml = `
+      const avatarData = playerAvatars[name];
+      if (avatarData) {
+        return `<img src="${avatarData}" alt="${name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0">`;
+      }
+      const char = name ? name.substring(0, 1) : '航';
+      return `
         <div class="${sizeClass} rounded-full bg-gradient-to-br from-sky-600 to-indigo-800 border border-sky-400/40 text-white font-bold flex items-center justify-center shadow shrink-0 select-none">
           ${char}
         </div>
       `;
-
-      if (customUrl) {
-        return `<img src="${customUrl}" alt="${name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0" onerror="this.outerHTML=\`${fallbackHtml}\`">`;
-      }
-
-      return `<img src="${repoUrl}" alt="${name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0" onerror="this.outerHTML=\`${fallbackHtml}\`">`;
     }
 
     function openCropper(imageSource, targetPlayer) {
@@ -499,7 +498,8 @@
       drawCropCanvas();
     });
 
-    window.confirmCropAndSave = function(downloadFile = false) {
+    // 裁切完成後直接寫入 LocalStorage
+    window.confirmCropAndSave = function() {
       if (!activeCropImage) return;
 
       const offCanvas = document.createElement('canvas');
@@ -524,16 +524,7 @@
 
       outCtx.drawImage(offCanvas, sourceLeft, sourceTop, CROP_DIAMETER, CROP_DIAMETER, 0, 0, outSize, outSize);
 
-      const dataUrl = outCanvas.toDataURL('image/jpeg', 0.85);
-      playerAvatars[cropTargetPlayer] = dataUrl;
-
-      if (downloadFile) {
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = `${cropTargetPlayer}.jpg`;
-        a.click();
-      }
-
+      playerAvatars[cropTargetPlayer] = outCanvas.toDataURL('image/jpeg', 0.85);
       closeCropperModal();
       saveState();
     };
@@ -630,7 +621,7 @@
         p.ops_plus = teamOps > 0 ? (p.ops / teamOps) * 100 : 100;
         p.woba = p.pa > 0 ? (0.69 * p.bb + 0.89 * p.h1 + 1.27 * p.h2 + 1.62 * p.h3 + 2.10 * p.hr) / p.pa : 0;
         p.wrc_plus = p.ops_plus;
-        // 慢壘加權選球能力指數 (SDI)
+        // 慢壘好球帶紀律指數 (SDI)
         p.sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
       });
 
@@ -667,7 +658,6 @@
       `).join('');
     }
 
-    // 百分位計算支援 SDI 慢壘選球
     function getPercentile(val, key, pList, invert = false) {
       const vals = pList.map(d => {
         if (key === 'bb_pct') return d.pa > 0 ? d.bb / d.pa : 0;
