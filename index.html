@@ -3,149 +3,181 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>棒球打擊成績動態分析系統</title>
+  <title>系壘進階數據分析庫 | 賽伯計量系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
   <div class="max-w-7xl mx-auto space-y-6">
-    <header class="border-b border-slate-700 pb-4">
-      <h1 class="text-2xl font-bold text-sky-400">棒球打擊成績動態分析系統</h1>
-      <p class="text-sm text-slate-400">支援多變量圖表切換與即時數據編輯</p>
+
+    <!-- 頂部標題區 -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 gap-4">
+      <div>
+        <div class="flex items-center space-x-3">
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">REBAS STYLE</span>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">系壘進階數據分析庫</h1>
+        </div>
+        <p class="text-sm text-slate-400 mt-1">參考野球革命賽伯計量學指標架構與全隊基準落點分析</p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button id="exportCsvBtn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-lg transition font-medium">匯出 CSV</button>
+        <button id="resetDataBtn" class="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/40 text-rose-300 text-xs px-3.5 py-2 rounded-lg transition font-medium">重置初始數據</button>
+      </div>
     </header>
 
-    <!-- 控制面板 -->
-    <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">圖表類型</label>
-        <select id="chartType" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm text-white">
-          <option value="bar">長條圖 (Bar Chart)</option>
-          <option value="line">折線圖 (Line Chart)</option>
-          <option value="scatter">二維散佈圖 (Scatter Plot)</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">X 軸指標 (散佈圖專用)</label>
-        <select id="xAxisVar" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm text-white">
-          <option value="打席">打席</option>
-          <option value="打數">打數</option>
-          <option value="avg">打擊率 (avg)</option>
-          <option value="obp">上壘率 (obp)</option>
-          <option value="slg">長打率 (slg)</option>
-          <option value="ops" selected>OPS</option>
-          <option value="woba">wOBA</option>
-          <option value="wrc+">wRC+</option>
-          <option value="ISO">ISO</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Y 軸指標 (分析主量)</label>
-        <select id="yAxisVar" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm text-white">
-          <option value="avg">打擊率 (avg)</option>
-          <option value="ops">OPS</option>
-          <option value="ops+">OPS+</option>
-          <option value="obp">上壘率 (obp)</option>
-          <option value="slg">長打率 (slg)</option>
-          <option value="woba">wOBA</option>
-          <option value="wrc+" selected>wRC+</option>
-          <option value="ISO">ISO</option>
-          <option value="HR">全壘打 (HR)</option>
-          <option value="安打">安打數</option>
-          <option value="K">三振 (K)</option>
-          <option value="BB">四壞 (BB)</option>
-        </select>
-      </div>
-      <div class="flex items-end">
-        <button id="resetBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 px-4 rounded text-sm transition">
-          重置為預設資料
-        </button>
-      </div>
-    </div>
+    <!-- 模組一：全隊戰力基準與榮譽榜首 -->
+    <section class="grid grid-cols-2 md:grid-cols-6 gap-3" id="teamSummaryCards"></section>
 
-    <!-- 圖表顯示區域 -->
-    <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-      <div class="h-96">
-        <canvas id="mainChart"></canvas>
-      </div>
-    </div>
-
-    <!-- 數據管理與新增 -->
-    <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg font-semibold text-sky-300">數據管理表</h2>
-        <button id="toggleAddForm" class="bg-sky-600 hover:bg-sky-700 text-white text-xs px-3 py-1.5 rounded">
-          + 新增選手數據
-        </button>
+    <!-- 模組二：個人球員卡與五維能力分析 -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div>
+          <h2 class="text-base font-bold text-sky-400">球員深度能力檔案 (Player Profile)</h2>
+          <p class="text-xs text-slate-400">五維能力雷達圖採隊內 PR 百分位標準化計算</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <label class="text-xs text-slate-400">選取選手：</label>
+          <select id="playerSelect" class="bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-sky-500"></select>
+        </div>
       </div>
 
-      <!-- 新增表單 (預設隱藏) -->
-      <form id="addForm" class="hidden bg-slate-900 p-4 rounded border border-slate-700 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-        <div>
-          <label class="block text-slate-400">姓名</label>
-          <input type="text" id="new_name" required class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-white">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+        <!-- 個人基礎與進階數據清單 -->
+        <div class="md:col-span-4 space-y-3" id="playerStatsDetail"></div>
+        <!-- 五維能力雷達圖 -->
+        <div class="md:col-span-5 h-72">
+          <canvas id="radarChart"></canvas>
         </div>
-        <div>
-          <label class="block text-slate-400">打席</label>
-          <input type="number" id="new_pa" required class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-white">
+        <!-- 安打組成環形圖 -->
+        <div class="md:col-span-3 h-64 flex flex-col items-center">
+          <span class="text-xs text-slate-400 mb-2 font-medium">安打長打分佈</span>
+          <div class="h-52 w-full">
+            <canvas id="donutChart"></canvas>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <!-- 模組三：進攻象限矩陣與動態自訂分析圖 -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- 象限分析圖 (OBP vs SLG) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">
         <div>
-          <label class="block text-slate-400">打數</label>
-          <input type="number" id="new_ab" required class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-white">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="text-sm font-bold text-slate-200">打擊型態象限分析 (OBP vs. SLG)</h3>
+            <span class="text-[11px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded">十字線：團隊平均</span>
+          </div>
+          <p class="text-xs text-slate-400 mb-4">右上為全能重砲，右下為上壘機器，左上為純長打型</p>
         </div>
+        <div class="h-80">
+          <canvas id="quadrantChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 自訂多變量分析圖 -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">
         <div>
-          <label class="block text-slate-400">安打</label>
-          <input type="number" id="new_h" required class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-white">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h3 class="text-sm font-bold text-slate-200">自由變量分析引擎</h3>
+            <div class="flex space-x-2">
+              <select id="customChartType" class="bg-slate-950 border border-slate-700 text-xs rounded px-2 py-1">
+                <option value="bar">長條圖</option>
+                <option value="line">折線圖</option>
+                <option value="scatter">散佈圖</option>
+              </select>
+              <select id="customXVar" class="bg-slate-950 border border-slate-700 text-xs rounded px-2 py-1">
+                <option value="打席">X: 打席</option>
+                <option value="打數">X: 打數</option>
+                <option value="avg">X: 打擊率</option>
+                <option value="obp">X: 上壘率</option>
+                <option value="ops" selected>X: OPS</option>
+                <option value="wrc+">X: wRC+</option>
+              </select>
+              <select id="customYVar" class="bg-slate-950 border border-slate-700 text-xs rounded px-2 py-1">
+                <option value="wrc+" selected>Y: wRC+</option>
+                <option value="ops">Y: OPS</option>
+                <option value="ops+">Y: OPS+</option>
+                <option value="woba">Y: wOBA</option>
+                <option value="avg">Y: 打擊率</option>
+                <option value="slg">Y: 長打率</option>
+                <option value="HR">Y: 全壘打</option>
+                <option value="安打">Y: 安打數</option>
+              </select>
+            </div>
+          </div>
         </div>
+        <div class="h-80">
+          <canvas id="customChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 模組四：完整互動數據總表 (CRUD & 排序) -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <label class="block text-slate-400">全壘打</label>
-          <input type="number" id="new_hr" required class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-white">
+          <h2 class="text-base font-bold text-sky-400">打擊成績總表 (Stats Database)</h2>
+          <p class="text-xs text-slate-400">點擊表頭欄位可進行升降冪排序；數值可直接在線編輯並同步運算</p>
         </div>
-        <div>
-          <label class="block text-slate-400">打擊率 (avg)</label>
-          <input type="number" step="0.001" id="new_avg" required class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-white">
-        </div>
-        <div>
-          <label class="block text-slate-400">OPS</label>
-          <input type="number" step="0.001" id="new_ops" required class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-white">
-        </div>
-        <div>
-          <label class="block text-slate-400">wOBA</label>
-          <input type="number" step="0.001" id="new_woba" required class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-white">
-        </div>
-        <div>
-          <label class="block text-slate-400">wRC+</label>
-          <input type="number" step="0.1" id="new_wrc" required class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-white">
-        </div>
-        <div class="col-span-2 md:col-span-3 flex items-end">
-          <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-1 px-4 rounded w-full">儲存並更新</button>
+        <button id="toggleAddBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 新增選手記錄</button>
+      </div>
+
+      <!-- 新增表單 -->
+      <form id="addRecordForm" class="hidden bg-slate-950 p-4 rounded-xl border border-slate-800 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+        <div><label class="block text-slate-400 mb-1">姓名</label><input type="text" id="add_name" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">打席</label><input type="number" id="add_pa" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">打數</label><input type="number" id="add_ab" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">安打</label><input type="number" id="add_h" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">全壘打</label><input type="number" id="add_hr" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">四壞 (BB)</label><input type="number" id="add_bb" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">三振 (K)</label><input type="number" id="add_k" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">打擊率 (AVG)</label><input type="number" step="0.001" id="add_avg" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">上壘率 (OBP)</label><input type="number" step="0.001" id="add_obp" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">長打率 (SLG)</label><input type="number" step="0.001" id="add_slg" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">OPS</label><input type="number" step="0.001" id="add_ops" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div><label class="block text-slate-400 mb-1">wRC+</label><input type="number" step="0.1" id="add_wrc" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div class="col-span-2 md:col-span-6 flex justify-end space-x-2 pt-2">
+          <button type="button" id="cancelAddBtn" class="bg-slate-800 text-slate-400 px-3 py-1 rounded">取消</button>
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1 rounded font-medium">確認儲存</button>
         </div>
       </form>
 
-      <!-- 滾動數據表格 -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs text-slate-300">
-          <thead class="bg-slate-900 text-slate-400 uppercase">
+      <!-- 資料表格 -->
+      <div class="overflow-x-auto rounded-lg border border-slate-800">
+        <table class="w-full text-left text-xs whitespace-nowrap">
+          <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider select-none" id="tableHeader">
             <tr>
-              <th class="p-2">選手</th>
-              <th class="p-2">打席</th>
-              <th class="p-2">打數</th>
-              <th class="p-2">安打</th>
-              <th class="p-2">HR</th>
-              <th class="p-2">AVG</th>
-              <th class="p-2">OPS</th>
-              <th class="p-2">wOBA</th>
-              <th class="p-2">wRC+</th>
-              <th class="p-2 text-center">操作</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="name">選手</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="打席">打席</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="打數">打數</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="安打">安打</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="HR">HR</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="BB">BB</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="K">K</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="avg">AVG</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="obp">OBP</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="slg">SLG</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="ops">OPS</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="ops+">OPS+</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="woba">wOBA</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="wrc+">wRC+</th>
+              <th class="p-2.5 cursor-pointer hover:text-white" data-col="ISO">ISO</th>
+              <th class="p-2.5 text-center">操作</th>
             </tr>
           </thead>
-          <tbody id="dataTableBody" class="divide-y divide-slate-700"></tbody>
+          <tbody id="dataTableBody" class="divide-y divide-slate-800/80 bg-slate-900/50"></tbody>
         </table>
       </div>
-    </div>
+    </section>
   </div>
 
   <script>
-    const defaultData = [
+    // 預設 Excel 原始 14 筆打擊數據
+    const rawExcelDataset = [
       {"name": "洪銘駿", "打席": 31, "打數": 27, "安打": 14, "1H": 13, "2H": 1, "3H": 0, "HR": 0, "BB": 2, "SF高犧": 2, "K": 5, "avg": 0.5185, "ops": 1.0717, "ops+": 89.3177, "obp": 0.5161, "slg": 0.5556, "woba": 0.4535, "wrc+": 90.2885, "ISO": 0.037},
       {"name": "陳威騏", "打席": 29, "打數": 27, "安打": 14, "1H": 13, "2H": 1, "3H": 0, "HR": 0, "BB": 2, "SF高犧": 0, "K": 2, "avg": 0.5185, "ops": 1.1073, "ops+": 92.2843, "obp": 0.5517, "slg": 0.5556, "woba": 0.4848, "wrc+": 96.5153, "ISO": 0.037},
       {"name": "楊智翔", "打席": 12, "打數": 10, "安打": 1, "1H": 1, "2H": 0, "3H": 0, "HR": 0, "BB": 2, "SF高犧": 0, "K": 0, "avg": 0.1, "ops": 0.35, "ops+": 29.1701, "obp": 0.25, "slg": 0.1, "woba": 0.1883, "wrc+": 37.4918, "ISO": 0.0},
@@ -162,62 +194,275 @@
       {"name": "陳柏翰", "打席": 16, "打數": 15, "安打": 9, "1H": 5, "2H": 4, "3H": 0, "HR": 0, "BB": 1, "SF高犧": 0, "K": 0, "avg": 0.6, "ops": 1.4917, "ops+": 124.3204, "obp": 0.625, "slg": 0.8667, "woba": 0.6281, "wrc+": 125.0417, "ISO": 0.2667}
     ];
 
-    let dataset = JSON.parse(localStorage.getItem('baseball_stats')) || defaultData;
-    let chartInstance = null;
+    let dataset = JSON.parse(localStorage.getItem('rebas_baseball_stats')) || rawExcelDataset;
+    let selectedPlayerName = dataset[0].name;
+    let sortKey = null;
+    let sortAsc = true;
 
-    function saveState() {
-      localStorage.setItem('baseball_stats', JSON.stringify(dataset));
-      renderTable();
-      renderChart();
+    let radarChartInst = null;
+    let donutChartInst = null;
+    let quadrantChartInst = null;
+    let customChartInst = null;
+
+    function saveAndRefresh() {
+      localStorage.setItem('rebas_baseball_stats', JSON.stringify(dataset));
+      renderAll();
     }
 
-    function renderChart() {
-      const type = document.getElementById('chartType').value;
-      const xKey = document.getElementById('xAxisVar').value;
-      const yKey = document.getElementById('yAxisVar').value;
-      const ctx = document.getElementById('mainChart').getContext('2d');
+    function calcTeamAverages() {
+      let t_pa = 0, t_ab = 0, t_h = 0, t_hr = 0, t_bb = 0;
+      let sum_ops = 0, sum_wrc = 0, sum_woba = 0;
+      dataset.forEach(d => {
+        t_pa += d['打席'] || 0;
+        t_ab += d['打數'] || 0;
+        t_h += d['安打'] || 0;
+        t_hr += d['HR'] || 0;
+        t_bb += d['BB'] || 0;
+        sum_ops += d['ops'] || 0;
+        sum_wrc += d['wrc+'] || 0;
+        sum_woba += d['woba'] || 0;
+      });
+      const count = dataset.length || 1;
+      return {
+        avg: t_ab > 0 ? (t_h / t_ab).toFixed(3) : '.000',
+        ops: (sum_ops / count).toFixed(3),
+        wrc: (sum_wrc / count).toFixed(1),
+        woba: (sum_woba / count).toFixed(3),
+        h: t_h,
+        hr: t_hr,
+        rawAvg: t_ab > 0 ? t_h / t_ab : 0,
+        rawObp: dataset.reduce((a, b) => a + (b.obp || 0), 0) / count,
+        rawSlg: dataset.reduce((a, b) => a + (b.slg || 0), 0) / count
+      };
+    }
 
-      if (chartInstance) chartInstance.destroy();
+    function renderSummaryCards() {
+      const stats = calcTeamAverages();
+      const topAvg = [...dataset].sort((a,b) => b.avg - a.avg)[0];
+      const topHr = [...dataset].sort((a,b) => b.HR - a.HR)[0];
+      const topWrc = [...dataset].sort((a,b) => b['wrc+'] - a['wrc+'])[0];
+
+      const cards = [
+        { label: '全隊打擊率 (AVG)', val: stats.avg, sub: `安打總數: ${stats.h}` },
+        { label: '全隊 OPS', val: stats.ops, sub: `wOBA: ${stats.woba}` },
+        { label: '全隊平均 wRC+', val: stats.wrc, sub: '聯盟平均 = 100' },
+        { label: '打擊王 (AVG)', val: topAvg ? topAvg.avg.toFixed(3) : '-', sub: topAvg ? topAvg.name : '' },
+        { label: '全壘打王 (HR)', val: topHr ? `${topHr.HR} 支` : '-', sub: topHr ? topHr.name : '' },
+        { label: '進攻破壞王 (wRC+)', val: topWrc ? topWrc['wrc+'].toFixed(1) : '-', sub: topWrc ? topWrc.name : '' }
+      ];
+
+      const container = document.getElementById('teamSummaryCards');
+      container.innerHTML = cards.map(c => `
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex flex-col justify-between">
+          <span class="text-[11px] font-medium text-slate-400">${c.label}</span>
+          <span class="text-xl font-black text-sky-400 my-1">${c.val}</span>
+          <span class="text-[10px] text-slate-500 font-mono">${c.sub}</span>
+        </div>
+      `).join('');
+    }
+
+    function getPercentile(val, key, invert = false) {
+      const vals = dataset.map(d => {
+        if (key === 'bb_pct') return (d['BB'] || 0) / (d['打席'] || 1);
+        if (key === 'k_pct') return (d['K'] || 0) / (d['打席'] || 1);
+        return d[key] || 0;
+      });
+      const min = Math.min(...vals);
+      const max = Math.max(...vals);
+      if (max === min) return 50;
+      let pr = ((val - min) / (max - min)) * 100;
+      if (invert) pr = 100 - pr;
+      return Math.round(Math.max(5, Math.min(99, pr)));
+    }
+
+    function renderPlayerProfile() {
+      const p = dataset.find(d => d.name === selectedPlayerName) || dataset[0];
+      if (!p) return;
+
+      const p_bb_pct = ((p['BB'] || 0) / (p['打席'] || 1));
+      const p_k_pct = ((p['K'] || 0) / (p['打席'] || 1));
+
+      const prContact = getPercentile(p.avg, 'avg');
+      const prPower = getPercentile(p.ISO, 'ISO');
+      const prDiscipline = getPercentile(p_bb_pct, 'bb_pct');
+      const prControl = getPercentile(p_k_pct, 'k_pct', true);
+      const prWrc = getPercentile(p['wrc+'], 'wrc+');
+
+      document.getElementById('playerStatsDetail').innerHTML = `
+        <div class="border-b border-slate-800 pb-3">
+          <div class="text-2xl font-black text-white flex items-center gap-2">
+            ${p.name}
+            <span class="text-xs font-mono font-normal bg-sky-950 text-sky-400 border border-sky-800/60 px-2 py-0.5 rounded">PA: ${p['打席']}</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">打數: ${p['打數']} | 安打: ${p['安打']} | 全壘打: ${p['HR']} | 保送: ${p['BB']} | 三振: ${p['K']}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
+            <span class="text-slate-400 block text-[10px]">打擊三圍 (AVG/OBP/SLG)</span>
+            <span class="font-mono text-emerald-400 font-bold">${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}</span>
+          </div>
+          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
+            <span class="text-slate-400 block text-[10px]">整體攻擊指數 (OPS / OPS+)</span>
+            <span class="font-mono text-sky-400 font-bold">${p.ops.toFixed(3)} / ${p['ops+'].toFixed(1)}</span>
+          </div>
+          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
+            <span class="text-slate-400 block text-[10px]">加權得分創造 (wRC+)</span>
+            <span class="font-mono text-amber-400 font-bold">${p['wrc+'].toFixed(1)}</span>
+          </div>
+          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
+            <span class="text-slate-400 block text-[10px]">純長打率 (ISO) / wOBA</span>
+            <span class="font-mono text-purple-400 font-bold">${p.ISO.toFixed(3)} / ${p.woba.toFixed(3)}</span>
+          </div>
+        </div>
+      `;
+
+      // 更新雷達圖
+      const radarCtx = document.getElementById('radarChart').getContext('2d');
+      if (radarChartInst) radarChartInst.destroy();
+      radarChartInst = new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+          labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '選球耐心 (BB%)', '擊球控制 (1-K%)', '進攻產出 (wRC+)'],
+          datasets: [{
+            label: `${p.name} 能力 PR 值`,
+            data: [prContact, prPower, prDiscipline, prControl, prWrc],
+            backgroundColor: 'rgba(56, 189, 248, 0.25)',
+            borderColor: '#38bdf8',
+            pointBackgroundColor: '#38bdf8',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#38bdf8',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { stepSize: 20, display: false },
+              grid: { color: 'rgba(255, 255, 255, 0.08)' },
+              angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+              pointLabels: { color: '#94a3b8', font: { size: 10 } }
+            }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // 更新安打環形圖
+      const donutCtx = document.getElementById('donutChart').getContext('2d');
+      if (donutChartInst) donutChartInst.destroy();
+      donutChartInst = new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['1H', '2H', '3H', 'HR'],
+          datasets: [{
+            data: [p['1H'] || 0, p['2H'] || 0, p['3H'] || 0, p['HR'] || 0],
+            backgroundColor: ['#38bdf8', '#34d399', '#fbbf24', '#f87171'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } }
+          },
+          cutout: '65%'
+        }
+      });
+    }
+
+    function renderQuadrantChart() {
+      const stats = calcTeamAverages();
+      const avgObp = stats.rawObp;
+      const avgSlg = stats.rawSlg;
+
+      const scatterData = dataset.map(d => ({ x: d.obp, y: d.slg, name: d.name }));
+      const ctx = document.getElementById('quadrantChart').getContext('2d');
+      if (quadrantChartInst) quadrantChartInst.destroy();
+
+      quadrantChartInst = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: '球員定位',
+              data: scatterData,
+              backgroundColor: '#38bdf8',
+              pointRadius: 6,
+              pointHoverRadius: 8
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: c => `${c.raw.name}: (OBP: ${c.raw.x.toFixed(3)}, SLG: ${c.raw.y.toFixed(3)})`
+              }
+            },
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: `上壘率 (OBP) - 全隊均值: ${avgObp.toFixed(3)}`, color: '#64748b' },
+              grid: { color: c => Math.abs(c.tick.value - avgObp) < 0.03 ? 'rgba(52, 211, 153, 0.7)' : 'rgba(255,255,255,0.05)' }
+            },
+            y: {
+              title: { display: true, text: `長打率 (SLG) - 全隊均值: ${avgSlg.toFixed(3)}`, color: '#64748b' },
+              grid: { color: c => Math.abs(c.tick.value - avgSlg) < 0.05 ? 'rgba(52, 211, 153, 0.7)' : 'rgba(255,255,255,0.05)' }
+            }
+          }
+        }
+      });
+    }
+
+    function renderCustomChart() {
+      const type = document.getElementById('customChartType').value;
+      const xKey = document.getElementById('customXVar').value;
+      const yKey = document.getElementById('customYVar').value;
+      const ctx = document.getElementById('customChart').getContext('2d');
+
+      if (customChartInst) customChartInst.destroy();
 
       if (type === 'scatter') {
-        const scatterData = dataset.map(d => ({ x: d[xKey], y: d[yKey], label: d.name }));
-        chartInstance = new Chart(ctx, {
+        customChartInst = new Chart(ctx, {
           type: 'scatter',
           data: {
             datasets: [{
-              label: `${xKey} vs ${yKey}`,
-              data: scatterData,
-              backgroundColor: '#38bdf8'
+              data: dataset.map(d => ({ x: d[xKey], y: d[yKey], name: d.name })),
+              backgroundColor: '#a78bfa'
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              tooltip: {
-                callbacks: {
-                  label: ctx => `${ctx.raw.label}: (${xKey}: ${ctx.raw.x}, ${yKey}: ${ctx.raw.y})`
-                }
-              }
+              tooltip: { callbacks: { label: c => `${c.raw.name}: (${xKey}: ${c.raw.x}, ${yKey}: ${c.raw.y})` } },
+              legend: { display: false }
             },
             scales: {
-              x: { title: { display: true, text: xKey, color: '#94a3b8' } },
-              y: { title: { display: true, text: yKey, color: '#94a3b8' } }
+              x: { title: { display: true, text: xKey, color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              y: { title: { display: true, text: yKey, color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
             }
           }
         });
       } else {
-        const labels = dataset.map(d => d.name);
-        const values = dataset.map(d => d[yKey]);
-        chartInstance = new Chart(ctx, {
+        customChartInst = new Chart(ctx, {
           type: type,
           data: {
-            labels: labels,
+            labels: dataset.map(d => d.name),
             datasets: [{
               label: yKey,
-              data: values,
-              backgroundColor: 'rgba(56, 189, 248, 0.6)',
-              borderColor: '#38bdf8',
+              data: dataset.map(d => d[yKey]),
+              backgroundColor: 'rgba(167, 139, 250, 0.6)',
+              borderColor: '#a78bfa',
               borderWidth: 1
             }]
           },
@@ -225,7 +470,8 @@
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { beginAtZero: true }
+              y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+              x: { grid: { display: false } }
             }
           }
         });
@@ -235,73 +481,161 @@
     function renderTable() {
       const tbody = document.getElementById('dataTableBody');
       tbody.innerHTML = '';
-      dataset.forEach((row, idx) => {
+
+      let rows = [...dataset];
+      if (sortKey) {
+        rows.sort((a, b) => {
+          let va = a[sortKey], vb = b[sortKey];
+          if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+          return sortAsc ? va - vb : vb - va;
+        });
+      }
+
+      rows.forEach((row) => {
+        const originalIndex = dataset.findIndex(d => d.name === row.name);
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-800 border-b border-slate-700/50';
+        tr.className = 'hover:bg-slate-800/60 transition cursor-pointer';
+        tr.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+            selectedPlayerName = row.name;
+            document.getElementById('playerSelect').value = row.name;
+            renderPlayerProfile();
+          }
+        };
+
         tr.innerHTML = `
-          <td class="p-2 font-medium text-white">${row.name}</td>
-          <td class="p-2"><input type="number" value="${row['打席']}" class="w-14 bg-slate-950 border border-slate-700 rounded px-1" onchange="updateCell(${idx}, '打席', this.value)"></td>
-          <td class="p-2"><input type="number" value="${row['打數']}" class="w-14 bg-slate-950 border border-slate-700 rounded px-1" onchange="updateCell(${idx}, '打數', this.value)"></td>
-          <td class="p-2"><input type="number" value="${row['安打']}" class="w-14 bg-slate-950 border border-slate-700 rounded px-1" onchange="updateCell(${idx}, '安打', this.value)"></td>
-          <td class="p-2"><input type="number" value="${row['HR']}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1" onchange="updateCell(${idx}, 'HR', this.value)"></td>
-          <td class="p-2"><input type="number" step="0.001" value="${row['avg']}" class="w-16 bg-slate-950 border border-slate-700 rounded px-1" onchange="updateCell(${idx}, 'avg', this.value)"></td>
-          <td class="p-2"><input type="number" step="0.001" value="${row['ops']}" class="w-16 bg-slate-950 border border-slate-700 rounded px-1" onchange="updateCell(${idx}, 'ops', this.value)"></td>
-          <td class="p-2"><input type="number" step="0.001" value="${row['woba']}" class="w-16 bg-slate-950 border border-slate-700 rounded px-1" onchange="updateCell(${idx}, 'woba', this.value)"></td>
-          <td class="p-2"><input type="number" step="0.1" value="${row['wrc+']}" class="w-16 bg-slate-950 border border-slate-700 rounded px-1" onchange="updateCell(${idx}, 'wrc+', this.value)"></td>
-          <td class="p-2 text-center">
-            <button onclick="deleteRow(${idx})" class="text-rose-400 hover:text-rose-200">刪除</button>
+          <td class="p-2.5 font-bold text-white">${row.name}</td>
+          <td class="p-2.5"><input type="number" value="${row['打席']}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateRowVal(${originalIndex}, '打席', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${row['打數']}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateRowVal(${originalIndex}, '打數', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${row['安打']}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateRowVal(${originalIndex}, '安打', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${row['HR']}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateRowVal(${originalIndex}, 'HR', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${row['BB']}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateRowVal(${originalIndex}, 'BB', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${row['K']}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateRowVal(${originalIndex}, 'K', this.value)"></td>
+          <td class="p-2.5 font-mono text-emerald-400">${row.avg.toFixed(3)}</td>
+          <td class="p-2.5 font-mono text-slate-300">${row.obp.toFixed(3)}</td>
+          <td class="p-2.5 font-mono text-slate-300">${row.slg.toFixed(3)}</td>
+          <td class="p-2.5 font-mono text-sky-400">${row.ops.toFixed(3)}</td>
+          <td class="p-2.5 font-mono">${row['ops+'].toFixed(1)}</td>
+          <td class="p-2.5 font-mono text-purple-300">${row.woba.toFixed(3)}</td>
+          <td class="p-2.5 font-mono font-bold text-amber-400">${row['wrc+'].toFixed(1)}</td>
+          <td class="p-2.5 font-mono">${row.ISO.toFixed(3)}</td>
+          <td class="p-2.5 text-center">
+            <button onclick="deleteRow(${originalIndex})" class="text-rose-400 hover:text-rose-200 text-xs px-2 py-1 rounded bg-rose-950/30 border border-rose-900/50">刪除</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    window.updateCell = (idx, field, val) => {
-      dataset[idx][field] = parseFloat(val) || 0;
-      saveState();
+    window.updateRowVal = (idx, key, val) => {
+      dataset[idx][key] = parseFloat(val) || 0;
+      // 自動連動基礎指標重算
+      if (['打席', '打數', '安打'].includes(key)) {
+        if (dataset[idx]['打數'] > 0) {
+          dataset[idx].avg = dataset[idx]['安打'] / dataset[idx]['打數'];
+        }
+      }
+      saveAndRefresh();
     };
 
     window.deleteRow = (idx) => {
+      if (dataset.length <= 1) return;
       dataset.splice(idx, 1);
-      saveState();
+      selectedPlayerName = dataset[0].name;
+      saveAndRefresh();
     };
 
-    document.getElementById('toggleAddForm').addEventListener('click', () => {
-      document.getElementById('addForm').classList.toggle('hidden');
+    function populateSelect() {
+      const sel = document.getElementById('playerSelect');
+      sel.innerHTML = dataset.map(d => `<option value="${d.name}" ${d.name === selectedPlayerName ? 'selected' : ''}>${d.name}</option>`).join('');
+    }
+
+    function renderAll() {
+      populateSelect();
+      renderSummaryCards();
+      renderPlayerProfile();
+      renderQuadrantChart();
+      renderCustomChart();
+      renderTable();
+    }
+
+    // 事件監聽註冊
+    document.getElementById('playerSelect').addEventListener('change', (e) => {
+      selectedPlayerName = e.target.value;
+      renderPlayerProfile();
     });
 
-    document.getElementById('addForm').addEventListener('submit', (e) => {
+    ['customChartType', 'customXVar', 'customYVar'].forEach(id => {
+      document.getElementById(id).addEventListener('change', renderCustomChart);
+    });
+
+    document.querySelectorAll('#tableHeader th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.getAttribute('data-col');
+        if (sortKey === col) {
+          sortAsc = !sortAsc;
+        } else {
+          sortKey = col;
+          sortAsc = false;
+        }
+        renderTable();
+      });
+    });
+
+    document.getElementById('toggleAddBtn').addEventListener('click', () => {
+      document.getElementById('addRecordForm').classList.toggle('hidden');
+    });
+    document.getElementById('cancelAddBtn').addEventListener('click', () => {
+      document.getElementById('addRecordForm').classList.add('hidden');
+    });
+
+    document.getElementById('addRecordForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      const newEntry = {
-        name: document.getElementById('new_name').value,
-        "打席": parseInt(document.getElementById('new_pa').value),
-        "打數": parseInt(document.getElementById('new_ab').value),
-        "安打": parseInt(document.getElementById('new_h').value),
-        "HR": parseInt(document.getElementById('new_hr').value),
-        "avg": parseFloat(document.getElementById('new_avg').value),
-        "ops": parseFloat(document.getElementById('new_ops').value),
-        "woba": parseFloat(document.getElementById('new_woba').value),
-        "wrc+": parseFloat(document.getElementById('new_wrc').value),
-        "1H": 0, "2H": 0, "3H": 0, "BB": 0, "SF高犧": 0, "K": 0, "ops+": 100, "obp": 0, "slg": 0, "ISO": 0
+      const newP = {
+        name: document.getElementById('add_name').value.trim(),
+        "打席": parseInt(document.getElementById('add_pa').value),
+        "打數": parseInt(document.getElementById('add_ab').value),
+        "安打": parseInt(document.getElementById('add_h').value),
+        "HR": parseInt(document.getElementById('add_hr').value),
+        "BB": parseInt(document.getElementById('add_bb').value),
+        "K": parseInt(document.getElementById('add_k').value),
+        avg: parseFloat(document.getElementById('add_avg').value),
+        obp: parseFloat(document.getElementById('add_obp').value),
+        slg: parseFloat(document.getElementById('add_slg').value),
+        ops: parseFloat(document.getElementById('add_ops').value),
+        "wrc+": parseFloat(document.getElementById('add_wrc').value),
+        "1H": parseInt(document.getElementById('add_h').value) - parseInt(document.getElementById('add_hr').value),
+        "2H": 0, "3H": 0, "SF高犧": 0, "ops+": 100, woba: 0.35, ISO: parseFloat(document.getElementById('add_slg').value) - parseFloat(document.getElementById('add_avg').value)
       };
-      dataset.push(newEntry);
-      document.getElementById('addForm').reset();
-      document.getElementById('addForm').classList.add('hidden');
-      saveState();
+      dataset.push(newP);
+      selectedPlayerName = newP.name;
+      document.getElementById('addRecordForm').reset();
+      document.getElementById('addRecordForm').classList.add('hidden');
+      saveAndRefresh();
     });
 
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      localStorage.removeItem('baseball_stats');
-      dataset = JSON.parse(JSON.stringify(defaultData));
-      saveState();
+    document.getElementById('resetDataBtn').addEventListener('click', () => {
+      localStorage.removeItem('rebas_baseball_stats');
+      dataset = JSON.parse(JSON.stringify(rawExcelDataset));
+      selectedPlayerName = dataset[0].name;
+      saveAndRefresh();
     });
 
-    ['chartType', 'xAxisVar', 'yAxisVar'].forEach(id => {
-      document.getElementById(id).addEventListener('change', renderChart);
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      const keys = ['name', '打席', '打數', '安打', '1H', '2H', '3H', 'HR', 'BB', 'SF高犧', 'K', 'avg', 'obp', 'slg', 'ops', 'ops+', 'woba', 'wrc+', 'ISO'];
+      let csv = '\uFEFF' + keys.join(',') + '\n';
+      dataset.forEach(d => {
+        csv += keys.map(k => d[k] !== undefined ? d[k] : '').join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `系壘球員進階數據表_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
     });
 
-    renderTable();
-    renderChart();
+    renderAll();
   </script>
 </body>
 </html>
