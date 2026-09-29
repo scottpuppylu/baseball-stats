@@ -84,7 +84,7 @@
     <!-- 模組一：全隊戰力概覽看板 -->
     <section class="grid grid-cols-2 md:grid-cols-6 gap-3" id="teamSummaryCards"></section>
 
-    <!-- 模組二：個人深度檔案 (五維雷達採用 SDI 慢壘好球帶紀律) -->
+    <!-- 模組二：個人深度檔案 -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
@@ -111,7 +111,7 @@
       </div>
     </section>
 
-    <!-- 模組三：全隊排行榜模組 (整合選項即時指標百科，可伸縮) -->
+    <!-- 模組三：全隊排行榜模組 (可伸縮) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-3">
@@ -129,7 +129,6 @@
         </button>
       </div>
 
-      <!-- 預設收合的排行榜內容區塊 -->
       <div id="leaderboardContent" class="hidden space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 rounded-lg border border-slate-800/80">
           <div class="flex items-center space-x-2">
@@ -172,7 +171,6 @@
           </div>
         </div>
 
-        <!-- 所選指標專屬即時百科卡片 -->
         <div id="leaderboardMetricCard" class="bg-slate-950/80 border border-amber-500/30 rounded-xl p-3.5 space-y-1.5 transition"></div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="leaderboardPodium"></div>
@@ -201,7 +199,7 @@
       </div>
     </section>
 
-    <!-- 模組四：多變量交叉比對引擎與進攻象限分析 -->
+    <!-- 模組四：多變量交叉比對引擎與進攻象限分析 (已修復手機端十字基準線) -->
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">
         <div>
@@ -281,7 +279,7 @@
       </div>
     </section>
 
-    <!-- 模組五：雙視圖總表 (具備 .stat-input 防跑版樣式) -->
+    <!-- 模組五：雙視圖總表 -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
@@ -364,7 +362,7 @@
       </div>
     </section>
 
-    <!-- 模組六：雙人選手數據對決比較 (置於總數據下方，可伸縮) -->
+    <!-- 模組六：雙人選手數據對決比較 (可伸縮) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-3">
@@ -517,7 +515,7 @@
               <span class="font-bold text-white block text-sm">預估創造得分 (RC, Runs Created)</span>
               <p><span class="text-slate-400">定義：</span>由棒球統計之父 Bill James 發明，用於估算打者累計為球隊製造的實體得分數量。</p>
               <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">RC = (H + BB) × TB / (AB + BB)</span></p>
-              <p><span class="text-slate-400">意義：</span>將「上壘因子（H+BB）」乘上「壘包推進因子（TB）」，直觀評估球員在該時間區間內總共換取了多少球隊分數。</p>
+              <p><span class="text-slate-400">意義：</span>將「上壘因子（H+BB）」乘上「壘包推進因子（TB）」，直觀評估球員在該時間區間內總共為球隊換取了多少實體分數。</p>
             </div>
             <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
               <span class="font-bold text-white block text-sm">純長打率 (ISO, Isolated Power)</span>
@@ -689,7 +687,6 @@
     const CROP_RADIUS = 110;
     const CROP_CENTER = 150;
 
-    // 排行榜即時指標百科字典
     const leaderboardGlossary = {
       wrc_plus: {
         title: "加權得分創造 (wRC+, Weighted Runs Created Plus)",
@@ -1264,392 +1261,7 @@
       `).join('');
     }
 
-    function renderLeaderboard(agg) {
-      const metric = document.getElementById('leaderboardMetricSelect').value;
-      const minPa = Number(document.getElementById('leaderboardMinPa').value) || 0;
-
-      // 更新即時指標百科資訊卡
-      const info = leaderboardGlossary[metric] || { title: metric, formula: '', desc: '' };
-      document.getElementById('leaderboardMetricCard').innerHTML = `
-        <div class="flex flex-wrap items-center justify-between gap-1">
-          <span class="font-bold text-amber-300 text-xs">${info.title}</span>
-          ${info.formula ? `<span class="font-mono text-sky-400 text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800">${info.formula}</span>` : ''}
-        </div>
-        <p class="text-[11px] text-slate-300 leading-relaxed">${info.desc}</p>
-      `;
-
-      let filtered = agg.players.filter(p => p.pa >= minPa);
-
-      const isAscending = metric.endsWith('_asc');
-      const realKey = isAscending ? metric.replace('_asc', '') : metric;
-
-      filtered.sort((a, b) => {
-        const valA = a[realKey] ?? 0;
-        const valB = b[realKey] ?? 0;
-        return isAscending ? valA - valB : valB - valA;
-      });
-
-      const formatVal = (val, key) => {
-        if (['avg', 'obp', 'slg', 'iso', 'babip', 'woba', 'seca'].includes(key)) return Number(val).toFixed(3);
-        if (['ops', 'sdi'].includes(key)) return (val >= 0 ? '+' : '') + Number(val).toFixed(3);
-        if (['wrc_plus', 'ops_plus'].includes(key)) return Number(val).toFixed(1);
-        if (['bb_pct', 'k_pct', 'contact_pct'].includes(key)) return (Number(val) * 100).toFixed(1) + '%';
-        if (key === 'bb_k_ratio') return Number(val).toFixed(2);
-        return val;
-      };
-
-      const podium = document.getElementById('leaderboardPodium');
-      const top3 = filtered.slice(0, 3);
-      const podiumColors = [
-        { border: 'border-amber-400/60', bg: 'bg-amber-950/20', text: 'text-amber-300', title: '冠軍 / 1st' },
-        { border: 'border-slate-300/50', bg: 'bg-slate-800/30', text: 'text-slate-200', title: '亞軍 / 2nd' },
-        { border: 'border-amber-700/50', bg: 'bg-amber-900/10', text: 'text-amber-600', title: '季軍 / 3rd' }
-      ];
-
-      podium.innerHTML = top3.map((p, idx) => `
-        <div class="border ${podiumColors[idx].border} ${podiumColors[idx].bg} rounded-xl p-3 flex items-center space-x-3">
-          <div class="text-xl font-black ${podiumColors[idx].text} w-6 text-center">${idx + 1}</div>
-          ${renderAvatarElement(p.name, 'w-10 h-10 text-sm')}
-          <div class="flex-1">
-            <div class="flex justify-between items-center">
-              <span class="font-bold text-white text-sm">${p.name}</span>
-              <span class="text-[10px] font-mono ${podiumColors[idx].text}">${podiumColors[idx].title}</span>
-            </div>
-            <div class="flex justify-between items-baseline mt-0.5">
-              <span class="text-[11px] text-slate-400">PA: ${p.pa}</span>
-              <span class="text-base font-black font-mono text-sky-400">${formatVal(p[realKey], realKey)}</span>
-            </div>
-          </div>
-        </div>
-      `).join('');
-
-      const tbody = document.getElementById('leaderboardTableBody');
-      tbody.innerHTML = '';
-      filtered.forEach((p, idx) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-800/60 transition cursor-pointer';
-        tr.onclick = () => {
-          selectedPlayerName = p.name;
-          document.getElementById('playerSelect').value = p.name;
-          renderPlayerProfile(agg);
-        };
-
-        const rankBadge = idx < 3
-          ? `<span class="px-2 py-0.5 rounded-full font-bold text-[10px] ${idx === 0 ? 'bg-amber-500/20 text-amber-300' : idx === 1 ? 'bg-slate-300/20 text-slate-200' : 'bg-amber-700/20 text-amber-500'}">${idx + 1}</span>`
-          : `<span class="text-slate-500 font-mono">${idx + 1}</span>`;
-
-        tr.innerHTML = `
-          <td class="p-2.5 text-center">${rankBadge}</td>
-          <td class="p-2.5 font-bold text-white flex items-center space-x-2">
-            ${renderAvatarElement(p.name, 'w-5 h-5 text-[9px]')}
-            <span>${p.name}</span>
-          </td>
-          <td class="p-2.5 text-center">${p.pa}</td>
-          <td class="p-2.5 text-center">${p.ab}</td>
-          <td class="p-2.5 text-center">${p.h}</td>
-          <td class="p-2.5 text-center">${p.hr}</td>
-          <td class="p-2.5 text-center font-mono">${p.avg.toFixed(3)}</td>
-          <td class="p-2.5 text-center font-mono">${p.obp.toFixed(3)}</td>
-          <td class="p-2.5 text-center font-mono">${p.slg.toFixed(3)}</td>
-          <td class="p-2.5 text-center font-mono">${p.ops.toFixed(3)}</td>
-          <td class="p-2.5 text-center font-mono">${p.wrc_plus.toFixed(1)}</td>
-          <td class="p-2.5 text-center font-mono font-bold text-amber-400 text-sm">${formatVal(p[realKey], realKey)}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function populateCompareSelect(players) {
-      const selA = document.getElementById('comparePlayerA');
-      const selB = document.getElementById('comparePlayerB');
-      if (!selA || !selB || players.length === 0) return;
-
-      if (!comparePlayerAName || !players.find(p => p.name === comparePlayerAName)) {
-        comparePlayerAName = players[0].name;
-      }
-      if (!comparePlayerBName || !players.find(p => p.name === comparePlayerBName)) {
-        comparePlayerBName = players.length > 1 ? players[1].name : players[0].name;
-      }
-
-      selA.innerHTML = players.map(d => `<option value="${d.name}" ${d.name === comparePlayerAName ? 'selected' : ''}>${d.name}</option>`).join('');
-      selB.innerHTML = players.map(d => `<option value="${d.name}" ${d.name === comparePlayerBName ? 'selected' : ''}>${d.name}</option>`).join('');
-    }
-
-    function renderComparison(agg) {
-      const pList = agg.players;
-      if (pList.length === 0) return;
-
-      populateCompareSelect(pList);
-
-      const pA = pList.find(p => p.name === comparePlayerAName) || pList[0];
-      const pB = pList.find(p => p.name === comparePlayerBName) || (pList.length > 1 ? pList[1] : pList[0]);
-
-      document.getElementById('compareHeadA').textContent = pA.name;
-      document.getElementById('compareHeadB').textContent = pB.name;
-
-      document.getElementById('compareCardA').innerHTML = `
-        <div class="flex items-center space-x-3">
-          ${renderAvatarElement(pA.name, 'w-12 h-12 text-lg')}
-          <div class="flex-1">
-            <div class="flex justify-between items-baseline">
-              <span class="text-base font-black text-sky-400">${pA.name}</span>
-              <span class="text-xs font-mono text-slate-400">PA: ${pA.pa}</span>
-            </div>
-            <p class="text-xs text-slate-300 font-mono mt-0.5">三圍: ${pA.avg.toFixed(3)} / ${pA.obp.toFixed(3)} / ${pA.slg.toFixed(3)}</p>
-            <p class="text-[11px] text-slate-400 font-mono">OPS: ${pA.ops.toFixed(3)} | wRC+: ${pA.wrc_plus.toFixed(1)} | SDI: ${(pA.sdi >= 0 ? '+' : '') + pA.sdi.toFixed(3)}</p>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('compareCardB').innerHTML = `
-        <div class="flex items-center space-x-3">
-          ${renderAvatarElement(pB.name, 'w-12 h-12 text-lg')}
-          <div class="flex-1">
-            <div class="flex justify-between items-baseline">
-              <span class="text-base font-black text-amber-400">${pB.name}</span>
-              <span class="text-xs font-mono text-slate-400">PA: ${pB.pa}</span>
-            </div>
-            <p class="text-xs text-slate-300 font-mono mt-0.5">三圍: ${pB.avg.toFixed(3)} / ${pB.obp.toFixed(3)} / ${pB.slg.toFixed(3)}</p>
-            <p class="text-[11px] text-slate-400 font-mono">OPS: ${pB.ops.toFixed(3)} | wRC+: ${pB.wrc_plus.toFixed(1)} | SDI: ${(pB.sdi >= 0 ? '+' : '') + pB.sdi.toFixed(3)}</p>
-          </div>
-        </div>
-      `;
-
-      const metricsMeta = [
-        { key: 'pa', label: '打席數 (PA)', fmt: v => v },
-        { key: 'ab', label: '打數 (AB)', fmt: v => v },
-        { key: 'h', label: '安打數 (H)', fmt: v => v },
-        { key: 'hr', label: '全壘打 (HR)', fmt: v => v },
-        { key: 'avg', label: '打擊率 (AVG)', fmt: v => v.toFixed(3) },
-        { key: 'obp', label: '上壘率 (OBP)', fmt: v => v.toFixed(3) },
-        { key: 'slg', label: '長打率 (SLG)', fmt: v => v.toFixed(3) },
-        { key: 'ops', label: '整體攻擊指數 (OPS)', fmt: v => v.toFixed(3) },
-        { key: 'ops_plus', label: '標準化攻擊指數 (OPS+)', fmt: v => v.toFixed(1) },
-        { key: 'woba', label: '加權上壘率 (wOBA)', fmt: v => v.toFixed(3) },
-        { key: 'wrc_plus', label: '加權得分創造 (wRC+)', fmt: v => v.toFixed(1) },
-        { key: 'iso', label: '純長打率 (ISO)', fmt: v => v.toFixed(3) },
-        { key: 'babip', label: '場內安打率 (BABIP)', fmt: v => v.toFixed(3) },
-        { key: 'rc', label: '預估創造得分 (RC)', fmt: v => v.toFixed(1) },
-        { key: 'sdi', label: '慢壘好球帶紀律 (SDI)', fmt: v => (v >= 0 ? '+' : '') + v.toFixed(3) },
-        { key: 'contact_pct', label: '擊球掌握率 (Contact%)', fmt: v => (v * 100).toFixed(1) + '%' },
-        { key: 'bb_pct', label: '四壞率 (BB%)', fmt: v => (v * 100).toFixed(1) + '%' },
-        { key: 'k_pct', label: '三振率 (K%) [低佳]', fmt: v => (v * 100).toFixed(1) + '%', lowerBetter: true },
-        { key: 'bb_k_ratio', label: '保送三振比 (BB/K)', fmt: v => v.toFixed(2) }
-      ];
-
-      const tbody = document.getElementById('compareTableBody');
-      tbody.innerHTML = '';
-
-      metricsMeta.forEach(m => {
-        const valA = Number(pA[m.key]) || 0;
-        const valB = Number(pB[m.key]) || 0;
-        const lower = m.lowerBetter || false;
-
-        let leadHtml = '';
-        let classA = 'font-mono text-slate-300';
-        let classB = 'font-mono text-slate-300';
-
-        if (valA === valB) {
-          leadHtml = '<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">平手</span>';
-        } else if (lower ? valA < valB : valA > valB) {
-          leadHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-mono font-bold">${pA.name} 領先</span>`;
-          classA = 'font-mono text-sky-400 font-bold';
-        } else {
-          leadHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800/60 font-mono font-bold">${pB.name} 領先</span>`;
-          classB = 'font-mono text-amber-400 font-bold';
-        }
-
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-800/50 transition';
-        tr.innerHTML = `
-          <td class="p-2.5 font-medium text-slate-200">${m.label}</td>
-          <td class="p-2.5 text-center ${classA}">${m.fmt(valA)}</td>
-          <td class="p-2.5 text-center">${leadHtml}</td>
-          <td class="p-2.5 text-center ${classB}">${m.fmt(valB)}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      const prContactA = getPercentile(pA.avg, 'avg', pList);
-      const prPowerA = getPercentile(pA.iso, 'iso', pList);
-      const prDisciplineA = getPercentile(pA.sdi, 'sdi', pList);
-      const prControlA = getPercentile(pA.k_pct, 'k_pct', pList, true);
-      const prWrcA = getPercentile(pA.wrc_plus, 'wrc_plus', pList);
-
-      const prContactB = getPercentile(pB.avg, 'avg', pList);
-      const prPowerB = getPercentile(pB.iso, 'iso', pList);
-      const prDisciplineB = getPercentile(pB.sdi, 'sdi', pList);
-      const prControlB = getPercentile(pB.k_pct, 'k_pct', pList, true);
-      const prWrcB = getPercentile(pB.wrc_plus, 'wrc_plus', pList);
-
-      const radarCanvas = document.getElementById('compareRadarChart');
-      if (radarCanvas) {
-        const radarCtx = radarCanvas.getContext('2d');
-        if (compareRadarChartInst) compareRadarChartInst.destroy();
-
-        compareRadarChartInst = new Chart(radarCtx, {
-          type: 'radar',
-          data: {
-            labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '好球帶紀律 (SDI)', '擊球掌握 (1-K%)', '進攻產出 (wRC+)'],
-            datasets: [
-              {
-                label: `${pA.name} (藍方)`,
-                data: [prContactA, prPowerA, prDisciplineA, prControlA, prWrcA],
-                backgroundColor: 'rgba(56, 189, 248, 0.25)',
-                borderColor: '#38bdf8',
-                pointBackgroundColor: '#38bdf8',
-                borderWidth: 2
-              },
-              {
-                label: `${pB.name} (金方)`,
-                data: [prContactB, prPowerB, prDisciplineB, prControlB, prWrcB],
-                backgroundColor: 'rgba(245, 158, 11, 0.25)',
-                borderColor: '#f59e0b',
-                pointBackgroundColor: '#f59e0b',
-                borderWidth: 2
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              r: {
-                min: 0, max: 100, ticks: { stepSize: 20, display: false },
-                grid: { color: 'rgba(255, 255, 255, 0.08)' },
-                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                pointLabels: { color: '#94a3b8', font: { size: 10 } }
-              }
-            },
-            plugins: {
-              legend: {
-                display: true,
-                position: 'top',
-                labels: { color: '#cbd5e1', font: { size: 11 }, boxWidth: 12 }
-              }
-            }
-          }
-        });
-      }
-    }
-
-    function getPercentile(val, key, pList, invert = false) {
-      const vals = pList.map(d => {
-        if (key === 'bb_pct') return d.pa > 0 ? d.bb / d.pa : 0;
-        if (key === 'k_pct') return d.pa > 0 ? d.k / d.pa : 0;
-        if (key === 'sdi') return d.pa > 0 ? (d.bb - 1.5 * d.k) / d.pa : 0;
-        return d[key] || 0;
-      });
-      const min = Math.min(...vals);
-      const max = Math.max(...vals);
-      if (max === min) return 50;
-      let pr = ((val - min) / (max - min)) * 100;
-      if (invert) pr = 100 - pr;
-      return Math.round(Math.max(5, Math.min(99, pr)));
-    }
-
-    function renderPlayerProfile(agg) {
-      const pList = agg.players;
-      let p = pList.find(d => d.name === selectedPlayerName);
-      if (!p && pList.length > 0) {
-        p = pList[0];
-        selectedPlayerName = p.name;
-      }
-      if (!p) {
-        document.getElementById('playerProfileCard').innerHTML = '<span class="text-xs text-slate-500">該時間區間無紀錄</span>';
-        return;
-      }
-
-      const p_sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
-      const k_pct = p.pa > 0 ? p.k / p.pa : 0;
-      const prContact = getPercentile(p.avg, 'avg', pList);
-      const prPower = getPercentile(p.iso, 'iso', pList);
-      const prDiscipline = getPercentile(p_sdi, 'sdi', pList);
-      const prControl = getPercentile(k_pct, 'k_pct', pList, true);
-      const prWrc = getPercentile(p.wrc_plus, 'wrc_plus', pList);
-
-      document.getElementById('playerProfileCard').innerHTML = `
-        <div class="flex items-center space-x-4 border-b border-slate-800 pb-3">
-          <div class="relative group cursor-pointer" onclick="triggerAvatarUpload()" title="點擊自訂頭像裁切">
-            ${renderAvatarElement(p.name, 'w-16 h-16 text-xl')}
-            <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white font-medium">裁切</div>
-          </div>
-          <div class="flex-1">
-            <span class="text-xl font-black text-white">${p.name}</span>
-            <p class="text-xs text-slate-400 mt-1">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 三振: ${p.k}</p>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
-            <span class="text-slate-400 block text-[10px]">打擊三圍 (AVG/OBP/SLG)</span>
-            <span class="font-mono text-emerald-400 font-bold">${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}</span>
-          </div>
-          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
-            <span class="text-slate-400 block text-[10px]">攻擊指數 (OPS / OPS+)</span>
-            <span class="font-mono text-sky-400 font-bold">${p.ops.toFixed(3)} / ${p.ops_plus.toFixed(1)}</span>
-          </div>
-          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
-            <span class="text-slate-400 block text-[10px]">加權得分創造 (wRC+)</span>
-            <span class="font-mono text-amber-400 font-bold">${p.wrc_plus.toFixed(1)}</span>
-          </div>
-          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
-            <span class="text-slate-400 block text-[10px]">選球紀律 (SDI) / BABIP</span>
-            <span class="font-mono text-purple-400 font-bold">${p_sdi >= 0 ? '+' : ''}${p_sdi.toFixed(3)} / ${p.babip.toFixed(3)}</span>
-          </div>
-        </div>
-      `;
-
-      const radarCtx = document.getElementById('radarChart').getContext('2d');
-      if (radarChartInst) radarChartInst.destroy();
-      radarChartInst = new Chart(radarCtx, {
-        type: 'radar',
-        data: {
-          labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '好球帶紀律 (SDI)', '擊球掌握 (1-K%)', '進攻產出 (wRC+)'],
-          datasets: [{
-            label: `${p.name} 能力 PR 值`,
-            data: [prContact, prPower, prDiscipline, prControl, prWrc],
-            backgroundColor: 'rgba(56, 189, 248, 0.25)',
-            borderColor: '#38bdf8',
-            pointBackgroundColor: '#38bdf8',
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            r: {
-              min: 0, max: 100, ticks: { stepSize: 20, display: false },
-              grid: { color: 'rgba(255, 255, 255, 0.08)' },
-              angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-              pointLabels: { color: '#94a3b8', font: { size: 10 } }
-            }
-          },
-          plugins: { legend: { display: false } }
-        }
-      });
-
-      const donutCtx = document.getElementById('donutChart').getContext('2d');
-      if (donutChartInst) donutChartInst.destroy();
-      donutChartInst = new Chart(donutCtx, {
-        type: 'doughnut',
-        data: {
-          labels: ['1H', '2H', '3H', 'HR'],
-          datasets: [{
-            data: [p.h1, p.h2, p.h3, p.hr],
-            backgroundColor: ['#38bdf8', '#34d399', '#fbbf24', '#f87171'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } } },
-          cutout: '65%'
-        }
-      });
-    }
-
+    // 核心打擊型態象限分析 (使用自訂 afterDraw 外掛，保證手機豎綠線 100% 精準可見)
     function renderQuadrantChart(agg) {
       const pList = agg.players;
       const ctx = document.getElementById('quadrantChart').getContext('2d');
@@ -1661,7 +1273,8 @@
           datasets: [{
             data: pList.map(d => ({ x: d.obp, y: d.slg, name: d.name })),
             backgroundColor: '#38bdf8',
-            pointRadius: 6
+            pointRadius: 6,
+            hoverRadius: 8
           }]
         },
         options: {
@@ -1673,15 +1286,59 @@
           },
           scales: {
             x: {
-              title: { display: true, text: `上壘率 (OBP) - 均值: ${agg.teamObp.toFixed(3)}`, color: '#64748b' },
-              grid: { color: c => Math.abs(c.tick.value - agg.teamObp) < 0.03 ? 'rgba(52, 211, 153, 0.7)' : 'rgba(255,255,255,0.05)' }
+              title: { display: true, text: `上壘率 (OBP) - 均值: ${agg.teamObp.toFixed(3)}`, color: '#94a3b8' },
+              grid: { color: 'rgba(255,255,255,0.05)' }
             },
             y: {
-              title: { display: true, text: `長打率 (SLG) - 均值: ${agg.teamSlg.toFixed(3)}`, color: '#64748b' },
-              grid: { color: c => Math.abs(c.tick.value - agg.teamSlg) < 0.05 ? 'rgba(52, 211, 153, 0.7)' : 'rgba(255,255,255,0.05)' }
+              title: { display: true, text: `長打率 (SLG) - 均值: ${agg.teamSlg.toFixed(3)}`, color: '#94a3b8' },
+              grid: { color: 'rgba(255,255,255,0.05)' }
             }
           }
-        }
+        },
+        plugins: [{
+          id: 'quadrantCrosshair',
+          afterDraw(chart) {
+            if (!chart.chartArea) return;
+            const { ctx, chartArea: { top, bottom, left, right }, scales: { x, y } } = chart;
+            const xPixel = x.getPixelForValue(agg.teamObp);
+            const yPixel = y.getPixelForValue(agg.teamSlg);
+
+            ctx.save();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#34d399'; // 翡翠綠高對比十字線
+            ctx.setLineDash([4, 4]);
+
+            // 垂直均值線 (X = OBP 團隊平均，手機與桌機保證 100% 絕對可見)
+            if (xPixel >= left && xPixel <= right) {
+              ctx.beginPath();
+              ctx.moveTo(xPixel, top);
+              ctx.lineTo(xPixel, bottom);
+              ctx.stroke();
+
+              // 頂部數值標籤
+              ctx.fillStyle = '#34d399';
+              ctx.font = 'bold 10px ui-monospace, SFMono-Regular, monospace';
+              ctx.textAlign = 'center';
+              ctx.fillText(`OBP: ${agg.teamObp.toFixed(3)}`, xPixel, top + 12);
+            }
+
+            // 水平均值線 (Y = SLG 團隊平均)
+            if (yPixel >= top && yPixel <= bottom) {
+              ctx.beginPath();
+              ctx.moveTo(left, yPixel);
+              ctx.lineTo(right, yPixel);
+              ctx.stroke();
+
+              // 側邊數值標籤
+              ctx.fillStyle = '#34d399';
+              ctx.font = 'bold 10px ui-monospace, SFMono-Regular, monospace';
+              ctx.textAlign = 'left';
+              ctx.fillText(`SLG: ${agg.teamSlg.toFixed(3)}`, left + 4, yPixel - 4);
+            }
+
+            ctx.restore();
+          }
+        }]
       });
     }
 
