@@ -35,7 +35,7 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
   <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- 頂部導覽列：更新為淡江航太系壘與作者盧宣嘉 -->
+    <!-- 頂部導覽列：淡江航太系壘與作者盧宣嘉 -->
     <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 gap-4">
       <div>
         <div class="flex items-center space-x-3">
@@ -51,6 +51,10 @@
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openGlossaryModal()" class="bg-sky-950/60 hover:bg-sky-900/80 border border-sky-700/60 text-sky-300 text-xs px-3.5 py-2 rounded-lg transition font-medium flex items-center gap-1.5">
+          <span>📖</span>
+          <span>專有名詞圖書館</span>
+        </button>
         <button id="exportCsvBtn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-lg transition font-medium">匯出當前區間 CSV</button>
         <button id="resetAllDataBtn" class="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/40 text-rose-300 text-xs px-3.5 py-2 rounded-lg transition font-medium">重置為2025初始數據</button>
       </div>
@@ -283,13 +287,130 @@
         </button>
       </div>
 
-      <!-- 操作按鈕 (純本地即時儲存) -->
+      <!-- 操作按鈕 -->
       <div class="flex items-center justify-end w-full space-x-2 border-t border-slate-800 pt-3">
         <button onclick="closeCropperModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg text-xs transition">
           取消
         </button>
         <button onclick="confirmCropAndSave()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-1.5 rounded-lg text-xs shadow-lg transition">
           完成裁切並儲存
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 專有名詞圖書館彈窗 (Glossary Modal) -->
+  <div id="glossaryModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- 彈窗頂部 -->
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-3">
+          <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold">GLOSSARY</span>
+          <h3 class="text-lg font-bold text-white tracking-tight">淡江航太系壘 | 專有名詞圖書館</h3>
+        </div>
+        <button onclick="closeGlossaryModal()" class="text-slate-400 hover:text-white text-2xl font-bold leading-none">&times;</button>
+      </div>
+
+      <!-- 滾動內容區 -->
+      <div class="p-6 overflow-y-auto space-y-8 text-xs text-slate-300 leading-relaxed">
+
+        <!-- 區塊一：特化慢壘指標 -->
+        <section class="space-y-3 bg-sky-950/20 border border-sky-800/40 rounded-xl p-4">
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            <h4 class="text-sm font-bold text-sky-300">慢壘特化指標：好球帶紀律指數 (Softball Discipline Index, SDI)</h4>
+          </div>
+          <div class="space-y-2 pl-4">
+            <p><span class="font-semibold text-slate-200">【定義】</span>專為慢速壘球運動特性研發之淨好球帶控制指標，用於五維能力雷達圖中取代失真的純四壞率（BB%）。</p>
+            <p><span class="font-semibold text-slate-200">【計算公式】</span><span class="font-mono text-amber-300 font-bold">SDI = (BB - 1.5 × K) / PA</span></p>
+            <p><span class="font-semibold text-slate-200">【加權邏輯與代表意義】</span>慢壘具備「好球帶廣、球速慢、開局多為 1 好 1 壞」之特性，強打者以積極攻擊好球為主，四壞保送天然偏少（全隊 BB% 僅 12%）；相對地，在慢壘吞 K 代價極高（全隊 K% 僅 6.5%），通常代表追打惡劣壞球。公式給予三振 1.5 倍懲罰權重，破除「不保送就等於不會選球」的盲點，能真實回饋積極出棒且從不吞 K 的強打者（如簡承均 38 打席 0K 獲得 PR 64 評價）。</p>
+          </div>
+        </section>
+
+        <!-- 區塊二：賽伯計量進階指標 -->
+        <section class="space-y-3">
+          <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <h4 class="text-sm font-bold text-emerald-300">賽伯計量進階指標 (Sabermetrics)</h4>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">純長打率 (ISO, Isolated Power)</span>
+              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SLG - AVG</span></p>
+              <p class="mt-1">排除一壘安打水分，純粹衡量擊出二壘安打以上的淨長打爆發力。慢壘 ISO 高於 .250 即屬重砲。</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">標準化攻擊指數 (OPS+)</span>
+              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">(OPS / Team_OPS) × 100</span></p>
+              <p class="mt-1">以全隊平均 OPS 為 100 基準，評估球員相較於隊內平均優異的百分比（如 135 代表優於隊均 35%）。</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">加權上壘率 (wOBA, Weighted OBP)</span>
+              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">(0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA</span></p>
+              <p class="mt-1">根據得分期望模型為各類安打賦予不同線性權重，比傳統 OPS 更嚴密科學地評估真實進攻產能。</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">加權得分創造 (wRC+, Weighted Runs Created Plus)</span>
+              <p><span class="text-slate-400">定義：</span>以全隊 100 為基準的進攻效率標準化指數。</p>
+              <p class="mt-1">綜合上壘與長打的終極產出效率，排除賽制與場地偏誤，為現代賽伯計量學公認最客觀的身價指標。</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 區塊三：傳統打擊三圍與進攻指數 -->
+        <section class="space-y-3">
+          <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+            <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+            <h4 class="text-sm font-bold text-purple-300">打擊三圍與傳統進攻指數</h4>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">打擊率 (AVG, Batting Average)</span>
+              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">H / AB</span></p>
+              <p class="mt-1">每打數擊出安打的機率，反映最基礎的安打產出頻率。</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">上壘率 (OBP, On-Base Percentage)</span>
+              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">(H + BB) / (AB + BB + SF)</span></p>
+              <p class="mt-1">衡量打者站上打擊區「避免製造出局數」的機率，攻勢延續的關鍵指標。</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">長打率 (SLG, Slugging Percentage)</span>
+              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">(1H + 2×2H + 3×3H + 4×HR) / AB</span></p>
+              <p class="mt-1">平均每打數可推進的總壘打數（TB），評估長程推進威力。</p>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+              <span class="font-bold text-white block mb-1">整體攻擊指數 (OPS, On-base Plus Slugging)</span>
+              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OBP + SLG</span></p>
+              <p class="mt-1">結合上壘能力與長打威力的經典綜合成績指標。</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 區塊四：基礎計數指標清單 -->
+        <section class="space-y-3">
+          <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <h4 class="text-sm font-bold text-slate-300">基礎計數指標速查</h4>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pl-2 text-[11px]">
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打席 (PA)</span>總打擊輪次 = AB + BB + SF</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打數 (AB)</span>有效打擊數 = PA - BB - SF</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">安打 (H)</span>1H + 2H + 3H + HR</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">四壞 (BB)</span>累計 4 顆壞球保送上一壘</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">三振 (K)</span>累計 3 顆好球出局</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">高飛犧牲打 (SF)</span>出局但護送三壘跑者回本壘得分</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">百分位 (PR)</span>將數據正規化至 0–100 之相對排名</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">擊球掌握 (1-K%)</span>1 - (K / PA)，衡量避免無效出局能力</div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- 彈窗底端關閉鈕 -->
+      <div class="p-4 border-t border-slate-800 bg-slate-950 flex justify-end">
+        <button onclick="closeGlossaryModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-1.5 rounded-lg text-xs font-medium transition">
+          關閉圖書館
         </button>
       </div>
     </div>
@@ -346,7 +467,14 @@
       renderAll();
     }
 
-    // 純本地頭像渲染引擎 (無外部網路依賴、無破圖 404 報錯)
+    // 專有名詞圖書館彈窗控制
+    window.openGlossaryModal = function() {
+      document.getElementById('glossaryModal').classList.remove('hidden');
+    };
+    window.closeGlossaryModal = function() {
+      document.getElementById('glossaryModal').classList.add('hidden');
+    };
+
     function renderAvatarElement(name, sizeClass = 'w-7 h-7 text-xs') {
       const avatarData = playerAvatars[name];
       if (avatarData) {
@@ -498,7 +626,6 @@
       drawCropCanvas();
     });
 
-    // 裁切完成後直接寫入 LocalStorage
     window.confirmCropAndSave = function() {
       if (!activeCropImage) return;
 
