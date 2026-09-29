@@ -11,7 +11,7 @@
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
 
-    /* 表格專用防跑版輸入框樣式 (強制深色背景與高對比文字) */
+    /* 表格專用防跑版輸入框樣式 (深黑底高對比文字) */
     .stat-input {
       width: 3.25rem !important;
       background-color: #020617 !important;
@@ -39,10 +39,10 @@
     <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 gap-4">
       <div>
         <div class="flex items-center space-x-3">
-          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">DEPLOYED AVATAR SYSTEM</span>
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">SDI SABERMETRICS</span>
           <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">系壘賽事數據與球員檔案庫</h1>
         </div>
-        <p class="text-sm text-slate-400 mt-1">支援個人頭像裁切匯出、全站靜態部署、時間序列日誌分析與動態指標運算</p>
+        <p class="text-sm text-slate-400 mt-1">導入慢壘專用好球帶紀律指數 (SDI)、個人頭像裁切、時間序列分析與動態指標運算</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button id="exportCsvBtn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-lg transition font-medium">匯出當前區間 CSV</button>
@@ -77,12 +77,12 @@
     <!-- 模組一：全隊戰力概覽與排行榜 -->
     <section class="grid grid-cols-2 md:grid-cols-6 gap-3" id="teamSummaryCards"></section>
 
-    <!-- 模組二：個人深度檔案 -->
+    <!-- 模組二：個人深度檔案 (五維雷達升級為 SDI 慢壘好球帶紀律) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <h2 class="text-base font-bold text-sky-400">球員深度檔案與個人能力</h2>
-          <p class="text-xs text-slate-400">點擊頭像即可在線裁切並下載圖檔，放入 avatars 資料夾即可推送至全網</p>
+          <p class="text-xs text-slate-400">五維雷達圖採用慢壘加權選球指標 SDI：綜合四壞保送與三振懲罰評估好球帶辨識度</p>
         </div>
         <div class="flex items-center space-x-2">
           <label class="text-xs text-slate-400">選取選手：</label>
@@ -156,7 +156,7 @@
       </div>
     </section>
 
-    <!-- 模組四：雙視圖總表 (已全面修復 input 樣式) -->
+    <!-- 模組四：雙視圖總表 (具備 .stat-input 防跑版樣式) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
@@ -186,7 +186,7 @@
         </div>
       </form>
 
-      <!-- 匯總表格 (加入精確寬度與防跑版樣式) -->
+      <!-- 匯總表格 -->
       <div id="viewSummary" class="overflow-x-auto rounded-lg border border-slate-800">
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-950 text-slate-400 uppercase select-none">
@@ -630,6 +630,8 @@
         p.ops_plus = teamOps > 0 ? (p.ops / teamOps) * 100 : 100;
         p.woba = p.pa > 0 ? (0.69 * p.bb + 0.89 * p.h1 + 1.27 * p.h2 + 1.62 * p.h3 + 2.10 * p.hr) / p.pa : 0;
         p.wrc_plus = p.ops_plus;
+        // 慢壘加權選球能力指數 (SDI)
+        p.sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
       });
 
       return {
@@ -665,10 +667,12 @@
       `).join('');
     }
 
+    // 百分位計算支援 SDI 慢壘選球
     function getPercentile(val, key, pList, invert = false) {
       const vals = pList.map(d => {
         if (key === 'bb_pct') return d.pa > 0 ? d.bb / d.pa : 0;
         if (key === 'k_pct') return d.pa > 0 ? d.k / d.pa : 0;
+        if (key === 'sdi') return d.pa > 0 ? (d.bb - 1.5 * d.k) / d.pa : 0;
         return d[key] || 0;
       });
       const min = Math.min(...vals);
@@ -691,11 +695,11 @@
         return;
       }
 
-      const bb_pct = p.pa > 0 ? p.bb / p.pa : 0;
+      const p_sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
       const k_pct = p.pa > 0 ? p.k / p.pa : 0;
       const prContact = getPercentile(p.avg, 'avg', pList);
       const prPower = getPercentile(p.iso, 'iso', pList);
-      const prDiscipline = getPercentile(bb_pct, 'bb_pct', pList);
+      const prDiscipline = getPercentile(p_sdi, 'sdi', pList);
       const prControl = getPercentile(k_pct, 'k_pct', pList, true);
       const prWrc = getPercentile(p.wrc_plus, 'wrc_plus', pList);
 
@@ -730,8 +734,8 @@
             <span class="font-mono text-amber-400 font-bold">${p.wrc_plus.toFixed(1)}</span>
           </div>
           <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
-            <span class="text-slate-400 block text-[10px]">純長打率 (ISO) / wOBA</span>
-            <span class="font-mono text-purple-400 font-bold">${p.iso.toFixed(3)} / ${p.woba.toFixed(3)}</span>
+            <span class="text-slate-400 block text-[10px]">選球紀律 (SDI) / wOBA</span>
+            <span class="font-mono text-purple-400 font-bold">${p_sdi >= 0 ? '+' : ''}${p_sdi.toFixed(3)} / ${p.woba.toFixed(3)}</span>
           </div>
         </div>
       `;
@@ -741,7 +745,7 @@
       radarChartInst = new Chart(radarCtx, {
         type: 'radar',
         data: {
-          labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '選球耐心 (BB%)', '擊球控制 (1-K%)', '進攻產出 (wRC+)'],
+          labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '好球帶紀律 (SDI)', '擊球掌握 (1-K%)', '進攻產出 (wRC+)'],
           datasets: [{
             label: `${p.name} 能力 PR 值`,
             data: [prContact, prPower, prDiscipline, prControl, prWrc],
@@ -878,7 +882,6 @@
       }
     }
 
-    // 匯總表渲染引擎：採用固定 .stat-input 類別，確保深底白字與精確寬度
     function renderSummaryTable(agg) {
       const tbody = document.getElementById('summaryTableBody');
       tbody.innerHTML = '';
