@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>系壘進階數據庫 | 賽伯計量分析與球員頭像系統</title>
+  <title>系壘進階數據庫 | 賽伯計量分析與自訂頭像裁切系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -18,10 +18,10 @@
     <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 gap-4">
       <div>
         <div class="flex items-center space-x-3">
-          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">PLAYER AVATAR SYSTEM</span>
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">IG-STYLE CROPPER</span>
           <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">系壘賽事數據與球員檔案庫</h1>
         </div>
-        <p class="text-sm text-slate-400 mt-1">支援個人頭像自訂、時間序列日誌分析、動態指標運算與區間批次操作</p>
+        <p class="text-sm text-slate-400 mt-1">支援個人頭像自訂拖曳裁切、時間序列日誌分析、動態指標運算與區間批次操作</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button id="exportCsvBtn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-lg transition font-medium">匯出當前區間 CSV</button>
@@ -61,7 +61,7 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <h2 class="text-base font-bold text-sky-400">球員深度檔案與個人能力</h2>
-          <p class="text-xs text-slate-400">點擊頭像即可直接上傳本機照片或輸入圖片網址</p>
+          <p class="text-xs text-slate-400">點擊頭像即可開啟 Instagram 風格取景窗自由平移、縮放與旋轉裁切</p>
         </div>
         <div class="flex items-center space-x-2">
           <label class="text-xs text-slate-400">選取選手：</label>
@@ -70,13 +70,10 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-        <!-- 個人基本資訊與頭像特寫 -->
         <div class="md:col-span-4 space-y-4" id="playerProfileCard"></div>
-        <!-- 五維能力雷達圖 -->
         <div class="md:col-span-5 h-72">
           <canvas id="radarChart"></canvas>
         </div>
-        <!-- 安打組成環形圖 -->
         <div class="md:col-span-3 h-64 flex flex-col items-center">
           <span class="text-xs text-slate-400 mb-2 font-medium">區間安打分佈</span>
           <div class="h-52 w-full">
@@ -138,7 +135,7 @@
       </div>
     </section>
 
-    <!-- 模組四：雙視圖總表（整合頭像微縮標籤） -->
+    <!-- 模組四：雙視圖總表 -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
@@ -225,6 +222,52 @@
   <!-- 隱藏檔案選取元件 -->
   <input type="file" id="hiddenAvatarInput" accept="image/*" class="hidden">
 
+  <!-- Instagram 風格頭像裁切彈窗 (Modal) -->
+  <div id="cropModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 max-w-sm w-full shadow-2xl flex flex-col items-center space-y-4">
+      <div class="flex items-center justify-between w-full border-b border-slate-800 pb-2">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs bg-sky-500/10 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded font-mono">CROPPER</span>
+          <h3 class="text-sm font-bold text-white">自訂球員頭像</h3>
+        </div>
+        <button onclick="closeCropperModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <!-- 互動裁切畫布 (320x320) -->
+      <div class="relative w-[300px] h-[300px] rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shadow-inner select-none cursor-grab active:cursor-grabbing">
+        <canvas id="cropCanvas" width="300" height="300" class="touch-none w-full h-full"></canvas>
+      </div>
+
+      <!-- 縮放與旋轉工具列 -->
+      <div class="w-full space-y-2 text-xs">
+        <div class="flex items-center justify-between text-slate-400">
+          <span>縮放倍率</span>
+          <span id="zoomDisplay" class="font-mono text-sky-400">1.0x</span>
+        </div>
+        <input type="range" id="zoomSlider" min="1" max="3" step="0.05" value="1" class="w-full accent-sky-500 bg-slate-800 rounded h-1.5 cursor-pointer">
+      </div>
+
+      <div class="flex items-center justify-between w-full gap-2 text-xs">
+        <button onclick="rotateCropImage()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded-lg border border-slate-700 transition">
+          旋轉 90°
+        </button>
+        <button onclick="resetCropTransform()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded-lg border border-slate-700 transition">
+          重置置中
+        </button>
+      </div>
+
+      <!-- 彈窗底端按鈕 -->
+      <div class="flex items-center justify-end w-full space-x-2 border-t border-slate-800 pt-3">
+        <button onclick="closeCropperModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg text-xs transition">
+          取消
+        </button>
+        <button onclick="confirmCropAndSave()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-1.5 rounded-lg text-xs shadow-lg transition">
+          完成裁切並儲存
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const baseline2025Logs = [
       {"id":"log_2025_1","date":"2025-12-31","tag":"2025年度總結","name":"洪銘駿","pa":31,"ab":27,"h":14,"h1":13,"h2":1,"h3":0,"hr":0,"bb":2,"sf":2,"k":5},
@@ -252,13 +295,31 @@
     let quadrantChartInst = null;
     let customChartInst = null;
 
+    // Instagram 裁切引擎狀態
+    let activeCropImage = null;
+    let cropTargetPlayer = '';
+    let cropScale = 1.0;
+    let cropBaseScale = 1.0;
+    let cropOffsetX = 0;
+    let cropOffsetY = 0;
+    let cropRotation = 0;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragStartOffsetX = 0;
+    let dragStartOffsetY = 0;
+
+    const CROP_CANVAS_SIZE = 300;
+    const CROP_DIAMETER = 220;
+    const CROP_RADIUS = 110;
+    const CROP_CENTER = 150;
+
     function saveState() {
       localStorage.setItem('rebas_baseball_logs', JSON.stringify(allLogs));
       localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
       renderAll();
     }
 
-    // 頭像渲染引擎 (自帶自適應首字向量徽章)
     function renderAvatarElement(name, sizeClass = 'w-7 h-7 text-xs') {
       const avatarUrl = playerAvatars[name];
       if (avatarUrl) {
@@ -272,40 +333,184 @@
       `;
     }
 
-    // 圖片壓縮並寫入儲存庫 (中心裁剪為 160x160 JPEG)
-    function processAvatarFile(file, name) {
-      if (!file || !file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const size = 160;
-          canvas.width = size;
-          canvas.height = size;
-          const ctx = canvas.getContext('2d');
-          const minDim = Math.min(img.width, img.height);
-          const sx = (img.width - minDim) / 2;
-          const sy = (img.height - minDim) / 2;
-          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
-          playerAvatars[name] = canvas.toDataURL('image/jpeg', 0.82);
-          saveState();
-        };
-        img.src = e.target.result;
+    // 開啟裁切視窗
+    function openCropper(imageSource, targetPlayer) {
+      cropTargetPlayer = targetPlayer;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        activeCropImage = img;
+        const minDim = Math.min(img.width, img.height);
+        cropBaseScale = CROP_DIAMETER / minDim;
+        cropScale = 1.0;
+        cropOffsetX = 0;
+        cropOffsetY = 0;
+        cropRotation = 0;
+        document.getElementById('zoomSlider').value = 1.0;
+        document.getElementById('zoomDisplay').textContent = '1.0x';
+        document.getElementById('cropModal').classList.remove('hidden');
+        drawCropCanvas();
       };
-      reader.readAsDataURL(file);
+      img.src = imageSource;
     }
 
-    window.promptAvatarUrl = function(name) {
-      const url = prompt(`請輸入 ${name} 的圖片網址 (URL)：`, playerAvatars[name] || '');
-      if (url !== null) {
-        if (url.trim() === '') {
-          delete playerAvatars[name];
-        } else {
-          playerAvatars[name] = url.trim();
-        }
-        saveState();
+    window.closeCropperModal = function() {
+      document.getElementById('cropModal').classList.add('hidden');
+      activeCropImage = null;
+    };
+
+    window.rotateCropImage = function() {
+      cropRotation = (cropRotation + 90) % 360;
+      drawCropCanvas();
+    };
+
+    window.resetCropTransform = function() {
+      cropScale = 1.0;
+      cropOffsetX = 0;
+      cropOffsetY = 0;
+      cropRotation = 0;
+      document.getElementById('zoomSlider').value = 1.0;
+      document.getElementById('zoomDisplay').textContent = '1.0x';
+      drawCropCanvas();
+    };
+
+    // 繪製裁切器視圖（含圓形遮罩與九宮格導引線）
+    function drawCropCanvas() {
+      if (!activeCropImage) return;
+      const canvas = document.getElementById('cropCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, CROP_CANVAS_SIZE, CROP_CANVAS_SIZE);
+
+      // 1. 繪製變形後的原始圖片
+      ctx.save();
+      ctx.translate(CROP_CENTER + cropOffsetX, CROP_CENTER + cropOffsetY);
+      ctx.rotate((cropRotation * Math.PI) / 180);
+      const totalScale = cropBaseScale * cropScale;
+      ctx.scale(totalScale, totalScale);
+      ctx.drawImage(activeCropImage, -activeCropImage.width / 2, -activeCropImage.height / 2);
+      ctx.restore();
+
+      // 2. 繪製半透明深色外圈遮罩
+      ctx.save();
+      ctx.fillStyle = 'rgba(10, 15, 29, 0.78)';
+      ctx.beginPath();
+      ctx.rect(0, 0, CROP_CANVAS_SIZE, CROP_CANVAS_SIZE);
+      ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2, true);
+      ctx.fill('evenodd');
+
+      // 3. 繪製 Instagram 風格白色圓環外框
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 4. 圓圈內部繪製微妙的九宮格輔助導引線
+      ctx.beginPath();
+      ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      const step = CROP_DIAMETER / 3;
+      const startX = CROP_CENTER - CROP_RADIUS;
+      ctx.moveTo(startX + step, 0); ctx.lineTo(startX + step, CROP_CANVAS_SIZE);
+      ctx.moveTo(startX + step * 2, 0); ctx.lineTo(startX + step * 2, CROP_CANVAS_SIZE);
+      ctx.moveTo(0, startX + step); ctx.lineTo(CROP_CANVAS_SIZE, startX + step);
+      ctx.moveTo(0, startX + step * 2); ctx.lineTo(CROP_CANVAS_SIZE, startX + step * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 拖曳互動事件綁定
+    const cropCanvas = document.getElementById('cropCanvas');
+
+    cropCanvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      dragStartOffsetX = cropOffsetX;
+      dragStartOffsetY = cropOffsetY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      cropOffsetX = dragStartOffsetX + (e.clientX - dragStartX);
+      cropOffsetY = dragStartOffsetY + (e.clientY - dragStartY);
+      drawCropCanvas();
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    cropCanvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        dragStartX = e.touches[0].clientX;
+        dragStartY = e.touches[0].clientY;
+        dragStartOffsetX = cropOffsetX;
+        dragStartOffsetY = cropOffsetY;
       }
+    }, { passive: false });
+
+    cropCanvas.addEventListener('touchmove', (e) => {
+      if (!isDragging || e.touches.length !== 1) return;
+      e.preventDefault();
+      cropOffsetX = dragStartOffsetX + (e.touches[0].clientX - dragStartX);
+      cropOffsetY = dragStartOffsetY + (e.touches[0].clientY - dragStartY);
+      drawCropCanvas();
+    }, { passive: false });
+
+    cropCanvas.addEventListener('touchend', () => { isDragging = false; });
+
+    // 滾輪縮放
+    cropCanvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      const newScale = Math.min(3, Math.max(1, cropScale + delta));
+      cropScale = newScale;
+      document.getElementById('zoomSlider').value = newScale;
+      document.getElementById('zoomDisplay').textContent = `${newScale.toFixed(2)}x`;
+      drawCropCanvas();
+    }, { passive: false });
+
+    // 滑桿縮放
+    document.getElementById('zoomSlider').addEventListener('input', (e) => {
+      cropScale = parseFloat(e.target.value);
+      document.getElementById('zoomDisplay').textContent = `${cropScale.toFixed(2)}x`;
+      drawCropCanvas();
+    });
+
+    // 導出裁切結果並寫入頭像資料庫
+    window.confirmCropAndSave = function() {
+      if (!activeCropImage) return;
+
+      // 建立無遮罩乾淨投影離屏畫布
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = CROP_CANVAS_SIZE;
+      offCanvas.height = CROP_CANVAS_SIZE;
+      const offCtx = offCanvas.getContext('2d');
+
+      offCtx.translate(CROP_CENTER + cropOffsetX, CROP_CENTER + cropOffsetY);
+      offCtx.rotate((cropRotation * Math.PI) / 180);
+      const totalScale = cropBaseScale * cropScale;
+      offCtx.scale(totalScale, totalScale);
+      offCtx.drawImage(activeCropImage, -activeCropImage.width / 2, -activeCropImage.height / 2);
+
+      // 提取圓形取景窗區域並寫入 160x160 輸出畫布
+      const outCanvas = document.createElement('canvas');
+      const outSize = 160;
+      outCanvas.width = outSize;
+      outCanvas.height = outSize;
+      const outCtx = outCanvas.getContext('2d');
+
+      const sourceLeft = CROP_CENTER - CROP_RADIUS;
+      const sourceTop = CROP_CENTER - CROP_RADIUS;
+
+      outCtx.drawImage(offCanvas, sourceLeft, sourceTop, CROP_DIAMETER, CROP_DIAMETER, 0, 0, outSize, outSize);
+
+      playerAvatars[cropTargetPlayer] = outCanvas.toDataURL('image/jpeg', 0.85);
+      closeCropperModal();
+      saveState();
     };
 
     window.triggerAvatarUpload = function() {
@@ -314,10 +519,22 @@
 
     document.getElementById('hiddenAvatarInput').addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
-        processAvatarFile(e.target.files[0], selectedPlayerName);
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          openCropper(event.target.result, selectedPlayerName);
+        };
+        reader.readAsDataURL(file);
         e.target.value = '';
       }
     });
+
+    window.promptAvatarUrl = function(name) {
+      const url = prompt(`請輸入 ${name} 的圖片網址：`, playerAvatars[name] || '');
+      if (url && url.trim() !== '') {
+        openCropper(url.trim(), name);
+      }
+    };
 
     window.clearAvatar = function(name) {
       if (confirm(`確認清除 ${name} 的自訂頭像？`)) {
@@ -459,9 +676,9 @@
 
       document.getElementById('playerProfileCard').innerHTML = `
         <div class="flex items-center space-x-4 border-b border-slate-800 pb-3">
-          <div class="relative group cursor-pointer" onclick="triggerAvatarUpload()" title="點擊上傳大頭照">
+          <div class="relative group cursor-pointer" onclick="triggerAvatarUpload()" title="點擊自訂頭像裁切">
             ${renderAvatarElement(p.name, 'w-16 h-16 text-xl')}
-            <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white font-medium">更換</div>
+            <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white font-medium">裁切</div>
           </div>
           <div class="flex-1">
             <div class="flex items-center justify-between">
