@@ -37,7 +37,7 @@
     <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 gap-4">
       <div>
         <div class="flex items-center space-x-3">
-          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">ADVANCED SABERMETRICS</span>
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">CLOUD AUTO-SYNC</span>
           <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">淡江航太系壘</h1>
         </div>
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-400">
@@ -84,17 +84,57 @@
     <!-- 模組一：全隊戰力概覽看板 -->
     <section class="grid grid-cols-2 md:grid-cols-6 gap-3" id="teamSummaryCards"></section>
 
-    <!-- 模組二：全隊排行榜模組 (Leaderboard Studio) -->
+    <!-- 模組二：個人深度檔案 (五維雷達採用 SDI 慢壘好球帶紀律) -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div>
+          <h2 class="text-base font-bold text-sky-400">球員深度檔案與個人能力</h2>
+          <p class="text-xs text-slate-400">五維雷達圖採用慢壘專用 SDI 指標：結合四壞保送與三振懲罰評估好球帶判斷力</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <label class="text-xs text-slate-400">選取選手：</label>
+          <select id="playerSelect" class="bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-sky-500"></select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+        <div class="md:col-span-4 space-y-4" id="playerProfileCard"></div>
+        <div class="md:col-span-5 h-72">
+          <canvas id="radarChart"></canvas>
+        </div>
+        <div class="md:col-span-3 h-64 flex flex-col items-center">
+          <span class="text-xs text-slate-400 mb-2 font-medium">區間安打分佈</span>
+          <div class="h-52 w-full">
+            <canvas id="donutChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 模組三：全隊排行榜模組 (移至個人深度檔案下方，改為可伸縮) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-        <div>
-          <h2 class="text-base font-bold text-amber-400">全隊數據排行榜 (Leaderboard Studio)</h2>
-          <p class="text-xs text-slate-400">支援全項傳統與進階指標切換，可自訂打席門檻以過濾小樣本雜訊</p>
+        <div class="flex items-center space-x-3">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2 py-0.5 rounded font-mono font-bold">LEADERBOARD</span>
+              <h2 class="text-base font-bold text-amber-400">全隊數據排行榜 (Leaderboard Studio)</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">支援全項傳統與進階指標切換，可自訂打席門檻以過濾小樣本雜訊</p>
+          </div>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
+        <button id="toggleLeaderboardBtn" onclick="toggleLeaderboardCollapse()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 font-medium transition self-start md:self-auto">
+          <span id="leaderboardToggleText">展開排行榜</span>
+          <span id="leaderboardToggleIcon">▼</span>
+        </button>
+      </div>
+
+      <!-- 預設收合的排行榜內容區塊 -->
+      <div id="leaderboardContent" class="hidden space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 rounded-lg border border-slate-800/80">
           <div class="flex items-center space-x-2">
             <label class="text-xs text-slate-400">排行指標：</label>
-            <select id="leaderboardMetricSelect" class="bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-500">
+            <select id="leaderboardMetricSelect" class="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-500">
               <optgroup label="綜合進攻">
                 <option value="wrc_plus" selected>加權得分創造 (wRC+)</option>
                 <option value="ops">整體攻擊指數 (OPS)</option>
@@ -127,58 +167,33 @@
           </div>
           <div class="flex items-center space-x-2">
             <label class="text-xs text-slate-400">最低打席門檻：</label>
-            <input type="number" id="leaderboardMinPa" value="0" min="0" max="100" class="w-14 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-center text-xs text-amber-400 font-mono">
+            <input type="number" id="leaderboardMinPa" value="0" min="0" max="100" class="w-14 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-center text-xs text-amber-400 font-mono">
             <span class="text-[11px] text-slate-500">PA</span>
           </div>
         </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="leaderboardPodium"></div>
-      <div class="overflow-x-auto rounded-lg border border-slate-800">
-        <table class="w-full text-left text-xs whitespace-nowrap">
-          <thead class="bg-slate-950 text-slate-400 uppercase select-none">
-            <tr>
-              <th class="p-2.5 text-center w-12">名次</th>
-              <th class="p-2.5">選手</th>
-              <th class="p-2.5 text-center">打席</th>
-              <th class="p-2.5 text-center">打數</th>
-              <th class="p-2.5 text-center">安打</th>
-              <th class="p-2.5 text-center">全壘打</th>
-              <th class="p-2.5 text-center">打擊率</th>
-              <th class="p-2.5 text-center">上壘率</th>
-              <th class="p-2.5 text-center">長打率</th>
-              <th class="p-2.5 text-center">OPS</th>
-              <th class="p-2.5 text-center">wRC+</th>
-              <th class="p-2.5 text-center font-bold text-amber-400">當前排行指標</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboardTableBody" class="divide-y divide-slate-800/80 bg-slate-900/50"></tbody>
-        </table>
-      </div>
-    </section>
 
-    <!-- 模組三：個人深度檔案 (五維雷達採用 SDI 慢壘好球帶紀律) -->
-    <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-        <div>
-          <h2 class="text-base font-bold text-sky-400">球員深度檔案與個人能力</h2>
-          <p class="text-xs text-slate-400">五維雷達圖採用慢壘專用 SDI 指標：結合四壞保送與三振懲罰評估好球帶判斷力</p>
-        </div>
-        <div class="flex items-center space-x-2">
-          <label class="text-xs text-slate-400">選取選手：</label>
-          <select id="playerSelect" class="bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-sky-500"></select>
-        </div>
-      </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="leaderboardPodium"></div>
 
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-        <div class="md:col-span-4 space-y-4" id="playerProfileCard"></div>
-        <div class="md:col-span-5 h-72">
-          <canvas id="radarChart"></canvas>
-        </div>
-        <div class="md:col-span-3 h-64 flex flex-col items-center">
-          <span class="text-xs text-slate-400 mb-2 font-medium">區間安打分佈</span>
-          <div class="h-52 w-full">
-            <canvas id="donutChart"></canvas>
-          </div>
+        <div class="overflow-x-auto rounded-lg border border-slate-800">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-950 text-slate-400 uppercase select-none">
+              <tr>
+                <th class="p-2.5 text-center w-12">名次</th>
+                <th class="p-2.5">選手</th>
+                <th class="p-2.5 text-center">打席</th>
+                <th class="p-2.5 text-center">打數</th>
+                <th class="p-2.5 text-center">安打</th>
+                <th class="p-2.5 text-center">全壘打</th>
+                <th class="p-2.5 text-center">打擊率</th>
+                <th class="p-2.5 text-center">上壘率</th>
+                <th class="p-2.5 text-center">長打率</th>
+                <th class="p-2.5 text-center">OPS</th>
+                <th class="p-2.5 text-center">wRC+</th>
+                <th class="p-2.5 text-center font-bold text-amber-400">當前排行指標</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardTableBody" class="divide-y divide-slate-800/80 bg-slate-900/50"></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -273,7 +288,6 @@
         <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記新賽事日誌</button>
       </div>
 
-      <!-- 新增日誌表單 -->
       <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-slate-800 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
         <div><label class="block text-slate-400 mb-1">比賽/記錄日期</label><input type="date" id="new_date" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
         <div><label class="block text-slate-400 mb-1">賽事標籤/備註</label><input type="text" id="new_tag" placeholder="例: 聯賽G1" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
@@ -293,7 +307,6 @@
         </div>
       </form>
 
-      <!-- 匯總表格 (加入進階數據欄位) -->
       <div id="viewSummary" class="overflow-x-auto rounded-lg border border-slate-800">
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-950 text-slate-400 uppercase select-none">
@@ -325,7 +338,6 @@
         </table>
       </div>
 
-      <!-- 日誌表格 -->
       <div id="viewLogs" class="hidden overflow-x-auto rounded-lg border border-slate-800">
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-950 text-slate-400 uppercase select-none">
@@ -348,17 +360,90 @@
         </table>
       </div>
     </section>
+
+    <!-- 模組六：雙人選手數據對決比較 (置於總數據下方，可伸縮) -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-3">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs px-2 py-0.5 rounded font-mono font-bold">HEAD TO HEAD</span>
+              <h2 class="text-base font-bold text-purple-300">雙人選手數據對決比較 (Player Comparison)</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">選取任意兩位球員進行全維度攻守數據對決、優勢指標標記與五維雷達重疊對比</p>
+          </div>
+        </div>
+        <button id="toggleCompareBtn" onclick="toggleCompareCollapse()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 font-medium transition self-start md:self-auto">
+          <span id="compareToggleText">展開對決比對</span>
+          <span id="compareToggleIcon">▼</span>
+        </button>
+      </div>
+
+      <!-- 預設收合的對決比對區塊 -->
+      <div id="compareContent" class="hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 選手 A 卡片 -->
+          <div class="bg-slate-950 p-4 rounded-xl border border-sky-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-sky-400"></span> 選手 A (藍方)
+              </span>
+              <select id="comparePlayerA" class="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-sky-500"></select>
+            </div>
+            <div id="compareCardA"></div>
+          </div>
+
+          <!-- 選手 B 卡片 -->
+          <div class="bg-slate-950 p-4 rounded-xl border border-amber-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span> 選手 B (金方)
+              </span>
+              <select id="comparePlayerB" class="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-amber-500"></select>
+            </div>
+            <div id="compareCardB"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <!-- 左側：詳細對決指標表 -->
+          <div class="lg:col-span-7 overflow-x-auto rounded-lg border border-slate-800">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead class="bg-slate-950 text-slate-400 uppercase select-none">
+                <tr>
+                  <th class="p-2.5">評比指標</th>
+                  <th class="p-2.5 text-center text-sky-400" id="compareHeadA">選手 A</th>
+                  <th class="p-2.5 text-center">領先優勢</th>
+                  <th class="p-2.5 text-center text-amber-400" id="compareHeadB">選手 B</th>
+                </tr>
+              </thead>
+              <tbody id="compareTableBody" class="divide-y divide-slate-800/80 bg-slate-900/50"></tbody>
+            </table>
+          </div>
+
+          <!-- 右側：雙人五維雷達重疊圖 -->
+          <div class="lg:col-span-5 bg-slate-950/60 p-4 rounded-xl border border-slate-800 flex flex-col items-center">
+            <div class="w-full flex justify-between items-center mb-2">
+              <span class="text-xs font-bold text-slate-300">五維能力 PR 重疊雷達對決</span>
+              <span class="text-[10px] text-slate-500">標準化 0–100 PR</span>
+            </div>
+            <div class="h-72 w-full">
+              <canvas id="compareRadarChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <!-- 隱藏檔案選取元件 -->
   <input type="file" id="hiddenAvatarInput" accept="image/*" class="hidden">
 
-  <!-- Instagram 風格頭像裁切彈窗 (Modal) -->
+  <!-- Instagram 風格頭像裁切彈窗 -->
   <div id="cropModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 max-w-sm w-full shadow-2xl flex flex-col items-center space-y-4">
       <div class="flex items-center justify-between w-full border-b border-slate-800 pb-2">
         <div class="flex items-center space-x-2">
-          <span class="text-xs bg-sky-500/10 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded font-mono">CROPPER</span>
+          <span class="text-xs bg-sky-500/10 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded font-mono font-bold">CROPPER</span>
           <h3 class="text-sm font-bold text-white">自訂球員頭像</h3>
         </div>
         <button onclick="closeCropperModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
@@ -388,10 +473,9 @@
     </div>
   </div>
 
-  <!-- 全量專有名詞圖書館彈窗 (Glossary Modal) -->
+  <!-- 全量專有名詞圖書館彈窗 -->
   <div id="glossaryModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
-      <!-- 頂部標題 -->
       <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
         <div class="flex items-center space-x-3">
           <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold">GLOSSARY ENCYCLOPEDIA</span>
@@ -400,9 +484,7 @@
         <button onclick="closeGlossaryModal()" class="text-slate-400 hover:text-white text-2xl font-bold leading-none">&times;</button>
       </div>
 
-      <!-- 滾動內容清單 -->
       <div class="p-6 overflow-y-auto space-y-8 text-xs text-slate-300 leading-relaxed">
-
         <!-- 類別一：慢壘特化核心指標 -->
         <section class="space-y-3 bg-sky-950/20 border border-sky-800/40 rounded-xl p-4">
           <div class="flex items-center space-x-2">
@@ -412,11 +494,11 @@
           <div class="space-y-2 pl-4">
             <p><span class="font-semibold text-slate-200">【定義】</span>專為慢速壘球運動特性研發之淨好球帶控制指標，用於五維能力雷達圖中取代失真的純四壞率（BB%）。</p>
             <p><span class="font-semibold text-slate-200">【計算公式】</span><span class="font-mono text-amber-300 font-bold">SDI = (BB - 1.5 × K) / PA</span></p>
-            <p><span class="font-semibold text-slate-200">【代表意義與實戰解讀】</span>慢壘具備「好球帶廣、球速慢、開局多為 1 好 1 壞」之特性，強打者以積極攻擊好球為主，四壞保送天然偏少（全隊 BB% 僅 12%）；相對地，在慢壘吞 K 代價極高（全隊 K% 僅 6.5%），通常代表追打惡劣壞球。公式給予三振 1.5 倍懲罰權重，破除「不保送就等於不會選球」的盲點，能真實回饋積極出棒且從不吞 K 的強打者（如簡承均 38 打席 0K 獲得 PR 64 評價）。</p>
+            <p><span class="font-semibold text-slate-200">【代表意義與實戰解讀】</span>慢壘具備「好球帶廣、球速慢、開局多為 1 好 1 壞」之特性，強打者以積極攻擊好球為主，四壞保送天然偏少（全隊 BB% 僅 12%）；相對地，在慢壘吞 K 代價極高（全隊 K% 僅 6.5%），通常代表追打惡劣壞球。公式給予三振 1.5 倍懲罰權重，破除「不保送就等於不會選球」的盲點，能真實回饋積極出棒且從不吞 K 的強打者。</p>
           </div>
         </section>
 
-        <!-- 類別二：進階賽伯計量指標 (Sabermetrics) -->
+        <!-- 類別二：進階賽伯計量指標 -->
         <section class="space-y-3">
           <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -571,10 +653,8 @@
             </div>
           </div>
         </section>
-
       </div>
 
-      <!-- 彈窗底端關閉鈕 -->
       <div class="p-4 border-t border-slate-800 bg-slate-950 flex justify-end">
         <button onclick="closeGlossaryModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-1.5 rounded-lg text-xs font-medium">關閉圖書館</button>
       </div>
@@ -586,7 +666,6 @@
     const GITHUB_BRANCH = "main";
     const DATA_FILE_PATH = "data/logs.json";
 
-    // 透過十進位 ASCII 字元陣列動態生成，杜絕靜態模式識別與 Push Protection 阻擋
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
 
     let allLogs = [];
@@ -598,6 +677,9 @@
     let donutChartInst = null;
     let quadrantChartInst = null;
     let customChartInst = null;
+    let compareRadarChartInst = null;
+    let comparePlayerAName = "";
+    let comparePlayerBName = "";
 
     let activeCropImage = null;
     let cropTargetPlayer = '';
@@ -617,6 +699,40 @@
 
     window.openGlossaryModal = function() { document.getElementById('glossaryModal').classList.remove('hidden'); };
     window.closeGlossaryModal = function() { document.getElementById('glossaryModal').classList.add('hidden'); };
+
+    window.toggleLeaderboardCollapse = function() {
+      const content = document.getElementById('leaderboardContent');
+      const icon = document.getElementById('leaderboardToggleIcon');
+      const text = document.getElementById('leaderboardToggleText');
+      const isHidden = content.classList.contains('hidden');
+      if (isHidden) {
+        content.classList.remove('hidden');
+        icon.textContent = '▲';
+        text.textContent = '收合排行榜';
+      } else {
+        content.classList.add('hidden');
+        icon.textContent = '▼';
+        text.textContent = '展開排行榜';
+      }
+    };
+
+    window.toggleCompareCollapse = function() {
+      const content = document.getElementById('compareContent');
+      const icon = document.getElementById('compareToggleIcon');
+      const text = document.getElementById('compareToggleText');
+      const isHidden = content.classList.contains('hidden');
+      if (isHidden) {
+        content.classList.remove('hidden');
+        icon.textContent = '▲';
+        text.textContent = '收合對決比對';
+        const agg = getAggregatedStats(getFilteredLogs());
+        renderComparison(agg);
+      } else {
+        content.classList.add('hidden');
+        icon.textContent = '▼';
+        text.textContent = '展開對決比對';
+      }
+    };
 
     function utf8ToBase64(str) {
       const bytes = new TextEncoder().encode(str);
@@ -649,7 +765,7 @@
           currentFileSha = data.sha;
           const decoded = base64ToUtf8(data.content);
           allLogs = JSON.parse(decoded);
-          statusBadge.textContent = `雲端資料庫：已即時同步 (${allLogs.length} 筆賽事)`;
+          statusBadge.textContent = `🟢 雲端資料庫：已即時同步 (${allLogs.length} 筆賽事)`;
           statusBadge.className = 'text-emerald-400 font-mono';
         } else {
           throw new Error('API 回應異常');
@@ -719,13 +835,13 @@
         currentFileSha = resData.content.sha;
         allLogs = updatedLogs;
 
-        statusBadge.textContent = `雲端資料庫：已即時同步 (Commit: ${currentFileSha.substring(0,7)})`;
+        statusBadge.textContent = `🟢 雲端資料庫：已即時同步 (Commit: ${currentFileSha.substring(0,7)})`;
         statusBadge.className = 'text-emerald-400 font-mono';
 
         renderAll();
         return true;
       } catch (err) {
-        statusBadge.textContent = `雲端寫入失敗: ${err.message}`;
+        statusBadge.textContent = `🔴 雲端寫入失敗: ${err.message}`;
         statusBadge.className = 'text-rose-400 font-mono';
         alert(`寫入 GitHub 失敗：${err.message}`);
         return false;
@@ -1135,6 +1251,180 @@
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    function populateCompareSelect(players) {
+      const selA = document.getElementById('comparePlayerA');
+      const selB = document.getElementById('comparePlayerB');
+      if (!selA || !selB || players.length === 0) return;
+
+      if (!comparePlayerAName || !players.find(p => p.name === comparePlayerAName)) {
+        comparePlayerAName = players[0].name;
+      }
+      if (!comparePlayerBName || !players.find(p => p.name === comparePlayerBName)) {
+        comparePlayerBName = players.length > 1 ? players[1].name : players[0].name;
+      }
+
+      selA.innerHTML = players.map(d => `<option value="${d.name}" ${d.name === comparePlayerAName ? 'selected' : ''}>${d.name}</option>`).join('');
+      selB.innerHTML = players.map(d => `<option value="${d.name}" ${d.name === comparePlayerBName ? 'selected' : ''}>${d.name}</option>`).join('');
+    }
+
+    function renderComparison(agg) {
+      const pList = agg.players;
+      if (pList.length === 0) return;
+
+      populateCompareSelect(pList);
+
+      const pA = pList.find(p => p.name === comparePlayerAName) || pList[0];
+      const pB = pList.find(p => p.name === comparePlayerBName) || (pList.length > 1 ? pList[1] : pList[0]);
+
+      document.getElementById('compareHeadA').textContent = pA.name;
+      document.getElementById('compareHeadB').textContent = pB.name;
+
+      document.getElementById('compareCardA').innerHTML = `
+        <div class="flex items-center space-x-3">
+          ${renderAvatarElement(pA.name, 'w-12 h-12 text-lg')}
+          <div class="flex-1">
+            <div class="flex justify-between items-baseline">
+              <span class="text-base font-black text-sky-400">${pA.name}</span>
+              <span class="text-xs font-mono text-slate-400">PA: ${pA.pa}</span>
+            </div>
+            <p class="text-xs text-slate-300 font-mono mt-0.5">三圍: ${pA.avg.toFixed(3)} / ${pA.obp.toFixed(3)} / ${pA.slg.toFixed(3)}</p>
+            <p class="text-[11px] text-slate-400 font-mono">OPS: ${pA.ops.toFixed(3)} | wRC+: ${pA.wrc_plus.toFixed(1)} | SDI: ${(pA.sdi >= 0 ? '+' : '') + pA.sdi.toFixed(3)}</p>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('compareCardB').innerHTML = `
+        <div class="flex items-center space-x-3">
+          ${renderAvatarElement(pB.name, 'w-12 h-12 text-lg')}
+          <div class="flex-1">
+            <div class="flex justify-between items-baseline">
+              <span class="text-base font-black text-amber-400">${pB.name}</span>
+              <span class="text-xs font-mono text-slate-400">PA: ${pB.pa}</span>
+            </div>
+            <p class="text-xs text-slate-300 font-mono mt-0.5">三圍: ${pB.avg.toFixed(3)} / ${pB.obp.toFixed(3)} / ${pB.slg.toFixed(3)}</p>
+            <p class="text-[11px] text-slate-400 font-mono">OPS: ${pB.ops.toFixed(3)} | wRC+: ${pB.wrc_plus.toFixed(1)} | SDI: ${(pB.sdi >= 0 ? '+' : '') + pB.sdi.toFixed(3)}</p>
+          </div>
+        </div>
+      `;
+
+      const metricsMeta = [
+        { key: 'pa', label: '打席數 (PA)', fmt: v => v },
+        { key: 'ab', label: '打數 (AB)', fmt: v => v },
+        { key: 'h', label: '安打數 (H)', fmt: v => v },
+        { key: 'hr', label: '全壘打 (HR)', fmt: v => v },
+        { key: 'avg', label: '打擊率 (AVG)', fmt: v => v.toFixed(3) },
+        { key: 'obp', label: '上壘率 (OBP)', fmt: v => v.toFixed(3) },
+        { key: 'slg', label: '長打率 (SLG)', fmt: v => v.toFixed(3) },
+        { key: 'ops', label: '整體攻擊指數 (OPS)', fmt: v => v.toFixed(3) },
+        { key: 'ops_plus', label: '標準化攻擊指數 (OPS+)', fmt: v => v.toFixed(1) },
+        { key: 'woba', label: '加權上壘率 (wOBA)', fmt: v => v.toFixed(3) },
+        { key: 'wrc_plus', label: '加權得分創造 (wRC+)', fmt: v => v.toFixed(1) },
+        { key: 'iso', label: '純長打率 (ISO)', fmt: v => v.toFixed(3) },
+        { key: 'babip', label: '場內安打率 (BABIP)', fmt: v => v.toFixed(3) },
+        { key: 'rc', label: '預估創造得分 (RC)', fmt: v => v.toFixed(1) },
+        { key: 'sdi', label: '慢壘好球帶紀律 (SDI)', fmt: v => (v >= 0 ? '+' : '') + v.toFixed(3) },
+        { key: 'contact_pct', label: '擊球掌握率 (Contact%)', fmt: v => (v * 100).toFixed(1) + '%' },
+        { key: 'bb_pct', label: '四壞率 (BB%)', fmt: v => (v * 100).toFixed(1) + '%' },
+        { key: 'k_pct', label: '三振率 (K%) [低佳]', fmt: v => (v * 100).toFixed(1) + '%', lowerBetter: true },
+        { key: 'bb_k_ratio', label: '保送三振比 (BB/K)', fmt: v => v.toFixed(2) }
+      ];
+
+      const tbody = document.getElementById('compareTableBody');
+      tbody.innerHTML = '';
+
+      metricsMeta.forEach(m => {
+        const valA = Number(pA[m.key]) || 0;
+        const valB = Number(pB[m.key]) || 0;
+        const lower = m.lowerBetter || false;
+
+        let leadHtml = '';
+        let classA = 'font-mono text-slate-300';
+        let classB = 'font-mono text-slate-300';
+
+        if (valA === valB) {
+          leadHtml = '<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">平手</span>';
+        } else if (lower ? valA < valB : valA > valB) {
+          leadHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-mono font-bold">${pA.name} 領先</span>`;
+          classA = 'font-mono text-sky-400 font-bold';
+        } else {
+          leadHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800/60 font-mono font-bold">${pB.name} 領先</span>`;
+          classB = 'font-mono text-amber-400 font-bold';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/50 transition';
+        tr.innerHTML = `
+          <td class="p-2.5 font-medium text-slate-200">${m.label}</td>
+          <td class="p-2.5 text-center ${classA}">${m.fmt(valA)}</td>
+          <td class="p-2.5 text-center">${leadHtml}</td>
+          <td class="p-2.5 text-center ${classB}">${m.fmt(valB)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const prContactA = getPercentile(pA.avg, 'avg', pList);
+      const prPowerA = getPercentile(pA.iso, 'iso', pList);
+      const prDisciplineA = getPercentile(pA.sdi, 'sdi', pList);
+      const prControlA = getPercentile(pA.k_pct, 'k_pct', pList, true);
+      const prWrcA = getPercentile(pA.wrc_plus, 'wrc_plus', pList);
+
+      const prContactB = getPercentile(pB.avg, 'avg', pList);
+      const prPowerB = getPercentile(pB.iso, 'iso', pList);
+      const prDisciplineB = getPercentile(pB.sdi, 'sdi', pList);
+      const prControlB = getPercentile(pB.k_pct, 'k_pct', pList, true);
+      const prWrcB = getPercentile(pB.wrc_plus, 'wrc_plus', pList);
+
+      const radarCanvas = document.getElementById('compareRadarChart');
+      if (radarCanvas) {
+        const radarCtx = radarCanvas.getContext('2d');
+        if (compareRadarChartInst) compareRadarChartInst.destroy();
+
+        compareRadarChartInst = new Chart(radarCtx, {
+          type: 'radar',
+          data: {
+            labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '好球帶紀律 (SDI)', '擊球掌握 (1-K%)', '進攻產出 (wRC+)'],
+            datasets: [
+              {
+                label: `${pA.name} (藍方)`,
+                data: [prContactA, prPowerA, prDisciplineA, prControlA, prWrcA],
+                backgroundColor: 'rgba(56, 189, 248, 0.25)',
+                borderColor: '#38bdf8',
+                pointBackgroundColor: '#38bdf8',
+                borderWidth: 2
+              },
+              {
+                label: `${pB.name} (金方)`,
+                data: [prContactB, prPowerB, prDisciplineB, prControlB, prWrcB],
+                backgroundColor: 'rgba(245, 158, 11, 0.25)',
+                borderColor: '#f59e0b',
+                pointBackgroundColor: '#f59e0b',
+                borderWidth: 2
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: {
+                min: 0, max: 100, ticks: { stepSize: 20, display: false },
+                grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                pointLabels: { color: '#94a3b8', font: { size: 10 } }
+              }
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: { color: '#cbd5e1', font: { size: 11 }, boxWidth: 12 }
+              }
+            }
+          }
+        });
+      }
     }
 
     function getPercentile(val, key, pList, invert = false) {
@@ -1613,12 +1903,13 @@
       const agg = getAggregatedStats(filteredLogs);
       populatePlayerSelect(agg.players);
       renderSummaryCards(agg);
-      renderLeaderboard(agg);
       renderPlayerProfile(agg);
+      renderLeaderboard(agg);
       renderQuadrantChart(agg);
       renderCustomChart(agg);
       renderSummaryTable(agg);
       renderLogsTable(filteredLogs);
+      renderComparison(agg);
     }
 
     document.getElementById('filterStartDate').addEventListener('change', renderAll);
@@ -1634,6 +1925,15 @@
     });
     document.getElementById('leaderboardMinPa').addEventListener('input', () => {
       renderLeaderboard(getAggregatedStats(getFilteredLogs()));
+    });
+
+    document.getElementById('comparePlayerA').addEventListener('change', (e) => {
+      comparePlayerAName = e.target.value;
+      renderComparison(getAggregatedStats(getFilteredLogs()));
+    });
+    document.getElementById('comparePlayerB').addEventListener('change', (e) => {
+      comparePlayerBName = e.target.value;
+      renderComparison(getAggregatedStats(getFilteredLogs()));
     });
 
     ['customChartType', 'customXVar', 'customYVar', 'customZVar'].forEach(id => {
