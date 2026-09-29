@@ -18,10 +18,10 @@
     <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-5 gap-4">
       <div>
         <div class="flex items-center space-x-3">
-          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">DEPLOYED AVATAR SYSTEM</span>
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold tracking-wider">IG-STYLE CROPPER</span>
           <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">系壘賽事數據與球員檔案庫</h1>
         </div>
-        <p class="text-sm text-slate-400 mt-1">支援個人頭像裁切匯出、全站靜態部署、時間序列日誌分析與動態指標運算</p>
+        <p class="text-sm text-slate-400 mt-1">支援個人頭像自訂拖曳裁切、時間序列日誌分析、動態指標運算與區間批次操作</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button id="exportCsvBtn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-lg transition font-medium">匯出當前區間 CSV</button>
@@ -56,12 +56,12 @@
     <!-- 模組一：全隊戰力概覽與排行榜 -->
     <section class="grid grid-cols-2 md:grid-cols-6 gap-3" id="teamSummaryCards"></section>
 
-    <!-- 模組二：個人深度檔案 -->
+    <!-- 模組二：個人深度檔案（整合頭像管理系統） -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <h2 class="text-base font-bold text-sky-400">球員深度檔案與個人能力</h2>
-          <p class="text-xs text-slate-400">點擊頭像即可在線裁切並下載圖檔，放入 avatars 資料夾即可推送至全網</p>
+          <p class="text-xs text-slate-400">點擊頭像即可開啟 Instagram 風格取景窗自由平移、縮放與旋轉裁切</p>
         </div>
         <div class="flex items-center space-x-2">
           <label class="text-xs text-slate-400">選取選手：</label>
@@ -233,12 +233,12 @@
         <button onclick="closeCropperModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
       </div>
 
-      <!-- 互動裁切畫布 -->
+      <!-- 互動裁切畫布 (320x320) -->
       <div class="relative w-[300px] h-[300px] rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shadow-inner select-none cursor-grab active:cursor-grabbing">
         <canvas id="cropCanvas" width="300" height="300" class="touch-none w-full h-full"></canvas>
       </div>
 
-      <!-- 控制列 -->
+      <!-- 縮放與旋轉工具列 -->
       <div class="w-full space-y-2 text-xs">
         <div class="flex items-center justify-between text-slate-400">
           <span>縮放倍率</span>
@@ -256,16 +256,13 @@
         </button>
       </div>
 
-      <!-- 操作按鈕 -->
+      <!-- 彈窗底端按鈕 -->
       <div class="flex items-center justify-end w-full space-x-2 border-t border-slate-800 pt-3">
-        <button onclick="closeCropperModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs transition">
+        <button onclick="closeCropperModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg text-xs transition">
           取消
         </button>
-        <button onclick="confirmCropAndSave(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-lg transition" title="下載為圖檔放入 avatars/ 資料夾推送到 GitHub">
-          下載為圖檔
-        </button>
-        <button onclick="confirmCropAndSave(false)" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-lg transition">
-          僅本機套用
+        <button onclick="confirmCropAndSave()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-1.5 rounded-lg text-xs shadow-lg transition">
+          完成裁切並儲存
         </button>
       </div>
     </div>
@@ -298,6 +295,7 @@
     let quadrantChartInst = null;
     let customChartInst = null;
 
+    // Instagram 裁切引擎狀態
     let activeCropImage = null;
     let cropTargetPlayer = '';
     let cropScale = 1.0;
@@ -322,25 +320,20 @@
       renderAll();
     }
 
-    // 頭像渲染引擎：先嘗試讀取 avatars/ 目錄圖檔，失敗則退回 LocalStorage 或首字徽章
     function renderAvatarElement(name, sizeClass = 'w-7 h-7 text-xs') {
-      const customUrl = playerAvatars[name];
-      const repoUrl = `avatars/${encodeURIComponent(name)}.jpg`;
+      const avatarUrl = playerAvatars[name];
+      if (avatarUrl) {
+        return `<img src="avatarUrl"alt="{name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0">`;
+      }
       const char = name ? name.substring(0, 1) : '球';
-
-      const fallbackHtml = `
+      return `
         <div class="${sizeClass} rounded-full bg-gradient-to-br from-sky-600 to-indigo-800 border border-sky-400/40 text-white font-bold flex items-center justify-center shadow shrink-0 select-none">
           ${char}
         </div>
       `;
-
-      if (customUrl) {
-        return `<img src="${customUrl}" alt="${name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0" onerror="this.outerHTML=\`${fallbackHtml}\`">`;
-      }
-
-      return `<img src="${repoUrl}" alt="${name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0" onerror="this.outerHTML=\`${fallbackHtml}\`">`;
     }
 
+    // 開啟裁切視窗
     function openCropper(imageSource, targetPlayer) {
       cropTargetPlayer = targetPlayer;
       const img = new Image();
@@ -381,12 +374,14 @@
       drawCropCanvas();
     };
 
+    // 繪製裁切器視圖（含圓形遮罩與九宮格導引線）
     function drawCropCanvas() {
       if (!activeCropImage) return;
       const canvas = document.getElementById('cropCanvas');
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, CROP_CANVAS_SIZE, CROP_CANVAS_SIZE);
 
+      // 1. 繪製變形後的原始圖片
       ctx.save();
       ctx.translate(CROP_CENTER + cropOffsetX, CROP_CENTER + cropOffsetY);
       ctx.rotate((cropRotation * Math.PI) / 180);
@@ -395,6 +390,7 @@
       ctx.drawImage(activeCropImage, -activeCropImage.width / 2, -activeCropImage.height / 2);
       ctx.restore();
 
+      // 2. 繪製半透明深色外圈遮罩
       ctx.save();
       ctx.fillStyle = 'rgba(10, 15, 29, 0.78)';
       ctx.beginPath();
@@ -402,12 +398,14 @@
       ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2, true);
       ctx.fill('evenodd');
 
+      // 3. 繪製 Instagram 風格白色圓環外框
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2);
       ctx.stroke();
 
+      // 4. 圓圈內部繪製微妙的九宮格輔助導引線
       ctx.beginPath();
       ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2);
       ctx.clip();
@@ -424,6 +422,7 @@
       ctx.restore();
     }
 
+    // 拖曳互動事件綁定
     const cropCanvas = document.getElementById('cropCanvas');
 
     cropCanvas.addEventListener('mousedown', (e) => {
@@ -463,6 +462,7 @@
 
     cropCanvas.addEventListener('touchend', () => { isDragging = false; });
 
+    // 滾輪縮放
     cropCanvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       const delta = e.deltaY < 0 ? 0.05 : -0.05;
@@ -473,15 +473,18 @@
       drawCropCanvas();
     }, { passive: false });
 
+    // 滑桿縮放
     document.getElementById('zoomSlider').addEventListener('input', (e) => {
       cropScale = parseFloat(e.target.value);
       document.getElementById('zoomDisplay').textContent = `${cropScale.toFixed(2)}x`;
       drawCropCanvas();
     });
 
-    window.confirmCropAndSave = function(downloadFile = false) {
+    // 導出裁切結果並寫入頭像資料庫
+    window.confirmCropAndSave = function() {
       if (!activeCropImage) return;
 
+      // 建立無遮罩乾淨投影離屏畫布
       const offCanvas = document.createElement('canvas');
       offCanvas.width = CROP_CANVAS_SIZE;
       offCanvas.height = CROP_CANVAS_SIZE;
@@ -493,6 +496,7 @@
       offCtx.scale(totalScale, totalScale);
       offCtx.drawImage(activeCropImage, -activeCropImage.width / 2, -activeCropImage.height / 2);
 
+      // 提取圓形取景窗區域並寫入 160x160 輸出畫布
       const outCanvas = document.createElement('canvas');
       const outSize = 160;
       outCanvas.width = outSize;
@@ -504,16 +508,7 @@
 
       outCtx.drawImage(offCanvas, sourceLeft, sourceTop, CROP_DIAMETER, CROP_DIAMETER, 0, 0, outSize, outSize);
 
-      const dataUrl = outCanvas.toDataURL('image/jpeg', 0.85);
-      playerAvatars[cropTargetPlayer] = dataUrl;
-
-      if (downloadFile) {
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = `${cropTargetPlayer}.jpg`;
-        a.click();
-      }
-
+      playerAvatars[cropTargetPlayer] = outCanvas.toDataURL('image/jpeg', 0.85);
       closeCropperModal();
       saveState();
     };
@@ -824,7 +819,7 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              tooltip: { callbacks: { label: c => `${c.raw.name}: (${xKey}: ${c.raw.x}, ${yKey}: ${c.raw.y})` } },
+              tooltip: { callbacks: { label: c => `c.raw.name:({xKey}: ${c.raw.x}, ${yKey}: ${c.raw.y})` } },
               legend: { display: false }
             },
             scales: {
@@ -877,15 +872,15 @@
             ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px]')}
             <span>${p.name}</span>
           </td>
-          <td class="p-2.5"><input type="number" value="${p.pa}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'pa', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="${p.ab}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'ab', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="${p.h}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'h', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="${p.h1}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'h1', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="${p.h2}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'h2', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="${p.h3}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'h3', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="${p.hr}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'hr', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="${p.bb}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'bb', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="${p.k}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'k', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="p.pa"class="w-12bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'pa', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="p.ab"class="w-12bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'ab', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="p.h"class="w-12bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'h', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="p.h1"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'h1', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="p.h2"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'h2', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="p.h3"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'h3', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="p.hr"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'hr', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="p.bb"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'bb', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="p.k"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'k', this.value)"></td>
           <td class="p-2.5 font-mono text-emerald-400">${p.avg.toFixed(3)}</td>
           <td class="p-2.5 font-mono text-slate-300">${p.obp.toFixed(3)}</td>
           <td class="p-2.5 font-mono text-slate-300">${p.slg.toFixed(3)}</td>
@@ -971,7 +966,7 @@
 
     function populatePlayerSelect(players) {
       const sel = document.getElementById('playerSelect');
-      sel.innerHTML = players.map(d => `<option value="${d.name}" ${d.name === selectedPlayerName ? 'selected' : ''}>${d.name}</option>`).join('');
+      sel.innerHTML = players.map(d => `<option value="${d.name}" d.name===selectedPlayerName?'selected':''>{d.name}</option>`).join('');
     }
 
     function renderAll() {
@@ -1073,3 +1068,4 @@
   </script>
 </body>
 </html>
+
