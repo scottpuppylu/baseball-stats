@@ -323,7 +323,7 @@
     function renderAvatarElement(name, sizeClass = 'w-7 h-7 text-xs') {
       const avatarUrl = playerAvatars[name];
       if (avatarUrl) {
-        return `<img src="avatarUrl"alt="{name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0">`;
+        return `<img src="${avatarUrl}" alt="${name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0">`;
       }
       const char = name ? name.substring(0, 1) : '球';
       return `
@@ -819,7 +819,7 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              tooltip: { callbacks: { label: c => `c.raw.name:({xKey}: ${c.raw.x}, ${yKey}: ${c.raw.y})` } },
+              tooltip: { callbacks: { label: c => `${c.raw.name}: (${xKey}: ${c.raw.x}, ${yKey}: ${c.raw.y})` } },
               legend: { display: false }
             },
             scales: {
@@ -872,15 +872,15 @@
             ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px]')}
             <span>${p.name}</span>
           </td>
-          <td class="p-2.5"><input type="number" value="p.pa"class="w-12bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'pa', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="p.ab"class="w-12bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'ab', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="p.h"class="w-12bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'h', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="p.h1"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'h1', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="p.h2"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'h2', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="p.h3"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'h3', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="p.hr"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'hr', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="p.bb"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'bb', this.value)"></td>
-          <td class="p-2.5"><input type="number" value="p.k"class="w-10bg-slate-950borderborder-slate-700roundedpx-1text-center"onchange="updateSummaryMetric('{p.name}', 'k', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${p.pa}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'pa', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${p.ab}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'ab', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${p.h}" class="w-12 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'h', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${p.h1}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'h1', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${p.h2}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'h2', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${p.h3}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'h3', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${p.hr}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'hr', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${p.bb}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'bb', this.value)"></td>
+          <td class="p-2.5"><input type="number" value="${p.k}" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 text-center" onchange="updateSummaryMetric('${p.name}', 'k', this.value)"></td>
           <td class="p-2.5 font-mono text-emerald-400">${p.avg.toFixed(3)}</td>
           <td class="p-2.5 font-mono text-slate-300">${p.obp.toFixed(3)}</td>
           <td class="p-2.5 font-mono text-slate-300">${p.slg.toFixed(3)}</td>
@@ -966,7 +966,7 @@
 
     function populatePlayerSelect(players) {
       const sel = document.getElementById('playerSelect');
-      sel.innerHTML = players.map(d => `<option value="${d.name}" d.name===selectedPlayerName?'selected':''>{d.name}</option>`).join('');
+      sel.innerHTML = players.map(d => `<option value="${d.name}" ${d.name === selectedPlayerName ? 'selected' : ''}>${d.name}</option>`).join('');
     }
 
     function renderAll() {
@@ -1068,4 +1068,3 @@
   </script>
 </body>
 </html>
-
