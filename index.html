@@ -282,7 +282,7 @@
       </div>
     </section>
 
-    <!-- 模組五：雙視圖總表 (分立日誌登打與球員建檔) -->
+    <!-- 模組五：雙視圖總表 (計算項解耦，日誌與球員分立) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
@@ -290,16 +290,16 @@
           <button id="tabLogsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded font-medium">詳細賽事日誌</button>
         </div>
         <div class="flex items-center space-x-2">
-          <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記賽事日誌</button>
-          <button id="toggleAddPlayerBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 新增球隊球員</button>
+          <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記賽事日誌</button>
+          <button id="toggleAddPlayerBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 新增球隊球員</button>
         </div>
       </div>
 
-      <!-- 賽事日誌登打表單 (打數 AB 自動計算，高飛犧牲 SF 獨立輸入) -->
+      <!-- 賽事日誌登打表單 (打數 AB 與安打 H 均為自動計算項) -->
       <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-emerald-900/60 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
         <div class="col-span-2 md:col-span-6 flex items-center justify-between border-b border-slate-800 pb-2">
           <span class="font-bold text-emerald-400">登記賽事日誌 (輸入球員背號)</span>
-          <span class="text-[11px] text-slate-500">打數 (AB) 由系統自算：PA - BB - SF</span>
+          <span class="text-[11px] text-slate-400">系統自算：打數 (AB) = PA - BB - SF | 安打 (H) = 1H + 2H + 3H + HR</span>
         </div>
         <div>
           <label class="block text-slate-400 mb-1">比賽/記錄日期 <span class="text-rose-400">*</span></label>
@@ -307,7 +307,7 @@
         </div>
         <div>
           <label class="block text-slate-400 mb-1">賽事標籤/備註</label>
-          <input type="text" id="new_tag" placeholder="例: 盃賽G1 (未填預設: 聯賽)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 focus:outline-none focus:border-emerald-500">
+          <input type="text" id="new_tag" placeholder="未填預設：聯賽" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 focus:outline-none focus:border-emerald-500">
         </div>
         <div>
           <label class="block text-slate-400 mb-1">球員背號 <span class="text-rose-400">*</span></label>
@@ -315,8 +315,20 @@
           <span id="jerseyMatchHint" class="block text-[10px] mt-0.5 min-h-[16px]"></span>
         </div>
         <div>
-          <label class="block text-slate-400 mb-1">打席 (PA)</label>
-          <input type="number" id="new_pa" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+          <label class="block text-slate-400 mb-1">打席 (PA) <span class="text-rose-400">*</span></label>
+          <select id="new_pa" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono text-white focus:outline-none focus:border-emerald-500">
+            <option value="" disabled selected>選取打席 (1-10)</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
         </div>
         <div>
           <label class="block text-slate-400 mb-1">四壞 (BB)</label>
@@ -331,8 +343,8 @@
           <input type="text" id="preview_ab" value="0" readonly class="w-full bg-slate-950/80 border border-slate-800 rounded px-2 py-1 font-mono text-emerald-400 text-center font-bold cursor-not-allowed">
         </div>
         <div>
-          <label class="block text-slate-400 mb-1">安打 (H)</label>
-          <input type="number" id="new_h" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+          <label class="block text-slate-400 mb-1">安打 (H) [系統自算]</label>
+          <input type="text" id="preview_h" value="0" readonly class="w-full bg-slate-950/80 border border-slate-800 rounded px-2 py-1 font-mono text-emerald-400 text-center font-bold cursor-not-allowed">
         </div>
         <div>
           <label class="block text-slate-400 mb-1">一壘打 (1H)</label>
@@ -380,7 +392,7 @@
         </div>
         <div>
           <label class="block text-slate-400 mb-1">身分別/備註</label>
-          <input type="text" id="reg_tag" placeholder="例: 新進隊員 (未填預設: 選手建檔)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500">
+          <input type="text" id="reg_tag" placeholder="未填預設：選手建檔" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500">
         </div>
         <div class="col-span-1 md:col-span-4 flex justify-end space-x-2 pt-2 border-t border-slate-800/60">
           <button type="button" id="cancelAddPlayerBtn" class="bg-slate-800 text-slate-400 px-3 py-1 rounded">取消</button>
@@ -395,7 +407,7 @@
               <th class="p-2.5">選手</th>
               <th class="p-2.5 text-center">打席</th>
               <th class="p-2.5 text-center text-slate-300">打數 (自算)</th>
-              <th class="p-2.5 text-center">安打</th>
+              <th class="p-2.5 text-center text-slate-300">安打 (自算)</th>
               <th class="p-2.5 text-center">1H</th>
               <th class="p-2.5 text-center">2H</th>
               <th class="p-2.5 text-center">3H</th>
@@ -694,9 +706,9 @@
             <h4 class="text-sm font-bold text-slate-300">五、基礎計數指標速查 (Counting Statistics)</h4>
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pl-2 text-[11px]">
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打席 (PA)</span>總打擊輪次 = AB + BB + SF</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打席 (PA)</span>總打擊輪次 = AB + BB + SF (下拉 1-10)</div>
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打數 (AB)</span>有效打擊數 = PA - BB - SF (自算)</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">安打 (H)</span>擊球安全上壘 = 1H+2H+3H+HR</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">安打 (H)</span>擊球安全上壘 = 1H+2H+3H+HR (自算)</div>
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">壘打數 (TB)</span>1H + 2×2H + 3×3H + 4×HR</div>
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">四壞 (BB)</span>選到 4 顆壞球保送上一壘</div>
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">高犧 (SF)</span>出局但護送三壘跑者回本壘得分</div>
@@ -758,7 +770,7 @@
       98: "陳柏翰"
     };
 
-    // 2025 年度總結初始基準數據庫 (14位選手完整數據)
+    // 2025 年度總結初始基準數據庫 (依據 總成績.xlsx 完整補齊)
     const baseline2025Logs = [
       {"id":"log_2025_1","date":"2025-12-31","tag":"2025年度總結","name":"洪銘駿","jersey":30,"pa":31,"ab":27,"h":14,"h1":13,"h2":1,"h3":0,"hr":0,"bb":2,"sf":2,"k":5},
       {"id":"log_2025_2","date":"2025-12-31","tag":"2025年度總結","name":"陳威騏","jersey":99,"pa":29,"ab":27,"h":14,"h1":13,"h2":1,"h3":0,"hr":0,"bb":2,"sf":0,"k":2},
@@ -905,7 +917,7 @@
       },
       h: {
         title: "安打數 (Hits, H)",
-        formula: "H = 1H + 2H + 3H + HR",
+        formula: "H = 1H + 2H + 3H + HR (自算)",
         desc: "打者安全上壘且未藉由失誤或野手選擇的總打擊次數。"
       },
       hr: {
@@ -920,7 +932,7 @@
       },
       pa: {
         title: "打席數 (Plate Appearances, PA)",
-        formula: "PA = AB + BB + SF",
+        formula: "PA = AB + BB + SF (下拉選單 1-10)",
         desc: "打者完成完整打擊輪次的總次數，為評估出賽貢獻與樣本可信度之基礎。"
       }
     };
@@ -1310,6 +1322,7 @@
       });
     }
 
+    // 資料聚合計算引擎 (打數 AB 與安打 H 均由規則公式自動衍生)
     function getAggregatedStats(filteredLogs) {
       const grouped = {};
       filteredLogs.forEach(l => {
@@ -1317,14 +1330,28 @@
           grouped[l.name] = { name: l.name, pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0 };
         }
         grouped[l.name].pa += Number(l.pa) || 0;
-        grouped[l.name].h += Number(l.h) || 0;
-        grouped[l.name].h1 += Number(l.h1) || 0;
-        grouped[l.name].h2 += Number(l.h2) || 0;
-        grouped[l.name].h3 += Number(l.h3) || 0;
-        grouped[l.name].hr += Number(l.hr) || 0;
+        const h1 = Number(l.h1) || 0;
+        const h2 = Number(l.h2) || 0;
+        const h3 = Number(l.h3) || 0;
+        const hr = Number(l.hr) || 0;
+        const hitSum = h1 + h2 + h3 + hr;
+        const rawH = Number(l.h) || 0;
+
+        if (hitSum > 0) {
+          grouped[l.name].h1 += h1;
+          grouped[l.name].h2 += h2;
+          grouped[l.name].h3 += h3;
+          grouped[l.name].hr += hr;
+          grouped[l.name].h += hitSum;
+        } else if (rawH > 0) {
+          grouped[l.name].h1 += rawH;
+          grouped[l.name].h += rawH;
+        }
+
         grouped[l.name].bb += Number(l.bb) || 0;
         grouped[l.name].sf += Number(l.sf) || 0;
         grouped[l.name].k += Number(l.k) || 0;
+
         // 打數 AB 永遠由 PA - BB - SF 自動計算
         grouped[l.name].ab = Math.max(0, grouped[l.name].pa - grouped[l.name].bb - grouped[l.name].sf);
       });
@@ -1557,8 +1584,8 @@
 
       const metricsMeta = [
         { key: 'pa', label: '打席數 (PA)', fmt: v => v },
-        { key: 'ab', label: '打數 (AB)', fmt: v => v },
-        { key: 'h', label: '安打數 (H)', fmt: v => v },
+        { key: 'ab', label: '打數 (AB) [自算]', fmt: v => v },
+        { key: 'h', label: '安打數 (H) [自算]', fmt: v => v },
         { key: 'hr', label: '全壘打 (HR)', fmt: v => v },
         { key: 'avg', label: '打擊率 (AVG)', fmt: v => v.toFixed(3) },
         { key: 'obp', label: '上壘率 (OBP)', fmt: v => v.toFixed(3) },
@@ -1793,6 +1820,7 @@
       });
     }
 
+    // 核心打擊型態象限分析 (已導入 afterDraw Canvas 插件，徹底根除手機端豎線消失)
     function renderQuadrantChart(agg) {
       const pList = agg.players;
       const ctx = document.getElementById('quadrantChart').getContext('2d');
@@ -2064,7 +2092,7 @@
           </td>
           <td class="p-2.5 text-center"><input type="number" value="${p.pa ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'pa', this.value)"></td>
           <td class="p-2.5 text-center font-mono font-bold text-slate-200">${p.ab}</td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.h ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h', this.value)"></td>
+          <td class="p-2.5 text-center font-mono font-bold text-emerald-400">${p.h}</td>
           <td class="p-2.5 text-center"><input type="number" value="${p.h1 ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h1', this.value)"></td>
           <td class="p-2.5 text-center"><input type="number" value="${p.h2 ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h2', this.value)"></td>
           <td class="p-2.5 text-center"><input type="number" value="${p.h3 ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h3', this.value)"></td>
@@ -2093,11 +2121,8 @@
       if (logs.length > 0) {
         const targetLog = logs[logs.length - 1];
         targetLog[key] = Number(val) || 0;
-        // 打數永遠自動重算
         targetLog.ab = Math.max(0, (Number(targetLog.pa)||0) - (Number(targetLog.bb)||0) - (Number(targetLog.sf)||0));
-        if (key === 'h' && targetLog.h1 === 0 && targetLog.h2 === 0 && targetLog.h3 === 0 && targetLog.hr === 0) {
-          targetLog.h1 = Number(val) || 0;
-        }
+        targetLog.h = (Number(targetLog.h1)||0) + (Number(targetLog.h2)||0) + (Number(targetLog.h3)||0) + (Number(targetLog.hr)||0);
         await commitLogsToGitHub(allLogs, `update: update metric ${key} for ${name}`);
       }
     };
@@ -2170,6 +2195,10 @@
       document.getElementById('addLogForm').classList.add('hidden');
       const hint = document.getElementById('jerseyMatchHint');
       if (hint) hint.textContent = '';
+      const previewAbEl = document.getElementById('preview_ab');
+      if (previewAbEl) previewAbEl.value = '0';
+      const previewHEl = document.getElementById('preview_h');
+      if (previewHEl) previewHEl.value = '0';
     });
 
     document.getElementById('toggleAddPlayerBtn').addEventListener('click', () => {
@@ -2199,21 +2228,35 @@
       }
     });
 
-    // 日誌輸入：動態更新打數預覽 (AB = PA - BB - SF)
-    function updateAbPreview() {
+    // 動態更新打數預覽 (AB = PA - BB - SF) 與安打預覽 (H = 1H + 2H + 3H + HR)
+    function updateCalculatedPreviews() {
       const pa = Number(document.getElementById('new_pa').value) || 0;
       const bb = Number(document.getElementById('new_bb').value) || 0;
       const sf = Number(document.getElementById('new_sf').value) || 0;
-      const previewEl = document.getElementById('preview_ab');
-      if (previewEl) {
-        previewEl.value = Math.max(0, pa - bb - sf);
+      const previewAbEl = document.getElementById('preview_ab');
+      if (previewAbEl) {
+        previewAbEl.value = Math.max(0, pa - bb - sf);
+      }
+
+      const h1 = Number(document.getElementById('new_h1').value) || 0;
+      const h2 = Number(document.getElementById('new_h2').value) || 0;
+      const h3 = Number(document.getElementById('new_h3').value) || 0;
+      const hr = Number(document.getElementById('new_hr').value) || 0;
+      const previewHEl = document.getElementById('preview_h');
+      if (previewHEl) {
+        previewHEl.value = h1 + h2 + h3 + hr;
       }
     }
-    ['new_pa', 'new_bb', 'new_sf'].forEach(id => {
-      document.getElementById(id).addEventListener('input', updateAbPreview);
+
+    ['new_pa', 'new_bb', 'new_sf', 'new_h1', 'new_h2', 'new_h3', 'new_hr'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', updateCalculatedPreviews);
+        el.addEventListener('change', updateCalculatedPreviews);
+      }
     });
 
-    // 日誌送出：僅需背號、日期必填，未填項目自動補 0，標籤未填預設「聯賽」
+    // 日誌送出：日期、背號、打席必填，標籤未填預設「聯賽」，其他項目未填自動補 0
     document.getElementById('addLogForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const date = document.getElementById('new_date').value;
@@ -2229,27 +2272,24 @@
         return;
       }
 
+      const paVal = document.getElementById('new_pa').value;
+      if (!paVal) {
+        alert('請選取打席數 (PA)！');
+        return;
+      }
+      const pa = Number(paVal) || 0;
+
       const tag = document.getElementById('new_tag').value.trim() || '聯賽';
-      const pa = Number(document.getElementById('new_pa').value) || 0;
       const bb = Number(document.getElementById('new_bb').value) || 0;
       const sf = Number(document.getElementById('new_sf').value) || 0;
       const ab = Math.max(0, pa - bb - sf);
 
-      let h = Number(document.getElementById('new_h').value) || 0;
-      let h1 = Number(document.getElementById('new_h1').value) || 0;
-      let h2 = Number(document.getElementById('new_h2').value) || 0;
-      let h3 = Number(document.getElementById('new_h3').value) || 0;
-      let hr = Number(document.getElementById('new_hr').value) || 0;
+      const h1 = Number(document.getElementById('new_h1').value) || 0;
+      const h2 = Number(document.getElementById('new_h2').value) || 0;
+      const h3 = Number(document.getElementById('new_h3').value) || 0;
+      const hr = Number(document.getElementById('new_hr').value) || 0;
+      const h = h1 + h2 + h3 + hr;
       const k = Number(document.getElementById('new_k').value) || 0;
-
-      // 若未填總安打但填寫了分項安打，自動加總
-      if (h === 0 && (h1 + h2 + h3 + hr) > 0) {
-        h = h1 + h2 + h3 + hr;
-      }
-      // 若填寫總安打但未分項，預設歸入一壘打
-      if (h > 0 && (h1 + h2 + h3 + hr) === 0) {
-        h1 = h;
-      }
 
       const newEntry = {
         id: 'log_' + Date.now(),
@@ -2277,8 +2317,10 @@
         document.getElementById('addLogForm').reset();
         const hint = document.getElementById('jerseyMatchHint');
         if (hint) hint.textContent = '';
-        const previewEl = document.getElementById('preview_ab');
-        if (previewEl) previewEl.value = '0';
+        const previewAbEl = document.getElementById('preview_ab');
+        if (previewAbEl) previewAbEl.value = '0';
+        const previewHEl = document.getElementById('preview_h');
+        if (previewHEl) previewHEl.value = '0';
         document.getElementById('addLogForm').classList.add('hidden');
       }
     });
