@@ -282,20 +282,32 @@
       </div>
     </section>
 
-    <!-- 模組五：雙視圖總表 -->
+    <!-- 模組五：雙視圖總表 (分開提供賽事登打與球員建檔) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
           <button id="tabSummaryBtn" class="bg-sky-600 text-white text-xs px-3.5 py-1.5 rounded font-medium">區間成績匯總表 (即時儲存至 GitHub)</button>
           <button id="tabLogsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded font-medium">詳細賽事日誌</button>
         </div>
-        <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記新賽事日誌</button>
+        <div class="flex items-center space-x-2">
+          <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記賽事日誌</button>
+          <button id="toggleAddPlayerBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 新增球隊球員</button>
+        </div>
       </div>
 
-      <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-slate-800 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-        <div><label class="block text-slate-400 mb-1">比賽/記錄日期</label><input type="date" id="new_date" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">賽事標籤/備註</label><input type="text" id="new_tag" placeholder="例: 聯賽G1" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">球員姓名</label><input type="text" id="new_name" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+      <!-- 賽事日誌登打表單 (僅輸入背號，自動鎖定姓名) -->
+      <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-emerald-900/60 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+        <div class="col-span-2 md:col-span-6 flex items-center justify-between border-b border-slate-800 pb-2">
+          <span class="font-bold text-emerald-400">登記賽事日誌 (輸入球員背號)</span>
+          <span class="text-[11px] text-slate-500">若為新進隊員請先點擊「+ 新增球隊球員」建檔</span>
+        </div>
+        <div><label class="block text-slate-400 mb-1">比賽/記錄日期</label><input type="date" id="new_date" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono text-white focus:outline-none focus:border-emerald-500"></div>
+        <div><label class="block text-slate-400 mb-1">賽事標籤/備註</label><input type="text" id="new_tag" placeholder="例: 聯賽G1" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 focus:outline-none focus:border-emerald-500"></div>
+        <div>
+          <label class="block text-slate-400 mb-1">球員背號</label>
+          <input type="number" id="new_jersey" placeholder="輸入數字 (例: 44)" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono text-white focus:outline-none focus:border-emerald-500">
+          <span id="jerseyMatchHint" class="block text-[10px] mt-0.5 min-h-[16px]"></span>
+        </div>
         <div><label class="block text-slate-400 mb-1">打席 (PA)</label><input type="number" id="new_pa" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
         <div><label class="block text-slate-400 mb-1">打數 (AB)</label><input type="number" id="new_ab" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
         <div><label class="block text-slate-400 mb-1">安打 (H)</label><input type="number" id="new_h" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
@@ -305,9 +317,37 @@
         <div><label class="block text-slate-400 mb-1">全壘打 (HR)</label><input type="number" id="new_hr" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
         <div><label class="block text-slate-400 mb-1">四壞 (BB)</label><input type="number" id="new_bb" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
         <div><label class="block text-slate-400 mb-1">三振 (K)</label><input type="number" id="new_k" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div class="col-span-2 md:col-span-6 flex justify-end space-x-2 pt-2">
+        <div class="col-span-2 md:col-span-6 flex justify-end space-x-2 pt-2 border-t border-slate-800/60">
           <button type="button" id="cancelAddLogBtn" class="bg-slate-800 text-slate-400 px-3 py-1 rounded">取消</button>
           <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1 rounded font-medium">儲存並寫入 GitHub 雲端</button>
+        </div>
+      </form>
+
+      <!-- 新增球隊球員表單 (輸入新球員背號與姓名) -->
+      <form id="addPlayerForm" class="hidden bg-slate-950 p-4 rounded-xl border border-indigo-900/60 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+        <div class="col-span-1 md:col-span-4 flex items-center justify-between border-b border-slate-800 pb-2">
+          <span class="font-bold text-indigo-400">新增球隊球員檔案 (球員背號與姓名建檔)</span>
+          <span class="text-[11px] text-slate-500">完成建檔後，日誌登打即可直接輸入該背號</span>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">球員背號</label>
+          <input type="number" id="reg_jersey" placeholder="輸入數字背號 (例: 17)" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 font-mono text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">球員姓名</label>
+          <input type="text" id="reg_name" placeholder="輸入球員真實姓名" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">入隊/建檔日期</label>
+          <input type="date" id="reg_date" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 font-mono text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">身分別/備註</label>
+          <input type="text" id="reg_tag" placeholder="例: 新進隊員 / 大一" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="col-span-1 md:col-span-4 flex justify-end space-x-2 pt-2 border-t border-slate-800/60">
+          <button type="button" id="cancelAddPlayerBtn" class="bg-slate-800 text-slate-400 px-3 py-1 rounded">取消</button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1 rounded font-medium">建立檔案並同步至 GitHub</button>
         </div>
       </form>
 
@@ -661,6 +701,41 @@
 
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
 
+    // 球隊背號預設對照字典 (14位現役隊員)
+    const DEFAULT_JERSEY_MAP = {
+      30: "洪銘駿",
+      99: "陳威騏",
+      24: "楊智翔",
+      26: "林楊大禎",
+      2: "劉憬翰",
+      4: "陳泓銘",
+      31: "孫煜哲",
+      72: "田耕宇",
+      44: "盧宣嘉",
+      8: "簡承均",
+      47: "謝承祐",
+      41: "廖仲毅",
+      34: "吳侑宸",
+      98: "陳柏翰"
+    };
+
+    let JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
+    let NAME_TO_JERSEY = Object.fromEntries(
+      Object.entries(JERSEY_TO_NAME).map(([k, v]) => [v, Number(k)])
+    );
+
+    function syncJerseyMaps() {
+      JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
+      allLogs.forEach(l => {
+        if (l.jersey && l.name) {
+          JERSEY_TO_NAME[Number(l.jersey)] = l.name;
+        }
+      });
+      NAME_TO_JERSEY = Object.fromEntries(
+        Object.entries(JERSEY_TO_NAME).map(([k, v]) => [v, Number(k)])
+      );
+    }
+
     let allLogs = [];
     let currentFileSha = null;
     let selectedPlayerName = "";
@@ -880,6 +955,7 @@
         }
       }
 
+      syncJerseyMaps();
       if (allLogs.length > 0 && !selectedPlayerName) {
         selectedPlayerName = allLogs[0].name;
       }
@@ -930,6 +1006,7 @@
         const resData = await putRes.json();
         currentFileSha = resData.content.sha;
         allLogs = updatedLogs;
+        syncJerseyMaps();
 
         statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (Commit: ${currentFileSha.substring(0,7)})`;
         statusBadge.className = 'text-emerald-400 font-mono';
@@ -1311,7 +1388,7 @@
           ${renderAvatarElement(p.name, 'w-10 h-10 text-sm')}
           <div class="flex-1">
             <div class="flex justify-between items-center">
-              <span class="font-bold text-white text-sm">${p.name}</span>
+              <span class="font-bold text-white text-sm">#${NAME_TO_JERSEY[p.name] ?? "--"} ${p.name}</span>
               <span class="text-[10px] font-mono ${podiumColors[idx].text}">${podiumColors[idx].title}</span>
             </div>
             <div class="flex justify-between items-baseline mt-0.5">
@@ -1341,7 +1418,7 @@
           <td class="p-2.5 text-center">${rankBadge}</td>
           <td class="p-2.5 font-bold text-white flex items-center space-x-2">
             ${renderAvatarElement(p.name, 'w-5 h-5 text-[9px]')}
-            <span>${p.name}</span>
+            <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-[10px] mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
           <td class="p-2.5 text-center">${p.pa}</td>
           <td class="p-2.5 text-center">${p.ab}</td>
@@ -1370,8 +1447,14 @@
         comparePlayerBName = players.length > 1 ? players[1].name : players[0].name;
       }
 
-      selA.innerHTML = players.map(d => `<option value="${d.name}" ${d.name === comparePlayerAName ? 'selected' : ''}>${d.name}</option>`).join('');
-      selB.innerHTML = players.map(d => `<option value="${d.name}" ${d.name === comparePlayerBName ? 'selected' : ''}>${d.name}</option>`).join('');
+      selA.innerHTML = players.map(d => {
+        const j = NAME_TO_JERSEY[d.name] !== undefined ? `#${NAME_TO_JERSEY[d.name]} ` : '';
+        return `<option value="${d.name}" ${d.name === comparePlayerAName ? 'selected' : ''}>${j}${d.name}</option>`;
+      }).join('');
+      selB.innerHTML = players.map(d => {
+        const j = NAME_TO_JERSEY[d.name] !== undefined ? `#${NAME_TO_JERSEY[d.name]} ` : '';
+        return `<option value="${d.name}" ${d.name === comparePlayerBName ? 'selected' : ''}>${j}${d.name}</option>`;
+      }).join('');
     }
 
     function renderComparison(agg) {
@@ -1383,15 +1466,15 @@
       const pA = pList.find(p => p.name === comparePlayerAName) || pList[0];
       const pB = pList.find(p => p.name === comparePlayerBName) || (pList.length > 1 ? pList[1] : pList[0]);
 
-      document.getElementById('compareHeadA').textContent = pA.name;
-      document.getElementById('compareHeadB').textContent = pB.name;
+      document.getElementById('compareHeadA').textContent = `#${NAME_TO_JERSEY[pA.name] ?? ''} ${pA.name}`;
+      document.getElementById('compareHeadB').textContent = `#${NAME_TO_JERSEY[pB.name] ?? ''} ${pB.name}`;
 
       document.getElementById('compareCardA').innerHTML = `
         <div class="flex items-center space-x-3">
           ${renderAvatarElement(pA.name, 'w-12 h-12 text-lg')}
           <div class="flex-1">
             <div class="flex justify-between items-baseline">
-              <span class="text-base font-black text-sky-400">${pA.name}</span>
+              <span class="text-base font-black text-sky-400">#${NAME_TO_JERSEY[pA.name] ?? ""} ${pA.name}</span>
               <span class="text-xs font-mono text-slate-400">PA: ${pA.pa}</span>
             </div>
             <p class="text-xs text-slate-300 font-mono mt-0.5">三圍: ${pA.avg.toFixed(3)} / ${pA.obp.toFixed(3)} / ${pA.slg.toFixed(3)}</p>
@@ -1405,7 +1488,7 @@
           ${renderAvatarElement(pB.name, 'w-12 h-12 text-lg')}
           <div class="flex-1">
             <div class="flex justify-between items-baseline">
-              <span class="text-base font-black text-amber-400">${pB.name}</span>
+              <span class="text-base font-black text-amber-400">#${NAME_TO_JERSEY[pB.name] ?? ""} ${pB.name}</span>
               <span class="text-xs font-mono text-slate-400">PA: ${pB.pa}</span>
             </div>
             <p class="text-xs text-slate-300 font-mono mt-0.5">三圍: ${pB.avg.toFixed(3)} / ${pB.obp.toFixed(3)} / ${pB.slg.toFixed(3)}</p>
@@ -1574,7 +1657,10 @@
             <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white font-medium">裁切</div>
           </div>
           <div class="flex-1">
-            <span class="text-xl font-black text-white">${p.name}</span>
+            <div class="flex items-center space-x-2">
+              <span class="text-xl font-black text-white">${p.name}</span>
+              <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2 py-0.5 rounded font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
+            </div>
             <p class="text-xs text-slate-400 mt-1">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 三振: ${p.k}</p>
           </div>
         </div>
@@ -1919,7 +2005,7 @@
         tr.innerHTML = `
           <td class="p-2.5 font-bold text-white flex items-center space-x-2">
             ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px]')}
-            <span>${p.name}</span>
+            <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-[10px] mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
           <td class="p-2.5 text-center"><input type="number" value="${p.pa ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'pa', this.value)"></td>
           <td class="p-2.5 text-center"><input type="number" value="${p.ab ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'ab', this.value)"></td>
@@ -1975,7 +2061,7 @@
           <td class="p-2.5 text-slate-300">${l.tag}</td>
           <td class="p-2.5 font-bold text-white flex items-center space-x-2">
             ${renderAvatarElement(l.name, 'w-5 h-5 text-[9px]')}
-            <span>${l.name}</span>
+            <span>${NAME_TO_JERSEY[l.name] !== undefined ? `<span class="text-slate-400 font-mono text-[10px] mr-1">#${NAME_TO_JERSEY[l.name]}</span>` : ''}${l.name}</span>
           </td>
           <td class="p-2.5">${l.pa}</td>
           <td class="p-2.5">${l.ab}</td>
@@ -2013,13 +2099,63 @@
       await commitLogsToGitHub(updated, `delete: batch prune match logs from ${s} to ${e}`);
     });
 
+    // 表單切換控制：賽事日誌與新增球員分開獨立
+    document.getElementById('toggleAddLogBtn').addEventListener('click', () => {
+      document.getElementById('addLogForm').classList.toggle('hidden');
+      document.getElementById('addPlayerForm').classList.add('hidden');
+      const today = new Date().toISOString().slice(0, 10);
+      if (!document.getElementById('new_date').value) document.getElementById('new_date').value = today;
+    });
+
+    document.getElementById('cancelAddLogBtn').addEventListener('click', () => {
+      document.getElementById('addLogForm').classList.add('hidden');
+      const hint = document.getElementById('jerseyMatchHint');
+      if (hint) hint.textContent = '';
+    });
+
+    document.getElementById('toggleAddPlayerBtn').addEventListener('click', () => {
+      document.getElementById('addPlayerForm').classList.toggle('hidden');
+      document.getElementById('addLogForm').classList.add('hidden');
+      const today = new Date().toISOString().slice(0, 10);
+      if (!document.getElementById('reg_date').value) document.getElementById('reg_date').value = today;
+    });
+
+    document.getElementById('cancelAddPlayerBtn').addEventListener('click', () => {
+      document.getElementById('addPlayerForm').classList.add('hidden');
+    });
+
+    // 日誌輸入：背號即時聯想與鎖定提示
+    document.getElementById('new_jersey').addEventListener('input', (e) => {
+      const num = Number(e.target.value.trim());
+      const hint = document.getElementById('jerseyMatchHint');
+      if (!hint) return;
+      if (JERSEY_TO_NAME[num]) {
+        hint.textContent = `鎖定球員：#${num} ${JERSEY_TO_NAME[num]}`;
+        hint.className = 'block text-[10px] text-emerald-400 mt-0.5 min-h-[16px] font-medium';
+      } else if (e.target.value.trim() !== '') {
+        hint.textContent = '查無此背號，若為新進隊員請先透過「新增球隊球員」建檔';
+        hint.className = 'block text-[10px] text-rose-400 mt-0.5 min-h-[16px] font-medium';
+      } else {
+        hint.textContent = '';
+      }
+    });
+
+    // 日誌送出：僅需輸入背號，自動校驗並提交
     document.getElementById('addLogForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const jerseyNum = Number(document.getElementById('new_jersey').value.trim());
+      const playerName = JERSEY_TO_NAME[jerseyNum];
+      if (!playerName) {
+        alert(`查無背號 #${jerseyNum} 之球員！\n若為新球員，請先點擊「+ 新增球隊球員」建立檔案。`);
+        return;
+      }
+
       const newEntry = {
         id: 'log_' + Date.now(),
         date: document.getElementById('new_date').value,
         tag: document.getElementById('new_tag').value.trim(),
-        name: document.getElementById('new_name').value.trim(),
+        name: playerName,
+        jersey: jerseyNum,
         pa: Number(document.getElementById('new_pa').value) || 0,
         ab: Number(document.getElementById('new_ab').value) || 0,
         h: Number(document.getElementById('new_h').value) || 0,
@@ -2035,16 +2171,77 @@
       const updated = [...allLogs, newEntry];
       selectedPlayerName = newEntry.name;
 
-      const success = await commitLogsToGitHub(updated, `feat: add match record for ${newEntry.name} on ${newEntry.date}`);
+      const success = await commitLogsToGitHub(updated, `feat: add match record for #${jerseyNum} ${newEntry.name} on ${newEntry.date}`);
       if (success) {
         document.getElementById('addLogForm').reset();
+        const hint = document.getElementById('jerseyMatchHint');
+        if (hint) hint.textContent = '';
         document.getElementById('addLogForm').classList.add('hidden');
+      }
+    });
+
+    // 新增球員送出：綁定背號與姓名，永久同步至 GitHub
+    document.getElementById('addPlayerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const num = Number(document.getElementById('reg_jersey').value.trim());
+      const name = document.getElementById('reg_name').value.trim();
+      const date = document.getElementById('reg_date').value;
+      const tag = document.getElementById('reg_tag').value.trim() || '選手建檔';
+
+      if (!name) {
+        alert('請輸入球員姓名！');
+        return;
+      }
+      if (isNaN(num) || num < 0) {
+        alert('請輸入有效數字背號！');
+        return;
+      }
+      if (JERSEY_TO_NAME[num]) {
+        alert(`背號 #${num} 已由「${JERSEY_TO_NAME[num]}」登記使用，無法重複指派！`);
+        return;
+      }
+      if (NAME_TO_JERSEY[name] !== undefined) {
+        alert(`球員「${name}」已建檔過，目前背號為 #${NAME_TO_JERSEY[name]}！`);
+        return;
+      }
+
+      JERSEY_TO_NAME[num] = name;
+      NAME_TO_JERSEY[name] = num;
+
+      const regLog = {
+        id: 'reg_' + Date.now(),
+        date: date,
+        tag: tag,
+        name: name,
+        jersey: num,
+        pa: 0,
+        ab: 0,
+        h: 0,
+        h1: 0,
+        h2: 0,
+        h3: 0,
+        hr: 0,
+        bb: 0,
+        sf: 0,
+        k: 0
+      };
+
+      const updated = [...allLogs, regLog];
+      selectedPlayerName = name;
+
+      const success = await commitLogsToGitHub(updated, `feat: register player #${num} ${name}`);
+      if (success) {
+        document.getElementById('addPlayerForm').reset();
+        document.getElementById('addPlayerForm').classList.add('hidden');
       }
     });
 
     function populatePlayerSelect(players) {
       const sel = document.getElementById('playerSelect');
-      sel.innerHTML = players.map(d => `<option value="${d.name}" ${d.name === selectedPlayerName ? 'selected' : ''}>${d.name}</option>`).join('');
+      sel.innerHTML = players.map(d => {
+        const j = NAME_TO_JERSEY[d.name] !== undefined ? `#${NAME_TO_JERSEY[d.name]} ` : '';
+        return `<option value="${d.name}" ${d.name === selectedPlayerName ? 'selected' : ''}>${j}${d.name}</option>`;
+      }).join('');
     }
 
     function renderAll() {
@@ -2103,13 +2300,6 @@
       document.getElementById('viewLogs').classList.remove('hidden');
       document.getElementById('tabLogsBtn').className = 'bg-sky-600 text-white text-xs px-3.5 py-1.5 rounded font-medium';
       document.getElementById('tabSummaryBtn').className = 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded font-medium';
-    });
-
-    document.getElementById('toggleAddLogBtn').addEventListener('click', () => {
-      document.getElementById('addLogForm').classList.toggle('hidden');
-    });
-    document.getElementById('cancelAddLogBtn').addEventListener('click', () => {
-      document.getElementById('addLogForm').classList.add('hidden');
     });
 
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
