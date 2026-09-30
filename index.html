@@ -24,7 +24,7 @@
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-400">
           <div class="flex items-center space-x-1.5">
             <span class="text-sky-300 font-medium">系統建構：盧宣嘉</span>
-            <span class="bg-slate-800 text-slate-300 border border-slate-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">v261001.0036</span>
+            <span class="bg-slate-800 text-slate-300 border border-slate-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">v261001.0050</span>
           </div>
           <span class="text-slate-600">|</span>
           <span id="syncStatusBadge" class="text-emerald-400 font-mono">雲端資料庫：連線中...</span>
@@ -58,18 +58,19 @@
       </div>
     </section>
 
-    <!-- 模組一：全隊戰力概覽看板 -->
+    <!-- 模組一：全隊戰力概覽看板 (榮譽王座自動帶入選手大頭像) -->
     <section class="grid grid-cols-2 md:grid-cols-6 gap-3" id="teamSummaryCards"></section>
 
-    <!-- 模組二：個人深度檔案 -->
+    <!-- 模組二：個人深度檔案 (超顯眼 96px 大頭像與快捷上傳) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <h2 class="text-base font-bold text-sky-400">球員深度檔案與個人能力</h2>
           <p class="text-xs text-slate-400">五維雷達圖採用慢壘專用 SDI 指標：結合四壞保送與三振懲罰評估好球帶判斷力</p>
         </div>
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2.5">
           <label class="text-xs text-slate-400">選取選手：</label>
+          <div id="playerSelectAvatarBadge" class="shrink-0"></div>
           <select id="playerSelect" class="bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-sky-500"></select>
         </div>
       </div>
@@ -88,7 +89,7 @@
       </div>
     </section>
 
-    <!-- 模組三：全隊排行榜模組 (可伸縮) -->
+    <!-- 模組三：全隊排行榜模組 (前三名頒獎台放大頭像與金銀銅立體光環) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-3">
@@ -256,7 +257,7 @@
       </div>
     </section>
 
-    <!-- 模組五：雙視圖總表 (彙總表唯讀檢視，日誌與球員分立) -->
+    <!-- 模組五：雙視圖總表 (匯總表與日誌頭像全面放大顯眼化) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
@@ -269,7 +270,7 @@
         </div>
       </div>
 
-      <!-- 賽事日誌登打表單 -->
+      <!-- 賽事日誌登打表單 (輸入背號自動浮現選手即時頭像) -->
       <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-emerald-900/60 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
         <div class="col-span-2 md:col-span-6 flex items-center justify-between border-b border-slate-800 pb-2">
           <span class="font-bold text-emerald-400">登記賽事日誌 (輸入球員背號)</span>
@@ -374,7 +375,7 @@
         </div>
       </form>
 
-      <!-- 區間成績匯總表 (唯讀檢視) -->
+      <!-- 區間成績匯總表 (唯讀檢視，頭像放大至 36px) -->
       <div id="viewSummary" class="overflow-x-auto rounded-lg border border-slate-800">
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-950 text-slate-400 uppercase select-none">
@@ -407,7 +408,7 @@
         </table>
       </div>
 
-      <!-- 詳細賽事日誌與分頁元件 (每頁 15 筆) -->
+      <!-- 詳細賽事日誌與分頁元件 (頭像放大至 32px，每頁 15 筆) -->
       <div id="viewLogs" class="hidden space-y-3">
         <div class="overflow-x-auto rounded-lg border border-slate-800">
           <table class="w-full text-left text-xs whitespace-nowrap">
@@ -435,7 +436,7 @@
       </div>
     </section>
 
-    <!-- 模組六：雙人選手數據對決比較 (可伸縮) -->
+    <!-- 模組六：雙人選手數據對決比較 (雙雄對決大頭像 80px 與表頭頭像嵌入) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-3">
@@ -998,7 +999,7 @@
             localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
           }
         } catch (e) {
-          // 保留本地快取頭像
+          // 保留本地快取
         }
       }
     }
@@ -1165,14 +1166,15 @@
       }
     }
 
-    function renderAvatarElement(name, sizeClass = 'w-7 h-7 text-xs') {
+    // 全站頭像核心渲染器：強化光澤外框與飽和漸層背景
+    function renderAvatarElement(name, sizeClass = 'w-8 h-8 text-xs') {
       const avatarData = playerAvatars[name];
       if (avatarData) {
-        return `<img src="${avatarData}" alt="${name}" class="${sizeClass} rounded-full object-cover border border-sky-400/50 shadow shrink-0">`;
+        return `<img src="${avatarData}" alt="${name}" class="${sizeClass} rounded-full object-cover border-2 border-sky-400/80 shadow-md shrink-0 transition duration-150">`;
       }
       const char = name ? name.substring(0, 1) : '航';
       return `
-        <div class="${sizeClass} rounded-full bg-gradient-to-br from-sky-600 to-indigo-800 border border-sky-400/40 text-white font-bold flex items-center justify-center shadow shrink-0 select-none">
+        <div class="${sizeClass} rounded-full bg-gradient-to-br from-sky-600 via-indigo-700 to-slate-900 border-2 border-sky-400/60 text-white font-black flex items-center justify-center shadow-md shrink-0 select-none tracking-tight">
           ${char}
         </div>
       `;
@@ -1495,6 +1497,7 @@
       };
     }
 
+    // 模組一：看板卡片渲染（得主卡片右側嵌入大頭像並支援點擊切換）
     function renderSummaryCards(agg) {
       const pList = agg.players;
       const topAvg = [...pList].sort((a,b) => b.avg - a.avg)[0];
@@ -1502,23 +1505,27 @@
       const topWrc = [...pList].sort((a,b) => b.wrc_plus - a.wrc_plus)[0];
 
       const cards = [
-        { label: '區間團隊打擊率', val: agg.teamAvg.toFixed(3), sub: `安打累計: ${agg.totalH}` },
-        { label: '區間團隊 OPS', val: agg.teamOps.toFixed(3), sub: `OBP: ${agg.teamObp.toFixed(3)} | SLG: ${agg.teamSlg.toFixed(3)}` },
-        { label: '區間總打席', val: agg.totalPa, sub: `全壘打: ${agg.totalHr} 支` },
-        { label: '區間打擊王', val: topAvg ? topAvg.avg.toFixed(3) : '.000', sub: topAvg ? topAvg.name : '-' },
-        { label: '區間全壘打王', val: topHr ? `${topHr.hr} 支` : '0 支', sub: topHr ? topHr.name : '-' },
-        { label: '區間進攻破壞王', val: topWrc ? topWrc.wrc_plus.toFixed(1) : '100', sub: topWrc ? topWrc.name : '-' }
+        { label: '區間團隊打擊率', val: agg.teamAvg.toFixed(3), sub: `安打累計: ${agg.totalH}`, player: null },
+        { label: '區間團隊 OPS', val: agg.teamOps.toFixed(3), sub: `OBP: ${agg.teamObp.toFixed(3)} | SLG: ${agg.teamSlg.toFixed(3)}`, player: null },
+        { label: '區間總打席', val: agg.totalPa, sub: `全壘打: ${agg.totalHr} 支`, player: null },
+        { label: '區間打擊王', val: topAvg ? topAvg.avg.toFixed(3) : '.000', sub: topAvg ? `#${NAME_TO_JERSEY[topAvg.name] ?? ''} ${topAvg.name}` : '-', player: topAvg ? topAvg.name : null },
+        { label: '區間全壘打王', val: topHr ? `${topHr.hr} 支` : '0 支', sub: topHr ? `#${NAME_TO_JERSEY[topHr.name] ?? ''} ${topHr.name}` : '-', player: topHr ? topHr.name : null },
+        { label: '區間進攻破壞王', val: topWrc ? topWrc.wrc_plus.toFixed(1) : '100', sub: topWrc ? `#${NAME_TO_JERSEY[topWrc.name] ?? ''} ${topWrc.name}` : '-', player: topWrc ? topWrc.name : null }
       ];
 
       document.getElementById('teamSummaryCards').innerHTML = cards.map(c => `
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex flex-col justify-between">
-          <span class="text-[11px] font-medium text-slate-400">${c.label}</span>
-          <span class="text-xl font-black text-sky-400 my-1">${c.val}</span>
-          <span class="text-[10px] text-slate-500 font-mono">${c.sub}</span>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex items-center justify-between gap-2 shadow hover:border-slate-700 transition">
+          <div class="flex-1 min-w-0">
+            <span class="text-[11px] font-medium text-slate-400 block truncate">${c.label}</span>
+            <span class="text-xl font-black text-sky-400 my-0.5 block">${c.val}</span>
+            <span class="text-[10px] text-slate-500 font-mono block truncate">${c.sub}</span>
+          </div>
+          ${c.player ? `<div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${c.player}'; document.getElementById('playerSelect').value='${c.player}'; renderAll();" title="點擊檢視 ${c.player} 深度檔案">${renderAvatarElement(c.player, 'w-11 h-11 text-sm ring-2 ring-sky-400/60 shadow-lg')}</div>` : ''}
         </div>
       `).join('');
     }
 
+    // 模組三：排行榜前三名大頭像與清單行頭像渲染
     function renderLeaderboard(agg) {
       const metric = document.getElementById('leaderboardMetricSelect').value;
       const minPa = Number(document.getElementById('leaderboardMinPa').value) || 0;
@@ -1555,23 +1562,25 @@
       const podium = document.getElementById('leaderboardPodium');
       const top3 = filtered.slice(0, 3);
       const podiumColors = [
-        { border: 'border-amber-400/60', bg: 'bg-amber-950/20', text: 'text-amber-300', title: '冠軍 / 1st' },
-        { border: 'border-slate-300/50', bg: 'bg-slate-800/30', text: 'text-slate-200', title: '亞軍 / 2nd' },
-        { border: 'border-amber-700/50', bg: 'bg-amber-900/10', text: 'text-amber-600', title: '季軍 / 3rd' }
+        { border: 'border-amber-400/60', bg: 'bg-amber-950/25', text: 'text-amber-300', title: '冠軍 / 1st', ring: 'ring-2 ring-amber-400 shadow-lg shadow-amber-500/20' },
+        { border: 'border-slate-300/50', bg: 'bg-slate-800/40', text: 'text-slate-200', title: '亞軍 / 2nd', ring: 'ring-2 ring-slate-300 shadow-lg shadow-slate-400/20' },
+        { border: 'border-amber-700/50', bg: 'bg-amber-900/15', text: 'text-amber-600', title: '季軍 / 3rd', ring: 'ring-2 ring-amber-700 shadow-lg shadow-amber-800/20' }
       ];
 
       podium.innerHTML = top3.map((p, idx) => `
-        <div class="border ${podiumColors[idx].border} ${podiumColors[idx].bg} rounded-xl p-3 flex items-center space-x-3">
-          <div class="text-xl font-black ${podiumColors[idx].text} w-6 text-center">${idx + 1}</div>
-          ${renderAvatarElement(p.name, 'w-10 h-10 text-sm')}
-          <div class="flex-1">
+        <div class="border ${podiumColors[idx].border} ${podiumColors[idx].bg} rounded-xl p-3.5 flex items-center space-x-3.5 shadow-md">
+          <div class="text-2xl font-black ${podiumColors[idx].text} w-6 text-center">${idx + 1}</div>
+          <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${p.name}'; document.getElementById('playerSelect').value='${p.name}'; renderAll();" title="點擊檢視 ${p.name} 檔案">
+            ${renderAvatarElement(p.name, 'w-14 h-14 text-xl ' + podiumColors[idx].ring)}
+          </div>
+          <div class="flex-1 min-w-0">
             <div class="flex justify-between items-center">
-              <span class="font-bold text-white text-sm">#${NAME_TO_JERSEY[p.name] ?? "--"} ${p.name}</span>
-              <span class="text-[10px] font-mono ${podiumColors[idx].text}">${podiumColors[idx].title}</span>
+              <span class="font-bold text-white text-base truncate">#${NAME_TO_JERSEY[p.name] ?? "--"} ${p.name}</span>
+              <span class="text-[10px] font-mono ${podiumColors[idx].text} px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800">${podiumColors[idx].title}</span>
             </div>
-            <div class="flex justify-between items-baseline mt-0.5">
-              <span class="text-[11px] text-slate-400">PA: ${p.pa}</span>
-              <span class="text-base font-black font-mono text-sky-400">${formatVal(p[realKey], realKey)}</span>
+            <div class="flex justify-between items-baseline mt-1">
+              <span class="text-xs text-slate-400">PA: ${p.pa}</span>
+              <span class="text-lg font-black font-mono text-sky-400">${formatVal(p[realKey], realKey)}</span>
             </div>
           </div>
         </div>
@@ -1594,8 +1603,8 @@
 
         tr.innerHTML = `
           <td class="p-2.5 text-center">${rankBadge}</td>
-          <td class="p-2.5 font-bold text-white flex items-center space-x-2">
-            ${renderAvatarElement(p.name, 'w-5 h-5 text-[9px]')}
+          <td class="p-2.5 font-bold text-white flex items-center space-x-2.5">
+            ${renderAvatarElement(p.name, 'w-8 h-8 text-xs ring-1 ring-slate-700')}
             <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-[10px] mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
           <td class="p-2.5 text-center">${p.pa}</td>
@@ -1635,6 +1644,7 @@
       }).join('');
     }
 
+    // 模組六：雙人對決卡片放大至 80px 頭像與表頭雙方頭像置入
     function renderComparison(agg) {
       const pList = agg.players;
       if (pList.length === 0) return;
@@ -1644,33 +1654,47 @@
       const pA = pList.find(p => p.name === comparePlayerAName) || pList[0];
       const pB = pList.find(p => p.name === comparePlayerBName) || (pList.length > 1 ? pList[1] : pList[0]);
 
-      document.getElementById('compareHeadA').textContent = `#${NAME_TO_JERSEY[pA.name] ?? ''} ${pA.name}`;
-      document.getElementById('compareHeadB').textContent = `#${NAME_TO_JERSEY[pB.name] ?? ''} ${pB.name}`;
+      document.getElementById('compareHeadA').innerHTML = `
+        <div class="flex items-center justify-center gap-1.5">
+          ${renderAvatarElement(pA.name, 'w-6 h-6 text-[10px] ring-1 ring-sky-400')}
+          <span>#${NAME_TO_JERSEY[pA.name] ?? ''} ${pA.name}</span>
+        </div>
+      `;
+      document.getElementById('compareHeadB').innerHTML = `
+        <div class="flex items-center justify-center gap-1.5">
+          ${renderAvatarElement(pB.name, 'w-6 h-6 text-[10px] ring-1 ring-amber-400')}
+          <span>#${NAME_TO_JERSEY[pB.name] ?? ''} ${pB.name}</span>
+        </div>
+      `;
 
       document.getElementById('compareCardA').innerHTML = `
-        <div class="flex items-center space-x-3">
-          ${renderAvatarElement(pA.name, 'w-12 h-12 text-lg')}
-          <div class="flex-1">
+        <div class="flex items-center space-x-4">
+          <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${pA.name}'; document.getElementById('playerSelect').value='${pA.name}'; renderAll();" title="點擊檢視 ${pA.name} 檔案">
+            ${renderAvatarElement(pA.name, 'w-20 h-20 text-2xl ring-4 ring-sky-500/50 shadow-xl shadow-sky-500/20')}
+          </div>
+          <div class="flex-1 min-w-0">
             <div class="flex justify-between items-baseline">
-              <span class="text-base font-black text-sky-400">#${NAME_TO_JERSEY[pA.name] ?? ""} ${pA.name}</span>
+              <span class="text-lg font-black text-sky-400 truncate">#${NAME_TO_JERSEY[pA.name] ?? ""} ${pA.name}</span>
               <span class="text-xs font-mono text-slate-400">PA: ${pA.pa}</span>
             </div>
-            <p class="text-xs text-slate-300 font-mono mt-0.5">三圍: ${pA.avg.toFixed(3)} / ${pA.obp.toFixed(3)} / ${pA.slg.toFixed(3)}</p>
-            <p class="text-[11px] text-slate-400 font-mono">OPS: ${pA.ops.toFixed(3)} | wRC+: ${pA.wrc_plus.toFixed(1)} | SDI: ${(pA.sdi >= 0 ? '+' : '') + pA.sdi.toFixed(3)}</p>
+            <p class="text-xs text-slate-300 font-mono mt-1">三圍: ${pA.avg.toFixed(3)} / ${pA.obp.toFixed(3)} / ${pA.slg.toFixed(3)}</p>
+            <p class="text-[11px] text-slate-400 font-mono mt-0.5">OPS: ${pA.ops.toFixed(3)} | wRC+: ${pA.wrc_plus.toFixed(1)} | SDI: ${(pA.sdi >= 0 ? '+' : '') + pA.sdi.toFixed(3)}</p>
           </div>
         </div>
       `;
 
       document.getElementById('compareCardB').innerHTML = `
-        <div class="flex items-center space-x-3">
-          ${renderAvatarElement(pB.name, 'w-12 h-12 text-lg')}
-          <div class="flex-1">
+        <div class="flex items-center space-x-4">
+          <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${pB.name}'; document.getElementById('playerSelect').value='${pB.name}'; renderAll();" title="點擊檢視 ${pB.name} 檔案">
+            ${renderAvatarElement(pB.name, 'w-20 h-20 text-2xl ring-4 ring-amber-500/50 shadow-xl shadow-amber-500/20')}
+          </div>
+          <div class="flex-1 min-w-0">
             <div class="flex justify-between items-baseline">
-              <span class="text-base font-black text-amber-400">#${NAME_TO_JERSEY[pB.name] ?? ""} ${pB.name}</span>
+              <span class="text-lg font-black text-amber-400 truncate">#${NAME_TO_JERSEY[pB.name] ?? ""} ${pB.name}</span>
               <span class="text-xs font-mono text-slate-400">PA: ${pB.pa}</span>
             </div>
-            <p class="text-xs text-slate-300 font-mono mt-0.5">三圍: ${pB.avg.toFixed(3)} / ${pB.obp.toFixed(3)} / ${pB.slg.toFixed(3)}</p>
-            <p class="text-[11px] text-slate-400 font-mono">OPS: ${pB.ops.toFixed(3)} | wRC+: ${pB.wrc_plus.toFixed(1)} | SDI: ${(pA.sdi >= 0 ? '+' : '') + pA.sdi.toFixed(3)}</p>
+            <p class="text-xs text-slate-300 font-mono mt-1">三圍: ${pB.avg.toFixed(3)} / ${pB.obp.toFixed(3)} / ${pB.slg.toFixed(3)}</p>
+            <p class="text-[11px] text-slate-400 font-mono mt-0.5">OPS: ${pB.ops.toFixed(3)} | wRC+: ${pB.wrc_plus.toFixed(1)} | SDI: ${(pB.sdi >= 0 ? '+' : '') + pB.sdi.toFixed(3)}</p>
           </div>
         </div>
       `;
@@ -1808,6 +1832,7 @@
       return Math.round(Math.max(5, Math.min(99, pr)));
     }
 
+    // 模組二：個人深度檔案（超顯眼 96px 大頭像與獨立相機上傳按鈕）
     function renderPlayerProfile(agg) {
       const pList = agg.players;
       let p = pList.find(d => d.name === selectedPlayerName);
@@ -1829,36 +1854,48 @@
       const prWrc = getPercentile(p.wrc_plus, 'wrc_plus', pList);
 
       document.getElementById('playerProfileCard').innerHTML = `
-        <div class="flex items-center space-x-4 border-b border-slate-800 pb-3">
-          <div class="relative group cursor-pointer" onclick="triggerAvatarUpload()" title="點擊自訂頭像（裁切完即時同步至雲端）">
-            ${renderAvatarElement(p.name, 'w-16 h-16 text-xl')}
-            <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white font-medium text-center px-1">更換頭像</div>
-          </div>
-          <div class="flex-1">
-            <div class="flex items-center space-x-2">
-              <span class="text-xl font-black text-white">${p.name}</span>
-              <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2 py-0.5 rounded font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
-              ${playerAvatars[p.name] ? `<button onclick="clearAvatar('${p.name}')" class="text-[10px] text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
+        <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 border-b border-slate-800 pb-4">
+          <div class="relative group cursor-pointer shrink-0" onclick="triggerAvatarUpload()" title="點擊自訂頭像（裁切完即時同步至雲端）">
+            ${renderAvatarElement(p.name, 'w-24 h-24 text-3xl ring-4 ring-sky-500/40 shadow-2xl')}
+            <div class="absolute inset-0 bg-slate-950/75 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
+              <span class="text-xs text-sky-300 font-bold">更換頭像</span>
+              <span class="text-[9px] text-slate-300 mt-0.5">即時同步</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 高犧: ${p.sf} | 三振: ${p.k}</p>
+            <div class="absolute -bottom-1 -right-1 bg-sky-600 text-white p-1.5 rounded-full shadow-lg border-2 border-slate-900 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <span class="text-2xl font-black text-white tracking-tight">${p.name}</span>
+              <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2.5 py-0.5 rounded-md font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
+              ${playerAvatars[p.name] ? `<button onclick="clearAvatar('${p.name}')" class="text-[11px] text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
+            </div>
+            <p class="text-xs text-slate-400 mt-1.5 font-mono">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 高犧: ${p.sf} | 三振: ${p.k}</p>
+            <div class="mt-2.5">
+              <button onclick="triggerAvatarUpload()" class="inline-flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 px-3 py-1.5 rounded-md transition font-medium shadow-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>上傳/更換選手頭像照片</span>
+              </button>
+            </div>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
+        <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+          <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">
             <span class="text-slate-400 block text-[10px]">打擊三圍 (AVG/OBP/SLG)</span>
-            <span class="font-mono text-emerald-400 font-bold">${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}</span>
+            <span class="font-mono text-emerald-400 font-bold text-sm">${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}</span>
           </div>
-          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
+          <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">
             <span class="text-slate-400 block text-[10px]">攻擊指數 (OPS / OPS+)</span>
-            <span class="font-mono text-sky-400 font-bold">${p.ops.toFixed(3)} / ${p.ops_plus.toFixed(1)}</span>
+            <span class="font-mono text-sky-400 font-bold text-sm">${p.ops.toFixed(3)} / ${p.ops_plus.toFixed(1)}</span>
           </div>
-          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
+          <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">
             <span class="text-slate-400 block text-[10px]">加權得分創造 (wRC+)</span>
-            <span class="font-mono text-amber-400 font-bold">${p.wrc_plus.toFixed(1)}</span>
+            <span class="font-mono text-amber-400 font-bold text-sm">${p.wrc_plus.toFixed(1)}</span>
           </div>
-          <div class="bg-slate-950 p-2 rounded border border-slate-800/60">
+          <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">
             <span class="text-slate-400 block text-[10px]">選球紀律 (SDI) / BABIP</span>
-            <span class="font-mono text-purple-400 font-bold">${p_sdi >= 0 ? '+' : ''}${p_sdi.toFixed(3)} / ${p.babip.toFixed(3)}</span>
+            <span class="font-mono text-purple-400 font-bold text-sm">${p_sdi >= 0 ? '+' : ''}${p_sdi.toFixed(3)} / ${p.babip.toFixed(3)}</span>
           </div>
         </div>
       `;
@@ -2165,6 +2202,7 @@
       }
     }
 
+    // 模組五：匯總表渲染（頭像放大至 36px）
     function renderSummaryTable(agg) {
       const tbody = document.getElementById('summaryTableBody');
       tbody.innerHTML = '';
@@ -2178,8 +2216,8 @@
         };
 
         tr.innerHTML = `
-          <td class="p-2.5 font-bold text-white flex items-center space-x-2">
-            ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px]')}
+          <td class="p-2.5 font-bold text-white flex items-center space-x-2.5">
+            ${renderAvatarElement(p.name, 'w-9 h-9 text-xs ring-2 ring-sky-500/30')}
             <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-[10px] mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
           <td class="p-2.5 text-center font-mono text-slate-300">${p.pa}</td>
@@ -2213,6 +2251,7 @@
       renderLogsTable(getFilteredLogs());
     };
 
+    // 詳細賽事日誌渲染（頭像放大至 32px）
     function renderLogsTable(filteredLogs) {
       const tbody = document.getElementById('logsTableBody');
       const paginationEl = document.getElementById('logsPagination');
@@ -2252,8 +2291,8 @@
         tr.innerHTML = `
           <td class="p-2.5 font-mono text-sky-400">${l.date}</td>
           <td class="p-2.5 text-slate-300">${l.tag}</td>
-          <td class="p-2.5 font-bold text-white flex items-center space-x-2">
-            ${renderAvatarElement(l.name, 'w-5 h-5 text-[9px]')}
+          <td class="p-2.5 font-bold text-white flex items-center space-x-2.5">
+            ${renderAvatarElement(l.name, 'w-8 h-8 text-xs ring-1 ring-slate-700')}
             <span>${NAME_TO_JERSEY[l.name] !== undefined ? `<span class="text-slate-400 font-mono text-[10px] mr-1">#${NAME_TO_JERSEY[l.name]}</span>` : ''}${l.name}</span>
           </td>
           <td class="p-2.5 text-center">${l.pa}</td>
@@ -2330,14 +2369,15 @@
       document.getElementById('addPlayerForm').classList.add('hidden');
     });
 
-    // 日誌輸入：背號即時鎖定提示
+    // 日誌輸入：背號即時鎖定提示 (即時浮現球員頭像)
     document.getElementById('new_jersey').addEventListener('input', (e) => {
       const num = Number(e.target.value.trim());
       const hint = document.getElementById('jerseyMatchHint');
       if (!hint) return;
       if (JERSEY_TO_NAME[num]) {
-        hint.textContent = `鎖定球員：#${num} ${JERSEY_TO_NAME[num]}`;
-        hint.className = 'block text-[10px] text-emerald-400 mt-0.5 min-h-[16px] font-medium';
+        const pName = JERSEY_TO_NAME[num];
+        hint.innerHTML = `<span class="inline-flex items-center gap-1.5">${renderAvatarElement(pName, 'w-5 h-5 text-[10px]')}<span>鎖定球員：#${num} ${pName}</span></span>`;
+        hint.className = 'block text-[11px] text-emerald-400 mt-1 min-h-[22px] font-medium';
       } else if (e.target.value.trim() !== '') {
         hint.textContent = '查無此背號，若為新隊員請先透過「新增球隊球員」建檔';
         hint.className = 'block text-[10px] text-rose-400 mt-0.5 min-h-[16px] font-medium';
@@ -2500,12 +2540,17 @@
       }
     });
 
+    // 選手選單：即時切換連動頭像徽章
     function populatePlayerSelect(players) {
       const sel = document.getElementById('playerSelect');
       sel.innerHTML = players.map(d => {
         const j = NAME_TO_JERSEY[d.name] !== undefined ? `#${NAME_TO_JERSEY[d.name]} ` : '';
         return `<option value="${d.name}" ${d.name === selectedPlayerName ? 'selected' : ''}>${j}${d.name}</option>`;
       }).join('');
+      const badgeEl = document.getElementById('playerSelectAvatarBadge');
+      if (badgeEl && selectedPlayerName) {
+        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-8 h-8 text-xs ring-2 ring-sky-400/60 shadow');
+      }
     }
 
     function renderAll() {
@@ -2532,6 +2577,10 @@
     });
     document.getElementById('playerSelect').addEventListener('change', (e) => {
       selectedPlayerName = e.target.value;
+      const badgeEl = document.getElementById('playerSelectAvatarBadge');
+      if (badgeEl) {
+        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-8 h-8 text-xs ring-2 ring-sky-400/60 shadow');
+      }
       const agg = getAggregatedStats(getFilteredLogs());
       renderPlayerProfile(agg);
     });
