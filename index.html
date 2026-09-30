@@ -290,12 +290,12 @@
           <button id="tabLogsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded font-medium">詳細賽事日誌</button>
         </div>
         <div class="flex items-center space-x-2">
-          <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記賽事日誌</button>
-          <button id="toggleAddPlayerBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 新增球隊球員</button>
+          <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記賽事日誌</button>
+          <button id="toggleAddPlayerBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 新增球隊球員</button>
         </div>
       </div>
 
-      <!-- 賽事日誌登打表單 (打數 AB 與安打 H 均為自動計算項) -->
+      <!-- 賽事日誌登打表單 (打席 1-10 必選，打數 AB 與安打 H 均為自動計算項) -->
       <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-emerald-900/60 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
         <div class="col-span-2 md:col-span-6 flex items-center justify-between border-b border-slate-800 pb-2">
           <span class="font-bold text-emerald-400">登記賽事日誌 (輸入球員背號)</span>
@@ -400,6 +400,7 @@
         </div>
       </form>
 
+      <!-- 區間成績匯總表 -->
       <div id="viewSummary" class="overflow-x-auto rounded-lg border border-slate-800">
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-950 text-slate-400 uppercase select-none">
@@ -432,27 +433,31 @@
         </table>
       </div>
 
-      <div id="viewLogs" class="hidden overflow-x-auto rounded-lg border border-slate-800">
-        <table class="w-full text-left text-xs whitespace-nowrap">
-          <thead class="bg-slate-950 text-slate-400 uppercase select-none">
-            <tr>
-              <th class="p-2.5">紀錄時間</th>
-              <th class="p-2.5">賽事/標籤</th>
-              <th class="p-2.5">選手</th>
-              <th class="p-2.5 text-center">打席</th>
-              <th class="p-2.5 text-center">打數</th>
-              <th class="p-2.5 text-center">安打</th>
-              <th class="p-2.5 text-center">HR</th>
-              <th class="p-2.5 text-center">BB</th>
-              <th class="p-2.5 text-center">SF</th>
-              <th class="p-2.5 text-center">K</th>
-              <th class="p-2.5">AVG</th>
-              <th class="p-2.5">OPS</th>
-              <th class="p-2.5 text-center">操作</th>
-            </tr>
-          </thead>
-          <tbody id="logsTableBody" class="divide-y divide-slate-800/80 bg-slate-900/50"></tbody>
-        </table>
+      <!-- 詳細賽事日誌與分頁元件 (每頁 15 筆) -->
+      <div id="viewLogs" class="hidden space-y-3">
+        <div class="overflow-x-auto rounded-lg border border-slate-800">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-950 text-slate-400 uppercase select-none">
+              <tr>
+                <th class="p-2.5">紀錄時間</th>
+                <th class="p-2.5">賽事/標籤</th>
+                <th class="p-2.5">選手</th>
+                <th class="p-2.5 text-center">打席</th>
+                <th class="p-2.5 text-center">打數</th>
+                <th class="p-2.5 text-center">安打</th>
+                <th class="p-2.5 text-center">HR</th>
+                <th class="p-2.5 text-center">BB</th>
+                <th class="p-2.5 text-center">SF</th>
+                <th class="p-2.5 text-center">K</th>
+                <th class="p-2.5">AVG</th>
+                <th class="p-2.5">OPS</th>
+                <th class="p-2.5 text-center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody" class="divide-y divide-slate-800/80 bg-slate-900/50"></tbody>
+          </table>
+        </div>
+        <div id="logsPagination" class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-slate-400"></div>
       </div>
     </section>
 
@@ -625,7 +630,7 @@
             </div>
             <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
               <span class="font-bold text-white block text-sm">次級打擊率 (SecA, Secondary Average)</span>
-              <p><span class="text-slate-400">定義：</span>不依賴擊出安打，純粹衡量打者透過「額外長打」與「保送」獲取壘包的純粹產能。</p>
+              <p><span class="text-slate-400">定義：</span>不依賴擊出安打，純粹衡量打者透過「額外長打」與「保送」獲取壘包的純粹產能，反映對投手施加之無形壓力。</p>
               <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SecA = (TB - H + BB) / AB</span></p>
               <p><span class="text-slate-400">意義：</span>評估打者在安打以外能對投手造成多大壓迫，SecA 愈高代表長打破壞力與選球耐性愈強。</p>
             </div>
@@ -809,6 +814,9 @@
     let currentFileSha = null;
     let selectedPlayerName = "";
     let playerAvatars = JSON.parse(localStorage.getItem('rebas_player_avatars')) || {};
+
+    let currentLogsPage = 1;
+    const LOGS_PER_PAGE = 15;
 
     let radarChartInst = null;
     let donutChartInst = null;
@@ -1304,6 +1312,7 @@
     };
 
     window.setDateRange = function(range) {
+      currentLogsPage = 1;
       const s = document.getElementById('filterStartDate');
       const e = document.getElementById('filterEndDate');
       if (range === 'all') { s.value = ''; e.value = ''; }
@@ -2127,10 +2136,39 @@
       }
     };
 
+    window.changeLogsPage = function(targetPage) {
+      currentLogsPage = targetPage;
+      renderLogsTable(getFilteredLogs());
+    };
+
     function renderLogsTable(filteredLogs) {
       const tbody = document.getElementById('logsTableBody');
+      const paginationEl = document.getElementById('logsPagination');
       tbody.innerHTML = '';
-      filteredLogs.forEach(l => {
+
+      // 較新更新的排序在上面：主要依日期降冪 (新到舊)，同日期依陣列倒序 (後登打在最上)
+      const sortedLogs = [...filteredLogs].slice().reverse().sort((a, b) => {
+        if (b.date !== a.date) {
+          return b.date.localeCompare(a.date);
+        }
+        return 0;
+      });
+
+      const totalLogs = sortedLogs.length;
+      const totalPages = Math.max(1, Math.ceil(totalLogs / LOGS_PER_PAGE));
+      if (currentLogsPage > totalPages) currentLogsPage = totalPages;
+      if (currentLogsPage < 1) currentLogsPage = 1;
+
+      const startIndex = (currentLogsPage - 1) * LOGS_PER_PAGE;
+      const pageLogs = sortedLogs.slice(startIndex, startIndex + LOGS_PER_PAGE);
+
+      if (pageLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="13" class="p-6 text-center text-slate-500 font-mono">此統計區間內尚無賽事紀錄</td></tr>`;
+        if (paginationEl) paginationEl.innerHTML = '';
+        return;
+      }
+
+      pageLogs.forEach(l => {
         const avg = l.ab > 0 ? (l.h / l.ab).toFixed(3) : '.000';
         const tb = (Number(l.h1)||0) + 2*(Number(l.h2)||0) + 3*(Number(l.h3)||0) + 4*(Number(l.hr)||0);
         const slg = l.ab > 0 ? (tb / l.ab) : 0;
@@ -2161,6 +2199,28 @@
         `;
         tbody.appendChild(tr);
       });
+
+      if (paginationEl) {
+        const startNum = startIndex + 1;
+        const endNum = Math.min(startIndex + LOGS_PER_PAGE, totalLogs);
+
+        paginationEl.innerHTML = `
+          <div class="text-slate-400 font-mono">
+            顯示第 <span class="text-slate-200 font-bold">${startNum}</span> - <span class="text-slate-200 font-bold">${endNum}</span> 筆 / 共 <span class="text-sky-400 font-bold">${totalLogs}</span> 筆紀錄 (每頁 15 筆)
+          </div>
+          <div class="flex items-center space-x-1.5 font-mono">
+            <button onclick="changeLogsPage(${currentLogsPage - 1})" ${currentLogsPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-950 border border-slate-800 text-slate-500 px-2.5 py-1 rounded"' : 'class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded transition"'}>
+              上一頁
+            </button>
+            <span class="px-2.5 py-1 bg-slate-950 border border-slate-800 rounded text-sky-400 font-bold">
+              ${currentLogsPage} / ${totalPages}
+            </span>
+            <button onclick="changeLogsPage(${currentLogsPage + 1})" ${currentLogsPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-950 border border-slate-800 text-slate-500 px-2.5 py-1 rounded"' : 'class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded transition"'}>
+              下一頁
+            </button>
+          </div>
+        `;
+      }
     }
 
     window.deleteSingleLog = async (id) => {
@@ -2311,6 +2371,7 @@
 
       const updated = [...allLogs, newEntry];
       selectedPlayerName = newEntry.name;
+      currentLogsPage = 1;
 
       const success = await commitLogsToGitHub(updated, `feat: add match record for #${jerseyNum} ${newEntry.name} on ${newEntry.date}`);
       if (success) {
@@ -2403,8 +2464,14 @@
       renderComparison(agg);
     }
 
-    document.getElementById('filterStartDate').addEventListener('change', renderAll);
-    document.getElementById('filterEndDate').addEventListener('change', renderAll);
+    document.getElementById('filterStartDate').addEventListener('change', () => {
+      currentLogsPage = 1;
+      renderAll();
+    });
+    document.getElementById('filterEndDate').addEventListener('change', () => {
+      currentLogsPage = 1;
+      renderAll();
+    });
     document.getElementById('playerSelect').addEventListener('change', (e) => {
       selectedPlayerName = e.target.value;
       const agg = getAggregatedStats(getFilteredLogs());
