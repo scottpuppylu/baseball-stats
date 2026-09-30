@@ -24,7 +24,7 @@
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-400">
           <div class="flex items-center space-x-1.5">
             <span class="text-sky-300 font-medium">系統建構：盧宣嘉</span>
-            <span class="bg-slate-800 text-slate-300 border border-slate-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">v260930.0715</span>
+            <span class="bg-slate-800 text-slate-300 border border-slate-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">v261001.0025</span>
           </div>
           <span class="text-slate-600">|</span>
           <span id="syncStatusBadge" class="text-emerald-400 font-mono">雲端資料庫：連線中...</span>
@@ -41,26 +41,19 @@
       </div>
     </header>
 
-    <!-- 時間過濾與批次操作 -->
-    <section class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-3">
-          <span class="text-xs font-semibold text-slate-300">成績統計區間：</span>
-          <div class="flex items-center space-x-2">
-            <input type="date" id="filterStartDate" class="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-sky-500">
-            <span class="text-slate-500 text-xs">至</span>
-            <input type="date" id="filterEndDate" class="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-sky-500">
-          </div>
-          <div class="flex items-center space-x-1">
-            <button onclick="setDateRange('all')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded transition">全部歷史</button>
-            <button onclick="setDateRange('2025')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded transition">2025年度總結</button>
-            <button onclick="setDateRange('2026')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded transition">2026年度</button>
-          </div>
+    <!-- 時間過濾 -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-xs font-semibold text-slate-300">成績統計區間：</span>
+        <div class="flex items-center space-x-2">
+          <input type="date" id="filterStartDate" class="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-sky-500">
+          <span class="text-slate-500 text-xs">至</span>
+          <input type="date" id="filterEndDate" class="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-sky-500">
         </div>
-        <div>
-          <button id="batchDeleteBtn" class="bg-rose-900/40 hover:bg-rose-800 border border-rose-700/60 text-rose-200 text-xs px-3 py-1.5 rounded transition font-medium">
-            砍掉目前時間範圍內的日誌
-          </button>
+        <div class="flex items-center space-x-1">
+          <button onclick="setDateRange('all')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded transition">全部歷史</button>
+          <button onclick="setDateRange('2025')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded transition">2025年度總結</button>
+          <button onclick="setDateRange('2026')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded transition">2026年度</button>
         </div>
       </div>
     </section>
@@ -2205,20 +2198,6 @@
       const updated = allLogs.filter(l => l.id !== id);
       await commitLogsToGitHub(updated, `delete: remove match log ${id}`);
     };
-
-    document.getElementById('batchDeleteBtn').addEventListener('click', async () => {
-      const s = document.getElementById('filterStartDate').value;
-      const e = document.getElementById('filterEndDate').value;
-      const msg = `確認自 GitHub 雲端資料庫永久刪除 ${s || '最早'} 至 ${e || '最新'} 區間內的全部日誌？`;
-      if (!confirm(msg)) return;
-
-      const updated = allLogs.filter(item => {
-        if (s && item.date >= s && (!e || item.date <= e)) return false;
-        if (e && item.date <= e && (!s || item.date >= s)) return false;
-        return true;
-      });
-      await commitLogsToGitHub(updated, `delete: batch prune match logs from ${s} to ${e}`);
-    });
 
     // 表單切換控制：賽事日誌與新增球員分立
     document.getElementById('toggleAddLogBtn').addEventListener('click', () => {
