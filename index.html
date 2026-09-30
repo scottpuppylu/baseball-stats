@@ -9,31 +9,32 @@
   <style>
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
     .tab-active {
       background: linear-gradient(135deg, rgba(2, 132, 199, 0.95), rgba(14, 165, 233, 0.85));
       color: #ffffff;
-      border-color: rgba(56, 189, 248, 0.8);
-      box-shadow: 0 4px 20px -2px rgba(14, 165, 233, 0.4);
+      border-color: rgba(56, 189, 248, 0.9);
+      box-shadow: 0 4px 20px -2px rgba(14, 165, 233, 0.45);
     }
   </style>
 </head>
-<body class="bg-[#070b14] text-slate-100 min-h-screen p-3 md:p-8 font-sans antialiased selection:bg-sky-500 selection:text-white">
+<body class="bg-[#080c16] text-slate-100 min-h-screen p-3 md:p-8 font-sans antialiased selection:bg-sky-500 selection:text-white">
   <div class="max-w-7xl mx-auto space-y-6">
 
     <!-- 頂部系統導覽列 -->
     <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800/80 pb-5 gap-4">
       <div>
         <div class="flex items-center space-x-3">
-          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] px-2.5 py-0.5 rounded-full font-mono font-bold tracking-wider flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] px-2.5 py-0.5 rounded-full font-mono font-bold tracking-wider flex items-center gap-1.5 shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             CLOUD AUTO-SYNC
           </span>
           <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">淡江航太系壘</h1>
         </div>
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-slate-400">
           <div class="flex items-center space-x-1.5">
-            <span class="text-sky-400 font-semibold tracking-wide">系統建構：盧宣嘉</span>
-            <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-2 py-0.5 rounded-md font-mono font-bold">v261001.0120</span>
+            <span class="text-sky-400 font-semibold tracking-wide">系統架構：盧宣嘉</span>
+            <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-2 py-0.5 rounded-md font-mono font-bold">v261001.0150</span>
           </div>
           <span class="text-slate-700">|</span>
           <span id="syncStatusBadge" class="text-emerald-400 font-mono text-[11px]">雲端資料庫：連線中...</span>
@@ -51,7 +52,7 @@
     </header>
 
     <!-- 時間過濾區間 -->
-    <section class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 shadow-lg backdrop-blur-sm">
+    <section class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 shadow-lg backdrop-blur-md">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-3">
           <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
@@ -1583,19 +1584,19 @@
       const topWrc = [...pList].sort((a,b) => b.wrc_plus - a.wrc_plus)[0];
 
       const cards = [
-        { label: '區間團隊打擊率', val: agg.teamAvg.toFixed(3), sub: `安打累計: ${agg.totalH}`, player: null },
-        { label: '區間團隊 OPS', val: agg.teamOps.toFixed(3), sub: `OBP: ${agg.teamObp.toFixed(3)} | SLG: ${agg.teamSlg.toFixed(3)}`, player: null },
+        { label: '團隊打擊率', val: agg.teamAvg.toFixed(3), sub: `安打累計: ${agg.totalH}`, player: null },
+        { label: '團隊攻擊指數', val: agg.teamOps.toFixed(3), sub: `OBP: ${agg.teamObp.toFixed(3)} | SLG: ${agg.teamSlg.toFixed(3)}`, player: null },
         { label: '區間總打席', val: agg.totalPa, sub: `全壘打: ${agg.totalHr} 支`, player: null },
         { label: '區間打擊王', val: topAvg ? topAvg.avg.toFixed(3) : '.000', sub: topAvg ? `#${NAME_TO_JERSEY[topAvg.name] ?? ''} ${topAvg.name}` : '-', player: topAvg ? topAvg.name : null },
         { label: '區間全壘打王', val: topHr ? `${topHr.hr} 支` : '0 支', sub: topHr ? `#${NAME_TO_JERSEY[topHr.name] ?? ''} ${topHr.name}` : '-', player: topHr ? topHr.name : null },
-        { label: '區間進攻破壞王', val: topWrc ? topWrc.wrc_plus.toFixed(1) : '100', sub: topWrc ? `#${NAME_TO_JERSEY[topWrc.name] ?? ''} ${topWrc.name}` : '-', player: topWrc ? topWrc.name : null }
+        { label: '進攻破壞王', val: topWrc ? topWrc.wrc_plus.toFixed(1) : '100', sub: topWrc ? `#${NAME_TO_JERSEY[topWrc.name] ?? ''} ${topWrc.name}` : '-', player: topWrc ? topWrc.name : null }
       ];
 
       document.getElementById('teamSummaryCards').innerHTML = cards.map(c => `
         <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-lg hover:border-slate-700 transition">
           <div class="flex-1 min-w-0">
             <span class="text-[11px] font-semibold text-slate-400 block truncate">${c.label}</span>
-            <span class="text-2xl font-black text-sky-400 my-0.5 block tracking-tight">${c.val}</span>
+            <span class="text-2xl font-black text-sky-400 my-0.5 block tracking-tight tabular-nums">${c.val}</span>
             <span class="text-[10px] text-slate-500 font-mono block truncate">${c.sub}</span>
           </div>
           ${c.player ? `<div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${c.player}'; switchMainTab('tabProfile');" title="點擊檢視 ${c.player} 深度檔案">${renderAvatarElement(c.player, 'w-[3.25rem] h-[3.25rem] text-sm ring-2 ring-sky-400/80 shadow-md hover:scale-105 transition')}</div>` : ''}
@@ -1646,7 +1647,7 @@
 
       podium.innerHTML = top3.map((p, idx) => `
         <div class="border ${podiumColors[idx].border} ${podiumColors[idx].bg} rounded-2xl p-4 flex items-center space-x-4 shadow-xl">
-          <div class="text-3xl font-black ${podiumColors[idx].text} w-6 text-center">${idx + 1}</div>
+          <div class="text-3xl font-black ${podiumColors[idx].text} w-6 text-center tabular-nums">${idx + 1}</div>
           <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${p.name}'; switchMainTab('tabProfile');" title="點擊檢視 ${p.name} 檔案">
             ${renderAvatarElement(p.name, 'w-[4.25rem] h-[4.25rem] text-2xl ' + podiumColors[idx].ring)}
           </div>
@@ -1657,7 +1658,7 @@
             </div>
             <div class="flex justify-between items-baseline mt-1.5">
               <span class="text-xs text-slate-400">PA: ${p.pa}</span>
-              <span class="text-xl font-black font-mono text-sky-400">${formatVal(p[realKey], realKey)}</span>
+              <span class="text-xl font-black font-mono text-sky-400 tabular-nums">${formatVal(p[realKey], realKey)}</span>
             </div>
           </div>
         </div>
@@ -1678,21 +1679,21 @@
           : `<span class="text-slate-500 font-mono">${idx + 1}</span>`;
 
         tr.innerHTML = `
-          <td class="p-3 text-center">${rankBadge}</td>
+          <td class="p-3 text-center tabular-nums">${rankBadge}</td>
           <td class="p-3 font-bold text-white flex items-center space-x-3">
             ${renderAvatarElement(p.name, 'w-9 h-9 text-xs ring-1 ring-slate-700')}
             <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-xs mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
-          <td class="p-3 text-center font-mono">${p.pa}</td>
-          <td class="p-3 text-center font-mono">${p.ab}</td>
-          <td class="p-3 text-center font-mono">${p.h}</td>
-          <td class="p-3 text-center font-mono">${p.hr}</td>
-          <td class="p-3 text-center font-mono">${p.avg.toFixed(3)}</td>
-          <td class="p-3 text-center font-mono">${p.obp.toFixed(3)}</td>
-          <td class="p-3 text-center font-mono">${p.slg.toFixed(3)}</td>
-          <td class="p-3 text-center font-mono">${p.ops.toFixed(3)}</td>
-          <td class="p-3 text-center font-mono">${p.wrc_plus.toFixed(1)}</td>
-          <td class="p-3 text-center font-mono font-black text-amber-400 text-sm">${formatVal(p[realKey], realKey)}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${p.pa}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${p.ab}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${p.h}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${p.hr}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${p.avg.toFixed(3)}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${p.obp.toFixed(3)}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${p.slg.toFixed(3)}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${p.ops.toFixed(3)}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${p.wrc_plus.toFixed(1)}</td>
+          <td class="p-3 text-center font-mono font-black text-amber-400 text-sm tabular-nums">${formatVal(p[realKey], realKey)}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -1752,8 +1753,8 @@
               <span class="text-xl font-black text-sky-400 truncate">#${NAME_TO_JERSEY[pA.name] ?? ""} ${pA.name}</span>
               <span class="text-xs font-mono text-slate-400">PA: ${pA.pa}</span>
             </div>
-            <p class="text-xs text-slate-300 font-mono mt-1">三圍: ${pA.avg.toFixed(3)} / ${pA.obp.toFixed(3)} / ${pA.slg.toFixed(3)}</p>
-            <p class="text-xs text-slate-400 font-mono mt-0.5">OPS: ${pA.ops.toFixed(3)} | wRC+: ${pA.wrc_plus.toFixed(1)} | SDI: ${(pA.sdi >= 0 ? '+' : '') + pA.sdi.toFixed(3)}</p>
+            <p class="text-xs text-slate-300 font-mono mt-1 tabular-nums">三圍: ${pA.avg.toFixed(3)} / ${pA.obp.toFixed(3)} / ${pA.slg.toFixed(3)}</p>
+            <p class="text-xs text-slate-400 font-mono mt-0.5 tabular-nums">OPS: ${pA.ops.toFixed(3)} | wRC+: ${pA.wrc_plus.toFixed(1)} | SDI: ${(pA.sdi >= 0 ? '+' : '') + pA.sdi.toFixed(3)}</p>
           </div>
         </div>
       `;
@@ -1768,8 +1769,8 @@
               <span class="text-xl font-black text-amber-400 truncate">#${NAME_TO_JERSEY[pB.name] ?? ""} ${pB.name}</span>
               <span class="text-xs font-mono text-slate-400">PA: ${pB.pa}</span>
             </div>
-            <p class="text-xs text-slate-300 font-mono mt-1">三圍: ${pB.avg.toFixed(3)} / ${pB.obp.toFixed(3)} / ${pB.slg.toFixed(3)}</p>
-            <p class="text-xs text-slate-400 font-mono mt-0.5">OPS: ${pB.ops.toFixed(3)} | wRC+: ${pB.wrc_plus.toFixed(1)} | SDI: ${(pB.sdi >= 0 ? '+' : '') + pB.sdi.toFixed(3)}</p>
+            <p class="text-xs text-slate-300 font-mono mt-1 tabular-nums">三圍: ${pB.avg.toFixed(3)} / ${pB.obp.toFixed(3)} / ${pB.slg.toFixed(3)}</p>
+            <p class="text-xs text-slate-400 font-mono mt-0.5 tabular-nums">OPS: ${pB.ops.toFixed(3)} | wRC+: ${pB.wrc_plus.toFixed(1)} | SDI: ${(pB.sdi >= 0 ? '+' : '') + pB.sdi.toFixed(3)}</p>
           </div>
         </div>
       `;
@@ -1805,17 +1806,17 @@
         const lower = m.lowerBetter || false;
 
         let leadHtml = '';
-        let classA = 'font-mono text-slate-300';
-        let classB = 'font-mono text-slate-300';
+        let classA = 'font-mono text-slate-300 tabular-nums';
+        let classB = 'font-mono text-slate-300 tabular-nums';
 
         if (valA === valB) {
           leadHtml = '<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">平手</span>';
         } else if (lower ? valA < valB : valA > valB) {
           leadHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-mono font-bold">${pA.name} 領先</span>`;
-          classA = 'font-mono text-sky-400 font-bold';
+          classA = 'font-mono text-sky-400 font-bold tabular-nums';
         } else {
           leadHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800/60 font-mono font-bold">${pB.name} 領先</span>`;
-          classB = 'font-mono text-amber-400 font-bold';
+          classB = 'font-mono text-amber-400 font-bold tabular-nums';
         }
 
         const tr = document.createElement('tr');
@@ -1946,7 +1947,7 @@
               <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2.5 py-0.5 rounded-lg font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
               ${playerAvatars[p.name] ? `<button onclick="clearAvatar('${p.name}')" class="text-xs text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
             </div>
-            <p class="text-xs text-slate-400 mt-2 font-mono">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 高犧: ${p.sf} | 三振: ${p.k}</p>
+            <p class="text-xs text-slate-400 mt-2 font-mono tabular-nums">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 高犧: ${p.sf} | 三振: ${p.k}</p>
             <div class="mt-3.5">
               <button onclick="triggerAvatarUpload()" class="inline-flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 px-3.5 py-1.5 rounded-xl transition font-medium shadow-sm hover:border-slate-600">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -1958,19 +1959,19 @@
         <div class="grid grid-cols-2 gap-3 text-xs pt-1">
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 shadow-sm">
             <span class="text-slate-400 block text-[10px] font-medium">打擊三圍 (AVG/OBP/SLG)</span>
-            <span class="font-mono text-emerald-400 font-black text-sm mt-0.5 block tracking-wide">${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}</span>
+            <span class="font-mono text-emerald-400 font-black text-sm mt-0.5 block tracking-wide tabular-nums">${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}</span>
           </div>
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 shadow-sm">
             <span class="text-slate-400 block text-[10px] font-medium">攻擊指數 (OPS / OPS+)</span>
-            <span class="font-mono text-sky-400 font-black text-sm mt-0.5 block tracking-wide">${p.ops.toFixed(3)} / ${p.ops_plus.toFixed(1)}</span>
+            <span class="font-mono text-sky-400 font-black text-sm mt-0.5 block tracking-wide tabular-nums">${p.ops.toFixed(3)} / ${p.ops_plus.toFixed(1)}</span>
           </div>
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 shadow-sm">
             <span class="text-slate-400 block text-[10px] font-medium">加權得分創造 (wRC+)</span>
-            <span class="font-mono text-amber-400 font-black text-sm mt-0.5 block tracking-wide">${p.wrc_plus.toFixed(1)}</span>
+            <span class="font-mono text-amber-400 font-black text-sm mt-0.5 block tracking-wide tabular-nums">${p.wrc_plus.toFixed(1)}</span>
           </div>
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 shadow-sm">
             <span class="text-slate-400 block text-[10px] font-medium">選球紀律 (SDI) / BABIP</span>
-            <span class="font-mono text-purple-400 font-black text-sm mt-0.5 block tracking-wide">${p_sdi >= 0 ? '+' : ''}${p_sdi.toFixed(3)} / ${p.babip.toFixed(3)}</span>
+            <span class="font-mono text-purple-400 font-black text-sm mt-0.5 block tracking-wide tabular-nums">${p_sdi >= 0 ? '+' : ''}${p_sdi.toFixed(3)} / ${p.babip.toFixed(3)}</span>
           </div>
         </div>
       `;
@@ -2130,13 +2131,13 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
                   <span class="font-black text-white text-base truncate">#${NAME_TO_JERSEY[p.name] ?? '--'} ${p.name}</span>
-                  <span class="text-[11px] font-mono text-slate-400">PA: ${p.pa} | AVG: ${p.avg.toFixed(3)}</span>
+                  <span class="text-[11px] font-mono text-slate-400 tabular-nums">PA: ${p.pa} | AVG: ${p.avg.toFixed(3)}</span>
                 </div>
                 <div class="flex items-center gap-1.5 mt-1">
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-rose-300">K%: ${(p.k_pct * 100).toFixed(1)}%</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-sky-300">BB%: ${(p.bb_pct * 100).toFixed(1)}%</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-amber-300">ISO: ${p.iso.toFixed(3)}</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-purple-300">wRC+: ${p.wrc_plus.toFixed(1)}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-rose-300 tabular-nums">K%: ${(p.k_pct * 100).toFixed(1)}%</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-sky-300 tabular-nums">BB%: ${(p.bb_pct * 100).toFixed(1)}%</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-amber-300 tabular-nums">ISO: ${p.iso.toFixed(3)}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-purple-300 tabular-nums">wRC+: ${p.wrc_plus.toFixed(1)}</span>
                 </div>
               </div>
             </div>
@@ -2442,27 +2443,27 @@
             ${renderAvatarElement(p.name, 'w-9 h-9 text-xs ring-2 ring-sky-500/40')}
             <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-xs mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
-          <td class="p-3 text-center font-mono text-slate-300">${p.pa}</td>
-          <td class="p-3 text-center font-mono font-bold text-slate-200">${p.ab}</td>
-          <td class="p-3 text-center font-mono font-bold text-emerald-400">${p.h}</td>
-          <td class="p-3 text-center font-mono text-slate-300">${p.h1}</td>
-          <td class="p-3 text-center font-mono text-slate-300">${p.h2}</td>
-          <td class="p-3 text-center font-mono text-slate-300">${p.h3}</td>
-          <td class="p-3 text-center font-mono text-slate-300">${p.hr}</td>
-          <td class="p-3 text-center font-mono text-slate-300">${p.bb}</td>
-          <td class="p-3 text-center font-mono text-slate-300">${p.sf}</td>
-          <td class="p-3 text-center font-mono text-slate-300">${p.k}</td>
-          <td class="p-3 font-mono text-emerald-400 font-bold">${p.avg.toFixed(3)}</td>
-          <td class="p-3 font-mono text-slate-300">${p.obp.toFixed(3)}</td>
-          <td class="p-3 font-mono text-slate-300">${p.slg.toFixed(3)}</td>
-          <td class="p-3 font-mono text-sky-400 font-bold">${p.ops.toFixed(3)}</td>
-          <td class="p-3 font-mono">${p.ops_plus.toFixed(1)}</td>
-          <td class="p-3 font-mono text-purple-300">${p.woba.toFixed(3)}</td>
-          <td class="p-3 font-mono font-bold text-amber-400">${p.wrc_plus.toFixed(1)}</td>
-          <td class="p-3 font-mono">${p.iso.toFixed(3)}</td>
-          <td class="p-3 font-mono text-slate-400">${p.babip.toFixed(3)}</td>
-          <td class="p-3 font-mono text-sky-300 font-bold">${p.rc.toFixed(1)}</td>
-          <td class="p-3 font-mono text-amber-400">${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}</td>
+          <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.pa}</td>
+          <td class="p-3 text-center font-mono font-bold text-slate-200 tabular-nums">${p.ab}</td>
+          <td class="p-3 text-center font-mono font-bold text-emerald-400 tabular-nums">${p.h}</td>
+          <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.h1}</td>
+          <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.h2}</td>
+          <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.h3}</td>
+          <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.hr}</td>
+          <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.bb}</td>
+          <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.sf}</td>
+          <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.k}</td>
+          <td class="p-3 font-mono text-emerald-400 font-bold tabular-nums">${p.avg.toFixed(3)}</td>
+          <td class="p-3 font-mono text-slate-300 tabular-nums">${p.obp.toFixed(3)}</td>
+          <td class="p-3 font-mono text-slate-300 tabular-nums">${p.slg.toFixed(3)}</td>
+          <td class="p-3 font-mono text-sky-400 font-bold tabular-nums">${p.ops.toFixed(3)}</td>
+          <td class="p-3 font-mono tabular-nums">${p.ops_plus.toFixed(1)}</td>
+          <td class="p-3 font-mono text-purple-300 tabular-nums">${p.woba.toFixed(3)}</td>
+          <td class="p-3 font-mono font-bold text-amber-400 tabular-nums">${p.wrc_plus.toFixed(1)}</td>
+          <td class="p-3 font-mono tabular-nums">${p.iso.toFixed(3)}</td>
+          <td class="p-3 font-mono text-slate-400 tabular-nums">${p.babip.toFixed(3)}</td>
+          <td class="p-3 font-mono text-sky-300 font-bold tabular-nums">${p.rc.toFixed(1)}</td>
+          <td class="p-3 font-mono text-amber-400 tabular-nums">${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -2507,21 +2508,21 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/60 transition';
         tr.innerHTML = `
-          <td class="p-3 font-mono text-sky-400">${l.date}</td>
+          <td class="p-3 font-mono text-sky-400 tabular-nums">${l.date}</td>
           <td class="p-3 text-slate-300">${l.tag}</td>
           <td class="p-3 font-bold text-white flex items-center space-x-3">
             ${renderAvatarElement(l.name, 'w-8 h-8 text-xs ring-1 ring-slate-700')}
             <span>${NAME_TO_JERSEY[l.name] !== undefined ? `<span class="text-slate-400 font-mono text-xs mr-1">#${NAME_TO_JERSEY[l.name]}</span>` : ''}${l.name}</span>
           </td>
-          <td class="p-3 text-center font-mono">${l.pa}</td>
-          <td class="p-3 text-center font-mono font-bold text-slate-200">${l.ab}</td>
-          <td class="p-3 text-center font-mono">${l.h}</td>
-          <td class="p-3 text-center font-mono">${l.hr}</td>
-          <td class="p-3 text-center font-mono">${l.bb}</td>
-          <td class="p-3 text-center font-mono">${l.sf ?? 0}</td>
-          <td class="p-3 text-center font-mono">${l.k}</td>
-          <td class="p-3 font-mono text-emerald-400">${avg}</td>
-          <td class="p-3 font-mono text-sky-400">${ops}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${l.pa}</td>
+          <td class="p-3 text-center font-mono font-bold text-slate-200 tabular-nums">${l.ab}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${l.h}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${l.hr}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${l.bb}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${l.sf ?? 0}</td>
+          <td class="p-3 text-center font-mono tabular-nums">${l.k}</td>
+          <td class="p-3 font-mono text-emerald-400 tabular-nums">${avg}</td>
+          <td class="p-3 font-mono text-sky-400 tabular-nums">${ops}</td>
           <td class="p-3 text-center">
             <button onclick="deleteSingleLog('${l.id}')" class="text-rose-400 hover:text-rose-200 text-xs px-2.5 py-1 rounded-md bg-rose-950/30 border border-rose-900/50 transition">刪除</button>
           </td>
@@ -2535,13 +2536,13 @@
 
         paginationEl.innerHTML = `
           <div class="text-slate-400 font-mono">
-            顯示第 <span class="text-slate-200 font-bold">${startNum}</span> - <span class="text-slate-200 font-bold">${endNum}</span> 筆 / 共 <span class="text-sky-400 font-bold">${totalLogs}</span> 筆紀錄 (每頁 15 筆)
+            顯示第 <span class="text-slate-200 font-bold tabular-nums">${startNum}</span> - <span class="text-slate-200 font-bold tabular-nums">${endNum}</span> 筆 / 共 <span class="text-sky-400 font-bold tabular-nums">${totalLogs}</span> 筆紀錄 (每頁 15 筆)
           </div>
           <div class="flex items-center space-x-1.5 font-mono">
             <button onclick="changeLogsPage(${currentLogsPage - 1})" ${currentLogsPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-950 border border-slate-800 text-slate-500 px-3 py-1 rounded-md"' : 'class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1 rounded-md transition"'}>
               上一頁
             </button>
-            <span class="px-3 py-1 bg-slate-950 border border-slate-800 rounded-md text-sky-400 font-bold">
+            <span class="px-3 py-1 bg-slate-950 border border-slate-800 rounded-md text-sky-400 font-bold tabular-nums">
               ${currentLogsPage} / ${totalPages}
             </span>
             <button onclick="changeLogsPage(${currentLogsPage + 1})" ${currentLogsPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-950 border border-slate-800 text-slate-500 px-3 py-1 rounded-md"' : 'class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1 rounded-md transition"'}>
