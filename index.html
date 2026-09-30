@@ -24,7 +24,7 @@
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-400">
           <div class="flex items-center space-x-1.5">
             <span class="text-sky-300 font-medium">系統建構：盧宣嘉</span>
-            <span class="bg-slate-800 text-slate-300 border border-slate-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">v261001.0025</span>
+            <span class="bg-slate-800 text-slate-300 border border-slate-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">v261001.0036</span>
           </div>
           <span class="text-slate-600">|</span>
           <span id="syncStatusBadge" class="text-emerald-400 font-mono">雲端資料庫：連線中...</span>
@@ -537,7 +537,7 @@
 
       <div class="flex items-center justify-end w-full space-x-2 border-t border-slate-800 pt-3">
         <button onclick="closeCropperModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg text-xs transition">取消</button>
-        <button onclick="confirmCropAndSave()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-1.5 rounded-lg text-xs shadow-lg transition">完成裁切並儲存</button>
+        <button onclick="confirmCropAndSave()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-1.5 rounded-lg text-xs shadow-lg transition">完成裁切並同步至雲端</button>
       </div>
     </div>
   </div>
@@ -728,6 +728,7 @@
     const GITHUB_REPO = "scottpuppylu/baseball-stats";
     const GITHUB_BRANCH = "main";
     const DATA_FILE_PATH = "data/logs.json";
+    const AVATARS_FILE_PATH = "data/avatars.json";
 
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
 
@@ -786,6 +787,7 @@
 
     let allLogs = [];
     let currentFileSha = null;
+    let currentAvatarsSha = null;
     let selectedPlayerName = "";
     let playerAvatars = JSON.parse(localStorage.getItem('rebas_player_avatars')) || {};
 
@@ -969,10 +971,101 @@
       return new TextDecoder().decode(bytes);
     }
 
+    async function loadAvatarsFromGitHub() {
+      try {
+        const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        if (apiRes.ok) {
+          const data = await apiRes.json();
+          currentAvatarsSha = data.sha;
+          const decoded = base64ToUtf8(data.content);
+          const cloudAvatars = JSON.parse(decoded);
+          playerAvatars = { ...playerAvatars, ...cloudAvatars };
+          localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
+        } else if (apiRes.status === 404) {
+          currentAvatarsSha = null;
+        }
+      } catch (err) {
+        try {
+          const res = await fetch(`./${AVATARS_FILE_PATH}?t=${Date.now()}`);
+          if (res.ok) {
+            const cloudAvatars = await res.json();
+            playerAvatars = { ...playerAvatars, ...cloudAvatars };
+            localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
+          }
+        } catch (e) {
+          // 保留本地快取頭像
+        }
+      }
+    }
+
+    async function commitAvatarsToGitHub(updatedAvatars, commitMessage = "update: sync player avatars via portal") {
+      const statusBadge = document.getElementById('syncStatusBadge');
+      statusBadge.textContent = '雲端資料庫：正在同步球員頭像至 GitHub...';
+      statusBadge.className = 'text-amber-400 font-mono animate-pulse';
+
+      try {
+        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
+        });
+        if (getShaRes.ok) {
+          const shaData = await getShaRes.json();
+          currentAvatarsSha = shaData.sha;
+        } else {
+          currentAvatarsSha = null;
+        }
+
+        const base64Content = utf8ToBase64(JSON.stringify(updatedAvatars, null, 2));
+
+        const putBody = {
+          message: commitMessage,
+          content: base64Content,
+          branch: GITHUB_BRANCH
+        };
+        if (currentAvatarsSha) putBody.sha = currentAvatarsSha;
+
+        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(putBody)
+        });
+
+        if (!putRes.ok) {
+          const errData = await putRes.json();
+          throw new Error(errData.message || 'GitHub API 頭像寫入拒絕');
+        }
+
+        const resData = await putRes.json();
+        currentAvatarsSha = resData.content.sha;
+        playerAvatars = updatedAvatars;
+        localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
+
+        statusBadge.textContent = `[連線正常] 頭像與資料庫：已即時同步 (Commit: ${currentAvatarsSha.substring(0,7)})`;
+        statusBadge.className = 'text-emerald-400 font-mono';
+
+        renderAll();
+        return true;
+      } catch (err) {
+        statusBadge.textContent = `[寫入失敗] 頭像雲端同步失敗: ${err.message}`;
+        statusBadge.className = 'text-rose-400 font-mono';
+        alert(`頭像寫入 GitHub 失敗：${err.message}`);
+        return false;
+      }
+    }
+
     async function loadLogsFromGitHub() {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端資料庫：載入中...';
       statusBadge.className = 'text-amber-400 font-mono';
+
+      await loadAvatarsFromGitHub();
 
       try {
         const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -1223,7 +1316,8 @@
       drawCropCanvas();
     });
 
-    window.confirmCropAndSave = function() {
+    // 裁切完成瞬間：即刻同步至 GitHub 雲端 (跨設備立即生效)
+    window.confirmCropAndSave = async function() {
       if (!activeCropImage) return;
 
       const offCanvas = document.createElement('canvas');
@@ -1248,10 +1342,16 @@
 
       outCtx.drawImage(offCanvas, sourceLeft, sourceTop, CROP_DIAMETER, CROP_DIAMETER, 0, 0, outSize, outSize);
 
-      playerAvatars[cropTargetPlayer] = outCanvas.toDataURL('image/jpeg', 0.85);
-      localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
+      const targetPlayer = cropTargetPlayer;
+      const newAvatarData = outCanvas.toDataURL('image/jpeg', 0.85);
+
       closeCropperModal();
+
+      playerAvatars[targetPlayer] = newAvatarData;
+      localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
       renderAll();
+
+      await commitAvatarsToGitHub(playerAvatars, `feat: update avatar for ${targetPlayer}`);
     };
 
     window.triggerAvatarUpload = function() {
@@ -1277,11 +1377,12 @@
       }
     };
 
-    window.clearAvatar = function(name) {
-      if (confirm(`確認清除 ${name} 的自訂頭像？`)) {
+    window.clearAvatar = async function(name) {
+      if (confirm(`確認自雲端清除 ${name} 的自訂頭像？`)) {
         delete playerAvatars[name];
         localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
         renderAll();
+        await commitAvatarsToGitHub(playerAvatars, `delete: remove avatar for ${name}`);
       }
     };
 
@@ -1569,7 +1670,7 @@
               <span class="text-xs font-mono text-slate-400">PA: ${pB.pa}</span>
             </div>
             <p class="text-xs text-slate-300 font-mono mt-0.5">三圍: ${pB.avg.toFixed(3)} / ${pB.obp.toFixed(3)} / ${pB.slg.toFixed(3)}</p>
-            <p class="text-[11px] text-slate-400 font-mono">OPS: ${pB.ops.toFixed(3)} | wRC+: ${pB.wrc_plus.toFixed(1)} | SDI: ${(pB.sdi >= 0 ? '+' : '') + pB.sdi.toFixed(3)}</p>
+            <p class="text-[11px] text-slate-400 font-mono">OPS: ${pB.ops.toFixed(3)} | wRC+: ${pB.wrc_plus.toFixed(1)} | SDI: ${(pA.sdi >= 0 ? '+' : '') + pA.sdi.toFixed(3)}</p>
           </div>
         </div>
       `;
@@ -1729,14 +1830,15 @@
 
       document.getElementById('playerProfileCard').innerHTML = `
         <div class="flex items-center space-x-4 border-b border-slate-800 pb-3">
-          <div class="relative group cursor-pointer" onclick="triggerAvatarUpload()" title="點擊自訂頭像裁切">
+          <div class="relative group cursor-pointer" onclick="triggerAvatarUpload()" title="點擊自訂頭像（裁切完即時同步至雲端）">
             ${renderAvatarElement(p.name, 'w-16 h-16 text-xl')}
-            <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white font-medium">裁切</div>
+            <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] text-white font-medium text-center px-1">更換頭像</div>
           </div>
           <div class="flex-1">
             <div class="flex items-center space-x-2">
               <span class="text-xl font-black text-white">${p.name}</span>
               <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2 py-0.5 rounded font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
+              ${playerAvatars[p.name] ? `<button onclick="clearAvatar('${p.name}')" class="text-[10px] text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
             </div>
             <p class="text-xs text-slate-400 mt-1">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 高犧: ${p.sf} | 三振: ${p.k}</p>
           </div>
