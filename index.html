@@ -10,102 +10,94 @@
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
     .tabular-nums { font-variant-numeric: tabular-nums; }
+    .nav-blur {
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+    }
     .tab-active {
-      background: linear-gradient(135deg, rgba(2, 132, 199, 0.95), rgba(14, 165, 233, 0.85));
-      color: #ffffff;
-      border-color: rgba(56, 189, 248, 0.9);
-      box-shadow: 0 4px 20px -2px rgba(14, 165, 233, 0.45);
+      background: rgba(255, 255, 255, 0.12);
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.5);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 2px 8px -1px rgba(0, 0, 0, 0.4);
     }
   </style>
 </head>
-<body class="bg-[#080c16] text-slate-100 min-h-screen p-3 md:p-8 font-sans antialiased selection:bg-sky-500 selection:text-white">
-  <div class="max-w-7xl mx-auto space-y-6">
+<body class="bg-[#070a12] text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white">
 
-    <!-- 頂部系統導覽列 -->
-    <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800/80 pb-5 gap-4">
-      <div>
-        <div class="flex items-center space-x-3">
-          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] px-2.5 py-0.5 rounded-full font-mono font-bold tracking-wider flex items-center gap-1.5 shadow-sm">
+  <!-- Apple 風格頂部全域懸浮導覽列 -->
+  <header class="sticky top-0 z-50 nav-blur bg-[#070a12]/85 border-b border-slate-800/80 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- 上層：品牌識別與系統連線狀態 -->
+      <div class="flex items-center justify-between h-14 border-b border-slate-800/40">
+        <div class="flex items-center space-x-3.5">
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] px-2.5 py-0.5 rounded-full font-mono font-bold tracking-wider flex items-center gap-1.5 shadow-sm">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             CLOUD AUTO-SYNC
           </span>
-          <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">淡江航太系壘</h1>
+          <span class="text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">淡江航太系壘</span>
+          <span class="hidden sm:inline text-xs text-slate-500">|</span>
+          <span class="hidden sm:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">v261001.0200</span>
         </div>
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-slate-400">
-          <div class="flex items-center space-x-1.5">
-            <span class="text-sky-400 font-semibold tracking-wide">系統架構：盧宣嘉</span>
-            <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-2 py-0.5 rounded-md font-mono font-bold">v261001.0150</span>
+        <div class="flex items-center space-x-2">
+          <span id="syncStatusBadge" class="hidden md:inline text-[11px] text-emerald-400 font-mono">雲端資料庫：連線中...</span>
+          <button onclick="manualRefresh()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-xs px-3 py-1.5 rounded-lg transition font-medium">即時重整</button>
+          <button onclick="openGlossaryModal()" class="bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 border border-sky-700/60 text-xs px-3 py-1.5 rounded-lg transition font-medium">圖書館</button>
+          <button id="exportCsvBtn" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-xs px-3 py-1.5 rounded-lg transition font-medium">匯出 CSV</button>
+        </div>
+      </div>
+
+      <!-- 下層：分段功能目錄 (Apple Segmented Navigation) -->
+      <div class="flex items-center justify-between py-2 overflow-x-auto gap-2 scrollbar-none">
+        <nav class="flex items-center space-x-1 shrink-0 bg-slate-950/60 p-1 rounded-xl border border-slate-800/80">
+          <button onclick="switchMainTab('tabOverview')" id="btnTabOverview" class="tab-active text-xs px-3.5 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span>全隊戰況與日誌</span>
+          </button>
+          <button onclick="switchMainTab('tabProfile')" id="btnTabProfile" class="text-slate-400 hover:text-slate-200 text-xs px-3.5 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <span>球員深度檔案與診斷</span>
+          </button>
+          <button onclick="switchMainTab('tabLeaderboard')" id="btnTabLeaderboard" class="text-slate-400 hover:text-slate-200 text-xs px-3.5 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            <span>數據排行榜</span>
+          </button>
+          <button onclick="switchMainTab('tabAnalytics')" id="btnTabAnalytics" class="text-slate-400 hover:text-slate-200 text-xs px-3.5 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path></svg>
+            <span>賽伯計量實驗室</span>
+          </button>
+          <button onclick="switchMainTab('tabCompare')" id="btnTabCompare" class="text-slate-400 hover:text-slate-200 text-xs px-3.5 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+            <span>雙雄攻守對決</span>
+          </button>
+        </nav>
+
+        <!-- 區間篩選膠囊 -->
+        <div class="flex items-center space-x-1.5 shrink-0 text-xs">
+          <input type="date" id="filterStartDate" class="bg-slate-950 border border-slate-700/80 text-slate-200 text-xs rounded-lg px-2 py-1 font-mono focus:outline-none focus:border-sky-500">
+          <span class="text-slate-500 text-xs">-</span>
+          <input type="date" id="filterEndDate" class="bg-slate-950 border border-slate-700/80 text-slate-200 text-xs rounded-lg px-2 py-1 font-mono focus:outline-none focus:border-sky-500">
+          <div class="flex items-center space-x-1 ml-1">
+            <button onclick="setDateRange('all')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-800 text-[11px] transition">全部</button>
+            <button onclick="setDateRange('2025')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-800 text-[11px] transition">2025</button>
+            <button onclick="setDateRange('2026')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-800 text-[11px] transition">2026</button>
           </div>
-          <span class="text-slate-700">|</span>
-          <span id="syncStatusBadge" class="text-emerald-400 font-mono text-[11px]">雲端資料庫：連線中...</span>
         </div>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button onclick="manualRefresh()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-xl transition font-medium flex items-center gap-1.5 shadow-sm hover:border-slate-600">
-          <span>即時重整</span>
-        </button>
-        <button onclick="openGlossaryModal()" class="bg-sky-950/40 hover:bg-sky-900/60 border border-sky-700/50 text-sky-300 text-xs px-3.5 py-2 rounded-xl transition font-medium flex items-center gap-1.5 shadow-sm">
-          <span>名詞圖書館</span>
-        </button>
-        <button id="exportCsvBtn" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-xl transition font-medium hover:border-slate-600">匯出 CSV</button>
-      </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- 時間過濾區間 -->
-    <section class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 shadow-lg backdrop-blur-md">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-3">
-          <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            統計區間：
-          </span>
-          <div class="flex items-center space-x-2">
-            <input type="date" id="filterStartDate" class="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-sky-500 font-mono">
-            <span class="text-slate-500 text-xs">至</span>
-            <input type="date" id="filterEndDate" class="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-sky-500 font-mono">
-          </div>
-        </div>
-        <div class="flex items-center space-x-1.5">
-          <button onclick="setDateRange('all')" class="bg-slate-950 hover:bg-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-slate-800 transition font-medium">全部歷史</button>
-          <button onclick="setDateRange('2025')" class="bg-slate-950 hover:bg-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-slate-800 transition font-medium">2025年度</button>
-          <button onclick="setDateRange('2026')" class="bg-slate-950 hover:bg-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-slate-800 transition font-medium">2026年度</button>
-        </div>
-      </div>
-    </section>
+  <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
 
-    <!-- 全域功能目錄導覽列 (5 大核心模組) -->
-    <nav class="bg-slate-900/90 backdrop-blur-md border border-slate-800/90 rounded-2xl p-1.5 shadow-2xl sticky top-2 z-30 flex items-center overflow-x-auto gap-1.5 scrollbar-thin">
-      <button onclick="switchMainTab('tabOverview')" id="btnTabOverview" class="tab-active text-xs px-4 py-2 rounded-xl border border-transparent font-bold shrink-0 transition flex items-center gap-2">
-        <svg class="w-4 h-4 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-        <span>全隊戰況與日誌</span>
-      </button>
-      <button onclick="switchMainTab('tabProfile')" id="btnTabProfile" class="bg-slate-950/70 hover:bg-slate-800 text-slate-300 text-xs px-4 py-2 rounded-xl border border-slate-800 font-medium shrink-0 transition flex items-center gap-2">
-        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-        <span>球員深度檔案與診斷</span>
-      </button>
-      <button onclick="switchMainTab('tabLeaderboard')" id="btnTabLeaderboard" class="bg-slate-950/70 hover:bg-slate-800 text-slate-300 text-xs px-4 py-2 rounded-xl border border-slate-800 font-medium shrink-0 transition flex items-center gap-2">
-        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-        <span>數據排行榜</span>
-      </button>
-      <button onclick="switchMainTab('tabAnalytics')" id="btnTabAnalytics" class="bg-slate-950/70 hover:bg-slate-800 text-slate-300 text-xs px-4 py-2 rounded-xl border border-slate-800 font-medium shrink-0 transition flex items-center gap-2">
-        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path></svg>
-        <span>賽伯計量實驗室</span>
-      </button>
-      <button onclick="switchMainTab('tabCompare')" id="btnTabCompare" class="bg-slate-950/70 hover:bg-slate-800 text-slate-300 text-xs px-4 py-2 rounded-xl border border-slate-800 font-medium shrink-0 transition flex items-center gap-2">
-        <svg class="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-        <span>雙雄攻守對決</span>
-      </button>
-    </nav>
-
-    <!-- 分頁內容主體容器 -->
+    <!-- 主體內容分頁群 -->
     <main class="space-y-6">
 
       <!-- 分頁一：全隊戰況與日誌 -->
       <div id="panelOverview" class="space-y-6">
         <section class="grid grid-cols-2 md:grid-cols-6 gap-3.5" id="teamSummaryCards"></section>
 
-        <section class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <section class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4 backdrop-blur-sm">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
             <div class="flex items-center space-x-2">
               <button id="tabSummaryBtn" class="bg-sky-600 text-white text-xs px-3.5 py-1.5 rounded-lg font-bold shadow">區間成績匯總表 (雲端唯讀)</button>
               <button id="tabLogsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded-lg font-medium">詳細賽事日誌</button>
@@ -117,10 +109,10 @@
           </div>
 
           <!-- 登打表單 (背號鎖定即時浮現球員頭像) -->
-          <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-emerald-900/60 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+          <form id="addLogForm" class="hidden bg-slate-950/90 p-4 rounded-xl border border-emerald-900/60 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
             <div class="col-span-2 md:col-span-6 flex items-center justify-between border-b border-slate-800 pb-2">
               <span class="font-bold text-emerald-400">登記賽事日誌 (輸入球員背號)</span>
-              <span class="text-[11px] text-slate-400">系統自算：打數 (AB) = PA - BB - SF | 安打 (H) = 1H + 2H + 3H + HR</span>
+              <span class="text-[11px] text-slate-400 font-mono">系統自算：打數 (AB) = PA - BB - SF | 安打 (H) = 1H + 2H + 3H + HR</span>
             </div>
             <div>
               <label class="block text-slate-400 mb-1">比賽/記錄日期 <span class="text-rose-400">*</span></label>
@@ -186,7 +178,7 @@
           </form>
 
           <!-- 新增球員表單 -->
-          <form id="addPlayerForm" class="hidden bg-slate-950 p-4 rounded-xl border border-indigo-900/60 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+          <form id="addPlayerForm" class="hidden bg-slate-950/90 p-4 rounded-xl border border-indigo-900/60 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
             <div class="col-span-1 md:col-span-4 flex items-center justify-between border-b border-slate-800 pb-2">
               <span class="font-bold text-indigo-400">新增球隊球員檔案 (球員背號與姓名建檔)</span>
               <span class="text-[11px] text-slate-500">完成建檔後，日誌登打即可直接輸入該背號</span>
@@ -216,7 +208,7 @@
           <!-- 匯總總表 (頭像放大至 36px) -->
           <div id="viewSummary" class="overflow-x-auto rounded-xl border border-slate-800/80">
             <table class="w-full text-left text-xs whitespace-nowrap">
-              <thead class="bg-slate-950 text-slate-400 uppercase select-none">
+              <thead class="bg-slate-950 text-slate-400 uppercase select-none font-mono">
                 <tr>
                   <th class="p-3">選手</th>
                   <th class="p-3 text-center">打席</th>
@@ -250,7 +242,7 @@
           <div id="viewLogs" class="hidden space-y-3">
             <div class="overflow-x-auto rounded-xl border border-slate-800/80">
               <table class="w-full text-left text-xs whitespace-nowrap">
-                <thead class="bg-slate-950 text-slate-400 uppercase select-none">
+                <thead class="bg-slate-950 text-slate-400 uppercase select-none font-mono">
                   <tr>
                     <th class="p-3">紀錄時間</th>
                     <th class="p-3">賽事/標籤</th>
@@ -275,17 +267,17 @@
         </section>
       </div>
 
-      <!-- 分頁二：球員深度檔案與打擊改善建議整合模組 -->
+      <!-- 分頁二：球員深度檔案與整合式弱點診斷 -->
       <div id="panelProfile" class="hidden space-y-6">
-        <!-- 上部：球員個人卡與視覺圖表 -->
-        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-6 shadow-xl space-y-6">
+        <!-- 上部：球員個人主體卡與進階視覺圖表 -->
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-6 shadow-xl space-y-6 backdrop-blur-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
             <div>
               <div class="flex items-center space-x-2.5">
                 <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">PLAYER STUDIO</span>
-                <h2 class="text-xl font-black text-white tracking-tight">球員個人深度檔案</h2>
+                <h2 class="text-xl font-black text-white tracking-tight">球員個人深度能力檔案</h2>
               </div>
-              <p class="text-xs text-slate-400 mt-1">慢壘專用 SDI 好球帶五維雷達 PR 能力分佈與區間安打分項</p>
+              <p class="text-xs text-slate-400 mt-1">慢壘五維能力雷達圖採用特化 SDI 指標：結合四壞保送與 1.5 倍三振懲罰評估好球帶控制力</p>
             </div>
             <div class="flex items-center space-x-3 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
               <label class="text-xs text-slate-400 font-semibold">切換選手：</label>
@@ -295,7 +287,7 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-            <!-- 特大頭像 128px 個人看板 -->
+            <!-- 128px 巨型頭像與選手三圍指標 -->
             <div class="md:col-span-5 space-y-4" id="playerProfileCard"></div>
 
             <!-- 五維雷達圖 -->
@@ -316,15 +308,15 @@
           </div>
         </section>
 
-        <!-- 下部：整合於此之弱點診斷與打擊改善建議面板 (可伸縮) -->
-        <section class="bg-slate-900/80 border border-rose-900/40 rounded-2xl p-6 shadow-xl space-y-5">
+        <!-- 下部：整合於此之球員弱點診斷與訓練改善方針 (可伸縮、自適應即時更新) -->
+        <section class="bg-slate-900/80 border border-rose-900/40 rounded-2xl p-6 shadow-xl space-y-5 backdrop-blur-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
             <div>
               <div class="flex items-center space-x-2">
-                <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">TACTICAL ADVISORY</span>
-                <h3 class="text-base font-bold text-rose-300">球員打擊弱點診斷與訓練改善方針</h3>
+                <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">SCOUTING & TACTICAL ADVISORY</span>
+                <h3 class="text-base font-bold text-rose-300">球員打擊弱點診斷與技術改善方針 (即時動態分析)</h3>
               </div>
-              <p class="text-xs text-slate-400 mt-1">基於三振率（K%）、選球紀律（SDI）、長打深度（ISO）與場內安打品質（BABIP）客觀點出打擊瓶頸</p>
+              <p class="text-xs text-slate-400 mt-1">基於三振率（K%）、好球帶紀律（SDI）、純長打威力（ISO）、場內安打穿透力（BABIP）與掌握度（Contact%）即時評估</p>
             </div>
             <button id="toggleDiagCollapseBtn" onclick="toggleDiagnosticsCollapse()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 font-medium transition self-start md:self-auto">
               <span id="diagToggleText">收合診斷面板</span>
@@ -337,23 +329,25 @@
               <div class="flex items-center space-x-2.5">
                 <label class="text-xs text-slate-400 font-medium">診斷檢視模式：</label>
                 <select id="diagFilterMode" onchange="renderDiagnostics(getAggregatedStats(getFilteredLogs()))" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-rose-500 font-medium">
-                  <option value="single" selected>僅顯示目前選取球員</option>
+                  <option value="single" selected>目前選取球員專屬診斷報告</option>
                   <option value="all">全隊隊員總體診斷矩陣</option>
-                  <option value="urgent">優先急迫改善名單 (追打壞球/高K率)</option>
-                  <option value="power">長打缺口名單 (純一壘安打短程打者)</option>
+                  <option value="urgent">優先急迫改善名單 (好球帶追打/高三振率)</option>
+                  <option value="power">長打推進缺口名單 (純一壘安打短程型)</option>
+                  <option value="contact">擊球掌握度需提升名單 (低Contact%)</option>
                 </select>
               </div>
-              <span class="text-[11px] text-slate-500 font-mono">慢壘實戰特化指標權重</span>
+              <span class="text-[11px] text-slate-500 font-mono">慢壘實戰特化診斷矩陣 2.0</span>
             </div>
 
+            <!-- 診斷卡片容器 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="diagnosticsCardsContainer"></div>
           </div>
         </section>
       </div>
 
-      <!-- 分頁三：全隊排行榜模組 (前三名 68px 大頭像與立體光環) -->
+      <!-- 分頁三：全隊排行榜模組 (前三名 68px 大頭像與立體金銀銅光環) -->
       <div id="panelLeaderboard" class="hidden space-y-6">
-        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-6 shadow-xl space-y-5">
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-6 shadow-xl space-y-5 backdrop-blur-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
             <div>
               <div class="flex items-center space-x-2">
@@ -411,7 +405,7 @@
 
           <div class="overflow-x-auto rounded-xl border border-slate-800">
             <table class="w-full text-left text-xs whitespace-nowrap">
-              <thead class="bg-slate-950 text-slate-400 uppercase select-none">
+              <thead class="bg-slate-950 text-slate-400 uppercase select-none font-mono">
                 <tr>
                   <th class="p-3 text-center w-12">名次</th>
                   <th class="p-3">選手</th>
@@ -436,7 +430,7 @@
       <!-- 分頁四：賽伯計量實驗室 (象限圖與多變量引擎) -->
       <div id="panelAnalytics" class="hidden space-y-6">
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+          <div class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-5 shadow-xl flex flex-col justify-between backdrop-blur-sm">
             <div>
               <div class="flex justify-between items-center mb-1">
                 <h3 class="text-sm font-bold text-slate-200">打擊型態象限分析 (OBP vs. SLG)</h3>
@@ -449,7 +443,7 @@
             </div>
           </div>
 
-          <div class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+          <div class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-5 shadow-xl flex flex-col justify-between backdrop-blur-sm">
             <div>
               <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <h3 class="text-sm font-bold text-purple-300">多變量交叉比對引擎</h3>
@@ -515,9 +509,9 @@
         </section>
       </div>
 
-      <!-- 分頁五：雙雄攻守對決 (104px 巨型頭像與表頭雙頭像) -->
+      <!-- 分頁五：雙雄攻守對決 (104px 巨型頭像與勝負判定) -->
       <div id="panelCompare" class="hidden space-y-6">
-        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-6 shadow-xl space-y-6">
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-6 shadow-xl space-y-6 backdrop-blur-sm">
           <div class="border-b border-slate-800 pb-3">
             <div class="flex items-center space-x-2">
               <span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">HEAD TO HEAD</span>
@@ -551,7 +545,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <div class="lg:col-span-7 overflow-x-auto rounded-xl border border-slate-800">
               <table class="w-full text-left text-xs whitespace-nowrap">
-                <thead class="bg-slate-950 text-slate-400 uppercase select-none">
+                <thead class="bg-slate-950 text-slate-400 uppercase select-none font-mono">
                   <tr>
                     <th class="p-3">評比指標</th>
                     <th class="p-3 text-center text-sky-400" id="compareHeadA">選手 A</th>
@@ -1013,10 +1007,10 @@
       Object.keys(panels).forEach(key => {
         if (key === tabId) {
           panels[key].classList.remove('hidden');
-          buttons[key].className = 'tab-active text-xs px-4 py-2 rounded-xl border border-sky-400 font-bold shrink-0 transition flex items-center gap-2 shadow-lg';
+          buttons[key].className = 'tab-active text-xs px-3.5 py-1.5 rounded-lg border font-bold transition flex items-center gap-1.5 shadow-sm';
         } else {
           panels[key].classList.add('hidden');
-          buttons[key].className = 'bg-slate-950/70 hover:bg-slate-800 text-slate-300 text-xs px-4 py-2 rounded-xl border border-slate-800 font-medium shrink-0 transition flex items-center gap-2';
+          buttons[key].className = 'text-slate-400 hover:text-slate-200 text-xs px-3.5 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5';
         }
       });
 
@@ -1097,7 +1091,7 @@
     async function commitAvatarsToGitHub(updatedAvatars, commitMessage = "update: sync player avatars via portal") {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端資料庫：正在同步球員頭像至 GitHub...';
-      statusBadge.className = 'text-amber-400 font-mono animate-pulse';
+      statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
 
       try {
         const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -1139,13 +1133,13 @@
         localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
 
         statusBadge.textContent = `[連線正常] 頭像與資料庫：已即時同步 (Commit: ${currentAvatarsSha.substring(0,7)})`;
-        statusBadge.className = 'text-emerald-400 font-mono';
+        statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
 
         renderAll();
         return true;
       } catch (err) {
         statusBadge.textContent = `[寫入失敗] 頭像雲端同步失敗: ${err.message}`;
-        statusBadge.className = 'text-rose-400 font-mono';
+        statusBadge.className = 'text-rose-400 font-mono text-[11px]';
         alert(`頭像寫入 GitHub 失敗：${err.message}`);
         return false;
       }
@@ -1154,7 +1148,7 @@
     async function loadLogsFromGitHub() {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端資料庫：載入中...';
-      statusBadge.className = 'text-amber-400 font-mono';
+      statusBadge.className = 'text-amber-400 font-mono text-[11px]';
 
       await loadAvatarsFromGitHub();
 
@@ -1172,7 +1166,7 @@
           const decoded = base64ToUtf8(data.content);
           allLogs = JSON.parse(decoded);
           statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (${allLogs.length} 筆賽事)`;
-          statusBadge.className = 'text-emerald-400 font-mono';
+          statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
         } else {
           throw new Error('API 回應異常');
         }
@@ -1182,11 +1176,11 @@
           if (!res.ok) throw new Error('靜態檔案未就緒');
           allLogs = await res.json();
           statusBadge.textContent = '[備援模式] 雲端資料庫：靜態備援讀取成功';
-          statusBadge.className = 'text-amber-300 font-mono';
+          statusBadge.className = 'text-amber-300 font-mono text-[11px]';
         } catch (staticErr) {
           allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
           statusBadge.textContent = '[基準數據] 雲端未就緒，已載入2025年度總結';
-          statusBadge.className = 'text-amber-400 font-mono';
+          statusBadge.className = 'text-amber-400 font-mono text-[11px]';
         }
       }
 
@@ -1204,7 +1198,7 @@
     async function commitLogsToGitHub(updatedLogs, commitMessage = "update: sync match logs via portal") {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端資料庫：正在寫入 GitHub...';
-      statusBadge.className = 'text-amber-400 font-mono animate-pulse';
+      statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
 
       try {
         const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -1244,13 +1238,13 @@
         syncJerseyMaps();
 
         statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (Commit: ${currentFileSha.substring(0,7)})`;
-        statusBadge.className = 'text-emerald-400 font-mono';
+        statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
 
         renderAll();
         return true;
       } catch (err) {
         statusBadge.textContent = `[寫入失敗] 雲端寫入失敗: ${err.message}`;
-        statusBadge.className = 'text-rose-400 font-mono';
+        statusBadge.className = 'text-rose-400 font-mono text-[11px]';
         alert(`寫入 GitHub 失敗：${err.message}`);
         return false;
       }
@@ -1325,7 +1319,7 @@
       ctx.restore();
 
       ctx.save();
-      ctx.fillStyle = 'rgba(7, 11, 20, 0.82)';
+      ctx.fillStyle = 'rgba(7, 10, 18, 0.85)';
       ctx.beginPath();
       ctx.rect(0, 0, CROP_CANVAS_SIZE, CROP_CANVAS_SIZE);
       ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2, true);
@@ -2027,7 +2021,7 @@
       });
     }
 
-    // 弱點診斷演算法：精準點出問題與具體改善方針
+    // 弱點診斷演算法 2.0：自適應每次賽事日誌與統計區間更新
     function renderDiagnostics(agg) {
       const container = document.getElementById('diagnosticsCardsContainer');
       const mode = document.getElementById('diagFilterMode').value;
@@ -2044,83 +2038,96 @@
         const issues = [];
         const strengths = [];
         const tips = [];
+        let profileTag = "攻守均衡打者";
+        let tagColor = "border-slate-700 bg-slate-800 text-slate-300";
 
         // 1. 三振與揮空判定 (K% & Contact%)
-        if (p.k_pct >= 0.10) {
+        if (p.k_pct >= 0.12 && p.pa >= 5) {
           issues.push({
-            title: `慢壘三振率偏高 (K% ${(p.k_pct * 100).toFixed(1)}%)`,
-            desc: `在慢壘吞 K 出局代價極高。數據顯示兩好球後過度追打引誘壞球或極端邊角球。`
+            title: `慢壘三振率異常偏高 (K% ${(p.k_pct * 100).toFixed(1)}%)`,
+            desc: `在慢速壘球中吞 K 代價極重。數據顯示打者在兩好球後過度追打引誘高壞球或下墜過早的無效球路。`
           });
-          tips.push(`兩好球後收縮好球帶，非正中紅中球堅決不出棒；練習縮短揮棒準備期，以確實推打為主。`);
+          tips.push(`【揮棒收縮原則】：兩好球後將好球帶收縮至腰部到胸口之正中球，非設定球路一律不出棒；縮短揮棒準備期以確實推打為主。`);
+          profileTag = "好球帶揮空過度";
+          tagColor = "border-rose-700/60 bg-rose-950/40 text-rose-300";
         } else if (p.k === 0 && p.pa >= 10) {
-          strengths.push(`零三振掌握者 (K% 0.0%)：球眼穩定，能確實咬中來球並對防守施壓。`);
+          strengths.push(`零三振掌控機器 (K% 0.0%)：球眼辨識與抗揮空穩定度屬全隊頂尖。`);
         }
 
-        if (p.contact_pct < 0.85 && p.pa >= 8) {
+        if (p.contact_pct < 0.85 && p.pa >= 6) {
           issues.push({
-            title: `揮空迴避率偏低 (Contact% ${(p.contact_pct * 100).toFixed(1)}%)`,
-            desc: `揮棒軌跡與球的落點甜蜜區不吻合，擊球點過早或過晚。`
+            title: `擊球掌握度偏低 (Contact% ${(p.contact_pct * 100).toFixed(1)}%)`,
+            desc: `揮棒平面與慢壘落點甜蜜區吻合度不足，擊球點容易過早拉扯或過晚切擊。`
           });
+          tips.push(`【節奏控制】：利用發球機或教練拋球練習「將球放深」擊球，確保前足著地時身體重心不向前傾倒。`);
         }
 
         // 2. 選球紀律與保送產能 (BB% & SDI)
-        if (p.bb_pct < 0.06 && p.pa >= 12) {
+        if (p.bb_pct < 0.05 && p.pa >= 12) {
           issues.push({
             title: `選球耐性偏低 (BB% ${(p.bb_pct * 100).toFixed(1)}%)`,
-            desc: `習慣在前 1–2 顆球過早發動攻擊，未充分逼迫投手投出好球。`
+            desc: `前 1–2 球發動出棒過於急躁，未有效消耗投手球數，對壞球放行意願偏低。`
           });
-          tips.push(`適度放慢打擊節奏，設定特定高度球路攻擊，未到理想進壘點不輕易出棒。`);
+          tips.push(`【打擊策略設定】：一好球前僅鎖定個人最擅長之特定高度球路，若未落在熱區堅決放過，逼迫投手投出好球。`);
         }
 
         if (p.sdi < 0 && p.pa >= 8) {
           issues.push({
-            title: `慢壘好球帶紀律為負 (SDI ${(p.sdi).toFixed(3)})`,
-            desc: `三振扣分大於四壞回饋，目前在打擊區的得失分邊際效益呈逆流狀態。`
+            title: `慢壘淨紀律指標為負 (SDI ${(p.sdi).toFixed(3)})`,
+            desc: `三振扣分大於保送加權，在打擊區的好球帶控制邊際貢獻呈負值。`
           });
         }
 
         // 3. 長打推進與力量釋放 (ISO & SLG)
-        if (p.iso <= 0.120 && p.avg >= 0.300 && p.pa >= 10) {
+        if (p.iso <= 0.120 && p.avg >= 0.300 && p.pa >= 8) {
           issues.push({
             title: `長打推進缺口 (ISO ${p.iso.toFixed(3)})`,
-            desc: `安打集中於一壘短程安打，外野守備容易前趨封鎖，缺乏越過防線之清壘威脅。`
+            desc: `安打幾乎全為短程一壘安打，守備方外野站位容易前趨包夾，清壘與長程推進力受限。`
           });
-          tips.push(`強化擊球啟動時下盤轉髖帶動與延伸軌跡，改善擊球初速，增加平飛長打比例。`);
+          tips.push(`【轉髖力量釋放】：擊球啟動時加強後腳下盤蹬地轉髖，揮棒軌跡保持完整跟隨動作（Follow-through），增加強勁平飛穿越球。`);
+          if (profileTag === "攻守均衡打者") {
+            profileTag = "短程機關槍型";
+            tagColor = "border-amber-700/60 bg-amber-950/40 text-amber-300";
+          }
         } else if (p.iso >= 0.280) {
-          strengths.push(`長打重砲手 (ISO ${p.iso.toFixed(3)})：具備優異長程推進破壞力。`);
+          strengths.push(`重砲清壘者 (ISO ${p.iso.toFixed(3)})：具備優異長程飛行距離與直接得分威脅。`);
+          profileTag = "長程重砲打者";
+          tagColor = "border-sky-700/60 bg-sky-950/40 text-sky-300";
         }
 
-        // 4. 擊球品質與場內安打 (BABIP)
-        if (p.babip < 0.350 && p.avg < 0.400 && p.pa >= 10) {
+        // 4. 擊球品質與場內安打穿透 (BABIP)
+        if (p.babip < 0.350 && p.avg < 0.400 && p.pa >= 8) {
           issues.push({
-            title: `擊球穿透力不足 (BABIP ${p.babip.toFixed(3)})`,
-            desc: `場內擊球容易形成守備正面滾地球或內野無效高飛球（Pop-up）。`
+            title: `擊球穿透力偏弱 (BABIP ${p.babip.toFixed(3)})`,
+            desc: `場內擊球容易形成守備正面滾地球或內野無效高飛球（Pop-up），擊球出速偏低。`
           });
-          tips.push(`修正倒棒與撈球毛病，保持由上往下、水平砍擊或平擊球心，形成強勁平飛球。`);
+          tips.push(`【砍擊擊球心】：修正倒棒或向上撈球之揮棒毛病，以由上往下的水平砍擊擊打球心上半部，降低內野飛球率。`);
         }
 
         // 5. 攻守型態綜合平衡 (OBP vs. SLG)
         if (p.obp >= 0.500 && p.slg < 0.600) {
-          strengths.push(`機關槍攻勢串連者：上壘率穩定，能持續堆疊壘包。`);
+          strengths.push(`高效率上壘樞紐：能持續堆疊壘包延續攻勢。`);
         } else if (p.slg >= 0.800 && p.obp < 0.480) {
           issues.push({
-            title: `打擊穩定度落差：長打雖具威力但出局率偏高，需提升上壘延續性。`
+            title: `擊球穩定度落差：長打雖具威力但整體出局率偏高，需兼顧上壘穩定性。`
           });
         }
 
+        // 依據篩選模式過濾
         if (mode === 'urgent' && !issues.some(i => i.title.includes('三振') || i.title.includes('紀律') || i.title.includes('揮空'))) return;
         if (mode === 'power' && !issues.some(i => i.title.includes('長打'))) return;
+        if (mode === 'contact' && !issues.some(i => i.title.includes('掌握度'))) return;
 
         if (issues.length === 0) {
           issues.push({
-            title: `攻守均衡型打者`,
-            desc: `當前各項指標均落在健康基準線內，擊球品質與好球帶控制穩定。`
+            title: `全維度擊球健康狀態`,
+            desc: `各項指標皆位於健康水準之上，選球耐心與出棒掌握度維持優異。`
           });
-          tips.push(`持續維持當前擊球手感，針對得點圈有人時加強深遠高飛犧牲打之護送推進。`);
+          tips.push(`【戰術強化】：維持當前打擊擊球甜蜜點，針對得點圈有人時多加練習右半邊推打與深遠外野高飛犧牲打。`);
         }
 
         const card = document.createElement('div');
-        card.className = 'bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-3 shadow-md hover:border-slate-700 transition';
+        card.className = 'bg-slate-950/90 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-between space-y-3.5 shadow-lg hover:border-slate-700 transition duration-150';
 
         card.innerHTML = `
           <div>
@@ -2130,14 +2137,18 @@
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
-                  <span class="font-black text-white text-base truncate">#${NAME_TO_JERSEY[p.name] ?? '--'} ${p.name}</span>
+                  <div class="flex items-center space-x-2">
+                    <span class="font-black text-white text-base truncate">#${NAME_TO_JERSEY[p.name] ?? '--'} ${p.name}</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full border font-mono ${tagColor}">${profileTag}</span>
+                  </div>
                   <span class="text-[11px] font-mono text-slate-400 tabular-nums">PA: ${p.pa} | AVG: ${p.avg.toFixed(3)}</span>
                 </div>
-                <div class="flex items-center gap-1.5 mt-1">
+                <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                   <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-rose-300 tabular-nums">K%: ${(p.k_pct * 100).toFixed(1)}%</span>
                   <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-sky-300 tabular-nums">BB%: ${(p.bb_pct * 100).toFixed(1)}%</span>
                   <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-amber-300 tabular-nums">ISO: ${p.iso.toFixed(3)}</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-purple-300 tabular-nums">wRC+: ${p.wrc_plus.toFixed(1)}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-purple-300 tabular-nums">SDI: ${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono text-emerald-300 tabular-nums">Contact: ${(p.contact_pct * 100).toFixed(1)}%</span>
                 </div>
               </div>
             </div>
@@ -2146,7 +2157,7 @@
             <div class="mt-3 space-y-2">
               <span class="text-[11px] font-bold text-rose-400 flex items-center gap-1">
                 <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                數據暴露弱點：
+                量化數據暴露弱點：
               </span>
               <ul class="space-y-1.5 text-xs text-slate-300 pl-1">
                 ${issues.map(item => `
@@ -2163,7 +2174,7 @@
               <div class="mt-3 pt-2.5 border-t border-slate-800/80">
                 <span class="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mb-1.5">
                   <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                  訓練與實戰改善方針：
+                  球探技術診斷與實戰改善處方：
                 </span>
                 <ul class="list-disc list-inside text-[11px] text-slate-300 space-y-1 pl-1">
                   ${tips.map(t => `<li class="leading-relaxed">${t}</li>`).join('')}
