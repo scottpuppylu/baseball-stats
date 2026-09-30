@@ -582,7 +582,7 @@
             <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
               <span class="font-bold text-white block text-sm">加權得分創造 (wRC+, Weighted Runs Created Plus)</span>
               <p><span class="text-slate-400">定義：</span>以全隊平均值 100 為基準的綜合進攻效率標準化指數。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wRC+ = (OPS / Team_OPS) × 100</span></p>
+              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wRC+ = (wOBA / Team_wOBA) × 100</span></p>
               <p><span class="text-slate-400">意義：</span>綜合考量上壘品質與長打推進，排除場地與賽制偏差，是公認最客觀的個人全能進攻身價標準。</p>
             </div>
             <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
@@ -826,8 +826,8 @@
     const leaderboardGlossary = {
       wrc_plus: {
         title: "加權得分創造 (wRC+, Weighted Runs Created Plus)",
-        formula: "wRC+ = (OPS / Team_OPS) × 100",
-        desc: "以全隊平均 100 為基準的綜合進攻效率指數，排除場地與賽制偏差，是公認最客觀的個人進攻全能產能身價標準。"
+        formula: "wRC+ = (wOBA / Team_wOBA) × 100",
+        desc: "以全隊平均 wOBA 為基準的綜合進攻效率指數，透過加權上壘率反映真實得分效益，與 OPS+ 和 OPS 的對應關係完全一致。"
       },
       ops: {
         title: "整體攻擊指數 (OPS, On-base Plus Slugging)",
@@ -842,7 +842,7 @@
       woba: {
         title: "加權上壘率 (wOBA, Weighted On-Base Average)",
         formula: "wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA",
-        desc: "依據賽伯計量得分期望值（Run Expectancy）賦予各進攻事件精確線性權重，精確衡量每打席對團隊得分的實際邊際價值。"
+        desc: "依據賽伯計量得分期望值（Run Expectancy）賦予各進攻事件精確線性權重之上壘指標。"
       },
       rc: {
         title: "預估創造得分 (RC, Runs Created)",
@@ -1361,6 +1361,15 @@
       const teamSlg = teamAb > 0 ? (teamH1 + 2*teamH2 + 3*teamH3 + 4*teamHr) / teamAb : 0;
       const teamOps = teamObp + teamSlg;
 
+      const teamPa = list.reduce((a, b) => a + b.pa, 0);
+      const teamBbVal = list.reduce((a, b) => a + b.bb, 0);
+      const teamH1Val = list.reduce((a, b) => a + b.h1, 0);
+      const teamH2Val = list.reduce((a, b) => a + b.h2, 0);
+      const teamH3Val = list.reduce((a, b) => a + b.h3, 0);
+      const teamHrVal = list.reduce((a, b) => a + b.hr, 0);
+      const teamWobaNum = 0.69 * teamBbVal + 0.89 * teamH1Val + 1.27 * teamH2Val + 1.62 * teamH3Val + 2.10 * teamHrVal;
+      const teamWoba = teamPa > 0 ? teamWobaNum / teamPa : 0;
+
       list.forEach(p => {
         p.avg = p.ab > 0 ? p.h / p.ab : 0;
         p.obp = (p.ab + p.bb + p.sf) > 0 ? (p.h + p.bb) / (p.ab + p.bb + p.sf) : 0;
@@ -1370,7 +1379,7 @@
         p.iso = p.slg - p.avg;
         p.ops_plus = teamOps > 0 ? (p.ops / teamOps) * 100 : 100;
         p.woba = p.pa > 0 ? (0.69 * p.bb + 0.89 * p.h1 + 1.27 * p.h2 + 1.62 * p.h3 + 2.10 * p.hr) / p.pa : 0;
-        p.wrc_plus = p.ops_plus;
+        p.wrc_plus = teamWoba > 0 ? (p.woba / teamWoba) * 100 : 100;
         p.sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
 
         const bipDenom = p.ab - p.k - p.hr + p.sf;
