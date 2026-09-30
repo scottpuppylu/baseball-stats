@@ -9,25 +9,6 @@
   <style>
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
-
-    .stat-input {
-      width: 3.25rem !important;
-      background-color: #020617 !important;
-      color: #f8fafc !important;
-      border: 1px solid #334155 !important;
-      border-radius: 0.375rem !important;
-      padding: 0.2rem 0.25rem !important;
-      text-align: center !important;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-      font-size: 0.75rem !important;
-      line-height: 1rem !important;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .stat-input:focus {
-      outline: none !important;
-      border-color: #38bdf8 !important;
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25) !important;
-    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
@@ -282,11 +263,11 @@
       </div>
     </section>
 
-    <!-- 模組五：雙視圖總表 (計算項解耦，日誌與球員分立) -->
+    <!-- 模組五：雙視圖總表 (彙總表唯讀檢視，日誌與球員分立) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
-          <button id="tabSummaryBtn" class="bg-sky-600 text-white text-xs px-3.5 py-1.5 rounded font-medium">區間成績匯總表 (即時儲存至 GitHub)</button>
+          <button id="tabSummaryBtn" class="bg-sky-600 text-white text-xs px-3.5 py-1.5 rounded font-medium">區間成績匯總表 (雲端唯讀檢視)</button>
           <button id="tabLogsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded font-medium">詳細賽事日誌</button>
         </div>
         <div class="flex items-center space-x-2">
@@ -295,7 +276,7 @@
         </div>
       </div>
 
-      <!-- 賽事日誌登打表單 (打席 1-10 必選，打數 AB 與安打 H 均為自動計算項) -->
+      <!-- 賽事日誌登打表單 -->
       <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-emerald-900/60 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
         <div class="col-span-2 md:col-span-6 flex items-center justify-between border-b border-slate-800 pb-2">
           <span class="font-bold text-emerald-400">登記賽事日誌 (輸入球員背號)</span>
@@ -400,7 +381,7 @@
         </div>
       </form>
 
-      <!-- 區間成績匯總表 -->
+      <!-- 區間成績匯總表 (唯讀檢視) -->
       <div id="viewSummary" class="overflow-x-auto rounded-lg border border-slate-800">
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-950 text-slate-400 uppercase select-none">
@@ -2086,12 +2067,10 @@
       agg.players.forEach(p => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/60 transition cursor-pointer';
-        tr.onclick = (e) => {
-          if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
-            selectedPlayerName = p.name;
-            document.getElementById('playerSelect').value = p.name;
-            renderPlayerProfile(agg);
-          }
+        tr.onclick = () => {
+          selectedPlayerName = p.name;
+          document.getElementById('playerSelect').value = p.name;
+          renderPlayerProfile(agg);
         };
 
         tr.innerHTML = `
@@ -2099,16 +2078,16 @@
             ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px]')}
             <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-[10px] mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.pa ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'pa', this.value)"></td>
+          <td class="p-2.5 text-center font-mono text-slate-300">${p.pa}</td>
           <td class="p-2.5 text-center font-mono font-bold text-slate-200">${p.ab}</td>
           <td class="p-2.5 text-center font-mono font-bold text-emerald-400">${p.h}</td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.h1 ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h1', this.value)"></td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.h2 ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h2', this.value)"></td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.h3 ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h3', this.value)"></td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.hr ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'hr', this.value)"></td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.bb ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'bb', this.value)"></td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.sf ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'sf', this.value)"></td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.k ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'k', this.value)"></td>
+          <td class="p-2.5 text-center font-mono text-slate-300">${p.h1}</td>
+          <td class="p-2.5 text-center font-mono text-slate-300">${p.h2}</td>
+          <td class="p-2.5 text-center font-mono text-slate-300">${p.h3}</td>
+          <td class="p-2.5 text-center font-mono text-slate-300">${p.hr}</td>
+          <td class="p-2.5 text-center font-mono text-slate-300">${p.bb}</td>
+          <td class="p-2.5 text-center font-mono text-slate-300">${p.sf}</td>
+          <td class="p-2.5 text-center font-mono text-slate-300">${p.k}</td>
           <td class="p-2.5 font-mono text-emerald-400">${p.avg.toFixed(3)}</td>
           <td class="p-2.5 font-mono text-slate-300">${p.obp.toFixed(3)}</td>
           <td class="p-2.5 font-mono text-slate-300">${p.slg.toFixed(3)}</td>
@@ -2124,17 +2103,6 @@
         tbody.appendChild(tr);
       });
     }
-
-    window.updateSummaryMetric = async (name, key, val) => {
-      const logs = allLogs.filter(l => l.name === name);
-      if (logs.length > 0) {
-        const targetLog = logs[logs.length - 1];
-        targetLog[key] = Number(val) || 0;
-        targetLog.ab = Math.max(0, (Number(targetLog.pa)||0) - (Number(targetLog.bb)||0) - (Number(targetLog.sf)||0));
-        targetLog.h = (Number(targetLog.h1)||0) + (Number(targetLog.h2)||0) + (Number(targetLog.h3)||0) + (Number(targetLog.hr)||0);
-        await commitLogsToGitHub(allLogs, `update: update metric ${key} for ${name}`);
-      }
-    };
 
     window.changeLogsPage = function(targetPage) {
       currentLogsPage = targetPage;
