@@ -282,7 +282,7 @@
       </div>
     </section>
 
-    <!-- 模組五：雙視圖總表 (分開提供賽事登打與球員建檔) -->
+    <!-- 模組五：雙視圖總表 (分立日誌登打與球員建檔) -->
     <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
@@ -290,60 +290,97 @@
           <button id="tabLogsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded font-medium">詳細賽事日誌</button>
         </div>
         <div class="flex items-center space-x-2">
-          <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記賽事日誌</button>
-          <button id="toggleAddPlayerBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 新增球隊球員</button>
+          <button id="toggleAddLogBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 登記賽事日誌</button>
+          <button id="toggleAddPlayerBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 新增球隊球員</button>
         </div>
       </div>
 
-      <!-- 賽事日誌登打表單 (僅輸入背號，自動鎖定姓名) -->
+      <!-- 賽事日誌登打表單 (打數 AB 自動計算，高飛犧牲 SF 獨立輸入) -->
       <form id="addLogForm" class="hidden bg-slate-950 p-4 rounded-xl border border-emerald-900/60 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
         <div class="col-span-2 md:col-span-6 flex items-center justify-between border-b border-slate-800 pb-2">
           <span class="font-bold text-emerald-400">登記賽事日誌 (輸入球員背號)</span>
-          <span class="text-[11px] text-slate-500">若為新進隊員請先點擊「+ 新增球隊球員」建檔</span>
+          <span class="text-[11px] text-slate-500">打數 (AB) 由系統自算：PA - BB - SF</span>
         </div>
-        <div><label class="block text-slate-400 mb-1">比賽/記錄日期</label><input type="date" id="new_date" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono text-white focus:outline-none focus:border-emerald-500"></div>
-        <div><label class="block text-slate-400 mb-1">賽事標籤/備註</label><input type="text" id="new_tag" placeholder="例: 聯賽G1" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 focus:outline-none focus:border-emerald-500"></div>
         <div>
-          <label class="block text-slate-400 mb-1">球員背號</label>
+          <label class="block text-slate-400 mb-1">比賽/記錄日期 <span class="text-rose-400">*</span></label>
+          <input type="date" id="new_date" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono text-white focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">賽事標籤/備註</label>
+          <input type="text" id="new_tag" placeholder="例: 盃賽G1 (未填預設: 聯賽)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">球員背號 <span class="text-rose-400">*</span></label>
           <input type="number" id="new_jersey" placeholder="輸入數字 (例: 44)" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono text-white focus:outline-none focus:border-emerald-500">
           <span id="jerseyMatchHint" class="block text-[10px] mt-0.5 min-h-[16px]"></span>
         </div>
-        <div><label class="block text-slate-400 mb-1">打席 (PA)</label><input type="number" id="new_pa" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">打數 (AB)</label><input type="number" id="new_ab" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">安打 (H)</label><input type="number" id="new_h" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">一壘打 (1H)</label><input type="number" id="new_h1" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">二壘打 (2H)</label><input type="number" id="new_h2" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">三壘打 (3H)</label><input type="number" id="new_h3" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">全壘打 (HR)</label><input type="number" id="new_hr" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">四壞 (BB)</label><input type="number" id="new_bb" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
-        <div><label class="block text-slate-400 mb-1">三振 (K)</label><input type="number" id="new_k" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"></div>
+        <div>
+          <label class="block text-slate-400 mb-1">打席 (PA)</label>
+          <input type="number" id="new_pa" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">四壞 (BB)</label>
+          <input type="number" id="new_bb" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">高飛犧牲 (SF)</label>
+          <input type="number" id="new_sf" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">打數 (AB) [系統自算]</label>
+          <input type="text" id="preview_ab" value="0" readonly class="w-full bg-slate-950/80 border border-slate-800 rounded px-2 py-1 font-mono text-emerald-400 text-center font-bold cursor-not-allowed">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">安打 (H)</label>
+          <input type="number" id="new_h" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">一壘打 (1H)</label>
+          <input type="number" id="new_h1" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">二壘打 (2H)</label>
+          <input type="number" id="new_h2" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">三壘打 (3H)</label>
+          <input type="number" id="new_h3" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">全壘打 (HR)</label>
+          <input type="number" id="new_hr" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">三振 (K)</label>
+          <input type="number" id="new_k" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 font-mono">
+        </div>
         <div class="col-span-2 md:col-span-6 flex justify-end space-x-2 pt-2 border-t border-slate-800/60">
           <button type="button" id="cancelAddLogBtn" class="bg-slate-800 text-slate-400 px-3 py-1 rounded">取消</button>
           <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1 rounded font-medium">儲存並寫入 GitHub 雲端</button>
         </div>
       </form>
 
-      <!-- 新增球隊球員表單 (輸入新球員背號與姓名) -->
+      <!-- 新增球隊球員表單 (背號與姓名建檔) -->
       <form id="addPlayerForm" class="hidden bg-slate-950 p-4 rounded-xl border border-indigo-900/60 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
         <div class="col-span-1 md:col-span-4 flex items-center justify-between border-b border-slate-800 pb-2">
           <span class="font-bold text-indigo-400">新增球隊球員檔案 (球員背號與姓名建檔)</span>
           <span class="text-[11px] text-slate-500">完成建檔後，日誌登打即可直接輸入該背號</span>
         </div>
         <div>
-          <label class="block text-slate-400 mb-1">球員背號</label>
+          <label class="block text-slate-400 mb-1">球員背號 <span class="text-rose-400">*</span></label>
           <input type="number" id="reg_jersey" placeholder="輸入數字背號 (例: 17)" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 font-mono text-white focus:outline-none focus:border-indigo-500">
         </div>
         <div>
-          <label class="block text-slate-400 mb-1">球員姓名</label>
+          <label class="block text-slate-400 mb-1">球員姓名 <span class="text-rose-400">*</span></label>
           <input type="text" id="reg_name" placeholder="輸入球員真實姓名" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500">
         </div>
         <div>
-          <label class="block text-slate-400 mb-1">入隊/建檔日期</label>
+          <label class="block text-slate-400 mb-1">入隊/建檔日期 <span class="text-rose-400">*</span></label>
           <input type="date" id="reg_date" required class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 font-mono text-white focus:outline-none focus:border-indigo-500">
         </div>
         <div>
           <label class="block text-slate-400 mb-1">身分別/備註</label>
-          <input type="text" id="reg_tag" placeholder="例: 新進隊員 / 大一" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500">
+          <input type="text" id="reg_tag" placeholder="例: 新進隊員 (未填預設: 選手建檔)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500">
         </div>
         <div class="col-span-1 md:col-span-4 flex justify-end space-x-2 pt-2 border-t border-slate-800/60">
           <button type="button" id="cancelAddPlayerBtn" class="bg-slate-800 text-slate-400 px-3 py-1 rounded">取消</button>
@@ -357,13 +394,14 @@
             <tr>
               <th class="p-2.5">選手</th>
               <th class="p-2.5 text-center">打席</th>
-              <th class="p-2.5 text-center">打數</th>
+              <th class="p-2.5 text-center text-slate-300">打數 (自算)</th>
               <th class="p-2.5 text-center">安打</th>
               <th class="p-2.5 text-center">1H</th>
               <th class="p-2.5 text-center">2H</th>
               <th class="p-2.5 text-center">3H</th>
               <th class="p-2.5 text-center">HR</th>
               <th class="p-2.5 text-center">BB</th>
+              <th class="p-2.5 text-center">高犧 (SF)</th>
               <th class="p-2.5 text-center">K</th>
               <th class="p-2.5">AVG</th>
               <th class="p-2.5">OBP</th>
@@ -389,12 +427,13 @@
               <th class="p-2.5">紀錄時間</th>
               <th class="p-2.5">賽事/標籤</th>
               <th class="p-2.5">選手</th>
-              <th class="p-2.5">打席</th>
-              <th class="p-2.5">打數</th>
-              <th class="p-2.5">安打</th>
-              <th class="p-2.5">HR</th>
-              <th class="p-2.5">BB</th>
-              <th class="p-2.5">K</th>
+              <th class="p-2.5 text-center">打席</th>
+              <th class="p-2.5 text-center">打數</th>
+              <th class="p-2.5 text-center">安打</th>
+              <th class="p-2.5 text-center">HR</th>
+              <th class="p-2.5 text-center">BB</th>
+              <th class="p-2.5 text-center">SF</th>
+              <th class="p-2.5 text-center">K</th>
               <th class="p-2.5">AVG</th>
               <th class="p-2.5">OPS</th>
               <th class="p-2.5 text-center">操作</th>
@@ -656,12 +695,12 @@
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pl-2 text-[11px]">
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打席 (PA)</span>總打擊輪次 = AB + BB + SF</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打數 (AB)</span>有效打擊數 = PA - BB - SF</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打數 (AB)</span>有效打擊數 = PA - BB - SF (自算)</div>
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">安打 (H)</span>擊球安全上壘 = 1H+2H+3H+HR</div>
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">壘打數 (TB)</span>1H + 2×2H + 3×3H + 4×HR</div>
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">四壞 (BB)</span>選到 4 顆壞球保送上一壘</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">三振 (K)</span>累計 3 顆好球揮空或未出棒出局</div>
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">高犧 (SF)</span>出局但護送三壘跑者回本壘得分</div>
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">三振 (K)</span>累計 3 顆好球揮空或未出棒出局</div>
             <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">長打分項</span>1H (一壘) / 2H (二壘) / 3H (三壘) / HR (全壘打)</div>
           </div>
         </section>
@@ -718,6 +757,24 @@
       34: "吳侑宸",
       98: "陳柏翰"
     };
+
+    // 2025 年度總結初始基準數據庫 (14位選手完整數據)
+    const baseline2025Logs = [
+      {"id":"log_2025_1","date":"2025-12-31","tag":"2025年度總結","name":"洪銘駿","jersey":30,"pa":31,"ab":27,"h":14,"h1":13,"h2":1,"h3":0,"hr":0,"bb":2,"sf":2,"k":5},
+      {"id":"log_2025_2","date":"2025-12-31","tag":"2025年度總結","name":"陳威騏","jersey":99,"pa":29,"ab":27,"h":14,"h1":13,"h2":1,"h3":0,"hr":0,"bb":2,"sf":0,"k":2},
+      {"id":"log_2025_3","date":"2025-12-31","tag":"2025年度總結","name":"楊智翔","jersey":24,"pa":12,"ab":10,"h":1,"h1":1,"h2":0,"h3":0,"hr":0,"bb":2,"sf":0,"k":0},
+      {"id":"log_2025_4","date":"2025-12-31","tag":"2025年度總結","name":"林楊大禎","jersey":26,"pa":11,"ab":10,"h":3,"h1":2,"h2":1,"h3":0,"hr":0,"bb":1,"sf":0,"k":4},
+      {"id":"log_2025_5","date":"2025-12-31","tag":"2025年度總結","name":"劉憬翰","jersey":2,"pa":27,"ab":23,"h":15,"h1":10,"h2":4,"h3":0,"hr":1,"bb":3,"sf":1,"k":3},
+      {"id":"log_2025_6","date":"2025-12-31","tag":"2025年度總結","name":"陳泓銘","jersey":4,"pa":14,"ab":11,"h":5,"h1":4,"h2":1,"h3":0,"hr":0,"bb":2,"sf":1,"k":1},
+      {"id":"log_2025_7","date":"2025-12-31","tag":"2025年度總結","name":"孫煜哲","jersey":31,"pa":18,"ab":13,"h":4,"h1":3,"h2":1,"h3":0,"hr":0,"bb":5,"sf":0,"k":3},
+      {"id":"log_2025_8","date":"2025-12-31","tag":"2025年度總結","name":"田耕宇","jersey":72,"pa":15,"ab":14,"h":4,"h1":4,"h2":0,"h3":0,"hr":0,"bb":1,"sf":0,"k":0},
+      {"id":"log_2025_9","date":"2025-12-31","tag":"2025年度總結","name":"盧宣嘉","jersey":44,"pa":38,"ab":28,"h":19,"h1":7,"h2":6,"h3":4,"hr":2,"bb":4,"sf":6,"k":1},
+      {"id":"log_2025_10","date":"2025-12-31","tag":"2025年度總結","name":"簡承均","jersey":8,"pa":38,"ab":36,"h":27,"h1":8,"h2":5,"h3":7,"hr":7,"bb":1,"sf":1,"k":0},
+      {"id":"log_2025_11","date":"2025-12-31","tag":"2025年度總結","name":"謝承祐","jersey":47,"pa":27,"ab":22,"h":11,"h1":8,"h2":3,"h3":0,"hr":0,"bb":4,"sf":1,"k":0},
+      {"id":"log_2025_12","date":"2025-12-31","tag":"2025年度總結","name":"廖仲毅","jersey":41,"pa":20,"ab":15,"h":8,"h1":7,"h2":1,"h3":0,"hr":0,"bb":5,"sf":0,"k":0},
+      {"id":"log_2025_13","date":"2025-12-31","tag":"2025年度總結","name":"吳侑宸","jersey":34,"pa":12,"ab":7,"h":3,"h1":3,"h2":0,"h3":0,"hr":0,"bb":5,"sf":0,"k":1},
+      {"id":"log_2025_14","date":"2025-12-31","tag":"2025年度總結","name":"陳柏翰","jersey":98,"pa":16,"ab":15,"h":9,"h1":5,"h2":4,"h3":0,"hr":0,"bb":1,"sf":0,"k":0}
+    ];
 
     let JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
     let NAME_TO_JERSEY = Object.fromEntries(
@@ -949,9 +1006,9 @@
           statusBadge.textContent = '[備援模式] 雲端資料庫：靜態備援讀取成功';
           statusBadge.className = 'text-amber-300 font-mono';
         } catch (staticErr) {
-          statusBadge.textContent = '[連線失敗] 雲端資料庫：載入失敗';
-          statusBadge.className = 'text-rose-400 font-mono';
-          return;
+          allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
+          statusBadge.textContent = '[基準數據] 雲端未就緒，已載入2025年度總結';
+          statusBadge.className = 'text-amber-400 font-mono';
         }
       }
 
@@ -1260,7 +1317,6 @@
           grouped[l.name] = { name: l.name, pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0 };
         }
         grouped[l.name].pa += Number(l.pa) || 0;
-        grouped[l.name].ab += Number(l.ab) || 0;
         grouped[l.name].h += Number(l.h) || 0;
         grouped[l.name].h1 += Number(l.h1) || 0;
         grouped[l.name].h2 += Number(l.h2) || 0;
@@ -1269,6 +1325,8 @@
         grouped[l.name].bb += Number(l.bb) || 0;
         grouped[l.name].sf += Number(l.sf) || 0;
         grouped[l.name].k += Number(l.k) || 0;
+        // 打數 AB 永遠由 PA - BB - SF 自動計算
+        grouped[l.name].ab = Math.max(0, grouped[l.name].pa - grouped[l.name].bb - grouped[l.name].sf);
       });
 
       const list = Object.values(grouped);
@@ -1661,7 +1719,7 @@
               <span class="text-xl font-black text-white">${p.name}</span>
               <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2 py-0.5 rounded font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 三振: ${p.k}</p>
+            <p class="text-xs text-slate-400 mt-1">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 高犧: ${p.sf} | 三振: ${p.k}</p>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2 text-xs">
@@ -1735,7 +1793,6 @@
       });
     }
 
-    // 核心打擊型態象限分析 (已導入 afterDraw Canvas 插件，徹底根除手機端豎線消失)
     function renderQuadrantChart(agg) {
       const pList = agg.players;
       const ctx = document.getElementById('quadrantChart').getContext('2d');
@@ -1782,7 +1839,6 @@
             ctx.strokeStyle = '#34d399';
             ctx.setLineDash([4, 4]);
 
-            // 垂直均值線 (X = OBP 平均，獨立換算像素，手機端保證繪製)
             if (xPixel >= chartArea.left && xPixel <= chartArea.right) {
               ctx.beginPath();
               ctx.moveTo(xPixel, chartArea.top);
@@ -1795,7 +1851,6 @@
               ctx.fillText(`OBP: ${agg.teamObp.toFixed(3)}`, xPixel, chartArea.top + 12);
             }
 
-            // 水平均值線 (Y = SLG 平均)
             if (yPixel >= chartArea.top && yPixel <= chartArea.bottom) {
               ctx.beginPath();
               ctx.moveTo(chartArea.left, yPixel);
@@ -2008,13 +2063,14 @@
             <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-[10px] mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
           <td class="p-2.5 text-center"><input type="number" value="${p.pa ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'pa', this.value)"></td>
-          <td class="p-2.5 text-center"><input type="number" value="${p.ab ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'ab', this.value)"></td>
+          <td class="p-2.5 text-center font-mono font-bold text-slate-200">${p.ab}</td>
           <td class="p-2.5 text-center"><input type="number" value="${p.h ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h', this.value)"></td>
           <td class="p-2.5 text-center"><input type="number" value="${p.h1 ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h1', this.value)"></td>
           <td class="p-2.5 text-center"><input type="number" value="${p.h2 ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h2', this.value)"></td>
           <td class="p-2.5 text-center"><input type="number" value="${p.h3 ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'h3', this.value)"></td>
           <td class="p-2.5 text-center"><input type="number" value="${p.hr ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'hr', this.value)"></td>
           <td class="p-2.5 text-center"><input type="number" value="${p.bb ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'bb', this.value)"></td>
+          <td class="p-2.5 text-center"><input type="number" value="${p.sf ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'sf', this.value)"></td>
           <td class="p-2.5 text-center"><input type="number" value="${p.k ?? 0}" class="stat-input" onchange="updateSummaryMetric('${p.name}', 'k', this.value)"></td>
           <td class="p-2.5 font-mono text-emerald-400">${p.avg.toFixed(3)}</td>
           <td class="p-2.5 font-mono text-slate-300">${p.obp.toFixed(3)}</td>
@@ -2037,6 +2093,8 @@
       if (logs.length > 0) {
         const targetLog = logs[logs.length - 1];
         targetLog[key] = Number(val) || 0;
+        // 打數永遠自動重算
+        targetLog.ab = Math.max(0, (Number(targetLog.pa)||0) - (Number(targetLog.bb)||0) - (Number(targetLog.sf)||0));
         if (key === 'h' && targetLog.h1 === 0 && targetLog.h2 === 0 && targetLog.h3 === 0 && targetLog.hr === 0) {
           targetLog.h1 = Number(val) || 0;
         }
@@ -2063,12 +2121,13 @@
             ${renderAvatarElement(l.name, 'w-5 h-5 text-[9px]')}
             <span>${NAME_TO_JERSEY[l.name] !== undefined ? `<span class="text-slate-400 font-mono text-[10px] mr-1">#${NAME_TO_JERSEY[l.name]}</span>` : ''}${l.name}</span>
           </td>
-          <td class="p-2.5">${l.pa}</td>
-          <td class="p-2.5">${l.ab}</td>
-          <td class="p-2.5">${l.h}</td>
-          <td class="p-2.5">${l.hr}</td>
-          <td class="p-2.5">${l.bb}</td>
-          <td class="p-2.5">${l.k}</td>
+          <td class="p-2.5 text-center">${l.pa}</td>
+          <td class="p-2.5 text-center font-mono font-bold text-slate-200">${l.ab}</td>
+          <td class="p-2.5 text-center">${l.h}</td>
+          <td class="p-2.5 text-center">${l.hr}</td>
+          <td class="p-2.5 text-center">${l.bb}</td>
+          <td class="p-2.5 text-center">${l.sf ?? 0}</td>
+          <td class="p-2.5 text-center">${l.k}</td>
           <td class="p-2.5 font-mono text-emerald-400">${avg}</td>
           <td class="p-2.5 font-mono text-sky-400">${ops}</td>
           <td class="p-2.5 text-center">
@@ -2099,7 +2158,7 @@
       await commitLogsToGitHub(updated, `delete: batch prune match logs from ${s} to ${e}`);
     });
 
-    // 表單切換控制：賽事日誌與新增球員分開獨立
+    // 表單切換控制：賽事日誌與新增球員分立
     document.getElementById('toggleAddLogBtn').addEventListener('click', () => {
       document.getElementById('addLogForm').classList.toggle('hidden');
       document.getElementById('addPlayerForm').classList.add('hidden');
@@ -2124,7 +2183,7 @@
       document.getElementById('addPlayerForm').classList.add('hidden');
     });
 
-    // 日誌輸入：背號即時聯想與鎖定提示
+    // 日誌輸入：背號即時鎖定提示
     document.getElementById('new_jersey').addEventListener('input', (e) => {
       const num = Number(e.target.value.trim());
       const hint = document.getElementById('jerseyMatchHint');
@@ -2133,16 +2192,36 @@
         hint.textContent = `鎖定球員：#${num} ${JERSEY_TO_NAME[num]}`;
         hint.className = 'block text-[10px] text-emerald-400 mt-0.5 min-h-[16px] font-medium';
       } else if (e.target.value.trim() !== '') {
-        hint.textContent = '查無此背號，若為新進隊員請先透過「新增球隊球員」建檔';
+        hint.textContent = '查無此背號，若為新隊員請先透過「新增球隊球員」建檔';
         hint.className = 'block text-[10px] text-rose-400 mt-0.5 min-h-[16px] font-medium';
       } else {
         hint.textContent = '';
       }
     });
 
-    // 日誌送出：僅需輸入背號，自動校驗並提交
+    // 日誌輸入：動態更新打數預覽 (AB = PA - BB - SF)
+    function updateAbPreview() {
+      const pa = Number(document.getElementById('new_pa').value) || 0;
+      const bb = Number(document.getElementById('new_bb').value) || 0;
+      const sf = Number(document.getElementById('new_sf').value) || 0;
+      const previewEl = document.getElementById('preview_ab');
+      if (previewEl) {
+        previewEl.value = Math.max(0, pa - bb - sf);
+      }
+    }
+    ['new_pa', 'new_bb', 'new_sf'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateAbPreview);
+    });
+
+    // 日誌送出：僅需背號、日期必填，未填項目自動補 0，標籤未填預設「聯賽」
     document.getElementById('addLogForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const date = document.getElementById('new_date').value;
+      if (!date) {
+        alert('請填寫比賽/記錄日期！');
+        return;
+      }
+
       const jerseyNum = Number(document.getElementById('new_jersey').value.trim());
       const playerName = JERSEY_TO_NAME[jerseyNum];
       if (!playerName) {
@@ -2150,22 +2229,44 @@
         return;
       }
 
+      const tag = document.getElementById('new_tag').value.trim() || '聯賽';
+      const pa = Number(document.getElementById('new_pa').value) || 0;
+      const bb = Number(document.getElementById('new_bb').value) || 0;
+      const sf = Number(document.getElementById('new_sf').value) || 0;
+      const ab = Math.max(0, pa - bb - sf);
+
+      let h = Number(document.getElementById('new_h').value) || 0;
+      let h1 = Number(document.getElementById('new_h1').value) || 0;
+      let h2 = Number(document.getElementById('new_h2').value) || 0;
+      let h3 = Number(document.getElementById('new_h3').value) || 0;
+      let hr = Number(document.getElementById('new_hr').value) || 0;
+      const k = Number(document.getElementById('new_k').value) || 0;
+
+      // 若未填總安打但填寫了分項安打，自動加總
+      if (h === 0 && (h1 + h2 + h3 + hr) > 0) {
+        h = h1 + h2 + h3 + hr;
+      }
+      // 若填寫總安打但未分項，預設歸入一壘打
+      if (h > 0 && (h1 + h2 + h3 + hr) === 0) {
+        h1 = h;
+      }
+
       const newEntry = {
         id: 'log_' + Date.now(),
-        date: document.getElementById('new_date').value,
-        tag: document.getElementById('new_tag').value.trim(),
+        date: date,
+        tag: tag,
         name: playerName,
         jersey: jerseyNum,
-        pa: Number(document.getElementById('new_pa').value) || 0,
-        ab: Number(document.getElementById('new_ab').value) || 0,
-        h: Number(document.getElementById('new_h').value) || 0,
-        h1: Number(document.getElementById('new_h1').value) || 0,
-        h2: Number(document.getElementById('new_h2').value) || 0,
-        h3: Number(document.getElementById('new_h3').value) || 0,
-        hr: Number(document.getElementById('new_hr').value) || 0,
-        bb: Number(document.getElementById('new_bb').value) || 0,
-        k: Number(document.getElementById('new_k').value) || 0,
-        sf: 0
+        pa: pa,
+        ab: ab,
+        h: h,
+        h1: h1,
+        h2: h2,
+        h3: h3,
+        hr: hr,
+        bb: bb,
+        sf: sf,
+        k: k
       };
 
       const updated = [...allLogs, newEntry];
@@ -2176,6 +2277,8 @@
         document.getElementById('addLogForm').reset();
         const hint = document.getElementById('jerseyMatchHint');
         if (hint) hint.textContent = '';
+        const previewEl = document.getElementById('preview_ab');
+        if (previewEl) previewEl.value = '0';
         document.getElementById('addLogForm').classList.add('hidden');
       }
     });
@@ -2304,7 +2407,7 @@
 
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
       const agg = getAggregatedStats(getFilteredLogs());
-      const keys = ['name', 'pa', 'ab', 'h', 'h1', 'h2', 'h3', 'hr', 'bb', 'k', 'avg', 'obp', 'slg', 'ops', 'ops_plus', 'wrc_plus', 'iso', 'babip', 'rc', 'sdi'];
+      const keys = ['name', 'pa', 'ab', 'h', 'h1', 'h2', 'h3', 'hr', 'bb', 'sf', 'k', 'avg', 'obp', 'slg', 'ops', 'ops_plus', 'wrc_plus', 'iso', 'babip', 'rc', 'sdi'];
       let csv = '\uFEFF' + keys.join(',') + '\n';
       agg.players.forEach(p => {
         csv += keys.map(k => p[k] !== undefined ? p[k] : '').join(',') + '\n';
