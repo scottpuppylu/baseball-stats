@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0345</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0355</span>
         </div>
 
 
@@ -6345,6 +6345,7 @@ window.toggleDiagnosticsCollapse = function() {
         ]
       };
 
+      if (typeof window !== 'undefined') window.activeGame = activeGame;
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
       renderLiveScorer();
     };
@@ -7351,6 +7352,7 @@ window.toggleDiagnosticsCollapse = function() {
 
       const finishedGameId = activeGame.id;
       activeGame = null;
+      if (typeof window !== 'undefined') window.activeGame = null;
       localStorage.removeItem('rebas_active_game');
 
       renderLiveScorer();
@@ -7362,10 +7364,28 @@ window.toggleDiagnosticsCollapse = function() {
 
     window.discardActiveGame = function() {
       if (!confirm('確定要放棄當前記錄中的這場比賽嗎？未推播的數據將會遺失。')) return;
+      const discardedId = activeGame ? activeGame.id : (window.activeGame ? window.activeGame.id : null);
       activeGame = null;
+      if (typeof window !== 'undefined') window.activeGame = null;
       localStorage.removeItem('rebas_active_game');
+
+      // 若該場比賽曾於換局或暫存推播時存入 allGames，一併徹底清除
+      if (discardedId && allGames && allGames.length > 0) {
+        allGames = allGames.filter(g => g.id !== discardedId);
+        if (typeof window !== 'undefined') window.allGames = allGames;
+        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        syncAllGamesToTeamLogs();
+        commitGamesToGitHub(allGames, "清除放棄賽事: " + discardedId);
+      }
+
+      // 重置開賽設定表單輸入框
+      const oppInput = document.getElementById('setup_game_opponent');
+      if (oppInput) oppInput.value = '';
+      const tagInput = document.getElementById('setup_game_tag');
+      if (tagInput) tagInput.value = '';
+
       renderLiveScorer();
-      showToast('已放棄當前比賽');
+      showToast('已放棄當前比賽並徹底清除紀錄');
     };
 
     // ==========================================
