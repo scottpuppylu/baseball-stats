@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0215</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0235</span>
         </div>
 
 
@@ -989,29 +989,38 @@
                     <div class="relative w-full max-w-[380px] mx-auto aspect-square select-none">
                       <svg id="interactiveFieldSvg" viewBox="0 0 400 400" class="w-full h-full rounded-xl cursor-crosshair border border-slate-800/80 bg-[#0d1712]">
                         <rect width="400" height="400" fill="#0d1712" />
-                        <path d="M 30 200 A 210 210 0 0 1 370 200 L 200 370 Z" fill="#14291c" stroke="#22c55e" stroke-width="2" />
-                        <line x1="200" y1="365" x2="25" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
-                        <line x1="200" y1="365" x2="375" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
-                        <path d="M 120 285 A 95 95 0 0 1 280 285 L 200 365 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                        <!-- 深遠外野草皮扇形與全壘打牆 (頂部弧度拉至 y=45，確保 LF/SF/RC/RF 四個外野守位完全在牆內) -->
+                        <path d="M 20 145 A 215 215 0 0 1 380 145 L 200 375 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />
+                        <!-- 兩側界內白線 (Foul Lines) -->
+                        <line x1="200" y1="370" x2="16" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                        <line x1="200" y1="370" x2="384" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                        <!-- 內野紅土區 (Infield Dirt Fan) -->
+                        <path d="M 115 285 A 95 95 0 0 1 285 285 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
                         <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
-                        <polygon points="200,365 275,285 200,210 125,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                        <!-- 內野壘線 (45度鑽石) -->
+                        <polygon points="200,370 280,285 200,200 120,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                        <!-- 投手板 -->
                         <rect x="194" y="258" width="12" height="4" fill="#ffffff" rx="1" />
-                        <polygon points="196,365 204,365 205,368 200,373 195,368" fill="#ffffff" />
-                        <polygon points="275,280 280,285 275,290 270,285" fill="#ffffff" />
-                        <polygon points="200,205 205,210 200,215 195,210" fill="#ffffff" />
-                        <polygon points="125,280 130,285 125,290 120,285" fill="#ffffff" />
+                        <!-- 本壘板 (5邊形) -->
+                        <polygon points="196,368 204,368 205,372 200,377 195,372" fill="#ffffff" />
+                        <!-- 一壘、二壘、三壘壘包 -->
+                        <polygon points="280,280 285,285 280,290 275,285" fill="#ffffff" />
+                        <polygon points="200,195 205,200 200,205 195,200" fill="#ffffff" />
+                        <polygon points="120,280 125,285 120,290 115,285" fill="#ffffff" />
+                        <!-- 10 個守備位置文字與圖示 (完全位於全壘打牆內綠色草皮甜蜜區) -->
                         <g id="svgPosLabels" class="text-[10px] font-mono font-bold select-none pointer-events-none fill-slate-300">
-                          <text x="200" y="390" text-anchor="middle" fill="#94a3b8">C 捕手</text>
+                          <text x="200" y="392" text-anchor="middle" fill="#94a3b8">C 捕手</text>
                           <text x="200" y="275" text-anchor="middle" fill="#f59e0b">P 投手</text>
-                          <text x="300" y="285" text-anchor="start" fill="#cbd5e1">1B</text>
-                          <text x="245" y="215" text-anchor="start" fill="#cbd5e1">2B</text>
-                          <text x="100" y="285" text-anchor="end" fill="#cbd5e1">3B</text>
-                          <text x="150" y="215" text-anchor="end" fill="#cbd5e1">SS</text>
-                          <text x="85" y="130" text-anchor="middle" fill="#38bdf8">LF 左外</text>
-                          <text x="160" y="90" text-anchor="middle" fill="#34d399">SF 自由</text>
-                          <text x="240" y="90" text-anchor="middle" fill="#34d399">RC 右中</text>
-                          <text x="315" y="130" text-anchor="middle" fill="#38bdf8">RF 右外</text>
+                          <text x="298" y="285" text-anchor="start" fill="#cbd5e1">1B</text>
+                          <text x="245" y="212" text-anchor="start" fill="#cbd5e1">2B</text>
+                          <text x="102" y="285" text-anchor="end" fill="#cbd5e1">3B</text>
+                          <text x="155" y="212" text-anchor="end" fill="#cbd5e1">SS</text>
+                          <text x="85" y="165" text-anchor="middle" fill="#38bdf8">LF 左外</text>
+                          <text x="155" y="115" text-anchor="middle" fill="#34d399">SF 自由</text>
+                          <text x="245" y="115" text-anchor="middle" fill="#34d399">RC 右中</text>
+                          <text x="315" y="165" text-anchor="middle" fill="#38bdf8">RF 右外</text>
                         </g>
+                        <!-- 動態定位準心 (Target Crosshair & Ripple) -->
                         <g id="fieldTargetMarker" class="transition-all duration-150" transform="translate(200, 260)">
                           <circle cx="0" cy="0" r="14" fill="none" stroke="#f59e0b" stroke-width="2" class="animate-ping" opacity="0.75" />
                           <circle cx="0" cy="0" r="6" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5" />
@@ -1030,17 +1039,21 @@
 
                   <!-- 右側：打擊動作盤 (Action Pad) -->
                   <div class="lg:col-span-6 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <!-- 最直覺快捷鍵：三振與保送 (無需選落點) -->
+                    <!-- 最直覺快捷鍵：三振、保送與跑壘者出局 (無需選落點) -->
                     <div>
                       <span class="text-xs font-bold text-slate-300 block mb-1.5">一鍵直覺記錄 (無需選落點)：</span>
-                      <div class="grid grid-cols-2 gap-2.5">
-                        <button onclick="recordQuickStrikeout()" class="bg-rose-950/60 hover:bg-rose-900 border border-rose-700/80 text-rose-300 p-3 rounded-xl font-black text-sm transition flex items-center justify-center gap-2 shadow-lg">
-                          <span class="text-lg">🔴</span>
+                      <div class="grid grid-cols-3 gap-2">
+                        <button onclick="recordQuickStrikeout()" class="bg-rose-950/60 hover:bg-rose-900 border border-rose-700/80 text-rose-300 p-2.5 rounded-xl font-black text-xs sm:text-sm transition flex flex-col items-center justify-center gap-1 shadow-lg">
+                          <span class="text-base sm:text-lg">🔴</span>
                           <span>三振出局 (K)</span>
                         </button>
-                        <button onclick="recordQuickWalk()" class="bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 p-3 rounded-xl font-black text-sm transition flex items-center justify-center gap-2 shadow-lg">
-                          <span class="text-lg">🟢</span>
+                        <button onclick="recordQuickWalk()" class="bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 p-2.5 rounded-xl font-black text-xs sm:text-sm transition flex flex-col items-center justify-center gap-1 shadow-lg">
+                          <span class="text-base sm:text-lg">🟢</span>
                           <span>四壞保送 (BB)</span>
+                        </button>
+                        <button onclick="recordRunnerOut()" class="bg-purple-950/60 hover:bg-purple-900 border border-purple-700/80 text-purple-300 p-2.5 rounded-xl font-black text-xs sm:text-sm transition flex flex-col items-center justify-center gap-1 shadow-lg" title="壘上跑者遭刺殺、觸殺或牽制出局 (+1 出局，打者打席繼續)">
+                          <span class="text-base sm:text-lg">🟣</span>
+                          <span>跑壘者出局 (+1 Out)</span>
                         </button>
                       </div>
                     </div>
@@ -1312,17 +1325,12 @@
                 <div class="relative w-full max-w-[420px] mx-auto aspect-square select-none">
                   <svg id="sprayChartSvg" viewBox="0 0 400 400" class="w-full h-full rounded-xl border border-slate-800/80 bg-[#0d1712]">
                     <rect width="400" height="400" fill="#0d1712" />
-                    <path d="M 30 200 A 210 210 0 0 1 370 200 L 200 370 Z" fill="#14291c" stroke="#22c55e" stroke-width="2" />
-                    <line x1="200" y1="365" x2="25" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
-                    <line x1="200" y1="365" x2="375" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
-                    <path d="M 120 285 A 95 95 0 0 1 280 285 L 200 365 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                    <path d="M 20 145 A 215 215 0 0 1 380 145 L 200 375 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />
+                    <line x1="200" y1="370" x2="16" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                    <line x1="200" y1="370" x2="384" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                    <path d="M 115 285 A 95 95 0 0 1 285 285 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
                     <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
-                    <polygon points="200,365 275,285 200,210 125,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
-                    <rect x="194" y="258" width="12" height="4" fill="#ffffff" rx="1" />
-                    <polygon points="196,365 204,365 205,368 200,373 195,368" fill="#ffffff" />
-                    <polygon points="275,280 280,285 275,290 270,285" fill="#ffffff" />
-                    <polygon points="200,205 205,210 200,215 195,210" fill="#ffffff" />
-                    <polygon points="125,280 130,285 125,290 120,285" fill="#ffffff" />
+                    <polygon points="200,370 280,285 200,200 120,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
                     <!-- 動態噴流落點群 -->
                     <g id="sprayPointsContainer"></g>
                   </svg>
@@ -1496,7 +1504,7 @@
     const GAMES_FILE_PATH = "data/games.json";
     let currentGamesSha = null;
     let allGames = window.allGames = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
-    let activeGame = JSON.parse(localStorage.getItem('rebas_active_game')) || null;
+    let activeGame = window.activeGame = JSON.parse(localStorage.getItem('rebas_active_game')) || null;
 
 
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
@@ -5308,17 +5316,17 @@ window.toggleDiagnosticsCollapse = function() {
     // 數位圖像化場記系統與打球落點噴流分析引擎
     // ==========================================
 
-    const POS_CANONICAL_COORDS = {
+    const POS_CANONICAL_COORDS = window.POS_CANONICAL_COORDS = {
       'C':  { x: 0.50, y: 0.94, px: 200, py: 375, label: '捕手 (C)' },
       'P':  { x: 0.50, y: 0.65, px: 200, py: 260, label: '投手 (P)' },
-      '1B': { x: 0.69, y: 0.71, px: 275, py: 285, label: '一壘 (1B)' },
-      '2B': { x: 0.59, y: 0.55, px: 235, py: 220, label: '二壘 (2B)' },
-      '3B': { x: 0.31, y: 0.71, px: 125, py: 285, label: '三壘 (3B)' },
-      'SS': { x: 0.41, y: 0.55, px: 165, py: 220, label: '游擊 (SS)' },
-      'LF': { x: 0.22, y: 0.32, px: 90,  py: 130, label: '左外野 (LF)' },
-      'SF': { x: 0.41, y: 0.24, px: 165, py: 95,  label: '自由/左中 (SF)' },
-      'RC': { x: 0.59, y: 0.24, px: 235, py: 95,  label: '右中外野 (RC)' },
-      'RF': { x: 0.78, y: 0.32, px: 310, py: 130, label: '右外野 (RF)' }
+      '1B': { x: 0.71, y: 0.70, px: 285, py: 280, label: '一壘 (1B)' },
+      '2B': { x: 0.60, y: 0.55, px: 240, py: 220, label: '二壘 (2B)' },
+      '3B': { x: 0.29, y: 0.70, px: 115, py: 280, label: '三壘 (3B)' },
+      'SS': { x: 0.40, y: 0.55, px: 160, py: 220, label: '游擊 (SS)' },
+      'LF': { x: 0.21, y: 0.41, px: 85,  py: 165, label: '左外野 (LF)' },
+      'SF': { x: 0.39, y: 0.29, px: 155, py: 115, label: '自由/左中 (SF)' },
+      'RC': { x: 0.61, y: 0.29, px: 245, py: 115, label: '右中外野 (RC)' },
+      'RF': { x: 0.79, y: 0.41, px: 315, py: 165, label: '右外野 (RF)' }
     };
 
         // 判斷該半局是否為我方進攻 (先攻則上半我方打，後攻/先守則下半我方打)
@@ -5722,6 +5730,7 @@ window.toggleDiagnosticsCollapse = function() {
     }
 
     function updateLiveScoreboard() {
+      if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       const tbody = document.getElementById('liveScoreboardBody');
       const innTitleBadge = document.getElementById('liveInningTitleBadge');
       const curRunsEl = document.getElementById('currentInningRunsDisplay');
@@ -5777,13 +5786,16 @@ window.toggleDiagnosticsCollapse = function() {
         oppRowCells.push(`<td class="p-2 font-mono ${isCurInning && !isOurBatting ? 'bg-rose-500/20 text-rose-300 font-bold' : 'text-slate-400'}">${oppVal}</td>`);
       }
 
-      tbody.innerHTML = `
+      const isOurFirst = (activeGame.ourRole === '先攻');
+      const ourRowHtml = `
         <tr class="hover:bg-slate-900 transition">
           <td class="p-2 text-left font-bold text-sky-400">淡江航太</td>
           ${ourRowCells.join('')}
           <td class="p-2 font-bold text-amber-400 border-l border-slate-800 text-sm">${activeGame.finalScore.us}</td>
           <td class="p-2 font-bold text-sky-400 text-sm">${Object.values(ourInnHitsMap).reduce((a,b)=>a+b, 0)}</td>
         </tr>
+      `;
+      const oppRowHtml = `
         <tr class="hover:bg-slate-900 transition">
           <td class="p-2 text-left font-bold text-slate-300 truncate max-w-[90px]">${activeGame.opponent}</td>
           ${oppRowCells.join('')}
@@ -5791,6 +5803,8 @@ window.toggleDiagnosticsCollapse = function() {
           <td class="p-2 font-bold text-slate-500 text-sm">-</td>
         </tr>
       `;
+      // ★★★ 依據正規攻守規則：先攻我方在上方(客隊)；後攻/先守我方在下方(主隊)！
+      tbody.innerHTML = isOurFirst ? (ourRowHtml + oppRowHtml) : (oppRowHtml + ourRowHtml);
     }
 
     function updateLiveBatterCard() {
@@ -6095,13 +6109,13 @@ window.toggleDiagnosticsCollapse = function() {
         'C': [200, 375],
         'P': [200, 260],
         '1B': [285, 280],
-        '2B': [235, 210],
+        '2B': [240, 220],
         '3B': [115, 280],
-        'SS': [160, 210],
-        'LF': [85, 130],
-        'SF': [160, 90],
-        'RC': [240, 90],
-        'RF': [315, 130]
+        'SS': [160, 220],
+        'LF': [85, 165],
+        'SF': [155, 115],
+        'RC': [245, 115],
+        'RF': [315, 165]
       };
       if (posCoords[posKey]) {
         currentPlayInput.x = parseFloat((posCoords[posKey][0] / 400).toFixed(3));
@@ -6197,6 +6211,65 @@ window.toggleDiagnosticsCollapse = function() {
       currentPlayInput.rbi = 0;
       currentPlayInput.runsScored = 0;
       submitBattedBallPlay();
+    };
+
+        // 跑壘者出局記錄 (壘上跑者遭觸殺、刺殺或牽制出局，+1 出局數，打者打席繼續)
+    window.recordRunnerOut = function() {
+      if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
+      if (!activeGame) return;
+      activeGame.currentOuts = Math.min(3, (activeGame.currentOuts || 0) + 1);
+
+      // 若壘上有人，優先清除跑者
+      const b = activeGame.currentBases || { first: null, second: null, third: null };
+      let runnerLoc = '壘上跑者';
+      if (b.third) { b.third = null; runnerLoc = '三壘跑者'; }
+      else if (b.second) { b.second = null; runnerLoc = '二壘跑者'; }
+      else if (b.first) { b.first = null; runnerLoc = '一壘跑者'; }
+
+      let curInning = activeGame.innings.find(i => i.inningNum === activeGame.currentInning && i.topBottom === activeGame.currentHalf);
+      if (!curInning) {
+        curInning = {
+          inningNum: activeGame.currentInning,
+          topBottom: activeGame.currentHalf,
+          runs: 0,
+          hits: 0,
+          plateAppearances: [],
+          defensiveEvents: []
+        };
+        activeGame.innings.push(curInning);
+      }
+
+      const batterName = activeGame.lineup[activeGame.currentBatterIdx];
+      const paRecord = {
+        playId: 'play_runner_' + Date.now(),
+        batterName,
+        slot: activeGame.currentBatterIdx + 1,
+        result: 'OUT',
+        trajectory: 'none',
+        location: 'Bases',
+        x: 0.5,
+        y: 0.7,
+        rbi: 0,
+        runsScored: 0,
+        outsAdded: 1,
+        outsAtEnd: activeGame.currentOuts,
+        desc: `${runnerLoc} 遭觸殺/刺殺出局 (+1 出局，${batterName} 仍在打擊區)`
+      };
+
+      curInning.plateAppearances = curInning.plateAppearances || [];
+      curInning.plateAppearances.push(paRecord);
+
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+
+      updateLiveScoreboard();
+      updateBasesAndOutsDisplay();
+      renderCurrentInningPlaysTable();
+
+      showToast(`🟣 已記錄：${paRecord.desc}`);
+
+      if (activeGame.currentOuts >= 3) {
+        showToast('3 出局！半局結束，請點擊下方【換局 (推進下一局)】');
+      }
     };
 
     window.recordQuickWalk = function() {
@@ -6847,18 +6920,33 @@ window.toggleDiagnosticsCollapse = function() {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800 bg-slate-950">
-                <tr>
-                  <td class="p-2 text-left font-bold text-sky-400">淡江航太</td>
-                  ${ourLineScoreCells.join('')}
-                  <td class="p-2 font-bold text-amber-400 border-l border-slate-800">${game.finalScore.us}</td>
-                  <td class="p-2 font-bold text-sky-400">${totalHits}</td>
-                </tr>
-                <tr>
-                  <td class="p-2 text-left font-bold text-slate-300">${game.opponent}</td>
-                  ${oppLineScoreCells.join('')}
-                  <td class="p-2 font-bold text-rose-400 border-l border-slate-800">${game.finalScore.opp}</td>
-                  <td class="p-2 font-bold text-slate-500">-</td>
-                </tr>
+                ${(game.ourRole === '先攻') ? `
+                  <tr>
+                    <td class="p-2 text-left font-bold text-sky-400">淡江航太</td>
+                    ${ourLineScoreCells.join('')}
+                    <td class="p-2 font-bold text-amber-400 border-l border-slate-800">${game.finalScore.us}</td>
+                    <td class="p-2 font-bold text-sky-400">${totalHits}</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 text-left font-bold text-slate-300">${game.opponent}</td>
+                    ${oppLineScoreCells.join('')}
+                    <td class="p-2 font-bold text-rose-400 border-l border-slate-800">${game.finalScore.opp}</td>
+                    <td class="p-2 font-bold text-slate-500">-</td>
+                  </tr>
+                ` : `
+                  <tr>
+                    <td class="p-2 text-left font-bold text-slate-300">${game.opponent}</td>
+                    ${oppLineScoreCells.join('')}
+                    <td class="p-2 font-bold text-rose-400 border-l border-slate-800">${game.finalScore.opp}</td>
+                    <td class="p-2 font-bold text-slate-500">-</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 text-left font-bold text-sky-400">淡江航太</td>
+                    ${ourLineScoreCells.join('')}
+                    <td class="p-2 font-bold text-amber-400 border-l border-slate-800">${game.finalScore.us}</td>
+                    <td class="p-2 font-bold text-sky-400">${totalHits}</td>
+                  </tr>
+                `}
               </tbody>
             </table>
           </div>
@@ -6905,11 +6993,11 @@ window.toggleDiagnosticsCollapse = function() {
             <div class="relative w-full max-w-[340px] mx-auto aspect-square select-none">
               <svg viewBox="0 0 400 400" class="w-full h-full rounded-xl border border-slate-800 bg-[#0d1712]">
                 <rect width="400" height="400" fill="#0d1712" />
-                <path d="M 30 200 A 210 210 0 0 1 370 200 L 200 370 Z" fill="#14291c" stroke="#22c55e" stroke-width="2" />
-                <line x1="200" y1="365" x2="25" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
-                <line x1="200" y1="365" x2="375" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
-                <path d="M 120 285 A 95 95 0 0 1 280 285 L 200 365 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
-                <polygon points="200,365 275,285 200,210 125,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                <path d="M 20 145 A 215 215 0 0 1 380 145 L 200 375 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />
+                <line x1="200" y1="370" x2="16" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                <line x1="200" y1="370" x2="384" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                <path d="M 115 285 A 95 95 0 0 1 285 285 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                <polygon points="200,370 280,285 200,200 120,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
                 ${sprayPointsHtml.join('')}
               </svg>
             </div>
