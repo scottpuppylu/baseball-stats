@@ -43,12 +43,12 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0255</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0315</span>
         </div>
 
 
         <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-          <span id="syncStatusBadge" class="hidden lg:inline text-[11px] text-emerald-400 font-mono">雲端資料庫：連線中...</span>
+          <span id="syncStatusBadge" class="hidden sm:inline text-[10px] sm:text-[11px] text-emerald-400 font-mono">雲端資料庫：連線中...</span>
           <button onclick="manualRefresh()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap">即時重整</button>
           <button onclick="openDefenseModal()" class="bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-700/60 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap flex items-center gap-1">
             <span>🛡️</span> 守位設定
@@ -851,15 +851,36 @@
                 </div>
               </div>
 
-              <!-- 快捷載入打線按鈕 -->
+              <!-- 實況記分 DH 賽制切換開關 (無DH 10棒 / 有DH 11棒) -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/90 p-3 sm:p-3.5 rounded-xl border border-slate-800 text-xs">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5 font-mono">
+                    <span>⚾</span> 比賽賽制 (DH 開關)：
+                  </span>
+                  <div class="inline-flex rounded-xl p-1 bg-slate-950 border border-slate-800">
+                    <button type="button" id="btnSetupDhOff" onclick="setDhRule(false)" class="text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                      無 DH 制 (10 棒・全打全守)
+                    </button>
+                    <button type="button" id="btnSetupDhOn" onclick="setDhRule(true)" class="text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                      有 DH 制 (11 棒・投手含入打線)
+                    </button>
+                  </div>
+                </div>
+                <span id="setupDhExplanation" class="text-slate-400 font-mono text-[11px]"></span>
+              </div>
+
+              <!-- 快捷載入打線與非隊員支援管理 -->
               <div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span class="text-xs text-slate-300 font-medium">先發打線快速載入：</span>
+                <span class="text-xs text-slate-300 font-medium">打線載入與陣容調整：</span>
                 <div class="flex flex-wrap gap-2">
                   <button type="button" onclick="loadLineupIntoGameSetup('recommended')" class="bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-600/60 px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1">
-                    <span>⚡</span> 載入賽伯計量最佳推薦打線
+                    <span>⚡</span> 載入最佳推薦
                   </button>
                   <button type="button" onclick="loadLineupIntoGameSetup('custom')" class="bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-600/60 px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1">
-                    <span>⚡</span> 載入自訂打線配置
+                    <span>⚡</span> 載入自訂配置
+                  </button>
+                  <button type="button" onclick="openGuestModal()" class="bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-600/60 px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                    <span>👤</span> + 非隊員/支援名單
                   </button>
                 </div>
               </div>
@@ -892,6 +913,9 @@
                   </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
+                  <button onclick="toggleActiveGameDh()" id="btnLiveToggleDh" class="bg-indigo-950/70 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/70 text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow" title="即時切換此場比賽之 DH 制 (10棒/11棒)">
+                    <span>🔄</span> 切換 DH (10/11棒)
+                  </button>
                   <button onclick="finishActiveGameAndSyncLogs()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow transition flex items-center gap-1">
                     <span>🏁</span> 結束比賽並同步全隊日誌
                   </button>
@@ -1613,6 +1637,84 @@
 
 
   <!-- Instagram 風格頭像裁切彈窗 -->
+    <!-- 非隊員與支援選手管理彈窗 -->
+  <div id="guestModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-purple-700/60 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-2.5">
+          <span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">GUEST ROSTER</span>
+          <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">非隊員與外援支援選手名冊</h3>
+        </div>
+        <button onclick="closeGuestModal()" class="text-slate-400 hover:text-white text-2xl font-bold leading-none">&times;</button>
+      </div>
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs text-slate-300">
+        <div class="bg-purple-950/20 border border-purple-800/40 rounded-xl p-3 text-[11px] text-purple-300/90 leading-relaxed">
+          <span class="font-bold">說明：</span>比賽若有友軍外援、友隊球友、或學長支援出賽，請在此登記選手姓名與背號。登記後即可直接在實況記分先發打線、替補席與守備中自由選用。非隊員之打擊數據將完整存入該場比賽紀錄，絕不影響正式隊員名冊。
+        </div>
+        <!-- 新增支援選手表單 -->
+        <form id="addGuestForm" onsubmit="submitAddGuestForm(event)" class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
+          <span class="font-bold text-slate-200 block text-xs">+ 快速登記支援選手：</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div>
+              <label class="block text-slate-400 text-[10px] mb-1 font-semibold">姓名 <span class="text-rose-400">*</span></label>
+              <input type="text" id="guestInputName" placeholder="例: 張小華、外援A" required class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-purple-500 font-medium">
+            </div>
+            <div>
+              <label class="block text-slate-400 text-[10px] mb-1 font-semibold">背號 (選填)</label>
+              <input type="number" id="guestInputJersey" placeholder="預設 0" class="w-full bg-slate-900 border border-slate-700 text-amber-300 font-mono rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="block text-slate-400 text-[10px] mb-1 font-semibold">備註/身分</label>
+              <input type="text" id="guestInputTag" placeholder="例: 友軍支援" class="w-full bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-purple-500">
+            </div>
+          </div>
+          <div class="flex justify-end pt-1">
+            <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs transition shadow flex items-center gap-1">
+              <span>+</span> 儲存並加入支援名冊
+            </button>
+          </div>
+        </form>
+        <!-- 現有支援選手清單 -->
+        <div class="space-y-2">
+          <span class="font-bold text-slate-300 block text-xs">目前已登記之非隊員名單：</span>
+          <div id="guestListContainer" class="space-y-1.5"></div>
+        </div>
+      </div>
+      <div class="p-3 sm:p-4 border-t border-slate-800 bg-slate-950 flex justify-end">
+        <button onclick="closeGuestModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg text-xs transition">完成關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 實況換人/替補彈窗 -->
+  <div id="substituteModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-indigo-700/60 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-2">
+          <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">SUBSTITUTION</span>
+          <h3 class="text-sm sm:text-base font-bold text-white tracking-tight">實況換人 / 替補選手指派</h3>
+        </div>
+        <button onclick="closeSubstituteModal()" class="text-slate-400 hover:text-white text-xl font-bold leading-none">&times;</button>
+      </div>
+      <div class="p-4 sm:p-5 space-y-4 text-xs">
+        <div id="substituteTargetInfo" class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1"></div>
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">指派替換選手 (隊員或非隊員支援)：</label>
+          <select id="substituteNewPlayerSelect" class="w-full bg-slate-950 border border-slate-700 text-white rounded-lg p-2.5 text-xs focus:outline-none focus:border-indigo-500 font-medium"></select>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 leading-relaxed">
+          💡 提示：更換後該棒次後續之打擊與守備將自動由新選手承接；如需新增其他外援，可在上方選單直接選擇「+ 快速新增非隊員...」。
+        </div>
+      </div>
+      <div class="p-3 sm:p-4 border-t border-slate-800 bg-slate-950 flex justify-end space-x-2">
+        <button onclick="closeSubstituteModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-lg text-xs transition">取消</button>
+        <button onclick="confirmSubstitution()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs shadow transition flex items-center gap-1">
+          <span>✓</span> 確認更換上場
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="cropModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 sm:p-5 max-w-[340px] sm:max-w-sm w-full shadow-2xl flex flex-col items-center space-y-4">
       <div class="flex items-center justify-between w-full border-b border-slate-800 pb-2">
@@ -1743,6 +1845,204 @@
     );
 
 
+    // 支援選手 / 非隊員名冊 (持久化於 localStorage)
+    let guestPlayers = window.guestPlayers = JSON.parse(localStorage.getItem('rebas_guest_players')) || [
+      { name: '支援選手A', jersey: 0, tag: '友軍支援' },
+      { name: '支援選手B', jersey: 0, tag: '友軍支援' }
+    ];
+
+    // 高效網路請求工具：3.5 秒超時自動中斷，杜絕連線卡頓 2 分鐘
+    window.fetchWithTimeout = fetchWithTimeout;
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 3500) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timer);
+        return response;
+      } catch (err) {
+        clearTimeout(timer);
+        throw err;
+      }
+    }
+
+    async function fetchGitHubContent(filePath, timeoutMs = 3500) {
+      const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}&t=${Date.now()}`;
+      const headers = { 'Accept': 'application/vnd.github.v3+json' };
+      if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
+      const res = await fetchWithTimeout(url, { headers }, timeoutMs);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const content = JSON.parse(base64ToUtf8(data.content));
+      return { content, sha: data.sha };
+    }
+
+    async function fetchLocalContent(filePath, timeoutMs = 1500) {
+      const res = await fetchWithTimeout(`./${filePath}?t=${Date.now()}`, {}, timeoutMs);
+      if (!res.ok) throw new Error(`Local file HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    // 取得所有可用選手（隊員與非隊員支援）
+    window.getAllAvailablePlayerNames = getAllAvailablePlayerNames;
+    function getAllAvailablePlayerNames() {
+      const teamNames = Object.values(DEFAULT_JERSEY_MAP);
+      allLogs.forEach(l => {
+        if (l.name && !teamNames.includes(l.name) && !(guestPlayers || []).some(g => g.name === l.name)) {
+          teamNames.push(l.name);
+        }
+      });
+      const guestNames = (guestPlayers || []).map(g => g.name);
+      return { teamNames: [...new Set(teamNames)], guestNames: [...new Set(guestNames)] };
+    }
+
+    // 新增與管理非隊員支援選手
+    window.addGuestPlayer = function(name, jersey = 0, tag = '友軍支援') {
+      if (!name || !name.trim()) return null;
+      const cleanName = name.trim();
+      const cleanJersey = parseInt(jersey, 10) || 0;
+      const existing = guestPlayers.find(g => g.name === cleanName);
+      if (existing) {
+        existing.jersey = cleanJersey;
+        existing.tag = tag;
+      } else {
+        guestPlayers.push({ name: cleanName, jersey: cleanJersey, tag });
+      }
+      localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
+      syncJerseyMaps();
+      return cleanName;
+    };
+
+    window.removeGuestPlayer = function(name) {
+      guestPlayers = guestPlayers.filter(g => g.name !== name);
+      localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
+      syncJerseyMaps();
+      renderGuestModalUI();
+      renderSetupLineupGrid();
+      showToast(`已自名單移除非隊員：${name}`);
+    };
+
+    window.openGuestModal = function() {
+      renderGuestModalUI();
+      document.getElementById('guestModal').classList.remove('hidden');
+    };
+
+    window.closeGuestModal = function() {
+      document.getElementById('guestModal').classList.add('hidden');
+    };
+
+    window.submitAddGuestForm = function(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('guestInputName');
+      const jerseyInput = document.getElementById('guestInputJersey');
+      const tagInput = document.getElementById('guestInputTag');
+      const name = nameInput ? nameInput.value.trim() : '';
+      const jersey = jerseyInput ? (parseInt(jerseyInput.value, 10) || 0) : 0;
+      const tag = tagInput ? (tagInput.value.trim() || '友軍支援') : '友軍支援';
+      if (!name) {
+        alert('請輸入支援選手姓名！');
+        return;
+      }
+      addGuestPlayer(name, jersey, tag);
+      if (nameInput) nameInput.value = '';
+      if (jerseyInput) jerseyInput.value = '';
+      if (tagInput) tagInput.value = '';
+      renderGuestModalUI();
+      renderSetupLineupGrid();
+      showToast(`已成功登記支援選手：#${jersey} ${name}！`);
+    };
+
+    function renderGuestModalUI() {
+      const container = document.getElementById('guestListContainer');
+      if (!container) return;
+      if (!guestPlayers || guestPlayers.length === 0) {
+        container.innerHTML = '<div class="p-3 text-center text-slate-500 bg-slate-950 rounded-xl border border-slate-800">目前尚無登記之支援選手，請在上方輸入新增。</div>';
+        return;
+      }
+      container.innerHTML = guestPlayers.map(g => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center space-x-2.5">
+            <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+            <span class="font-bold text-white text-xs">#${g.jersey !== undefined ? g.jersey : 0} ${g.name}</span>
+            <span class="text-[10px] text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded border border-purple-800/50">${g.tag || '支援'}</span>
+          </div>
+          <button type="button" onclick="removeGuestPlayer('${g.name}')" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 rounded bg-rose-950/40 border border-rose-900/50 transition">
+            🗑️ 移除
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // 實況換人/替補選手彈窗
+    window.openSubstituteModal = function() {
+      if (!activeGame) return;
+      const idx = activeGame.currentBatterIdx;
+      const currentName = activeGame.lineup[idx] || activeGame.lineup[0];
+      const slot = idx + 1;
+      const targetInfo = document.getElementById('substituteTargetInfo');
+      if (targetInfo) {
+        targetInfo.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400">目前替換棒次：</span>
+            <span class="text-amber-400 font-mono font-bold text-sm">第 ${slot} 棒</span>
+          </div>
+          <div class="flex items-center space-x-2 text-white font-bold text-sm">
+            <span>#${NAME_TO_JERSEY[currentName] ?? ''} ${currentName}</span>
+            <span class="text-xs font-normal text-slate-400">(${activeGame.hasDh && slot === activeGame.dhSlot ? 'DH' : '先發'})</span>
+          </div>
+        `;
+      }
+      const select = document.getElementById('substituteNewPlayerSelect');
+      if (select) {
+        const { teamNames, guestNames } = getAllAvailablePlayerNames();
+        select.innerHTML = `
+          <optgroup label="航太系壘隊員">
+            ${teamNames.map(name => `
+              <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name}</option>
+            `).join('')}
+          </optgroup>
+          ${guestNames.length > 0 ? `
+            <optgroup label="非隊員 / 支援選手">
+              ${guestNames.map(name => `
+                <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? '0'} ${name} (支援)</option>
+              `).join('')}
+            </optgroup>
+          ` : ''}
+          <optgroup label="快速操作">
+            <option value="__NEW_GUEST__">+ 快速新增非隊員/支援選手...</option>
+          </optgroup>
+        `;
+      }
+      document.getElementById('substituteModal').classList.remove('hidden');
+    };
+
+    window.closeSubstituteModal = function() {
+      document.getElementById('substituteModal').classList.add('hidden');
+    };
+
+    window.confirmSubstitution = function() {
+      if (!activeGame) return;
+      const select = document.getElementById('substituteNewPlayerSelect');
+      let chosenPlayer = select ? select.value : '';
+      if (!chosenPlayer) return;
+      if (chosenPlayer === '__NEW_GUEST__') {
+        const name = prompt('請輸入新支援選手姓名（例：張小華、外援A）：');
+        if (!name || !name.trim()) return;
+        const cleanName = name.trim();
+        const jerseyStr = prompt(`請輸入 ${cleanName} 的背號（選填，預設 0）：`, '0');
+        const jerseyNum = parseInt(jerseyStr, 10) || 0;
+        addGuestPlayer(cleanName, jerseyNum, '友軍支援');
+        chosenPlayer = cleanName;
+      }
+      const idx = activeGame.currentBatterIdx;
+      const oldPlayer = activeGame.lineup[idx];
+      activeGame.lineup[idx] = chosenPlayer;
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      closeSubstituteModal();
+      renderLiveScorer();
+      showToast(`已成功將第 ${idx + 1} 棒由【${oldPlayer}】替換為【${chosenPlayer}】！`);
+    };
+
     function syncJerseyMaps() {
       JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
       allLogs.forEach(l => {
@@ -1750,9 +2050,22 @@
           JERSEY_TO_NAME[Number(l.jersey)] = l.name;
         }
       });
+      (guestPlayers || []).forEach(g => {
+        if (g.name) {
+          const j = g.jersey !== undefined ? Number(g.jersey) : 0;
+          JERSEY_TO_NAME[j] = g.name;
+        }
+      });
       NAME_TO_JERSEY = Object.fromEntries(
         Object.entries(JERSEY_TO_NAME).map(([k, v]) => [v, Number(k)])
       );
+      (guestPlayers || []).forEach(g => {
+        if (g.name) {
+          NAME_TO_JERSEY[g.name] = g.jersey !== undefined ? Number(g.jersey) : 0;
+        }
+      });
+      window.JERSEY_TO_NAME = JERSEY_TO_NAME;
+      window.NAME_TO_JERSEY = NAME_TO_JERSEY;
     }
 
 
@@ -1989,31 +2302,18 @@
 
     async function loadDefenseFromGitHub() {
       try {
-        const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        if (apiRes.ok) {
-          const data = await apiRes.json();
-          currentDefenseSha = data.sha;
-          const decoded = base64ToUtf8(data.content);
-          const cloudDefense = JSON.parse(decoded);
-          defenseRankings = { ...DEFAULT_DEFENSE_RANKINGS, ...cloudDefense };
-          localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
-        } else if (apiRes.status === 404) {
-          currentDefenseSha = null;
-        }
+        const { content, sha } = await fetchGitHubContent(DEFENSE_FILE_PATH);
+        currentDefenseSha = sha;
+        defenseRankings = { ...DEFAULT_DEFENSE_RANKINGS, ...content };
+        localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
+        return true;
       } catch (err) {
         try {
-          const res = await fetch(`./${DEFENSE_FILE_PATH}?t=${Date.now()}`);
-          if (res.ok) {
-            const cloudDefense = await res.json();
-            defenseRankings = { ...DEFAULT_DEFENSE_RANKINGS, ...cloudDefense };
-            localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
-          }
+          const content = await fetchLocalContent(DEFENSE_FILE_PATH);
+          defenseRankings = { ...DEFAULT_DEFENSE_RANKINGS, ...content };
+          localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
         } catch (e) {}
+        return false;
       }
     }
 
@@ -2218,15 +2518,67 @@
     
     // 指定打擊 (DH) 制度設定前置條件 (localStorage 持久化)
     // 規則確認：有 DH 制時投手 (P) 依然要打，所以總共會變 11 棒 (10 位守備員全打 + 1 位純打擊 DH)
-    let isDhEnabled = localStorage.getItem('rebas_has_dh') !== null ? JSON.parse(localStorage.getItem('rebas_has_dh')) : false;
+    let isDhEnabled = window.isDhEnabled = localStorage.getItem('rebas_has_dh') !== null ? JSON.parse(localStorage.getItem('rebas_has_dh')) : false;
     let customDhSlot = Number(localStorage.getItem('rebas_custom_dh_slot')) || 4;
 
+    // 統一更新全系統 DH 賽制按鈕與說明標籤
+    window.updateDhRuleButtons = updateDhRuleButtons;
+    function updateDhRuleButtons() {
+      const btnNoDh = document.getElementById('btnRuleNoDh');
+      const btnWithDh = document.getElementById('btnRuleWithDh');
+      const explanationEl = document.getElementById('dhStatusExplanation');
+      const recTitleEl = document.getElementById('recLineupTitle');
+      const recSubtitleEl = document.getElementById('recLineupSubtitle');
+
+      const btnSetupDhOff = document.getElementById('btnSetupDhOff');
+      const btnSetupDhOn = document.getElementById('btnSetupDhOn');
+      const setupDhExpl = document.getElementById('setupDhExplanation');
+
+      if (!isDhEnabled) {
+        if (btnNoDh) btnNoDh.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-sky-600 text-white shadow transition';
+        if (btnWithDh) btnWithDh.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
+        if (btnSetupDhOff) btnSetupDhOff.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-sky-600 text-white shadow transition';
+        if (btnSetupDhOn) btnSetupDhOn.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
+        if (explanationEl) {
+          explanationEl.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="font-bold text-emerald-400">【無 DH 制 (10 棒打線)】</span><span class="text-slate-300">10 位打者全員下場防守（攻守合一），投手 (P) 親自打擊，場上無任何純指定打擊。</span></span>';
+        }
+        if (setupDhExpl) {
+          setupDhExpl.innerHTML = '<span class="text-emerald-400 font-bold">10 棒攻守合一</span>：全員防守，無純DH';
+        }
+        if (recTitleEl) recTitleEl.textContent = '賽伯計量最佳棒次推薦 (無 DH 制・10 棒全打全守)';
+        if (recSubtitleEl) recSubtitleEl.textContent = '融合慢壘得分期望值模型與各守位排名，推算 10 位攻守合一打者與守備位置 (歷史PA ≥ 15)';
+      } else {
+        if (btnWithDh) btnWithDh.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white shadow transition';
+        if (btnNoDh) btnNoDh.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
+        if (btnSetupDhOn) btnSetupDhOn.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white shadow transition';
+        if (btnSetupDhOff) btnSetupDhOff.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
+        if (explanationEl) {
+          explanationEl.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span class="font-bold text-amber-400">【有 DH 制 (11 棒打線)】</span><span class="text-slate-300">10 位守備員（含投手 P）全員打擊 + 1 位純打擊 DH，總共 11 棒打線！投手依然要打！</span></span>';
+        }
+        if (setupDhExpl) {
+          setupDhExpl.innerHTML = '<span class="text-amber-400 font-bold">11 棒特化打線</span>：10 守備員全打 + 1 純 DH';
+        }
+        if (recTitleEl) recTitleEl.textContent = '賽伯計量最佳棒次推薦 (有 DH 制・11 棒打線・投手含入打線)';
+        if (recSubtitleEl) recSubtitleEl.textContent = '10 位守備員 (含投手 P) 全員上場打擊 + 1 位純打擊 DH，共推算 11 位先發棒次與最佳守位配置 (歷史PA ≥ 15)';
+      }
+
+      const ruleBadge = document.getElementById('liveGameRuleBadge');
+      if (ruleBadge && activeGame) {
+        ruleBadge.textContent = activeGame.hasDh ? '11棒有DH (投手打擊)' : '10棒全打全守';
+        ruleBadge.className = activeGame.hasDh
+          ? 'text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40'
+          : 'text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      }
+    }
+
     window.setDhRule = function(enableDh) {
-      isDhEnabled = enableDh;
+      isDhEnabled = window.isDhEnabled = enableDh;
       localStorage.setItem('rebas_has_dh', JSON.stringify(isDhEnabled));
 
+      const { teamNames, guestNames } = getAllAvailablePlayerNames();
+      const allNames = [...teamNames, ...guestNames];
+
       // 若切換為有 DH 制 (11 棒)，且自訂打線目前僅 10 人，自動補齊第 11 人
-      const allNames = Object.values(JERSEY_TO_NAME);
       if (isDhEnabled && customLineup.length < 11) {
         const unused = allNames.find(n => !customLineup.includes(n)) || allNames[0];
         customLineup.push(unused);
@@ -2234,12 +2586,57 @@
         customLineup = customLineup.slice(0, 10);
       }
 
+      // 開賽設定打線長度同步更新
+      if (setupLineupList.length === 0) {
+        loadLineupIntoGameSetup('custom');
+      } else if (isDhEnabled && setupLineupList.length < 11) {
+        const unused = allNames.find(n => !setupLineupList.includes(n)) || allNames[0];
+        setupLineupList.push(unused);
+      } else if (!isDhEnabled && setupLineupList.length > 10) {
+        setupLineupList = setupLineupList.slice(0, 10);
+      }
+      window.setupLineupList = setupLineupList;
+
       if (customDhSlot > (isDhEnabled ? 11 : 10)) {
-        customDhSlot = isDhEnabled ? 4 : 4;
+        customDhSlot = 4;
       }
 
+      updateDhRuleButtons();
       const agg = getAggregatedStats(getFilteredLogs());
       renderLineupAnalysis(agg);
+      renderSetupLineupGrid();
+      showToast(isDhEnabled ? '已切換為【有 DH 制 (11 棒打線，投手兼打)】' : '已切換為【無 DH 制 (10 棒全打全守)】');
+    };
+
+    // 進行中實況比賽即時切換 DH 制 (10 棒 vs 11 棒)
+    window.toggleActiveGameDh = function() {
+      if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
+      if (!activeGame) return;
+      const targetHasDh = !activeGame.hasDh;
+      if (!confirm(`確定要將此場實況比賽切換為【${targetHasDh ? '11 棒有 DH 制' : '10 棒無 DH 制'}】？`)) return;
+      activeGame.hasDh = targetHasDh;
+      const { teamNames, guestNames } = getAllAvailablePlayerNames();
+      const allNames = [...teamNames, ...guestNames];
+      if (targetHasDh) {
+        if (activeGame.lineup.length < 11) {
+          const unused = allNames.find(n => !activeGame.lineup.includes(n)) || (guestNames[0] || '支援選手');
+          activeGame.lineup.push(unused);
+        }
+        activeGame.dhSlot = activeGame.dhSlot || 4;
+      } else {
+        if (activeGame.lineup.length > 10) {
+          activeGame.lineup = activeGame.lineup.slice(0, 10);
+        }
+        activeGame.dhSlot = null;
+      }
+      if (activeGame.currentBatterIdx >= activeGame.lineup.length) {
+        activeGame.currentBatterIdx = 0;
+      }
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      if (typeof window !== 'undefined') window.activeGame = activeGame;
+      updateDhRuleButtons();
+      renderLiveScorer();
+      showToast(`已成功切換比賽為【${targetHasDh ? '11 棒有 DH 制' : '10 棒無 DH 制'}】！`);
     };
 
     window.setCustomDhSlot = function(slot) {
@@ -2557,31 +2954,7 @@
       renderAttendanceGrid(historicalPaMap);
 
       // 更新頂部 DH 賽制控制按鈕與說明
-      const btnNoDh = document.getElementById('btnRuleNoDh');
-      const btnWithDh = document.getElementById('btnRuleWithDh');
-      const explanationEl = document.getElementById('dhStatusExplanation');
-      const recTitleEl = document.getElementById('recLineupTitle');
-      const recSubtitleEl = document.getElementById('recLineupSubtitle');
-
-      if (btnNoDh && btnWithDh) {
-        if (!isDhEnabled) {
-          btnNoDh.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-sky-600 text-white shadow transition';
-          btnWithDh.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
-          if (explanationEl) {
-            explanationEl.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="font-bold text-emerald-400">【無 DH 制 (10 棒打線)】</span><span class="text-slate-300">10 位打者全員下場防守（攻守合一），投手 (P) 親自打擊，場上無任何純指定打擊。</span></span>';
-          }
-          if (recTitleEl) recTitleEl.textContent = '賽伯計量最佳棒次推薦 (無 DH 制・10 棒全打全守)';
-          if (recSubtitleEl) recSubtitleEl.textContent = '融合慢壘得分期望值模型與各守位排名，推算 10 位攻守合一打者與守備位置 (歷史PA ≥ 15)';
-        } else {
-          btnWithDh.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white shadow transition';
-          btnNoDh.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
-          if (explanationEl) {
-            explanationEl.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span class="font-bold text-amber-400">【有 DH 制 (11 棒打線)】</span><span class="text-slate-300">10 位守備員（含投手 P）全員打擊 + 1 位純打擊 DH，總共 11 棒打線！投手依然要打！</span></span>';
-          }
-          if (recTitleEl) recTitleEl.textContent = '賽伯計量最佳棒次推薦 (有 DH 制・11 棒打線・投手含入打線)';
-          if (recSubtitleEl) recSubtitleEl.textContent = '10 位守備員 (含投手 P) 全員上場打擊 + 1 位純打擊 DH，共推算 11 位先發棒次與最佳守位配置 (歷史PA ≥ 15)';
-        }
-      }
+      updateDhRuleButtons();
 
       const rec = calculateRecommendedLineup(pList);
       const tbody = document.getElementById('recommendedLineupBody');
@@ -3289,31 +3662,18 @@ window.toggleDiagnosticsCollapse = function() {
 
     async function loadAvatarsFromGitHub() {
       try {
-        const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        if (apiRes.ok) {
-          const data = await apiRes.json();
-          currentAvatarsSha = data.sha;
-          const decoded = base64ToUtf8(data.content);
-          const cloudAvatars = JSON.parse(decoded);
-          playerAvatars = { ...playerAvatars, ...cloudAvatars };
-          localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
-        } else if (apiRes.status === 404) {
-          currentAvatarsSha = null;
-        }
+        const { content, sha } = await fetchGitHubContent(AVATARS_FILE_PATH);
+        currentAvatarsSha = sha;
+        playerAvatars = { ...playerAvatars, ...content };
+        localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
+        return true;
       } catch (err) {
         try {
-          const res = await fetch(`./${AVATARS_FILE_PATH}?t=${Date.now()}`);
-          if (res.ok) {
-            const cloudAvatars = await res.json();
-            playerAvatars = { ...playerAvatars, ...cloudAvatars };
-            localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
-          }
+          const content = await fetchLocalContent(AVATARS_FILE_PATH);
+          playerAvatars = { ...playerAvatars, ...content };
+          localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
         } catch (e) {}
+        return false;
       }
     }
 
@@ -3386,31 +3746,18 @@ window.toggleDiagnosticsCollapse = function() {
 
     async function loadTagsFromGitHub() {
       try {
-        const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        if (apiRes.ok) {
-          const data = await apiRes.json();
-          currentTagsSha = data.sha;
-          const decoded = base64ToUtf8(data.content);
-          const cloudTags = JSON.parse(decoded);
-          playerTags = { ...playerTags, ...cloudTags };
-          localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
-        } else if (apiRes.status === 404) {
-          currentTagsSha = null;
-        }
+        const { content, sha } = await fetchGitHubContent(TAGS_FILE_PATH);
+        currentTagsSha = sha;
+        playerTags = { ...playerTags, ...content };
+        localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
+        return true;
       } catch (err) {
         try {
-          const res = await fetch(`./${TAGS_FILE_PATH}?t=${Date.now()}`);
-          if (res.ok) {
-            const cloudTags = await res.json();
-            playerTags = { ...playerTags, ...cloudTags };
-            localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
-          }
+          const content = await fetchLocalContent(TAGS_FILE_PATH);
+          playerTags = { ...playerTags, ...content };
+          localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
         } catch (e) {}
+        return false;
       }
     }
 
@@ -3520,58 +3867,67 @@ window.toggleDiagnosticsCollapse = function() {
     };
 
 
+    window.loadLogsFromGitHub = loadLogsFromGitHub;
     async function loadLogsFromGitHub() {
       const statusBadge = document.getElementById('syncStatusBadge');
-      statusBadge.textContent = '雲端資料庫：載入中...';
-      statusBadge.className = 'text-amber-400 font-mono text-[11px]';
-
-
-      await loadAvatarsFromGitHub();
-      await loadTagsFromGitHub();
-      await loadDefenseFromGitHub();
-      await loadGamesFromGitHub();
-
-
-      try {
-        const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-
-
-        if (apiRes.ok) {
-          const data = await apiRes.json();
-          currentFileSha = data.sha;
-          const decoded = base64ToUtf8(data.content);
-          allLogs = JSON.parse(decoded);
-          statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (${allLogs.length} 筆賽事)`;
-          statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
-        } else {
-          throw new Error('API 回應異常');
-        }
-      } catch (err) {
-        try {
-          const res = await fetch(`./${DATA_FILE_PATH}?t=${Date.now()}`);
-          if (!res.ok) throw new Error('靜態檔案未就緒');
-          allLogs = await res.json();
-          statusBadge.textContent = '[備援模式] 雲端資料庫：靜態備援讀取成功';
-          statusBadge.className = 'text-amber-300 font-mono text-[11px]';
-        } catch (staticErr) {
-          allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
-          statusBadge.textContent = '[基準數據] 雲端未就緒，已載入2025年度總結';
-          statusBadge.className = 'text-amber-400 font-mono text-[11px]';
-        }
+      if (statusBadge) {
+        statusBadge.textContent = '雲端資料庫：連線同步中...';
+        statusBadge.className = 'text-amber-400 font-mono text-[11px] animate-pulse';
       }
 
+      let logsSuccess = false;
 
-      // 將所有歷史賽事自動整合進總數據庫
+      // 5 大資料庫並行發送，最多只需 3.5 秒，徹底杜絕連線卡頓！
+      await Promise.allSettled([
+        loadAvatarsFromGitHub(),
+        loadTagsFromGitHub(),
+        loadDefenseFromGitHub(),
+        loadGamesFromGitHub(),
+        (async () => {
+          try {
+            const { content, sha } = await fetchGitHubContent(DATA_FILE_PATH);
+            allLogs = content;
+            currentFileSha = sha;
+            logsSuccess = true;
+            localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+          } catch (err) {
+            try {
+              const content = await fetchLocalContent(DATA_FILE_PATH);
+              allLogs = content;
+              logsSuccess = false;
+              localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+            } catch (staticErr) {
+              const cached = localStorage.getItem('rebas_logs');
+              if (cached) {
+                try { allLogs = JSON.parse(cached); } catch(e) {}
+              }
+              if (!allLogs || allLogs.length === 0) {
+                allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
+              }
+              logsSuccess = false;
+            }
+          }
+        })()
+      ]);
+
+      // 同步整合與更新
       syncAllGamesToTeamLogs();
       syncJerseyMaps();
       if (allLogs.length > 0 && !selectedPlayerName) {
         selectedPlayerName = allLogs[0].name;
       }
+      updateDhRuleButtons();
+
+      if (statusBadge) {
+        if (logsSuccess) {
+          statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (${allLogs.length} 筆賽事)`;
+          statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+        } else {
+          statusBadge.textContent = `[離線/快取] 雲端未連線，已載入本地最新數據 (${allLogs.length} 筆)`;
+          statusBadge.className = 'text-amber-300 font-mono text-[11px]';
+        }
+      }
+
       renderAll();
     }
 
@@ -5567,7 +5923,7 @@ window.toggleDiagnosticsCollapse = function() {
     let currentSelectedRbi = 0;
     let currentSelectedRuns = 0;
 
-    let setupLineupList = [];
+    let setupLineupList = window.setupLineupList = [];
     let selectedReviewGameId = '';
     let selectedSprayPlayer = 'all';
     let currentSprayFilter = 'all'; // 'all', 'hits', 'extra', 'outs'
@@ -5620,35 +5976,23 @@ window.toggleDiagnosticsCollapse = function() {
 
     async function loadGamesFromGitHub() {
       try {
-        const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        if (apiRes.ok) {
-          const data = await apiRes.json();
-          currentGamesSha = data.sha;
-          const decoded = base64ToUtf8(data.content);
-          const cloudGames = JSON.parse(decoded);
-          allGames = Array.isArray(cloudGames) ? cloudGames : [];
-          localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-        } else if (apiRes.status === 404) {
-          currentGamesSha = null;
-        }
+        const { content, sha } = await fetchGitHubContent(GAMES_FILE_PATH);
+        currentGamesSha = sha;
+        allGames = Array.isArray(content) ? content : [];
+        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        return true;
       } catch (err) {
         try {
-          const res = await fetch(`./${GAMES_FILE_PATH}?t=${Date.now()}`);
-          if (res.ok) {
-            allGames = await res.json();
-            localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-          }
+          const content = await fetchLocalContent(GAMES_FILE_PATH);
+          allGames = Array.isArray(content) ? content : [];
+          localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
         } catch (e) {}
-      }
-
-      if (!allGames || allGames.length === 0) {
-        allGames = JSON.parse(JSON.stringify(baselineSampleGames));
-        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        return false;
+      } finally {
+        if (!allGames || allGames.length === 0) {
+          allGames = JSON.parse(JSON.stringify(baselineSampleGames));
+          localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        }
       }
     }
 
@@ -5778,6 +6122,7 @@ window.toggleDiagnosticsCollapse = function() {
       const dateEl = document.getElementById('setup_game_date');
       if (dateEl && !dateEl.value) dateEl.value = today;
 
+      updateDhRuleButtons();
       const targetSize = isDhEnabled ? 11 : 10;
       if (setupLineupList.length !== targetSize) {
         loadLineupIntoGameSetup('custom');
@@ -5789,7 +6134,8 @@ window.toggleDiagnosticsCollapse = function() {
     window.loadLineupIntoGameSetup = function(sourceType) {
       const agg = getAggregatedStats(getFilteredLogs());
       const targetSize = isDhEnabled ? 11 : 10;
-      const allNames = Object.values(JERSEY_TO_NAME);
+      const { teamNames, guestNames } = getAllAvailablePlayerNames();
+      const allNames = [...teamNames, ...guestNames];
 
       if (sourceType === 'recommended') {
         const rec = calculateRecommendedLineup(agg.players);
@@ -5809,28 +6155,55 @@ window.toggleDiagnosticsCollapse = function() {
       renderSetupLineupGrid();
     };
 
+    window.renderSetupLineupGrid = renderSetupLineupGrid;
     function renderSetupLineupGrid() {
       const container = document.getElementById('setupLineupGrid');
       if (!container) return;
 
-      const allNames = Object.values(JERSEY_TO_NAME);
+      const { teamNames, guestNames } = getAllAvailablePlayerNames();
+      const allNames = [...teamNames, ...guestNames];
       const targetSize = isDhEnabled ? 11 : 10;
+      const currentDh = customDhSlot || 4;
+
+      while (setupLineupList.length < targetSize) {
+        const unused = allNames.find(n => !setupLineupList.includes(n)) || allNames[0] || '選手';
+        setupLineupList.push(unused);
+      }
+      if (setupLineupList.length > targetSize) {
+        setupLineupList = setupLineupList.slice(0, targetSize);
+      }
 
       container.innerHTML = Array.from({ length: targetSize }, (_, i) => {
         const slot = i + 1;
-        const currentName = setupLineupList[i] || allNames[0];
-        const isDh = isDhEnabled && (slot === (customDhSlot || 4));
+        const currentName = setupLineupList[i] || allNames[0] || '選手';
+        const isDh = isDhEnabled && (slot === currentDh);
+        const isGuest = guestNames.includes(currentName);
 
         return `
-          <div class="p-2.5 rounded-xl border bg-slate-900/90 ${isDh ? 'border-amber-500/80' : 'border-slate-800'} space-y-1">
+          <div class="p-2.5 rounded-xl border bg-slate-900/90 ${isDh ? 'border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)]' : isGuest ? 'border-purple-600/70 bg-purple-950/20' : 'border-slate-800'} space-y-1">
             <div class="flex items-center justify-between text-[11px] font-mono">
-              <span class="font-bold ${isDh ? 'text-amber-400' : 'text-slate-300'}">第 ${slot} 棒</span>
-              ${isDh ? '<span class="text-[9px] text-amber-300 bg-amber-950 px-1 rounded border border-amber-700/60 font-bold">DH</span>' : ''}
+              <span class="font-bold ${isDh ? 'text-amber-400' : isGuest ? 'text-purple-300' : 'text-slate-300'}">第 ${slot} 棒</span>
+              <div class="flex items-center space-x-1">
+                ${isDh ? '<span class="text-[9px] text-amber-300 bg-amber-950 px-1 rounded border border-amber-700/60 font-bold">DH</span>' : ''}
+                ${isGuest ? '<span class="text-[9px] text-purple-300 bg-purple-950 px-1 rounded border border-purple-700/60 font-bold">支援</span>' : ''}
+              </div>
             </div>
-            <select onchange="updateSetupLineupSlot(${i}, this.value)" class="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded px-1.5 py-1 text-xs focus:outline-none focus:border-amber-500 font-medium">
-              ${allNames.map(name => `
-                <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name}</option>
-              `).join('')}
+            <select onchange="updateSetupLineupSlot(${i}, this.value)" class="w-full bg-slate-950 border ${isGuest ? 'border-purple-700 text-purple-200' : 'border-slate-700 text-slate-100'} rounded px-1.5 py-1 text-xs focus:outline-none focus:border-amber-500 font-medium">
+              <optgroup label="航太系壘隊員">
+                ${teamNames.map(name => `
+                  <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name}</option>
+                `).join('')}
+              </optgroup>
+              ${guestNames.length > 0 ? `
+                <optgroup label="非隊員 / 支援選手">
+                  ${guestNames.map(name => `
+                    <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? '0'} ${name} (支援)</option>
+                  `).join('')}
+                </optgroup>
+              ` : ''}
+              <optgroup label="快捷操作">
+                <option value="__ADD_GUEST__">+ 快速新增非隊員/支援選手...</option>
+              </optgroup>
             </select>
           </div>
         `;
@@ -5838,6 +6211,21 @@ window.toggleDiagnosticsCollapse = function() {
     }
 
     window.updateSetupLineupSlot = function(index, name) {
+      if (name === '__ADD_GUEST__') {
+        const guestName = prompt('請輸入非隊員/支援選手姓名（例：張小華、外援A）：');
+        if (!guestName || !guestName.trim()) {
+          renderSetupLineupGrid();
+          return;
+        }
+        const cleanName = guestName.trim();
+        const jerseyStr = prompt(`請輸入 ${cleanName} 的球衣背號（選填，例如 55，未填預設 0）：`, '0');
+        const jerseyNum = parseInt(jerseyStr, 10) || 0;
+        addGuestPlayer(cleanName, jerseyNum, '友軍支援');
+        setupLineupList[index] = cleanName;
+        renderSetupLineupGrid();
+        showToast(`已新增支援選手：#${jerseyNum} ${cleanName} 並指派至第 ${index + 1} 棒！`);
+        return;
+      }
       setupLineupList[index] = name;
       renderSetupLineupGrid();
     };
@@ -6069,7 +6457,10 @@ window.toggleDiagnosticsCollapse = function() {
           </div>
         </div>
 
-        <div class="flex items-center justify-between sm:justify-end space-x-3 border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
+        <div class="flex items-center justify-between sm:justify-end space-x-2 border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
+          <button onclick="openSubstituteModal()" class="bg-purple-950/70 hover:bg-purple-900 text-purple-300 border border-purple-700/60 px-2.5 py-1.5 rounded-lg text-xs font-mono transition flex items-center gap-1 shadow" title="替換當前打者或指派非隊員支援">
+            <span>🔄</span> 換人/替補
+          </button>
           <div class="text-right">
             <span class="text-[10px] text-slate-500 uppercase block font-mono">下一棒準備</span>
             <span class="text-xs font-bold text-slate-300 font-mono">#${NAME_TO_JERSEY[nextName] ?? ''} ${nextName} (第 ${(nextIdx + 1)} 棒)</span>
@@ -7587,6 +7978,23 @@ function renderSprayChartStudio() {
       renderSprayChartStudio();
     };
 
+    // 立即從 localStorage 或 baseline 載入快取，0 毫秒極速呈現完整數據，絕不白屏或卡在「連線中...」
+    try {
+      const cached = localStorage.getItem('rebas_logs');
+      if (cached) allLogs = JSON.parse(cached);
+    } catch(e) {}
+    if (!allLogs || allLogs.length === 0) {
+      allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
+    }
+    syncAllGamesToTeamLogs();
+    syncJerseyMaps();
+    if (allLogs.length > 0 && !selectedPlayerName) {
+      selectedPlayerName = allLogs[0].name;
+    }
+    updateDhRuleButtons();
+    renderAll();
+
+    // 背景迅速並行同步 GitHub (最多 3.5 秒超時保護)
     loadLogsFromGitHub();
   </script>
 </body>
