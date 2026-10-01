@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0535</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0600</span>
         </div>
 
 
@@ -6538,6 +6538,8 @@ window.toggleDiagnosticsCollapse = function() {
       let matchPa = 0, matchAb = 0, matchH = 0, matchHr = 0, matchBb = 0, matchRbi = 0, matchR = 0;
       activeGame.innings.forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
+          // 慢壘規則嚴格防呆：跑者出局 (RUNNER_OUT) 屬於跑壘事件，打者打席未結束，絕不計入打者 PA 與 AB！
+          if (pa.result === 'RUNNER_OUT' || pa.isRunnerOut) return;
           if (pa.batterName === batterName) {
             matchPa++;
             if (!['BB', 'SF'].includes(pa.result)) matchAb++;
@@ -7419,23 +7421,26 @@ window.toggleDiagnosticsCollapse = function() {
       if (!activeGame) return;
       if (!confirm(`確認正式完賽結束本場比賽（淡江航太 ${activeGame.finalScore.us} : ${activeGame.finalScore.opp} ${activeGame.opponent}）？
 
-賽事紀錄將儲存至歷史賽事庫，系統將自動同步此場數據至全隊歷史數據與每位球員之個人累積成績！`)) return;
+賽事紀錄將儲存至歷史賽事庫，系統將自動同步此場數據至全隊歷史日誌與每位球員之個人累積成績！`)) return;
 
       activeGame.status = 'finished';
+      const finishedGame = JSON.parse(JSON.stringify(activeGame));
 
-      const existingIdx = allGames.findIndex(g => g.id === activeGame.id);
+      const existingIdx = allGames.findIndex(g => g.id === finishedGame.id);
       if (existingIdx !== -1) {
-        allGames[existingIdx] = JSON.parse(JSON.stringify(activeGame));
+        allGames[existingIdx] = finishedGame;
       } else {
-        allGames.unshift(JSON.parse(JSON.stringify(activeGame)));
+        allGames.unshift(finishedGame);
       }
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
 
-      await commitGamesToGitHub(allGames, `賽事完賽: vs ${activeGame.opponent} (${activeGame.finalScore.us}-${activeGame.finalScore.opp})`);
+      // 1. 同步賽事紀錄至 GitHub (data/games.json)
+      await commitGamesToGitHub(allGames, `賽事完賽: vs ${finishedGame.opponent} (${finishedGame.finalScore.us}-${finishedGame.finalScore.opp})`);
 
-      // 場記已儲存至 data/games.json，個人成績與總數據自動於記憶體完全同步！
+      // 2. 關鍵同步：將此場賽事個人打擊成績轉換並登入全隊日誌與個人三圍數據庫 (data/logs.json)
+      const syncedCount = await syncGameToTeamLogs(finishedGame);
 
-      const finishedGameId = activeGame.id;
+      const finishedGameId = finishedGame.id;
       activeGame = null;
       if (typeof window !== 'undefined') window.activeGame = null;
       localStorage.removeItem('rebas_active_game');
@@ -7444,7 +7449,8 @@ window.toggleDiagnosticsCollapse = function() {
       selectedReviewGameId = finishedGameId;
       switchScorebookSubTab('review');
       renderGameReview();
-      showToast(`🏆 比賽已完結！本場比賽紀錄已成功儲存至歷史賽事庫！`);
+      renderAll();
+      showToast(`🏆 比賽已完結！已同步 ${syncedCount} 位球員成績至全隊日誌與個人三圍數據庫！`);
     };
 
     window.discardActiveGame = function() {
@@ -7487,7 +7493,7 @@ window.toggleDiagnosticsCollapse = function() {
       return 0;
     }
     window.syncGameToTeamLogs = syncGameToTeamLogs;
-    function syncGameToTeamLogs(game) {
+    async function syncGameToTeamLogs(game) {
       if (!game) return 0;
       const statsMap = {};
       const allMatchBatters = getGameAllBatters(game);
@@ -7503,6 +7509,10 @@ window.toggleDiagnosticsCollapse = function() {
 
       (game.innings || []).forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
+          // 慢壘規則嚴格防呆：跑者出局 (RUNNER_OUT) 屬於跑壘事件，打者打席未結束，絕不計入打者 PA 與 AB！
+          if (pa.result === 'RUNNER_OUT' || pa.isRunnerOut) {
+            return;
+          }
           const p = statsMap[pa.batterName];
           if (p) {
             p.pa++;
@@ -7626,18 +7636,28 @@ window.toggleDiagnosticsCollapse = function() {
     window.deleteReviewGame = async function() {
       const game = allGames.find(g => g.id === selectedReviewGameId);
       if (!game) return;
-      if (!confirm(`確定要徹底刪除此場賽事紀錄（${game.date} vs ${game.opponent}）？`)) return;
+      if (!confirm(`確定要徹底刪除此場賽事紀錄（${game.date} vs ${game.opponent}）？
+這將同時自賽事庫與全隊日誌中永久清除該場比賽所有成績！`)) return;
 
-      allGames = allGames.filter(g => g.id !== selectedReviewGameId);
+      const deletedId = game.id;
+      // 1. 自 allGames 中移除
+      allGames = allGames.filter(g => g.id !== deletedId);
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-      await commitGamesToGitHub(allGames, `刪除賽事: ${game.date} vs ${game.opponent}`);
 
-      // 場記已自 data/games.json 移除，個人成績與總數據自動於記憶體完全同步！
+      // 2. 自 allLogs 中同步清除對應該場比賽的所有日誌
+      const prefix1 = `log_game_${deletedId}_`;
+      const prefix2 = `log_auto_${deletedId}_`;
+      allLogs = allLogs.filter(l => !l.id.startsWith(prefix1) && !l.id.startsWith(prefix2));
+      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+
+      // 3. 同時推播更新 GitHub 兩大數據庫
+      await commitGamesToGitHub(allGames, `刪除賽事: ${game.date} vs ${game.opponent}`);
+      await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${game.date} vs ${game.opponent}`);
 
       selectedReviewGameId = allGames.length > 0 ? allGames[0].id : null;
       renderAll();
       renderGameReview();
-      showToast('已刪除該場賽事，個人成績與總數據已完全自動同步重算！');
+      showToast('已徹底刪除該場賽事與對應日誌，全隊與個人成績已同步重算！');
     };
 
     window.renderSelectedGameReview = function(gameId) {
@@ -7658,10 +7678,16 @@ window.toggleDiagnosticsCollapse = function() {
             <span class="px-2.5 py-1 rounded-full font-bold text-xs ${isWin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}">
               ${isWin ? 'VICTORY 勝利' : 'DEFEAT 落敗'} (${game.finalScore.us} - ${game.finalScore.opp})
             </span>
-            <span class="text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-800/50 flex items-center gap-1.5 font-bold shadow-sm">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              歷史數據自動同步中
-            </span>
+            ${isLogged ? `
+              <button onclick="undoGameFromTeamLogs('${game.id}')" class="text-xs bg-emerald-950/60 hover:bg-rose-950 text-emerald-300 hover:text-rose-300 px-3 py-1 rounded-lg border border-emerald-700/60 hover:border-rose-700 transition font-mono font-bold flex items-center gap-1 shadow-sm" title="點擊自全隊日誌中撤銷本場成績">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>日誌已同步 (點擊撤銷)</span>
+              </button>
+            ` : `
+              <button onclick="syncReviewGameToTeamLogs()" class="text-xs bg-amber-600 hover:bg-amber-500 text-white px-3 py-1 rounded-lg transition font-mono font-bold flex items-center gap-1 shadow-md animate-pulse" title="點擊將本場成績登入全隊日誌與個人三圍">
+                <span>⚡ 登入賽事日誌</span>
+              </button>
+            `}
             <button onclick="toggleEditCurrentReviewGame()" class="bg-amber-950/60 hover:bg-amber-900/80 border border-amber-600/70 text-amber-300 text-xs px-3 py-1 rounded-lg transition font-medium shadow-sm">
               ${isEditingReviewGame ? '✕ 取消編輯' : '✏️ 編輯賽事紀錄'}
             </button>
@@ -7719,8 +7745,12 @@ window.toggleDiagnosticsCollapse = function() {
       });
 
       let totalPAs = 0;
-      game.innings.forEach(inn => {
+      (game.innings || []).forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
+          // 慢壘規則嚴格防呆：跑者出局 (RUNNER_OUT) 屬於跑壘事件，正在打擊之打者打席未結束，絕不計入打者 PA 與 AB！
+          if (pa.result === 'RUNNER_OUT' || pa.isRunnerOut) {
+            return;
+          }
           totalPAs++;
           let p = boxScoreMap[pa.batterName];
           if (!p) {
@@ -8192,7 +8222,8 @@ window.toggleDiagnosticsCollapse = function() {
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
       await commitGamesToGitHub(allGames, `修改賽事紀錄: ${game.date} vs ${game.opponent}`);
 
-      // ★★★ 編輯賽事復盤已儲存至 data/games.json，個人成績與總數據自動於記憶體完全同步！
+      // 同時重新計算該場比賽個人成績並同步至全隊日誌與個人三圍數據庫
+      await syncGameToTeamLogs(game);
 
       isEditingReviewGame = false;
       renderAll();
@@ -8223,7 +8254,7 @@ function renderSprayChartStudio() {
         game.innings.forEach(inn => {
           inn.plateAppearances.forEach(pa => {
             if (selectedSprayPlayer !== 'all' && pa.batterName !== selectedSprayPlayer) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none') return;
+            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || pa.result === 'RUNNER_OUT' || pa.isRunnerOut) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
