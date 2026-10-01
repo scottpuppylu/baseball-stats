@@ -42,18 +42,18 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v2610.1230</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v2610.1240</span>
         </div>
 
         <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           <span id="syncStatusBadge" class="hidden lg:inline text-[11px] text-emerald-400 font-mono">雲端資料庫：連線中...</span>
           <button onclick="manualRefresh()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap">即時重整</button>
-          <button onclick="openGlossaryModal()" class="bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 border border-sky-700/60 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap">名詞圖書館</button>
+          <button onclick="switchMainTab('tabGlossary')" class="bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 border border-sky-700/60 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap">名詞圖書館</button>
           <button id="exportCsvBtn" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap">匯出 CSV</button>
         </div>
       </div>
 
-      <!-- 下層：分段功能目錄與日期篩選 -->
+      <!-- 下層：6 大核心功能分頁導覽與日期篩選 -->
       <div class="flex flex-col md:flex-row md:items-center justify-between py-2 gap-2">
         <nav class="flex items-center space-x-1 overflow-x-auto no-scrollbar shrink-0 bg-slate-950/60 p-1 rounded-xl border border-slate-800/80 max-w-full">
           <button onclick="switchMainTab('tabOverview')" id="btnTabOverview" class="tab-active text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
@@ -75,6 +75,10 @@
           <button onclick="switchMainTab('tabCompare')" id="btnTabCompare" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-pink-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
             <span>雙雄攻守對決</span>
+          </button>
+          <button onclick="switchMainTab('tabGlossary')" id="btnTabGlossary" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
+            <svg class="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <span>名詞圖書館</span>
           </button>
         </nav>
 
@@ -568,6 +572,186 @@
         </section>
       </div>
 
+      <!-- 分頁六：名詞圖書館 (專屬獨立分頁) -->
+      <div id="panelGlossary" class="hidden space-y-6">
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-6 backdrop-blur-sm">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center space-x-2.5">
+                <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">ENCYCLOPEDIA</span>
+                <h2 class="text-xl font-black text-white tracking-tight">專有名詞圖書館與統計公式手冊</h2>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">完整收錄淡江航太系壘賽伯計量模型、慢壘特化指標推導與進攻破壞力評估準則</p>
+            </div>
+          </div>
+
+          <div class="space-y-6 text-xs text-slate-300 leading-relaxed">
+            <!-- 第一章：慢壘特化指標 -->
+            <div class="space-y-3 bg-sky-950/20 border border-sky-800/40 rounded-xl p-4">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-sky-300">一、慢壘特化核心指標：好球帶紀律指數 (Softball Discipline Index, SDI)</h3>
+              </div>
+              <div class="space-y-2 pl-4">
+                <p><span class="font-semibold text-slate-200">【定義】</span>專為慢速壘球運動特性研發之淨好球帶控制指標，用於五維能力雷達圖中取代傳統棒球失真的純四壞率（BB%）。</p>
+                <p><span class="font-semibold text-slate-200">【計算公式】</span><span class="font-mono text-amber-300 font-bold bg-slate-950 px-2 py-0.5 rounded border border-slate-800">SDI = (BB - 1.5 × K) / PA</span></p>
+                <p><span class="font-semibold text-slate-200">【實戰解讀】</span>慢壘具備「好球帶寬廣、球速相對慢、開局多為 1 好 1 壞」之特性，強打者以積極攻擊好球為主，四壞保送天然偏少；相對地，在慢壘吞 K 出局代價極高，通常代表追打惡劣壞球。公式給予三振 1.5 倍懲罰權重，破除「不保送就等於不會選球」的盲點，真實回饋積極出棒且從不吞 K 的強打者。</p>
+              </div>
+            </div>
+
+            <!-- 第二章：賽伯計量進階指標 -->
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-emerald-300">二、賽伯計量進階指標 (Sabermetrics)</h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">加權得分創造 (wRC+, Weighted Runs Created Plus)</span>
+                  <p><span class="text-slate-400">定義：</span>以全隊平均值 100 為基準的綜合進攻效率標準化指數。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wRC+ = (wOBA / Team_wOBA) × 100</span></p>
+                  <p><span class="text-slate-400">意義：</span>綜合考量上壘品質與長打推進，排除場地與賽制偏差，是公認最客觀的個人全能進攻身價標準。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">加權上壘率 (wOBA, Weighted On-Base Average)</span>
+                  <p><span class="text-slate-400">定義：</span>依據賽伯計量得分期望值（Run Expectancy）賦予各進攻事件精確線性權重之上壘指標。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA</span></p>
+                  <p><span class="text-slate-400">意義：</span>修正傳統 OBP 忽略長打深度、以及 SLG 線性疊加壘包的瑕疵，精確衡量每打席對團隊得分的實際邊際價值。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">預估創造得分 (RC, Runs Created)</span>
+                  <p><span class="text-slate-400">定義：</span>由棒球統計之父 Bill James 發明，用於估算打者累計為球隊製造的實體得分數量。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">RC = (H + BB) × TB / (AB + BB)</span></p>
+                  <p><span class="text-slate-400">意義：</span>將「上壘因子（H+BB）」乘上「壘包推進因子（TB）」，直觀評估球員在該時間區間內總共為球隊換取了多少實體分數。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">純長打率 (ISO, Isolated Power)</span>
+                  <p><span class="text-slate-400">定義：</span>過濾一壘安打水分，純粹衡量擊出長打（二壘打以上）的淨長打威力。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">ISO = SLG - AVG = (2H + 2×3H + 3×HR) / AB</span></p>
+                  <p><span class="text-slate-400">意義：</span>區分短程巧打型（ISO &lt; .150）與重砲長打型（ISO &gt; .300）的決定性指標。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">場內安打率 (BABIP, Batting Average on Balls in Play)</span>
+                  <p><span class="text-slate-400">定義：</span>擊球員將球擊入場內（排除三振與全壘打）形成安打的機率。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BABIP = (H - HR) / (AB - K - HR + SF)</span></p>
+                  <p><span class="text-slate-400">意義：</span>慢壘防守站位深且無觸殺時差，BABIP 具體反映擊球落點穿透防線的品質、擊球初速與運氣成份。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">標準化攻擊指數 (OPS+)</span>
+                  <p><span class="text-slate-400">定義：</span>將球員個人 OPS 相較於全隊平均 OPS 進行正規化所得的百分比指數。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OPS+ = (OPS / Team_OPS) × 100</span></p>
+                  <p><span class="text-slate-400">意義：</span>數值以 100 為中位數基準；OPS+ 達 135 代表其綜合攻擊破壞力優於全隊平均 35%，低於 100 則低於隊均。</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 第三章：好球帶辨識與擊球控制 -->
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-amber-300">三、好球帶辨識與擊球控制指標</h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">擊球掌握率 (Contact%)</span>
+                  <p><span class="text-slate-400">定義：</span>打者在打數中成功將球擊出（未吞下三振）的機率。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">Contact% = (AB - K) / AB</span></p>
+                  <p><span class="text-slate-400">意義：</span>衡量打者的球眼穩定度與揮空迴避能力。慢壘防守破綻多，擊出球即能對守備施加失誤壓力。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">保送三振比 (BB/K)</span>
+                  <p><span class="text-slate-400">定義：</span>打者每吞下一次三振，所能換取之四壞保送次數。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BB/K = BB / K (若 K=0 則計為 BB 總數)</span></p>
+                  <p><span class="text-slate-400">意義：</span>經典選球控制比例。BB/K 大於 1.0 代表選球正向產出多於無效揮空；大於 2.0 屬頂級好球帶掌舵者。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">四壞保送率 (BB%)</span>
+                  <p><span class="text-slate-400">定義：</span>平均每打席選到四壞保送的機率。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BB% = BB / PA</span></p>
+                  <p><span class="text-slate-400">意義：</span>衡量耐心辨識壞球的能力。慢壘好球率高，BB% 超過 15% 即屬保送機器。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">三振率 (K%)</span>
+                  <p><span class="text-slate-400">定義：</span>平均每打席吞下三振出局的機率。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">K% = K / PA</span></p>
+                  <p><span class="text-slate-400">意義：</span>無效打席產生率，慢壘 K% 理論上應壓制在 5% 以下，K% 過高代表追打兩好球後大壞球嚴重。</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 第四章：經典打擊三圍 -->
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-purple-300">四、經典打擊三圍與綜合產能</h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">打擊率 (AVG, Batting Average)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">AVG = H / AB</span></p>
+                  <p><span class="text-slate-400">意義：</span>每打數擊出安打的機率，反映擊球穿透防守的最基本頻率。慢壘隊均水準約在 .500 上下。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">上壘率 (OBP, On-Base Percentage)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OBP = (H + BB) / (AB + BB + SF)</span></p>
+                  <p><span class="text-slate-400">意義：</span>衡量打者站上打擊區「避免製造出局數」的機率，為攻勢串連之最關鍵基準。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">長打率 (SLG, Slugging Percentage)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SLG = (1H + 2×2H + 3×3H + 4×HR) / AB = TB / AB</span></p>
+                  <p><span class="text-slate-400">意義：</span>打者平均每打數所能推進的總壘包數，量化長打破壞力。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">整體攻擊指數 (OPS, On-base Plus Slugging)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OPS = OBP + SLG</span></p>
+                  <p><span class="text-slate-400">意義：</span>結合上壘與長打的經典指標。慢壘中 OPS 達 1.200 即屬優異，超過 1.500 屬頂級重砲打者。</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 第五章：基礎計數指標速查 -->
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-slate-300">五、基礎計數指標速查 (Counting Statistics)</h3>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80"><span class="font-bold text-white block text-xs mb-1">打席 (PA)</span>總打擊輪次 = AB + BB + SF (下拉 1-10)</div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80"><span class="font-bold text-white block text-xs mb-1">打數 (AB)</span>有效打擊數 = PA - BB - SF (自算)</div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80"><span class="font-bold text-white block text-xs mb-1">安打 (H)</span>擊球安全上壘 = 1H+2H+3H+HR (自算)</div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80"><span class="font-bold text-white block text-xs mb-1">壘打數 (TB)</span>1H + 2×2H + 3×3H + 4×HR</div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80"><span class="font-bold text-white block text-xs mb-1">四壞 (BB)</span>選到 4 顆壞球保送上一壘</div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80"><span class="font-bold text-white block text-xs mb-1">高犧 (SF)</span>出局但護送三壘跑者回本壘得分</div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80"><span class="font-bold text-white block text-xs mb-1">三振 (K)</span>累計 3 顆好球揮空或未出棒出局</div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80"><span class="font-bold text-white block text-xs mb-1">長打分項</span>1H (一壘) / 2H (二壘) / 3H (三壘) / HR (全壘打)</div>
+              </div>
+            </div>
+
+            <!-- 第六章：多變量交叉比對與統計工具 -->
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-rose-300">六、多變量交叉比對與統計工具</h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">百分位排名 (PR 值, Percentile Rank)</span>
+                  <p><span class="text-slate-400">定義：</span>將全隊不同單位的數值透過 Min-Max 最小-最大標準化映射至 0–100 區間。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">PR = ((X - Min) / (Max - Min)) × 100</span></p>
+                  <p><span class="text-slate-400">意義：</span>用於五維能力雷達圖，直觀呈現選手在隊內的相對位階，PR 90 代表該指標優於全隊 90% 選手。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">皮爾森積差相關係數 (Pearson Correlation, r)</span>
+                  <p><span class="text-slate-400">定義：</span>衡量兩個連續變量（如 X 軸上壘率與 Y 軸 wRC+）之間線性關聯強弱的統計量數。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">r = Σ(X - X̄)(Y - Ȳ) / (√Σ(X - X̄)² √Σ(Y - Ȳ)²)</span></p>
+                  <p><span class="text-slate-400">意義：</span>介於 -1.0 至 +1.0 之間。|r| &gt; 0.7 為高度相關，|r| 介於 0.4–0.7 為中度相關，輔助球隊驗證打擊指標與得分產能的真實連動性。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
     </main>
   </div>
 
@@ -608,184 +792,35 @@
     </div>
   </div>
 
-  <!-- 全量專有名詞圖書館彈窗 -->
+  <!-- 全量專有名詞圖書館彈窗 (保留浮動速查備援) -->
   <div id="glossaryModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
         <div class="flex items-center space-x-2 sm:space-x-3">
-          <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold">GLOSSARY ENCYCLOPEDIA</span>
-          <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">淡江航太系壘 | 專有名詞圖書館</h3>
+          <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold">GLOSSARY</span>
+          <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">淡江航太系壘 | 專有名詞圖書館速查</h3>
         </div>
         <button onclick="closeGlossaryModal()" class="text-slate-400 hover:text-white text-2xl font-bold leading-none">&times;</button>
       </div>
 
       <div class="p-4 sm:p-6 overflow-y-auto space-y-6 sm:space-y-8 text-xs text-slate-300 leading-relaxed">
-        <section class="space-y-3 bg-sky-950/20 border border-sky-800/40 rounded-xl p-4">
-          <div class="flex items-center space-x-2">
-            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-            <h4 class="text-sm font-bold text-sky-300">一、慢壘特化核心指標：好球帶紀律指數 (Softball Discipline Index, SDI)</h4>
-          </div>
-          <div class="space-y-2 pl-4">
-            <p><span class="font-semibold text-slate-200">【定義】</span>專為慢速壘球運動特性研發之淨好球帶控制指標，用於五維能力雷達圖中取代失真的純四壞率（BB%）。</p>
-            <p><span class="font-semibold text-slate-200">【計算公式】</span><span class="font-mono text-amber-300 font-bold">SDI = (BB - 1.5 × K) / PA</span></p>
-            <p><span class="font-semibold text-slate-200">【代表意義與實戰解讀】</span>慢壘具備「好球帶廣、球速慢、開局多為 1 好 1 壞」之特性，強打者以積極攻擊好球為主，四壞保送天然偏少；相對地，在慢壘吞 K 代價極高，通常代表追打惡劣壞球。公式給予三振 1.5 倍懲罰權重，破除「不保送就等於不會選球」的盲點，能真實回饋積極出棒且從不吞 K 的強打者。</p>
-          </div>
-        </section>
-
-        <section class="space-y-3">
-          <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <h4 class="text-sm font-bold text-emerald-300">二、賽伯計量進階指標 (Sabermetrics)</h4>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">加權得分創造 (wRC+, Weighted Runs Created Plus)</span>
-              <p><span class="text-slate-400">定義：</span>以全隊平均值 100 為基準的綜合進攻效率標準化指數。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wRC+ = (wOBA / Team_wOBA) × 100</span></p>
-              <p><span class="text-slate-400">意義：</span>綜合考量上壘品質與長打推進，排除場地與賽制偏差，是公認最客觀的個人全能進攻身價標準。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">加權上壘率 (wOBA, Weighted On-Base Average)</span>
-              <p><span class="text-slate-400">定義：</span>依據賽伯計量得分期望值賦予各進攻事件精確線性權重之上壘指標。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA</span></p>
-              <p><span class="text-slate-400">意義：</span>修正傳統 OBP 忽略長打深度、以及 SLG 線性疊加壘包的瑕疵，精確衡量每打席對團隊得分的實際邊際價值。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">預估創造得分 (RC, Runs Created)</span>
-              <p><span class="text-slate-400">定義：</span>由棒球統計之父 Bill James 發明，用於估算打者累計為球隊製造的實體得分數量。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">RC = (H + BB) × TB / (AB + BB)</span></p>
-              <p><span class="text-slate-400">意義：</span>將「上壘因子（H+BB）」乘上「壘包推進因子（TB）」，直觀評估球員在該時間區間內總共為球隊換取了多少實體分數。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">純長打率 (ISO, Isolated Power)</span>
-              <p><span class="text-slate-400">定義：</span>過濾一壘安打水分，純粹衡量擊出長打（二壘打以上）的淨長打威力。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">ISO = SLG - AVG = (2H + 2×3H + 3×HR) / AB</span></p>
-              <p><span class="text-slate-400">意義：</span>區分短程巧打型（ISO &lt; .150）與重砲長打型（ISO &gt; .300）的決定性指標。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">場內安打率 (BABIP, Batting Average on Balls in Play)</span>
-              <p><span class="text-slate-400">定義：</span>擊球員將球擊入場內（排除三振與全壘打）形成安打的機率。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BABIP = (H - HR) / (AB - K - HR + SF)</span></p>
-              <p><span class="text-slate-400">意義：</span>慢壘防守站位深且無觸殺時差，BABIP 具體反映擊球落點穿透防線的品質、擊球初速與運氣成份。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">次級打擊率 (SecA, Secondary Average)</span>
-              <p><span class="text-slate-400">定義：</span>不依賴擊出安打，純粹衡量打者透過「額外長打」與「保送」獲取壘包的純粹產能，反映對投手施加之無形壓力。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SecA = (TB - H + BB) / AB</span></p>
-              <p><span class="text-slate-400">意義：</span>評估打者在安打以外能對投手造成多大壓迫，SecA 愈高代表長打破壞力與選球耐性愈強。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1 md:col-span-2">
-              <span class="font-bold text-white block text-sm">標準化攻擊指數 (OPS+)</span>
-              <p><span class="text-slate-400">定義：</span>將球員個人 OPS 相較於全隊平均 OPS 進行正規化所得的百分比指數。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OPS+ = (OPS / Team_OPS) × 100</span></p>
-              <p><span class="text-slate-400">意義：</span>數值以 100 為中位數基準；OPS+ 達 135 代表其綜合攻擊破壞力優於全隊平均 35%，低於 100 則低於隊均。</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="space-y-3">
-          <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
-            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-            <h4 class="text-sm font-bold text-amber-300">三、好球帶辨識與擊球控制指標</h4>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">擊球掌握率 (Contact%)</span>
-              <p><span class="text-slate-400">定義：</span>打者在打數中成功將球擊出（未吞下三振）的機率。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">Contact% = (AB - K) / AB</span></p>
-              <p><span class="text-slate-400">意義：</span>衡量打者的球眼穩定度與揮空迴避能力。慢壘防守破綻多，擊出球即能對守備施加失誤壓力。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">保送三振比 (BB/K)</span>
-              <p><span class="text-slate-400">定義：</span>打者每吞下一次三振，所能換取之四壞保送次數。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BB/K = BB / K (若 K=0 則計為 BB 總數)</span></p>
-              <p><span class="text-slate-400">意義：</span>經典選球控制比例。BB/K 大於 1.0 代表選球正向產出多於無效揮空；大於 2.0 屬頂級好球帶掌舵者。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">四壞保送率 (BB%)</span>
-              <p><span class="text-slate-400">定義：</span>平均每打席選到四壞保送的機率。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BB% = BB / PA</span></p>
-              <p><span class="text-slate-400">意義：</span>衡量耐心辨識壞球的能力。慢壘好球率高，BB% 超過 15% 即屬保送機器。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">三振率 (K%)</span>
-              <p><span class="text-slate-400">定義：</span>平均每打席吞下三振出局的機率。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">K% = K / PA</span></p>
-              <p><span class="text-slate-400">意義：</span>無效打席產生率，慢壘 K% 理論上應壓制在 5% 以下，K% 過高代表追打兩好球後大壞球嚴重。</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="space-y-3">
-          <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
-            <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-            <h4 class="text-sm font-bold text-purple-300">四、經典打擊三圍與綜合產能</h4>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">打擊率 (AVG, Batting Average)</span>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">AVG = H / AB</span></p>
-              <p><span class="text-slate-400">意義：</span>每打數擊出安打的機率，反映擊球穿透防守的最基本頻率。慢壘隊均水準約在 .500 上下。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">上壘率 (OBP, On-Base Percentage)</span>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OBP = (H + BB) / (AB + BB + SF)</span></p>
-              <p><span class="text-slate-400">意義：</span>衡量打者站上打擊區「避免製造出局數」的機率，為攻勢串連之最關鍵基準。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">長打率 (SLG, Slugging Percentage)</span>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SLG = (1H + 2×2H + 3×3H + 4×HR) / AB = TB / AB</span></p>
-              <p><span class="text-slate-400">意義：</span>打者平均每打數所能推進的總壘包數，量化長打破壞力。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">整體攻擊指數 (OPS, On-base Plus Slugging)</span>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OPS = OBP + SLG</span></p>
-              <p><span class="text-slate-400">意義：</span>結合上壘與長打的經典指標。慢壘中 OPS 達 1.200 即屬優異，超過 1.500 屬頂級重砲打者。</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="space-y-3">
-          <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
-            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-            <h4 class="text-sm font-bold text-slate-300">五、基礎計數指標速查 (Counting Statistics)</h4>
-          </div>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pl-2 text-[11px]">
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打席 (PA)</span>總打擊輪次 = AB + BB + SF (下拉 1-10)</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">打數 (AB)</span>有效打擊數 = PA - BB - SF (自算)</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">安打 (H)</span>擊球安全上壘 = 1H+2H+3H+HR (自算)</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">壘打數 (TB)</span>1H + 2×2H + 3×3H + 4×HR</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">四壞 (BB)</span>選到 4 顆壞球保送上一壘</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">高犧 (SF)</span>出局但護送三壘跑者回本壘得分</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">三振 (K)</span>累計 3 顆好球揮空或未出棒出局</div>
-            <div class="bg-slate-950 p-2.5 rounded border border-slate-800/60"><span class="font-bold text-white block">長打分項</span>1H (一壘) / 2H (二壘) / 3H (三壘) / HR (全壘打)</div>
-          </div>
-        </section>
-
-        <section class="space-y-3">
-          <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
-            <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-            <h4 class="text-sm font-bold text-rose-300">六、多變量交叉比對與統計工具</h4>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">百分位排名 (PR 值, Percentile Rank)</span>
-              <p><span class="text-slate-400">定義：</span>將全隊不同單位的數值透過 Min-Max 最小-最大標準化映射至 0–100 區間。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">PR = ((X - Min) / (Max - Min)) × 100</span></p>
-              <p><span class="text-slate-400">意義：</span>用於五維能力雷達圖，直觀呈現選手在隊內的相對位階，PR 90 代表該指標優於全隊 90% 選手。</p>
-            </div>
-            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
-              <span class="font-bold text-white block text-sm">皮爾森積差相關係數 (Pearson Correlation, r)</span>
-              <p><span class="text-slate-400">定義：</span>衡量兩個連續變量（如 X 軸上壘率與 Y 軸 wRC+）之間線性關聯強弱的統計量數。</p>
-              <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">r = Σ(X - X̄)(Y - Ȳ) / (√Σ(X - X̄)² √Σ(Y - Ȳ)²)</span></p>
-              <p><span class="text-slate-400">意義：</span>介於 -1.0 至 +1.0 之間。|r| &gt; 0.7 為高度相關，|r| 介於 0.4–0.7 為中度相關，輔助球隊驗證打擊指標與得分產能的真實連動性。</p>
-            </div>
-          </div>
-        </section>
+        <div class="bg-sky-950/20 border border-sky-800/40 rounded-xl p-4 space-y-2">
+          <span class="font-bold text-sky-300 block text-sm">慢壘特化核心：好球帶紀律指數 (SDI)</span>
+          <p><span class="font-semibold text-slate-200">公式：</span><span class="font-mono text-amber-300 font-bold">SDI = (BB - 1.5 × K) / PA</span></p>
+          <p class="text-slate-400">慢壘好球帶寬、球速慢，吞 K 懲罰 1.5 倍，打破「不保送就等於不會選球」的盲點。</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">wRC+</span>(wOBA / Team_wOBA) × 100，基準值 100</div>
+          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">wOBA</span>(0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA</div>
+          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">RC</span>(H + BB) × TB / (AB + BB)</div>
+          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">ISO</span>SLG - AVG = (2H + 2×3H + 3×HR) / AB</div>
+          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">BABIP</span>(H - HR) / (AB - K - HR + SF)</div>
+          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">Contact%</span>(AB - K) / AB</div>
+        </div>
       </div>
 
       <div class="p-3 sm:p-4 border-t border-slate-800 bg-slate-950 flex justify-end">
-        <button onclick="closeGlossaryModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-1.5 rounded-lg text-xs font-medium">關閉圖書館</button>
+        <button onclick="closeGlossaryModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-1.5 rounded-lg text-xs font-medium">關閉速查</button>
       </div>
     </div>
   </div>
@@ -884,104 +919,104 @@
 
     const leaderboardGlossary = {
       wrc_plus: {
-        title: "加權得分創造 (wRC+, Weighted Runs Created Plus)",
+        title: "加權得分創造 (wRC+)",
         formula: "wRC+ = (wOBA / Team_wOBA) × 100",
-        desc: "以全隊平均 wOBA 為基準的綜合進攻效率指數，透過加權上壘率反映真實得分效益，與 OPS+ 和 OPS 的對應關係完全一致。"
+        desc: "以全隊平均 wOBA 為基準的綜合進攻效率指數，透過加權上壘率反映真實得分效益。"
       },
       ops: {
-        title: "整體攻擊指數 (OPS, On-base Plus Slugging)",
+        title: "整體攻擊指數 (OPS)",
         formula: "OPS = OBP + SLG",
-        desc: "結合上壘能力（避免出局）與長打破壞力（壘包推進）的經典綜合指標。慢壘中高於 1.200 即屬優異，超過 1.500 屬頂級重砲打者。"
+        desc: "結合上壘能力與長打破壞力的經典綜合指標。慢壘中高於 1.200 即屬優異。"
       },
       ops_plus: {
         title: "標準化攻擊指數 (OPS+)",
         formula: "OPS+ = (OPS / Team_OPS) × 100",
-        desc: "個人 OPS 相較於全隊平均的百分比指數，達 135 代表其綜合攻擊破壞力優於全隊平均 35%，低於 100 則低於隊均。"
+        desc: "個人 OPS 相較於全隊平均的百分比指數，100 為隊均基準。"
       },
       woba: {
-        title: "加權上壘率 (wOBA, Weighted On-Base Average)",
+        title: "加權上壘率 (wOBA)",
         formula: "wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA",
-        desc: "依據賽伯計量得分期望值（Run Expectancy）賦予各進攻事件精確線性權重之上壘指標。"
+        desc: "依據得分期望值賦予各進攻事件精確線性權重之上壘指標。"
       },
       rc: {
-        title: "預估創造得分 (RC, Runs Created)",
+        title: "預估創造得分 (RC)",
         formula: "RC = (H + BB) × TB / (AB + BB)",
-        desc: "由 Bill James 發明，將「上壘因子（H+BB）」乘上「壘包推進因子（TB）」，直觀評估球員在該時間區間內總共為球隊換取了多少實體分數。"
+        desc: "評估球員在該時間區間內總共為球隊換取了多少實體分數。"
       },
       avg: {
-        title: "打擊率 (AVG, Batting Average)",
+        title: "打擊率 (AVG)",
         formula: "AVG = H / AB",
-        desc: "每打數擊出安打的機率，反映擊球穿透防守的最基本頻率。慢壘隊均水準約在 .500 上下。"
+        desc: "每打數擊出安打的機率，慢壘隊均水準約在 .500 上下。"
       },
       obp: {
-        title: "上壘率 (OBP, On-Base Percentage)",
+        title: "上壘率 (OBP)",
         formula: "OBP = (H + BB) / (AB + BB + SF)",
-        desc: "衡量打者站上打擊區「避免製造出局數」的機率，為攻勢延續與堆積壘包之最關鍵基準。"
+        desc: "衡量打者站上打擊區「避免製造出局數」的機率。"
       },
       slg: {
-        title: "長打率 (SLG, Slugging Percentage)",
-        formula: "SLG = TB / AB = (1H + 2×2H + 3×3H + 4×HR) / AB",
-        desc: "打者平均每打數所能推進的總壘包數，純粹量化長程砲火之破壞力。"
+        title: "長打率 (SLG)",
+        formula: "SLG = TB / AB",
+        desc: "打者平均每打數所能推進的總壘包數。"
       },
       iso: {
-        title: "純長打率 (ISO, Isolated Power)",
-        formula: "ISO = SLG - AVG = (2H + 2×3H + 3×HR) / AB",
-        desc: "過濾一壘安打水分，純粹衡量擊出二壘安打以上的淨長打威力。慢壘 ISO 高於 .250 屬重砲打者。"
+        title: "純長打率 (ISO)",
+        formula: "ISO = SLG - AVG",
+        desc: "過濾一壘安打水分，純粹衡量擊出長打的淨破壞力。"
       },
       babip: {
-        title: "場內安打率 (BABIP, Batting Average on Balls in Play)",
+        title: "場內安打率 (BABIP)",
         formula: "BABIP = (H - HR) / (AB - K - HR + SF)",
-        desc: "擊球員將球擊入場內（排除三振與全壘打）形成安打的機率。慢壘防守站位深且無觸殺時差，具體反映擊球落點品質、初速與運氣成份。"
+        desc: "擊球員將球擊入場內形成安打的機率。"
       },
       seca: {
-        title: "次級打擊率 (SecA, Secondary Average)",
+        title: "次級打擊率 (SecA)",
         formula: "SecA = (TB - H + BB) / AB",
-        desc: "不依賴擊出安打，純粹衡量打者透過「額外長打」與「保送」獲取壘包的純粹產能，反映對投手施加之無形壓力。"
+        desc: "純粹衡量打者透過額外長打與保送獲取壘包之產能。"
       },
       sdi: {
-        title: "慢壘好球帶紀律指數 (SDI, Softball Discipline Index)",
+        title: "慢壘好球帶紀律指數 (SDI)",
         formula: "SDI = (BB - 1.5 × K) / PA",
-        desc: "專為慢壘特性設計。慢壘保送稀少且吞 K 代價極高，以 1.5 倍懲罰三振，打破傳統「不選保送就是盲劍客」的偏差，實質獎勵積極攻擊且零三振的強打者。"
+        desc: "慢壘保送稀少且吞 K 代價極高，以 1.5 倍懲罰三振，實質獎勵積極攻擊且零三振的強打者。"
       },
       contact_pct: {
         title: "擊球掌握率 (Contact%)",
         formula: "Contact% = (AB - K) / AB",
-        desc: "打者在打數中成功將球擊出（未吞下三振）的機率，衡量打者的球眼穩定度與抗揮空能力。"
+        desc: "打者成功將球擊出未吞三振的機率。"
       },
       bb_pct: {
         title: "四壞保送率 (BB%)",
         formula: "BB% = BB / PA",
-        desc: "平均每打席選到四壞保送的機率。慢壘好球率高，BB% 超過 15% 即屬保送機器。"
+        desc: "平均每打席選到四壞保送的機率。"
       },
       k_pct_asc: {
         title: "三振率 (K%) [低至高排序]",
         formula: "K% = K / PA",
-        desc: "平均每打席吞下三振出局的機率。慢壘標準應壓制在 5% 以下，此排行榜以低三振率為優先。"
+        desc: "平均每打席吞下三振出局的機率，以低三振率優先排序。"
       },
       bb_k_ratio: {
         title: "保送三振比 (BB/K)",
-        formula: "BB/K = BB / K (若 K=0 則計為 BB 總數)",
-        desc: "經典選球控制比例。BB/K 大於 1.0 代表選球正向產出多於無效揮空；大於 2.0 屬頂級好球帶掌控水準。"
+        formula: "BB/K = BB / K (K=0 則計為 BB 數)",
+        desc: "選球控制比例，大於 1.0 代表選球正向產出多於無效揮空。"
       },
       h: {
-        title: "安打數 (Hits, H)",
+        title: "安打數 (H)",
         formula: "H = 1H + 2H + 3H + HR (自算)",
-        desc: "打者安全上壘且未藉由失誤或野手選擇的總打擊次數。"
+        desc: "擊出安打之總次數。"
       },
       hr: {
-        title: "全壘打數 (Home Runs, HR)",
+        title: "全壘打數 (HR)",
         formula: "全壘打累計總支數",
-        desc: "一棒清壘之最高進攻產物，慢壘長打能力與力量釋放之極致展現。"
+        desc: "一棒清壘之最高進攻產物。"
       },
       bb: {
-        title: "四壞保送數 (Base on Balls, BB)",
+        title: "四壞保送數 (BB)",
         formula: "四壞保送累計次數",
-        desc: "累計獲得 4 顆壞球而安全保送上一壘的次數，展現球眼耐性。"
+        desc: "選球耐性之計數展現。"
       },
       pa: {
-        title: "打席數 (Plate Appearances, PA)",
-        formula: "PA = AB + BB + SF (下拉選單 1-10)",
-        desc: "打者完成完整打擊輪次的總次數，為評估出賽貢獻與樣本可信度之基礎。"
+        title: "打席數 (PA)",
+        formula: "PA = AB + BB + SF",
+        desc: "打者完成完整打擊輪次的總次數。"
       }
     };
 
@@ -991,23 +1026,25 @@
         tabProfile: document.getElementById('panelProfile'),
         tabLeaderboard: document.getElementById('panelLeaderboard'),
         tabAnalytics: document.getElementById('panelAnalytics'),
-        tabCompare: document.getElementById('panelCompare')
+        tabCompare: document.getElementById('panelCompare'),
+        tabGlossary: document.getElementById('panelGlossary')
       };
       const buttons = {
         tabOverview: document.getElementById('btnTabOverview'),
         tabProfile: document.getElementById('btnTabProfile'),
         tabLeaderboard: document.getElementById('btnTabLeaderboard'),
         tabAnalytics: document.getElementById('btnTabAnalytics'),
-        tabCompare: document.getElementById('btnTabCompare')
+        tabCompare: document.getElementById('btnTabCompare'),
+        tabGlossary: document.getElementById('btnTabGlossary')
       };
 
       Object.keys(panels).forEach(key => {
         if (key === tabId) {
-          panels[key].classList.remove('hidden');
-          buttons[key].className = 'tab-active text-xs px-3 py-1.5 rounded-lg border font-bold transition flex items-center gap-1.5 shadow-sm whitespace-nowrap shrink-0';
+          if (panels[key]) panels[key].classList.remove('hidden');
+          if (buttons[key]) buttons[key].className = 'tab-active text-xs px-3 py-1.5 rounded-lg border font-bold transition flex items-center gap-1.5 shadow-sm whitespace-nowrap shrink-0';
         } else {
-          panels[key].classList.add('hidden');
-          buttons[key].className = 'text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0';
+          if (panels[key]) panels[key].classList.add('hidden');
+          if (buttons[key]) buttons[key].className = 'text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0';
         }
       });
 
@@ -1023,8 +1060,12 @@
       }
     };
 
-    window.openGlossaryModal = function() { document.getElementById('glossaryModal').classList.remove('hidden'); };
-    window.closeGlossaryModal = function() { document.getElementById('glossaryModal').classList.add('hidden'); };
+    window.openGlossaryModal = function() {
+      switchMainTab('tabGlossary');
+    };
+    window.closeGlossaryModal = function() {
+      document.getElementById('glossaryModal').classList.add('hidden');
+    };
 
     window.toggleDiagnosticsCollapse = function() {
       const content = document.getElementById('diagnosticsContent');
@@ -1247,7 +1288,6 @@
       }
     }
 
-    // 全站頭像核心渲染器
     function renderAvatarElement(name, sizeClass = 'w-9 h-9 text-xs') {
       const avatarData = playerAvatars[name];
       if (avatarData) {
@@ -1377,7 +1417,7 @@
       if (!isDragging || e.touches.length !== 1) return;
       e.preventDefault();
       cropOffsetX = dragStartOffsetX + (e.touches[0].clientX - dragStartX);
-      cropOffsetY = dragStartOffsetY + (e.clientY - dragStartY);
+      cropOffsetY = dragStartOffsetY + (e.touches[0].clientY - dragStartY);
       drawCropCanvas();
     }, { passive: false });
 
@@ -2430,7 +2470,7 @@
 
         tr.innerHTML = `
           <td class="p-3 font-bold text-white flex items-center space-x-3">
-            ${renderAvatarElement(p.name, 'w-9 h-9 text-xs ring-2 ring-sky-500/40')}
+            ${renderAvatarElement(p.name, 'w-8 h-8 sm:w-9 sm:h-9 text-xs ring-2 ring-sky-500/40')}
             <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-xs mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
           <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.pa}</td>
@@ -2526,16 +2566,16 @@
 
         paginationEl.innerHTML = `
           <div class="text-slate-400 font-mono">
-            顯示第 <span class="text-slate-200 font-bold tabular-nums">${startNum}</span> - <span class="text-slate-200 font-bold tabular-nums">${endNum}</span> 筆 / 共 <span class="text-sky-400 font-bold tabular-nums">${totalLogs}</span> 筆紀錄 (每頁 15 筆)
+            顯示第 <span class="text-slate-200 font-bold tabular-nums">${startNum}</span> - <span class="text-slate-200 font-bold tabular-nums">${endNum}</span> 筆 / 共 <span class="text-sky-400 font-bold tabular-nums">${totalLogs}</span> 筆
           </div>
           <div class="flex items-center space-x-1.5 font-mono">
-            <button onclick="changeLogsPage(${currentLogsPage - 1})" ${currentLogsPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-950 border border-slate-800 text-slate-500 px-3 py-1 rounded-md"' : 'class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1 rounded-md transition"'}>
+            <button onclick="changeLogsPage(${currentLogsPage - 1})" ${currentLogsPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-950 border border-slate-800 text-slate-500 px-2.5 py-1 rounded-md"' : 'class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-md transition"'}>
               上一頁
             </button>
-            <span class="px-3 py-1 bg-slate-950 border border-slate-800 rounded-md text-sky-400 font-bold tabular-nums">
+            <span class="px-2.5 py-1 bg-slate-950 border border-slate-800 rounded-md text-sky-400 font-bold tabular-nums">
               ${currentLogsPage} / ${totalPages}
             </span>
-            <button onclick="changeLogsPage(${currentLogsPage + 1})" ${currentLogsPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-950 border border-slate-800 text-slate-500 px-3 py-1 rounded-md"' : 'class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1 rounded-md transition"'}>
+            <button onclick="changeLogsPage(${currentLogsPage + 1})" ${currentLogsPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-950 border border-slate-800 text-slate-500 px-2.5 py-1 rounded-md"' : 'class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-md transition"'}>
               下一頁
             </button>
           </div>
@@ -2583,10 +2623,10 @@
       if (!hint) return;
       if (JERSEY_TO_NAME[num]) {
         const pName = JERSEY_TO_NAME[num];
-        hint.innerHTML = `<span class="inline-flex items-center gap-1.5">${renderAvatarElement(pName, 'w-6 h-6 text-[10px]')}<span>鎖定球員：#${num} ${pName}</span></span>`;
-        hint.className = 'block text-xs text-emerald-400 mt-1 min-h-[24px] font-medium';
+        hint.innerHTML = `<span class="inline-flex items-center gap-1.5">${renderAvatarElement(pName, 'w-5 h-5 text-[10px]')}<span>鎖定：#${num} ${pName}</span></span>`;
+        hint.className = 'block text-xs text-emerald-400 mt-1 min-h-[20px] font-medium';
       } else if (e.target.value.trim() !== '') {
-        hint.textContent = '查無此背號，若為新隊員請先透過「新增球隊球員」建檔';
+        hint.textContent = '查無此背號，若為新隊員請先新增球員';
         hint.className = 'block text-[10px] text-rose-400 mt-0.5 min-h-[16px] font-medium';
       } else {
         hint.textContent = '';
@@ -2627,7 +2667,7 @@
       const jerseyNum = Number(document.getElementById('new_jersey').value.trim());
       const playerName = JERSEY_TO_NAME[jerseyNum];
       if (!playerName) {
-        alert(`查無背號 #${jerseyNum} 之球員！\n若為新球員，請先點擊「+ 新增球隊球員」建立檔案。`);
+        alert(`查無背號 #${jerseyNum} 之球員！\n請先點擊「+ 新增球隊球員」建立檔案。`);
         return;
       }
 
@@ -2659,7 +2699,7 @@
       selectedPlayerName = newEntry.name;
       currentLogsPage = 1;
 
-      const success = await commitLogsToGitHub(updated, `feat: add match record for #${jerseyNum} ${newEntry.name} on ${newEntry.date}`);
+      const success = await commitLogsToGitHub(updated, `feat: add match record for #${jerseyNum} ${newEntry.name}`);
       if (success) {
         document.getElementById('addLogForm').reset();
         const hint = document.getElementById('jerseyMatchHint');
@@ -2723,7 +2763,7 @@
       }).join('');
       const badgeEl = document.getElementById('playerSelectAvatarBadge');
       if (badgeEl && selectedPlayerName) {
-        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-8 h-8 text-xs ring-2 ring-sky-400/80 shadow');
+        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-7 h-7 sm:w-8 sm:h-8 text-xs ring-2 ring-sky-400/80 shadow');
       }
     }
 
@@ -2754,7 +2794,7 @@
       selectedPlayerName = e.target.value;
       const badgeEl = document.getElementById('playerSelectAvatarBadge');
       if (badgeEl) {
-        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-8 h-8 text-xs ring-2 ring-sky-400/80 shadow');
+        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-7 h-7 sm:w-8 sm:h-8 text-xs ring-2 ring-sky-400/80 shadow');
       }
       const agg = getAggregatedStats(getFilteredLogs());
       renderPlayerProfile(agg);
@@ -2786,15 +2826,15 @@
     document.getElementById('tabSummaryBtn').addEventListener('click', () => {
       document.getElementById('viewSummary').classList.remove('hidden');
       document.getElementById('viewLogs').classList.add('hidden');
-      document.getElementById('tabSummaryBtn').className = 'bg-sky-600 text-white text-xs px-3.5 py-1.5 rounded-lg font-bold shadow';
-      document.getElementById('tabLogsBtn').className = 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded-lg font-medium';
+      document.getElementById('tabSummaryBtn').className = 'bg-sky-600 text-white text-xs px-3 sm:px-3.5 py-1.5 rounded-lg font-bold shadow';
+      document.getElementById('tabLogsBtn').className = 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 sm:px-3.5 py-1.5 rounded-lg font-medium';
     });
 
     document.getElementById('tabLogsBtn').addEventListener('click', () => {
       document.getElementById('viewSummary').classList.add('hidden');
       document.getElementById('viewLogs').classList.remove('hidden');
-      document.getElementById('tabLogsBtn').className = 'bg-sky-600 text-white text-xs px-3.5 py-1.5 rounded-lg font-bold shadow';
-      document.getElementById('tabSummaryBtn').className = 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded-lg font-medium';
+      document.getElementById('tabLogsBtn').className = 'bg-sky-600 text-white text-xs px-3 sm:px-3.5 py-1.5 rounded-lg font-bold shadow';
+      document.getElementById('tabSummaryBtn').className = 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 sm:px-3.5 py-1.5 rounded-lg font-medium';
     });
 
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
