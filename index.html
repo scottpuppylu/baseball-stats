@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0435</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0535</span>
         </div>
 
 
@@ -1828,7 +1828,17 @@
     const DEFENSE_FILE_PATH = "data/defense.json";
     const GAMES_FILE_PATH = "data/games.json";
     let currentGamesSha = null;
-    let allGames = window.allGames = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
+    // 歷史場記資料庫 (嚴格過濾模擬賽事，絕對不污染使用者真實數據)
+    let allGames = window.allGames = (function() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
+        const cleaned = stored.filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
+        localStorage.setItem('rebas_all_games', JSON.stringify(cleaned));
+        return cleaned;
+      } catch (e) {
+        return [];
+      }
+    })();
     let activeGame = window.activeGame = JSON.parse(localStorage.getItem('rebas_active_game')) || null;
 
 
@@ -2060,7 +2070,7 @@
           </div>
           <div class="flex items-center space-x-2 text-white font-bold text-sm">
             <span>#${NAME_TO_JERSEY[currentName] ?? ''} ${currentName}</span>
-            <span class="text-xs font-normal text-slate-400">(${activeGame.hasDh && slot === activeGame.dhSlot ? 'DH' : '先發'})</span>
+            <span class="text-xs font-normal text-slate-400">(打線第 ${slot} 棒)</span>
           </div>
         `;
       }
@@ -2108,6 +2118,15 @@
       }
       const idx = activeGame.currentBatterIdx;
       const oldPlayer = activeGame.lineup[idx];
+      activeGame.substitutions = activeGame.substitutions || [];
+      activeGame.substitutions.push({
+        inning: activeGame.currentInning,
+        half: activeGame.currentHalf,
+        slot: idx + 1,
+        outPlayer: oldPlayer,
+        inPlayer: chosenPlayer,
+        timestamp: Date.now()
+      });
       activeGame.lineup[idx] = chosenPlayer;
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
       closeSubstituteModal();
@@ -4365,64 +4384,98 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     // ★★★ 核心保護架構：手動日誌庫 (data/logs.json) 與歷史場記 (data/games.json) 完全獨立，永不相互覆蓋！
-    function getFilteredLogs() {
-      const s = document.getElementById('filterStartDate').value;
-      const e = document.getElementById('filterEndDate').value;
+    
+    // 取得賽事正規棒次出賽打者清單 (包含先發 10/11 人與所有替補，依棒次順序排列)
+    window.getGameOrderedBatters = getGameOrderedBatters;
+    function getGameOrderedBatters(game) {
+      if (!game) return [];
+      const ordered = [];
+      const addedNames = new Set();
+      
+      const startLineup = (game.startingLineup && game.startingLineup.length > 0)
+        ? game.startingLineup
+        : (game.lineup || []);
+      
+      const targetSlotsCount = Math.max(startLineup.length, (game.lineup || []).length, 10);
+      
+      for (let s = 1; s <= targetSlotsCount; s++) {
+        let starter = startLineup[s - 1] || null;
+        if (!starter && game.innings) {
+          for (const inn of game.innings) {
+            for (const pa of (inn.plateAppearances || [])) {
+              if (pa.slot === s && pa.batterName) {
+                starter = pa.batterName;
+                break;
+              }
+            }
+            if (starter) break;
+          }
+        }
+        if (!starter && game.lineup && game.lineup[s - 1]) {
+          starter = game.lineup[s - 1];
+        }
 
-      // 1. 手動登記日誌 (純手動輸入與建檔，受到絕對保護，永不被場記覆蓋)
-      const targetLogs = (typeof window !== 'undefined' && window.allLogs && window.allLogs.length > 0) ? window.allLogs : allLogs;
-      const manualLogs = targetLogs.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+        if (starter && !addedNames.has(starter)) {
+          ordered.push({ slot: s, name: starter, isSub: false, subOrder: 0 });
+          addedNames.add(starter);
+        }
 
-      // 2. 歷史場記比賽動態轉化為日誌 (即時從 allGames 計算，記憶體動態合成，不寫死覆蓋 data/logs.json)
-      const targetGames = (typeof window !== 'undefined' && window.allGames) ? window.allGames : allGames;
-      const gameLogs = [];
-      (targetGames || []).forEach(game => {
-        const statsMap = {};
-        (game.lineup || []).forEach(name => {
-          // 支援選手僅限實況記錄與該場比賽內，不計入全隊日誌與個人累計總表
-          const isGuest = (guestPlayers || []).some(g => g.name === name) || name.includes('支援');
-          if (isGuest) return;
-          statsMap[name] = {
-            name, jersey: NAME_TO_JERSEY[name] ?? 0,
-            pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0
-          };
-        });
+        if (game.substitutions && Array.isArray(game.substitutions)) {
+          game.substitutions.forEach((sub, subIdx) => {
+            if (sub.slot === s && sub.inPlayer && !addedNames.has(sub.inPlayer)) {
+              ordered.push({ slot: s, name: sub.inPlayer, isSub: true, subOrder: subIdx + 1 });
+              addedNames.add(sub.inPlayer);
+            }
+          });
+        }
+        if (game.innings) {
+          game.innings.forEach(inn => {
+            (inn.plateAppearances || []).forEach(pa => {
+              if (pa.slot === s && pa.batterName && !addedNames.has(pa.batterName)) {
+                ordered.push({ slot: s, name: pa.batterName, isSub: true, subOrder: 99 });
+                addedNames.add(pa.batterName);
+              }
+            });
+          });
+        }
+        if (game.lineup && game.lineup[s - 1] && !addedNames.has(game.lineup[s - 1])) {
+          ordered.push({ slot: s, name: game.lineup[s - 1], isSub: true, subOrder: 100 });
+          addedNames.add(game.lineup[s - 1]);
+        }
+      }
 
-        (game.innings || []).forEach(inn => {
+      if (game.innings) {
+        game.innings.forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
-            const p = statsMap[pa.batterName];
-            if (p) {
-              p.pa++;
-              if (!['BB', 'SF'].includes(pa.result)) p.ab++;
-              if (pa.result === '1H') { p.h++; p.h1++; }
-              else if (pa.result === '2H') { p.h++; p.h2++; }
-              else if (pa.result === '3H') { p.h++; p.h3++; }
-              else if (pa.result === 'HR') { p.h++; p.hr++; }
-              else if (pa.result === 'BB') p.bb++;
-              else if (pa.result === 'SF') p.sf++;
-              else if (['K', 'K_FOUL', '界外K'].includes(pa.result)) p.k++;
+            if (pa.batterName && !addedNames.has(pa.batterName)) {
+              ordered.push({ slot: pa.slot || targetSlotsCount, name: pa.batterName, isSub: true, subOrder: 999 });
+              addedNames.add(pa.batterName);
             }
           });
         });
+      }
 
-        Object.values(statsMap).forEach(p => {
-          if (p.pa > 0) {
-            gameLogs.push({
-              id: `log_game_${game.id}_${p.jersey}`,
-              date: game.date,
-              tag: `場記賽事: ${game.tag || '聯賽'} vs ${game.opponent}`,
-              name: p.name,
-              jersey: p.jersey,
-              pa: p.pa, ab: p.ab, h: p.h,
-              h1: p.h1, h2: p.h2, h3: p.h3, hr: p.hr,
-              bb: p.bb, sf: p.sf, k: p.k
-            });
-          }
-        });
+      return ordered;
+    }
+
+    window.getGameAllBatters = getGameAllBatters;
+    function getGameAllBatters(game) {
+      const ordered = getGameOrderedBatters(game);
+      const uniqueNames = [];
+      ordered.forEach(b => {
+        if (!uniqueNames.includes(b.name)) uniqueNames.push(b.name);
       });
+      return uniqueNames;
+    }
 
-      const combined = [...gameLogs, ...manualLogs];
-      return combined.filter(item => {
+    function getFilteredLogs() {
+      const s = document.getElementById('filterStartDate')?.value || '';
+      const e = document.getElementById('filterEndDate')?.value || '';
+      // 賽事日誌與比賽紀錄徹底分離：日誌列表僅展示使用者登記之日誌，絕不自動由場記灌入日誌
+      const targetLogs = (typeof window !== 'undefined' && window.allLogs && window.allLogs.length > 0) ? window.allLogs : allLogs;
+      // 確保排除任何舊版殘留之自動日誌
+      const cleanLogs = targetLogs.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+      return cleanLogs.filter(item => {
         if (s && item.date < s) return false;
         if (e && item.date > e) return false;
         return true;
@@ -6032,71 +6085,25 @@ window.toggleDiagnosticsCollapse = function() {
     let selectedSprayPlayer = 'all';
     let currentSprayFilter = 'all'; // 'all', 'hits', 'extra', 'outs'
 
-    // 內建示範歷史比賽 (若雲端與本地皆為空時作為初始展示)
-    const baselineSampleGames = [
-      {
-        id: "game_20260315_mech",
-        date: "2026-03-15",
-        opponent: "機械系壘",
-        tag: "春季友誼邀請賽",
-        hasDh: true,
-        ourRole: "先攻",
-        lineup: ["廖仲毅", "盧宣嘉", "劉憬翰", "簡承均", "陳柏翰", "陳威騏", "陳泓銘", "洪銘駿", "孫煜哲", "田耕宇", "謝承祐"],
-        dhSlot: 9,
-        status: "finished",
-        finalScore: { us: 10, opp: 6 },
-        innings: [
-          {
-            inningNum: 1,
-            topBottom: "top",
-            runs: 3,
-            hits: 3,
-            plateAppearances: [
-              { batterOrder: 1, batterName: "廖仲毅", jersey: 41, result: "BB", trajectory: "none", location: "C", x: 0.50, y: 0.94, rbi: 0, runsScored: 0, outsAdded: 0, textSummary: "選球精準四壞保送上壘", outsAtEnd: 0 },
-              { batterOrder: 2, batterName: "盧宣嘉", jersey: 44, result: "2H", trajectory: "line", location: "LF", x: 0.22, y: 0.32, rbi: 1, runsScored: 1, outsAdded: 0, textSummary: "左外野深遠平飛二壘安打 (1分打點)", outsAtEnd: 0 },
-              { batterOrder: 3, batterName: "劉憬翰", jersey: 2, result: "FO", trajectory: "fly", location: "SF", x: 0.41, y: 0.24, rbi: 0, runsScored: 0, outsAdded: 1, textSummary: "左中外野深遠高飛球遭接殺 (1出局)", outsAtEnd: 1 },
-              { batterOrder: 4, batterName: "簡承均", jersey: 8, result: "HR", trajectory: "fly", location: "RC", x: 0.65, y: 0.12, rbi: 2, runsScored: 2, outsAdded: 0, textSummary: "右中外野兩分砲！一棒清壘！", outsAtEnd: 1 },
-              { batterOrder: 5, batterName: "陳柏翰", jersey: 98, result: "GO", trajectory: "grounder", location: "SS", x: 0.41, y: 0.55, rbi: 0, runsScored: 0, outsAdded: 1, textSummary: "游擊方向強勁滾地球刺殺 (2出局)", outsAtEnd: 2 },
-              { batterOrder: 6, batterName: "陳威騏", jersey: 99, result: "K", trajectory: "none", location: "C", x: 0.50, y: 0.94, rbi: 0, runsScored: 0, outsAdded: 1, textSummary: "揮棒落空吞三振 (3出局)", outsAtEnd: 3 }
-            ]
-          },
-          {
-            inningNum: 2,
-            topBottom: "top",
-            runs: 2,
-            hits: 2,
-            plateAppearances: [
-              { batterOrder: 7, batterName: "陳泓銘", jersey: 4, result: "1H", trajectory: "line", location: "2B", x: 0.59, y: 0.55, rbi: 0, runsScored: 0, outsAdded: 0, textSummary: "穿越二壘防線平飛安打", outsAtEnd: 0 },
-              { batterOrder: 8, batterName: "洪銘駿", jersey: 30, result: "1H", trajectory: "grounder", location: "1B", x: 0.69, y: 0.71, rbi: 0, runsScored: 0, outsAdded: 0, textSummary: "穿越一二壘間強勁滾地安打", outsAtEnd: 0 },
-              { batterOrder: 9, batterName: "孫煜哲", jersey: 31, result: "BB", trajectory: "none", location: "C", x: 0.50, y: 0.94, rbi: 0, runsScored: 0, outsAdded: 0, textSummary: "專職DH保送滿壘", outsAtEnd: 0 },
-              { batterOrder: 10, batterName: "田耕宇", jersey: 72, result: "GO", trajectory: "grounder", location: "P", x: 0.50, y: 0.65, rbi: 1, runsScored: 1, outsAdded: 1, textSummary: "投手前滾地球推進帶有 1 分打點 (1出局)", outsAtEnd: 1 },
-              { batterOrder: 11, batterName: "謝承祐", jersey: 47, result: "SF", trajectory: "fly", location: "RF", x: 0.78, y: 0.32, rbi: 1, runsScored: 1, outsAdded: 1, textSummary: "右外野高飛犧牲打，再添 1 分 (2出局)", outsAtEnd: 2 },
-              { batterOrder: 1, batterName: "廖仲毅", jersey: 41, result: "LO", trajectory: "line", location: "3B", x: 0.31, y: 0.71, rbi: 0, runsScored: 0, outsAdded: 1, textSummary: "三壘強勁平飛球遭直接接殺 (3出局)", outsAtEnd: 3 }
-            ]
-          }
-        ]
-      }
-    ];
+    // 示範歷史比賽定義為空，絕不預置或強制塞入任何模擬比賽到用戶資料庫中
+    const baselineSampleGames = [];
 
     async function loadGamesFromGitHub() {
       try {
         const { content, sha } = await fetchGitHubContent(GAMES_FILE_PATH);
         currentGamesSha = sha;
-        allGames = Array.isArray(content) ? content : [];
+        const rawGames = Array.isArray(content) ? content : [];
+        allGames = rawGames.filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
         localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
         return true;
       } catch (err) {
         try {
           const content = await fetchLocalContent(GAMES_FILE_PATH);
-          allGames = Array.isArray(content) ? content : [];
+          const rawGames = Array.isArray(content) ? content : [];
+          allGames = rawGames.filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
           localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
         } catch (e) {}
         return false;
-      } finally {
-        if (!allGames || allGames.length === 0) {
-          allGames = JSON.parse(JSON.stringify(baselineSampleGames));
-          localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-        }
       }
     }
 
@@ -6284,11 +6291,10 @@ window.toggleDiagnosticsCollapse = function() {
         const isGuest = guestNames.includes(currentName);
 
         return `
-          <div class="p-2.5 rounded-xl border bg-slate-900/90 ${isDh ? 'border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)]' : isGuest ? 'border-purple-600/70 bg-purple-950/20' : 'border-slate-800'} space-y-1">
+          <div class="p-2.5 rounded-xl border bg-slate-900/90 ${isGuest ? 'border-purple-600/70 bg-purple-950/20' : 'border-slate-800'} space-y-1">
             <div class="flex items-center justify-between text-[11px] font-mono">
-              <span class="font-bold ${isDh ? 'text-amber-400' : isGuest ? 'text-purple-300' : 'text-slate-300'}">第 ${slot} 棒</span>
+              <span class="font-bold ${isGuest ? 'text-purple-300' : 'text-slate-300'}">第 ${slot} 棒</span>
               <div class="flex items-center space-x-1">
-                ${isDh ? '<span class="text-[9px] text-amber-300 bg-amber-950 px-1 rounded border border-amber-700/60 font-bold">DH</span>' : ''}
                 ${isGuest ? '<span class="text-[9px] text-purple-300 bg-purple-950 px-1 rounded border border-purple-700/60 font-bold">支援</span>' : ''}
               </div>
             </div>
@@ -6357,7 +6363,9 @@ window.toggleDiagnosticsCollapse = function() {
         hasDh: isDhEnabled,
         dhSlot: isDhEnabled ? (customDhSlot || 4) : null,
         ourRole: role, // '先攻' 或 '後攻'
-        lineup: cleanLineup,
+        lineup: [...cleanLineup],
+        startingLineup: [...cleanLineup], // 永久鎖定先發 10/11 人名單
+        substitutions: [], // 完整記錄換人歷程
         pitcherName: '盧宣嘉',
         currentInning: 1,
         currentHalf: 'top', // ★★★ 棒球/壘球鐵律：不論先攻或後攻，比賽絕對皆從第 1 局「上半」開始！
@@ -6553,7 +6561,7 @@ window.toggleDiagnosticsCollapse = function() {
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <span class="text-xs font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40">第 ${slot} 棒${isDh ? ' [DH]' : ''}</span>
+              <span class="text-xs font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40">第 ${slot} 棒</span>
               <h3 class="text-base sm:text-lg font-black text-white">${batterName}</h3>
             </div>
             <p class="text-xs text-slate-400 font-mono mt-0.5">
@@ -6761,6 +6769,15 @@ window.toggleDiagnosticsCollapse = function() {
 
       if (isReplace && !isNaN(replaceSlotIdx) && replaceSlotIdx >= 0 && replaceSlotIdx < activeGame.lineup.length) {
         const oldBatter = activeGame.lineup[replaceSlotIdx];
+        activeGame.substitutions = activeGame.substitutions || [];
+        activeGame.substitutions.push({
+          inning: activeGame.currentInning,
+          half: activeGame.currentHalf,
+          slot: replaceSlotIdx + 1,
+          outPlayer: oldBatter,
+          inPlayer: newPitcher,
+          timestamp: Date.now()
+        });
         activeGame.lineup[replaceSlotIdx] = newPitcher;
         showToast(`🔄 場下投手 #${NAME_TO_JERSEY[newPitcher] ?? ''} ${newPitcher} 已登板，並替換第 ${replaceSlotIdx + 1} 棒【${oldBatter}】的打擊名額！`);
       } else {
@@ -7054,6 +7071,15 @@ window.toggleDiagnosticsCollapse = function() {
 
     window.selectOutcome = function(outc) {
       currentPlayInput.result = outc;
+      // 安打防呆：慢壘安打落點絕不可為捕手 C 或跑者 Bases，若為 C 則自動智慧切換至合理的安打落點守位
+      if (['1H', '2H', '3H', 'HR'].includes(outc)) {
+        if (!currentPlayInput.location || currentPlayInput.location === 'C' || currentPlayInput.location === 'Bases') {
+          if (outc === '1H') selectFieldPosition('2B');
+          else if (outc === '2H') selectFieldPosition('LF');
+          else if (outc === '3H') selectFieldPosition('RC');
+          else if (outc === 'HR') selectFieldPosition('SF');
+        }
+      }
       const allOutcomes = ['1H', '2H', '3H', 'HR', 'GO', 'FO', 'LO', 'SF', 'E', 'FC', 'DP', '界外K'];
       allOutcomes.forEach(o => {
         const btn = document.getElementById(`res_${o}`);
@@ -7180,6 +7206,16 @@ window.toggleDiagnosticsCollapse = function() {
       const batterName = activeGame.lineup[idx];
       const slot = idx + 1;
 
+      // 防呆保護：若打擊結果為安打 (1H, 2H, 3H, HR)，但落點仍為捕手 C 或跑者 Bases，強制修正至合理守位
+      if (['1H', '2H', '3H', 'HR'].includes(currentPlayInput.result)) {
+        if (!currentPlayInput.location || currentPlayInput.location === 'C' || currentPlayInput.location === 'Bases') {
+          if (currentPlayInput.result === '1H') selectFieldPosition('2B');
+          else if (currentPlayInput.result === '2H') selectFieldPosition('LF');
+          else if (currentPlayInput.result === '3H') selectFieldPosition('RC');
+          else if (currentPlayInput.result === 'HR') selectFieldPosition('SF');
+        }
+      }
+
       let outsAdded = 0;
       if (['GO', 'FO', 'LO', 'K', '界外K'].includes(currentPlayInput.result)) outsAdded = 1;
       else if (currentPlayInput.result === 'DP') outsAdded = 2;
@@ -7237,6 +7273,22 @@ window.toggleDiagnosticsCollapse = function() {
       curInning.plateAppearances.push(paObj);
       curInning.runs += paObj.runsScored;
       if (['1H', '2H', '3H', 'HR'].includes(paObj.result)) curInning.hits++;
+
+      // 登打完成後重置打席輸入，避免上一打席狀態（例如三振/保送之捕手 C）殘留污染下一打席
+      currentPlayInput = window.currentPlayInput = {
+        result: '1H',
+        trajectory: 'grounder',
+        location: '2B',
+        x: 0.60,
+        y: 0.55,
+        rbi: 0,
+        runsScored: 0
+      };
+      updateFieldTargetDisplay();
+      selectOutcome('1H');
+      selectTrajectory('grounder');
+      selectRbi(0);
+      selectRunsScored(0);
 
       activeGame.currentBatterIdx = (activeGame.currentBatterIdx + 1) % activeGame.lineup.length;
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
@@ -7392,7 +7444,7 @@ window.toggleDiagnosticsCollapse = function() {
       selectedReviewGameId = finishedGameId;
       switchScorebookSubTab('review');
       renderGameReview();
-      showToast(`🏆 比賽已完結！本場攻守數據已完全自動同步計入全隊與個人總成績！`);
+      showToast(`🏆 比賽已完結！本場比賽紀錄已成功儲存至歷史賽事庫！`);
     };
 
     window.discardActiveGame = function() {
@@ -7426,80 +7478,20 @@ window.toggleDiagnosticsCollapse = function() {
     // ==========================================
     window.syncAllGamesToTeamLogs = syncAllGamesToTeamLogs;
     function syncAllGamesToTeamLogs() {
-      const targetGames = (typeof window !== 'undefined' && window.allGames && window.allGames.length > 0) ? window.allGames : allGames;
+      // 徹底落實比賽紀錄與日誌分離：場記比賽數據完整保留於歷史賽事庫，不污染全隊日誌
       const targetLogs = (typeof window !== 'undefined' && window.allLogs && window.allLogs.length > 0) ? window.allLogs : allLogs;
-
-      // 1. 保留所有非場記賽事的純手動/基準日誌 (剔除舊有的場記自動日誌)
-      const nonGameLogs = targetLogs.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
-
-      // 2. 遍歷 allGames 中所有的比賽紀錄，自動將每場比賽的個人攻守打擊數據生成為標準日誌
-      const generatedGameLogs = [];
-      (targetGames || []).forEach(game => {
-        const statsMap = {};
-        (game.lineup || []).forEach(name => {
-          // 支援選手僅限實況記錄與該場比賽內，不計入全隊日誌與個人累計總表
-          const isGuest = (guestPlayers || []).some(g => g.name === name) || name.includes('支援');
-          if (isGuest) return;
-          statsMap[name] = {
-            name,
-            jersey: NAME_TO_JERSEY[name] ?? 0,
-            pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0
-          };
-        });
-
-        (game.innings || []).forEach(inn => {
-          (inn.plateAppearances || []).forEach(pa => {
-            const p = statsMap[pa.batterName];
-            if (p) {
-              p.pa++;
-              if (!['BB', 'SF'].includes(pa.result)) p.ab++;
-              if (pa.result === '1H') { p.h++; p.h1++; }
-              else if (pa.result === '2H') { p.h++; p.h2++; }
-              else if (pa.result === '3H') { p.h++; p.h3++; }
-              else if (pa.result === 'HR') { p.h++; p.hr++; }
-              else if (pa.result === 'BB') p.bb++;
-              else if (pa.result === 'SF') p.sf++;
-              else if (pa.result === 'K') p.k++;
-            }
-          });
-        });
-
-        Object.values(statsMap).forEach(p => {
-          if (p.pa > 0) {
-            generatedGameLogs.push({
-              id: `log_game_${game.id}_${p.jersey}`,
-              date: game.date,
-              tag: `場記賽事: ${game.tag || '聯賽'} vs ${game.opponent}`,
-              name: p.name,
-              jersey: p.jersey,
-              pa: p.pa,
-              ab: p.ab,
-              h: p.h,
-              h1: p.h1,
-              h2: p.h2,
-              h3: p.h3,
-              hr: p.hr,
-              bb: p.bb,
-              sf: p.sf,
-              k: p.k
-            });
-          }
-        });
-      });
-
-      // 3. 合併並更新全域 allLogs
-      allLogs = [...generatedGameLogs, ...nonGameLogs];
-      if (typeof window !== 'undefined') window.allLogs = allLogs;
+      const cleanLogs = targetLogs.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+      allLogs = window.allLogs = cleanLogs;
       localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
       syncJerseyMaps();
-      return generatedGameLogs.length;
+      return 0;
     }
-
     window.syncGameToTeamLogs = syncGameToTeamLogs;
     function syncGameToTeamLogs(game) {
       if (!game) return 0;
       const statsMap = {};
-      (game.lineup || []).forEach(name => {
+      const allMatchBatters = getGameAllBatters(game);
+      allMatchBatters.forEach(name => {
         const isGuest = (guestPlayers || []).some(g => g.name === name) || name.includes('支援');
         if (isGuest) return;
         statsMap[name] = {
@@ -7712,11 +7704,15 @@ window.toggleDiagnosticsCollapse = function() {
         oppLineScoreCells.push(`<td class="p-2 font-mono text-slate-400">${oppInnRuns[i] !== undefined ? oppInnRuns[i] : '0'}</td>`);
       }
 
-      // 2. 全場盒式攻守數據表 (Full Box Score)
+      // 2. 全場盒式攻守數據表 (Full Box Score) - 完整支援先發與全部替補選手 (例如先發11人換2次替補共13人出賽)
+      const orderedBatters = getGameOrderedBatters(game);
       const boxScoreMap = {};
-      game.lineup.forEach(name => {
-        boxScoreMap[name] = {
-          name, jersey: NAME_TO_JERSEY[name] ?? 0,
+      orderedBatters.forEach(b => {
+        boxScoreMap[b.name] = {
+          name: b.name,
+          slot: b.slot,
+          isSub: b.isSub,
+          jersey: NAME_TO_JERSEY[b.name] ?? 0,
           pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0, rbi: 0, r: 0,
           details: []
         };
@@ -7726,7 +7722,19 @@ window.toggleDiagnosticsCollapse = function() {
       game.innings.forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
           totalPAs++;
-          const p = boxScoreMap[pa.batterName];
+          let p = boxScoreMap[pa.batterName];
+          if (!p) {
+            boxScoreMap[pa.batterName] = {
+              name: pa.batterName,
+              slot: pa.slot || 99,
+              isSub: true,
+              jersey: NAME_TO_JERSEY[pa.batterName] ?? 0,
+              pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0, rbi: 0, r: 0,
+              details: []
+            };
+            p = boxScoreMap[pa.batterName];
+            orderedBatters.push({ slot: pa.slot || 99, name: pa.batterName, isSub: true });
+          }
           if (p) {
             p.pa++;
             if (!['BB', 'SF'].includes(pa.result)) p.ab++;
@@ -7736,7 +7744,7 @@ window.toggleDiagnosticsCollapse = function() {
             else if (pa.result === 'HR') { p.h++; p.hr++; }
             else if (pa.result === 'BB') p.bb++;
             else if (pa.result === 'SF') p.sf++;
-            else if (pa.result === 'K') p.k++;
+            else if (['K', 'K_FOUL', '界外K'].includes(pa.result)) p.k++;
             p.rbi += (pa.rbi || 0);
             p.r += (pa.runsScored || 0);
             p.details.push(`${pa.result}(${pa.location || ''})`);
@@ -7744,34 +7752,77 @@ window.toggleDiagnosticsCollapse = function() {
         });
       });
 
-      const boxRows = game.lineup.map((name, i) => {
-        const p = boxScoreMap[name] || { pa: 0, ab: 0, h: 0, bb: 0, k: 0, rbi: 0, r: 0, details: [] };
+      let teamTotalPa = 0, teamTotalAb = 0, teamTotalH = 0, teamTotalRbi = 0, teamTotalR = 0, teamTotalBb = 0, teamTotalK = 0, teamTotalH1 = 0, teamTotalH2 = 0, teamTotalH3 = 0, teamTotalHr = 0, teamTotalSf = 0;
+
+      const boxRows = orderedBatters.map((b) => {
+        const p = boxScoreMap[b.name] || { pa: 0, ab: 0, h: 0, bb: 0, k: 0, rbi: 0, r: 0, details: [] };
+        teamTotalPa += p.pa;
+        teamTotalAb += p.ab;
+        teamTotalH += p.h;
+        teamTotalRbi += p.rbi;
+        teamTotalR += p.r;
+        teamTotalBb += p.bb;
+        teamTotalK += p.k;
+        teamTotalH1 += (p.h1 || 0);
+        teamTotalH2 += (p.h2 || 0);
+        teamTotalH3 += (p.h3 || 0);
+        teamTotalHr += (p.hr || 0);
+        teamTotalSf += (p.sf || 0);
+
         const avg = p.ab > 0 ? (p.h / p.ab).toFixed(3) : '.000';
         const obp = (p.ab + p.bb + p.sf) > 0 ? ((p.h + p.bb) / (p.ab + p.bb + p.sf)).toFixed(3) : '.000';
-        const tb = p.h1 + 2*p.h2 + 3*p.h3 + 4*p.hr;
+        const tb = (p.h1 || 0) + 2*(p.h2 || 0) + 3*(p.h3 || 0) + 4*(p.hr || 0);
         const slg = p.ab > 0 ? (tb / p.ab).toFixed(3) : '.000';
         const ops = (Number(obp) + Number(slg)).toFixed(3);
 
+        const slotBadge = b.isSub
+          ? `<span class="text-[10px] font-mono text-purple-300 bg-purple-950/80 px-1.5 py-0.5 rounded border border-purple-800/60 font-bold">替補</span>`
+          : `<span class="font-bold text-amber-400 font-mono">${b.slot}</span>`;
+
         return `
-          <tr class="hover:bg-slate-800/50 transition">
-            <td class="p-2.5 text-center font-bold text-amber-400">${i + 1}</td>
-            <td class="p-2.5 font-bold text-white flex items-center space-x-2">
-              ${renderAvatarElement(name, 'w-6 h-6 text-[10px]')}
-              <span>#${p.jersey} ${name}</span>
+          <tr class="hover:bg-slate-800/50 transition ${b.isSub ? 'bg-purple-950/15' : ''}">
+            <td class="p-2.5 text-center">${slotBadge}</td>
+            <td class="p-2.5 font-bold text-white flex items-center space-x-2 ${b.isSub ? 'pl-5' : ''}">
+              ${renderAvatarElement(b.name, 'w-6 h-6 text-[10px]')}
+              <span>#${p.jersey} ${b.name}</span>
+              ${b.isSub ? '<span class="text-[10px] text-purple-400 font-normal font-mono">(第' + b.slot + '棒替補)</span>' : ''}
             </td>
-            <td class="p-2.5 text-center">${p.pa}</td>
-            <td class="p-2.5 text-center font-bold text-slate-200">${p.ab}</td>
-            <td class="p-2.5 text-center font-bold text-emerald-400">${p.h}</td>
-            <td class="p-2.5 text-center font-bold text-amber-400">${p.rbi}</td>
-            <td class="p-2.5 text-center text-sky-400 font-bold">${p.r}</td>
-            <td class="p-2.5 text-center text-slate-300">${p.bb}</td>
-            <td class="p-2.5 text-center text-rose-400">${p.k}</td>
-            <td class="p-2.5 text-center text-emerald-400">${avg}</td>
-            <td class="p-2.5 text-center text-sky-400 font-bold">${ops}</td>
-            <td class="p-2.5 text-slate-400 text-[11px] truncate max-w-[140px]">${p.details.join(', ') || '-'}</td>
+            <td class="p-2.5 text-center font-mono">${p.pa}</td>
+            <td class="p-2.5 text-center font-bold text-slate-200 font-mono">${p.ab}</td>
+            <td class="p-2.5 text-center font-bold text-emerald-400 font-mono">${p.h}</td>
+            <td class="p-2.5 text-center font-bold text-amber-400 font-mono">${p.rbi}</td>
+            <td class="p-2.5 text-center text-sky-400 font-bold font-mono">${p.r}</td>
+            <td class="p-2.5 text-center text-slate-300 font-mono">${p.bb}</td>
+            <td class="p-2.5 text-center text-rose-400 font-mono">${p.k}</td>
+            <td class="p-2.5 text-center text-emerald-400 font-mono">${avg}</td>
+            <td class="p-2.5 text-center text-sky-400 font-bold font-mono">${ops}</td>
+            <td class="p-2.5 text-slate-400 text-[11px] truncate max-w-[140px] font-mono">${p.details.join(', ') || '-'}</td>
           </tr>
         `;
       }).join('');
+
+      const teamAvg = teamTotalAb > 0 ? (teamTotalH / teamTotalAb).toFixed(3) : '.000';
+      const teamTb = teamTotalH1 + 2*teamTotalH2 + 3*teamTotalH3 + 4*teamTotalHr;
+      const teamSlg = teamTotalAb > 0 ? (teamTb / teamTotalAb).toFixed(3) : '.000';
+      const teamObp = (teamTotalAb + teamTotalBb + teamTotalSf) > 0 ? ((teamTotalH + teamTotalBb) / (teamTotalAb + teamTotalBb + teamTotalSf)).toFixed(3) : '.000';
+      const teamOps = (Number(teamObp) + Number(teamSlg)).toFixed(3);
+
+      const teamTotalRow = `
+        <tr class="bg-slate-900/90 font-bold border-t-2 border-slate-700 text-amber-300">
+          <td class="p-2.5 text-center font-mono">合計</td>
+          <td class="p-2.5 font-bold text-white">全隊攻守總計 (${orderedBatters.length} 位打者出賽)</td>
+          <td class="p-2.5 text-center font-mono">${teamTotalPa}</td>
+          <td class="p-2.5 text-center font-mono">${teamTotalAb}</td>
+          <td class="p-2.5 text-center font-mono text-emerald-400">${teamTotalH}</td>
+          <td class="p-2.5 text-center font-mono text-amber-400">${teamTotalRbi}</td>
+          <td class="p-2.5 text-center font-mono text-sky-400">${teamTotalR}</td>
+          <td class="p-2.5 text-center font-mono">${teamTotalBb}</td>
+          <td class="p-2.5 text-center font-mono text-rose-400">${teamTotalK}</td>
+          <td class="p-2.5 text-center font-mono text-emerald-400">${teamAvg}</td>
+          <td class="p-2.5 text-center font-mono text-sky-400">${teamOps}</td>
+          <td class="p-2.5 text-slate-400 text-[11px] font-mono">-</td>
+        </tr>
+      `;
 
       // 3. 該場擊球落點噴流點繪製
       const sprayPointsHtml = [];
@@ -7869,7 +7920,7 @@ window.toggleDiagnosticsCollapse = function() {
         <div class="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
           <div class="flex items-center justify-between border-b border-slate-800 pb-2">
             <span class="text-xs font-bold text-slate-300 font-mono">⚾ 全場打者打擊成績表 (Box Score)</span>
-            <span class="text-xs text-slate-400 font-mono">全隊打席：${totalPAs} PA</span>
+            <span class="text-xs text-amber-300 font-mono font-bold">全隊打席：${totalPAs} PA・出賽打者：${orderedBatters.length} 人</span>
           </div>
           <div class="overflow-x-auto rounded-xl border border-slate-800">
             <table class="w-full text-left text-xs whitespace-nowrap font-mono">
@@ -7891,6 +7942,7 @@ window.toggleDiagnosticsCollapse = function() {
               </thead>
               <tbody class="divide-y divide-slate-800 bg-slate-950">
                 ${boxRows}
+                ${teamTotalRow}
               </tbody>
             </table>
           </div>
@@ -8281,11 +8333,25 @@ function renderSprayChartStudio() {
       renderSprayChartStudio();
     };
 
+
     // 立即從 localStorage 或 baseline 載入快取，0 毫秒極速呈現完整數據，絕不白屏或卡在「連線中...」
     try {
       const cached = localStorage.getItem('rebas_logs');
-      if (cached) allLogs = JSON.parse(cached);
+      if (cached) {
+        let parsed = JSON.parse(cached);
+        // 清理殘留的 log_game_ 與 log_auto_
+        allLogs = parsed.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+      }
     } catch(e) {}
+    try {
+      const cachedGames = localStorage.getItem('rebas_all_games');
+      if (cachedGames) {
+        let pGames = JSON.parse(cachedGames);
+        allGames = window.allGames = pGames.filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
+        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      }
+    } catch(e) {}
+
     if (!allLogs || allLogs.length === 0) {
       allLogs = window.allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
     }
