@@ -1,49 +1,5 @@
 [
   {
-    "id": "game_20261001_7887",
-    "date": "2026-10-01",
-    "opponent": "友隊選手",
-    "tag": "系壘例行賽",
-    "hasDh": false,
-    "dhSlot": null,
-    "ourRole": "先守",
-    "lineup": [
-      "謝承祐",
-      "盧宣嘉",
-      "劉憬翰",
-      "簡承均",
-      "廖仲毅",
-      "洪銘駿",
-      "陳柏翰",
-      "陳威騏",
-      "孫煜哲",
-      "陳泓銘"
-    ],
-    "currentInning": 1,
-    "currentHalf": "bottom",
-    "currentOuts": 0,
-    "currentBases": {
-      "first": null,
-      "second": null,
-      "third": null
-    },
-    "currentBatterIdx": 0,
-    "status": "finished",
-    "finalScore": {
-      "us": 0,
-      "opp": 0
-    },
-    "innings": [
-      {
-        "inningNum": 1,
-        "topBottom": "bottom",
-        "runs": 0,
-        "hits": 0,
-        "plateAppearances": []
-      }
-    ]
-  },
-  {
     "id": "game_20260315_mech",
     "date": "2026-03-15",
     "opponent": "機械系壘",
