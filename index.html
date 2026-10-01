@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0355</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0435</span>
         </div>
 
 
@@ -160,9 +160,17 @@
             <div>
               <label class="block text-slate-400 mb-1">打席 (PA) <span class="text-rose-400">*</span></label>
               <select id="new_pa" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 font-mono text-white focus:outline-none focus:border-emerald-500">
-                <option value="" disabled selected>選取打席 (1-10)</option>
+                <option value="" disabled selected>選取打席 (1-50)</option>
                 <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
                 <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+                <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
+                <option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option>
+                <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
+                <option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option>
+                <option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option>
+                <option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option>
+                <option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option>
               </select>
             </div>
             <div>
@@ -1903,10 +1911,17 @@
 
 
     // 支援選手 / 非隊員名冊 (持久化於 localStorage)
-    let guestPlayers = window.guestPlayers = JSON.parse(localStorage.getItem('rebas_guest_players')) || [
-      { name: '支援選手A', jersey: 0, tag: '友軍支援' },
-      { name: '支援選手B', jersey: 0, tag: '友軍支援' }
-    ];
+    let guestPlayers = window.guestPlayers = (function() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('rebas_guest_players')) || [];
+        // 自動過濾掉舊版預置的假支援選手A與支援選手B
+        const cleaned = stored.filter(g => g.name !== '支援選手A' && g.name !== '支援選手B');
+        localStorage.setItem('rebas_guest_players', JSON.stringify(cleaned));
+        return cleaned;
+      } catch (e) {
+        return [];
+      }
+    })();
 
     // 高效網路請求工具：3.5 秒超時自動中斷，杜絕連線卡頓 2 分鐘
     window.fetchWithTimeout = fetchWithTimeout;
@@ -2103,19 +2118,23 @@
     function syncJerseyMaps() {
       JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
       allLogs.forEach(l => {
-        if (l.jersey && l.name) {
+        const isGuest = (guestPlayers || []).some(g => g.name === l.name) || (l.tag && l.tag.includes('支援'));
+        if (l.jersey && l.name && !isGuest) {
           JERSEY_TO_NAME[Number(l.jersey)] = l.name;
         }
       });
+      // 確保支援選手絕不列入正式隊員名冊 JERSEY_TO_NAME
       (guestPlayers || []).forEach(g => {
         if (g.name) {
-          const j = g.jersey !== undefined ? Number(g.jersey) : 0;
-          JERSEY_TO_NAME[j] = g.name;
+          Object.keys(JERSEY_TO_NAME).forEach(k => {
+            if (JERSEY_TO_NAME[k] === g.name) delete JERSEY_TO_NAME[k];
+          });
         }
       });
       NAME_TO_JERSEY = Object.fromEntries(
         Object.entries(JERSEY_TO_NAME).map(([k, v]) => [v, Number(k)])
       );
+      // NAME_TO_JERSEY 僅供查詢背號用，支援選手可以查找背號
       (guestPlayers || []).forEach(g => {
         if (g.name) {
           NAME_TO_JERSEY[g.name] = g.jersey !== undefined ? Number(g.jersey) : 0;
@@ -2633,21 +2652,22 @@
       localStorage.setItem('rebas_has_dh', JSON.stringify(isDhEnabled));
 
       const { teamNames, guestNames } = getAllAvailablePlayerNames();
-      const allNames = [...teamNames, ...guestNames];
+      const officialNames = Object.values(JERSEY_TO_NAME);
+      const allSetupNames = [...teamNames, ...guestNames];
 
-      // 若切換為有 DH 制 (11 棒)，且自訂打線目前僅 10 人，自動補齊第 11 人
+      // 棒次分析嚴格只使用正式隊員名冊，絕不出現支援選手
       if (isDhEnabled && customLineup.length < 11) {
-        const unused = allNames.find(n => !customLineup.includes(n)) || allNames[0];
+        const unused = officialNames.find(n => !customLineup.includes(n)) || officialNames[0];
         customLineup.push(unused);
       } else if (!isDhEnabled && customLineup.length > 10) {
         customLineup = customLineup.slice(0, 10);
       }
 
-      // 開賽設定打線長度同步更新
+      // 實況開賽設定打線長度同步更新 (允許包含支援選手)
       if (setupLineupList.length === 0) {
         loadLineupIntoGameSetup('custom');
       } else if (isDhEnabled && setupLineupList.length < 11) {
-        const unused = allNames.find(n => !setupLineupList.includes(n)) || allNames[0];
+        const unused = allSetupNames.find(n => !setupLineupList.includes(n)) || allSetupNames[0];
         setupLineupList.push(unused);
       } else if (!isDhEnabled && setupLineupList.length > 10) {
         setupLineupList = setupLineupList.slice(0, 10);
@@ -3148,8 +3168,18 @@
     function renderCustomLineupPickers(players) {
       const container = document.getElementById('customLineupPickersContainer');
       const controlBar = document.getElementById('customDhControlBar');
+      // 棒次分析嚴格只使用正式隊員名單，徹底排除任何支援選手
       const allNames = Object.values(JERSEY_TO_NAME);
       const targetSize = isDhEnabled ? 11 : 10;
+
+      // 清洗自訂打線：若先前存有支援選手，自動淨化替換為正式隊員
+      const guestNameSet = new Set((guestPlayers || []).map(g => g.name));
+      customLineup = (customLineup || []).map(name => {
+        if (guestNameSet.has(name) || name.includes('支援') || !allNames.includes(name)) {
+          return allNames.find(n => !customLineup.includes(n)) || allNames[0];
+        }
+        return name;
+      });
 
       // 確保 customLineup 長度正確
       while (customLineup.length < targetSize) {
@@ -4349,6 +4379,9 @@ window.toggleDiagnosticsCollapse = function() {
       (targetGames || []).forEach(game => {
         const statsMap = {};
         (game.lineup || []).forEach(name => {
+          // 支援選手僅限實況記錄與該場比賽內，不計入全隊日誌與個人累計總表
+          const isGuest = (guestPlayers || []).some(g => g.name === name) || name.includes('支援');
+          if (isGuest) return;
           statsMap[name] = {
             name, jersey: NAME_TO_JERSEY[name] ?? 0,
             pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0
@@ -7404,6 +7437,9 @@ window.toggleDiagnosticsCollapse = function() {
       (targetGames || []).forEach(game => {
         const statsMap = {};
         (game.lineup || []).forEach(name => {
+          // 支援選手僅限實況記錄與該場比賽內，不計入全隊日誌與個人累計總表
+          const isGuest = (guestPlayers || []).some(g => g.name === name) || name.includes('支援');
+          if (isGuest) return;
           statsMap[name] = {
             name,
             jersey: NAME_TO_JERSEY[name] ?? 0,
@@ -7464,6 +7500,8 @@ window.toggleDiagnosticsCollapse = function() {
       if (!game) return 0;
       const statsMap = {};
       (game.lineup || []).forEach(name => {
+        const isGuest = (guestPlayers || []).some(g => g.name === name) || name.includes('支援');
+        if (isGuest) return;
         statsMap[name] = {
           name,
           jersey: NAME_TO_JERSEY[name] ?? 0,
