@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0330</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0345</span>
         </div>
 
 
@@ -1064,13 +1064,17 @@
 
                   <!-- 右側：打擊動作盤 (Action Pad) -->
                   <div class="lg:col-span-6 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <!-- 最直覺快捷鍵：三振、保送與跑壘者出局 (無需選落點) -->
+                    <!-- 最直覺快捷鍵：揮空K、界外K、保送與跑壘者出局 (無需選落點) -->
                     <div>
                       <span class="text-xs font-bold text-slate-300 block mb-1.5">一鍵直覺記錄 (無需選落點)：</span>
-                      <div class="grid grid-cols-3 gap-2">
-                        <button onclick="recordQuickStrikeout()" class="bg-rose-950/60 hover:bg-rose-900 border border-rose-700/80 text-rose-300 p-2.5 rounded-xl font-black text-xs sm:text-sm transition flex flex-col items-center justify-center gap-1 shadow-lg">
+                      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button onclick="recordQuickStrikeout('K')" class="bg-rose-950/60 hover:bg-rose-900 border border-rose-700/80 text-rose-300 p-2.5 rounded-xl font-black text-xs sm:text-sm transition flex flex-col items-center justify-center gap-1 shadow-lg" title="揮棒落空或站著不動吞三振 (+1 出局)">
                           <span class="text-base sm:text-lg">🔴</span>
-                          <span>三振出局 (K)</span>
+                          <span>揮空三振 (K)</span>
+                        </button>
+                        <button onclick="recordQuickStrikeout('界外K')" class="bg-rose-900/70 hover:bg-rose-800 border border-amber-500/70 text-amber-200 p-2.5 rounded-xl font-black text-xs sm:text-sm transition flex flex-col items-center justify-center gap-1 shadow-lg" title="慢速壘球專屬規程：兩好球後擊出界外球即判出局 (+1 出局)">
+                          <span class="text-base sm:text-lg">🛑</span>
+                          <span>界外三振 (界外K)</span>
                         </button>
                         <button onclick="recordQuickWalk()" class="bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 p-2.5 rounded-xl font-black text-xs sm:text-sm transition flex flex-col items-center justify-center gap-1 shadow-lg">
                           <span class="text-base sm:text-lg">🟢</span>
@@ -1104,12 +1108,13 @@
                         <button onclick="selectOutcome('3H')" id="res_3H" class="py-2 rounded-lg border border-purple-600/70 bg-purple-950/40 text-purple-300 hover:bg-purple-900/60 transition">3H 三安</button>
                         <button onclick="selectOutcome('HR')" id="res_HR" class="py-2 rounded-lg border border-amber-500/80 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60 transition">HR 全壘打</button>
                       </div>
-                      <!-- 出局類 -->
-                      <div class="grid grid-cols-4 gap-1.5 text-xs font-medium font-mono">
+                      <!-- 出局類 (含慢壘特有界外K) -->
+                      <div class="grid grid-cols-5 gap-1.5 text-xs font-medium font-mono">
                         <button onclick="selectOutcome('GO')" id="res_GO" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">GO 滾地刺</button>
                         <button onclick="selectOutcome('FO')" id="res_FO" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">FO 飛球殺</button>
                         <button onclick="selectOutcome('LO')" id="res_LO" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">LO 平飛殺</button>
                         <button onclick="selectOutcome('SF')" id="res_SF" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">SF 高飛犧</button>
+                        <button onclick="selectOutcome('界外K')" id="res_界外K" class="py-1.5 rounded-lg border border-rose-700/80 bg-rose-950/50 text-amber-300 font-bold hover:bg-rose-900/70 transition" title="慢壘兩好球後擊出界外球出局 (+1 出局)">🛑 界外K</button>
                       </div>
                       <!-- 其他上壘與雙殺 -->
                       <div class="grid grid-cols-3 gap-1.5 text-xs font-medium font-mono">
@@ -1197,9 +1202,12 @@
                       <p class="text-xs text-slate-400 font-mono mt-0.5">慢壘防守以投手為核心：免記對方打者，聚焦出局數、保送與失分控制</p>
                     </div>
                   </div>
-                  <div class="flex items-center space-x-2">
+                  <div class="flex flex-wrap items-center gap-2">
                     <label class="text-xs text-slate-400 font-medium shrink-0">登板投手：</label>
                     <select id="defensePitcherSelect" onchange="changeDefensePitcher(this.value)" class="bg-slate-900 border border-slate-700 text-sky-300 text-xs rounded-lg px-2.5 py-1.5 font-bold font-mono focus:outline-none focus:border-sky-500"></select>
+                    <button type="button" onclick="openPitcherChangeModal()" class="bg-sky-950/70 hover:bg-sky-900 border border-sky-600/70 text-sky-200 text-xs px-2.5 py-1.5 rounded-lg transition font-mono flex items-center gap-1 shadow" title="換投：支援自場下板凳隊員或非隊員直接登板">
+                      <span>🔄</span> 場下換投
+                    </button>
                   </div>
                 </div>
 
@@ -1212,22 +1220,26 @@
                     <span class="text-[11px] text-slate-500 font-mono">點擊即時抓出局或記失分</span>
                   </div>
 
-                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-bold">
-                    <button onclick="recordDefenseEvent('GO')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 p-3 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
+                  <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-bold">
+                    <button onclick="recordDefenseEvent('GO')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
                       <span class="text-base">🟢</span>
-                      <span>內野滾地刺殺 (+1 Out)</span>
+                      <span>滾地刺殺 (+1 Out)</span>
                     </button>
-                    <button onclick="recordDefenseEvent('FO')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 p-3 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
+                    <button onclick="recordDefenseEvent('FO')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
                       <span class="text-base">🔵</span>
-                      <span>高飛/平飛接殺 (+1 Out)</span>
+                      <span>接殺出局 (+1 Out)</span>
                     </button>
-                    <button onclick="recordDefenseEvent('K')" class="bg-rose-950/60 hover:bg-rose-900/80 border border-rose-700/80 text-rose-300 p-3 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
+                    <button onclick="recordDefenseEvent('K')" class="bg-rose-950/60 hover:bg-rose-900/80 border border-rose-700/80 text-rose-300 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
                       <span class="text-base">🔴</span>
-                      <span>投手漂亮三振 K！(+1 Out)</span>
+                      <span>揮空三振 (+1 Out)</span>
                     </button>
-                    <button onclick="recordDefenseEvent('DP')" class="bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/80 text-purple-300 p-3 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
+                    <button onclick="recordDefenseEvent('界外K')" class="bg-rose-900/70 hover:bg-rose-800 border border-amber-500/70 text-amber-200 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow" title="慢壘規程：兩好球後擊出界外球出局 (+1 出局)">
+                      <span class="text-base">🛑</span>
+                      <span>界外三振 (+1 Out)</span>
+                    </button>
+                    <button onclick="recordDefenseEvent('DP')" class="bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/80 text-purple-300 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
                       <span class="text-base">🟣</span>
-                      <span>內野雙殺完成 DP！(+2 Out)</span>
+                      <span>雙殺完成 (+2 Out)</span>
                     </button>
                   </div>
 
@@ -1710,6 +1722,48 @@
         <button onclick="closeSubstituteModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-lg text-xs transition">取消</button>
         <button onclick="confirmSubstitution()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs shadow transition flex items-center gap-1">
           <span>✓</span> 確認更換上場
+        </button>
+      </div>
+    </div>
+  </div>
+
+    <!-- 場下更換投手與打線棒次指派彈窗 -->
+  <div id="pitcherChangeModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-sky-700/60 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden flex flex-col">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-2">
+          <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">PITCHER CHANGE</span>
+          <h3 class="text-sm sm:text-base font-bold text-white tracking-tight">更換登板投手 (支援場下板凳/外援登板)</h3>
+        </div>
+        <button onclick="closePitcherChangeModal()" class="text-slate-400 hover:text-white text-xl font-bold leading-none">&times;</button>
+      </div>
+      <div class="p-4 sm:p-5 space-y-4 text-xs">
+        <div id="pitcherCurrentStatusInfo" class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1"></div>
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">新登板投手選取：</label>
+          <select id="modalNewPitcherSelect" onchange="handleModalNewPitcherChange(this.value)" class="w-full bg-slate-950 border border-slate-700 text-sky-300 rounded-lg p-2.5 text-xs focus:outline-none focus:border-sky-500 font-bold font-mono"></select>
+        </div>
+        <div id="pitcherLineupOptionBox" class="space-y-2 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+          <span class="text-amber-300 font-bold block">慢壘攻守合一規則設定：</span>
+          <label class="flex items-start space-x-2 text-slate-200 cursor-pointer">
+            <input type="radio" name="pitcherLineupMode" id="pitcherModeReplace" value="replace" checked onchange="togglePitcherReplaceSlotUi()" class="accent-sky-500 mt-0.5">
+            <div>
+              <span class="font-bold">同時替換場上某棒次打擊（符合慢壘投手必須打擊規程）：</span>
+              <div id="pitcherReplaceSlotContainer" class="mt-1.5">
+                <select id="pitcherReplaceSlotSelect" class="bg-slate-900 border border-slate-700 text-white rounded px-2.5 py-1 text-xs focus:outline-none focus:border-sky-500"></select>
+              </div>
+            </div>
+          </label>
+          <label class="flex items-center space-x-2 text-slate-300 cursor-pointer pt-1 border-t border-slate-800/80">
+            <input type="radio" name="pitcherLineupMode" id="pitcherModePitchOnly" value="pitchOnly" onchange="togglePitcherReplaceSlotUi()" class="accent-sky-500">
+            <span>僅登板投球（不變動目前進攻打線名冊）</span>
+          </label>
+        </div>
+      </div>
+      <div class="p-3 sm:p-4 border-t border-slate-800 bg-slate-950 flex justify-end space-x-2">
+        <button onclick="closePitcherChangeModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-lg text-xs transition">取消</button>
+        <button onclick="confirmPitcherChange()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs shadow transition flex items-center gap-1">
+          <span>✓</span> 確認投手登板
         </button>
       </div>
     </div>
@@ -6487,7 +6541,7 @@ window.toggleDiagnosticsCollapse = function() {
       `;
     }
 
-    // 我方防守：更新投手資訊卡
+    // 我方防守：更新投手資訊卡 (支援場上調換、場下板凳隊員與非隊員支援直接登板)
     function updateLivePitcherCard() {
       const pTitle = document.getElementById('defensePitcherNameTitle');
       const pAvatar = document.getElementById('defensePitcherAvatar');
@@ -6502,18 +6556,190 @@ window.toggleDiagnosticsCollapse = function() {
       if (pAvatar) pAvatar.innerHTML = renderAvatarElement(pitcherName, 'w-10 h-10 text-xs');
 
       if (pSelect) {
-        pSelect.innerHTML = activeGame.lineup.map(name => `
-          <option value="${name}" ${name === pitcherName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name}</option>
-        `).join('');
+        const { teamNames, guestNames } = getAllAvailablePlayerNames();
+        const lineupNames = activeGame.lineup || [];
+        const benchNames = teamNames.filter(n => !lineupNames.includes(n));
+        const nonLineupGuests = guestNames.filter(n => !lineupNames.includes(n));
+
+        pSelect.innerHTML = `
+          <optgroup label="場上守備打線 (場內守位調換)">
+            ${lineupNames.map(name => `
+              <option value="${name}" ${name === pitcherName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name} (場上)</option>
+            `).join('')}
+          </optgroup>
+          ${benchNames.length > 0 ? `
+            <optgroup label="場下板凳隊員 (替補登板)">
+              ${benchNames.map(name => `
+                <option value="${name}" ${name === pitcherName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name} [場下隊員]</option>
+              `).join('')}
+            </optgroup>
+          ` : ''}
+          ${nonLineupGuests.length > 0 ? `
+            <optgroup label="非隊員 / 支援外援 (場下支援)">
+              ${nonLineupGuests.map(name => `
+                <option value="${name}" ${name === pitcherName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? '0'} ${name} (外援/支援)</option>
+              `).join('')}
+            </optgroup>
+          ` : ''}
+          <optgroup label="快捷操作">
+            <option value="__NEW_GUEST_PITCHER__">+ 快速登記新外援/場下投手...</option>
+          </optgroup>
+        `;
       }
     }
 
     window.changeDefensePitcher = function(newPitcherName) {
       if (!activeGame) return;
-      activeGame.pitcherName = newPitcherName;
-      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+
+      if (newPitcherName === '__NEW_GUEST_PITCHER__') {
+        const name = prompt('請輸入場下/非隊員支援投手姓名（例：張小華、外援投手）：');
+        if (!name || !name.trim()) {
+          updateLivePitcherCard();
+          return;
+        }
+        const cleanName = name.trim();
+        const jerseyStr = prompt(`請輸入 ${cleanName} 的背號（選填，預設 0）：`, '0');
+        const jerseyNum = parseInt(jerseyStr, 10) || 0;
+        addGuestPlayer(cleanName, jerseyNum, '投手支援');
+        newPitcherName = cleanName;
+      }
+
+      const isInLineup = (activeGame.lineup || []).includes(newPitcherName);
+
+      if (isInLineup) {
+        // 場上調換
+        activeGame.pitcherName = newPitcherName;
+        localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+        updateLivePitcherCard();
+        showToast(`已更換登板投手為：#${NAME_TO_JERSEY[newPitcherName] ?? ''} ${newPitcherName} (場上調換)`);
+      } else {
+        // 場下上場投手！打開投手登板指派彈窗
+        openPitcherChangeModal(newPitcherName);
+      }
+    };
+
+    window.openPitcherChangeModal = function(targetPlayerName = null) {
+      if (!activeGame) return;
+      const curPitcher = activeGame.pitcherName || activeGame.lineup[0] || '盧宣嘉';
+      const statusInfo = document.getElementById('pitcherCurrentStatusInfo');
+      if (statusInfo) {
+        statusInfo.innerHTML = `
+          <div class="flex items-center justify-between text-slate-300">
+            <span>目前登板投手：</span>
+            <span class="text-amber-400 font-bold font-mono text-sm">#${NAME_TO_JERSEY[curPitcher] ?? ''} ${curPitcher}</span>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-relaxed mt-1">
+            慢壘允許牛棚場下隊員或非隊員外援登板救援。請確認登板投手，並決定是否同時替換場上進攻打線名額。
+          </p>
+        `;
+      }
+
+      const select = document.getElementById('modalNewPitcherSelect');
+      if (select) {
+        const { teamNames, guestNames } = getAllAvailablePlayerNames();
+        const lineupNames = activeGame.lineup || [];
+        const benchNames = teamNames.filter(n => !lineupNames.includes(n));
+        const nonLineupGuests = guestNames.filter(n => !lineupNames.includes(n));
+
+        const defaultPick = targetPlayerName || benchNames[0] || guestNames[0] || lineupNames[0];
+
+        select.innerHTML = `
+          ${benchNames.length > 0 ? `
+            <optgroup label="場下板凳隊員 (推薦替補登板)">
+              ${benchNames.map(name => `
+                <option value="${name}" ${name === defaultPick ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name} [場下隊員]</option>
+              `).join('')}
+            </optgroup>
+          ` : ''}
+          ${nonLineupGuests.length > 0 ? `
+            <optgroup label="非隊員 / 支援外援 (場下支援)">
+              ${nonLineupGuests.map(name => `
+                <option value="${name}" ${name === defaultPick ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? '0'} ${name} (外援/支援)</option>
+              `).join('')}
+            </optgroup>
+          ` : ''}
+          <optgroup label="場上守備打線 (場內守位調換)">
+            ${lineupNames.map(name => `
+              <option value="${name}" ${name === defaultPick ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name} (場上球員)</option>
+            `).join('')}
+          </optgroup>
+          <optgroup label="快捷操作">
+            <option value="__NEW_GUEST_PITCHER__">+ 快速登記新外援/場下投手...</option>
+          </optgroup>
+        `;
+      }
+
+      // Populate pitcherReplaceSlotSelect
+      const slotSelect = document.getElementById('pitcherReplaceSlotSelect');
+      if (slotSelect) {
+        slotSelect.innerHTML = (activeGame.lineup || []).map((name, i) => `
+          <option value="${i}">第 ${i + 1} 棒 #${NAME_TO_JERSEY[name] ?? ''} ${name} ${name === curPitcher ? '(原投手)' : ''}</option>
+        `).join('');
+        const prevIdx = (activeGame.lineup || []).indexOf(curPitcher);
+        if (prevIdx !== -1) slotSelect.value = String(prevIdx);
+      }
+
+      const modal = document.getElementById('pitcherChangeModal');
+      if (modal) modal.classList.remove('hidden');
+    };
+
+    window.closePitcherChangeModal = function() {
+      const modal = document.getElementById('pitcherChangeModal');
+      if (modal) modal.classList.add('hidden');
       updateLivePitcherCard();
-      showToast(`已更換登板投手為：#${NAME_TO_JERSEY[newPitcherName] ?? ''} ${newPitcherName}`);
+    };
+
+    window.handleModalNewPitcherChange = function(val) {
+      if (val === '__NEW_GUEST_PITCHER__') {
+        const name = prompt('請輸入場下/非隊員支援投手姓名（例：張小華、外援投手）：');
+        if (!name || !name.trim()) {
+          openPitcherChangeModal();
+          return;
+        }
+        const cleanName = name.trim();
+        const jerseyStr = prompt(`請輸入 ${cleanName} 的背號（選填，預設 0）：`, '0');
+        const jerseyNum = parseInt(jerseyStr, 10) || 0;
+        addGuestPlayer(cleanName, jerseyNum, '投手支援');
+        openPitcherChangeModal(cleanName);
+      }
+    };
+
+    window.togglePitcherReplaceSlotUi = function() {
+      const isReplace = document.getElementById('pitcherModeReplace')?.checked;
+      const container = document.getElementById('pitcherReplaceSlotContainer');
+      if (container) {
+        if (isReplace) container.classList.remove('opacity-40', 'pointer-events-none');
+        else container.classList.add('opacity-40', 'pointer-events-none');
+      }
+    };
+
+    window.confirmPitcherChange = function() {
+      if (!activeGame) return;
+      const select = document.getElementById('modalNewPitcherSelect');
+      const newPitcher = select ? select.value : '';
+      if (!newPitcher || newPitcher === '__NEW_GUEST_PITCHER__') return;
+
+      const isReplace = document.getElementById('pitcherModeReplace')?.checked;
+      const slotSelect = document.getElementById('pitcherReplaceSlotSelect');
+      const replaceSlotIdx = slotSelect ? parseInt(slotSelect.value, 10) : 0;
+
+      activeGame.pitcherName = newPitcher;
+
+      if (isReplace && !isNaN(replaceSlotIdx) && replaceSlotIdx >= 0 && replaceSlotIdx < activeGame.lineup.length) {
+        const oldBatter = activeGame.lineup[replaceSlotIdx];
+        activeGame.lineup[replaceSlotIdx] = newPitcher;
+        showToast(`🔄 場下投手 #${NAME_TO_JERSEY[newPitcher] ?? ''} ${newPitcher} 已登板，並替換第 ${replaceSlotIdx + 1} 棒【${oldBatter}】的打擊名額！`);
+      } else {
+        showToast(`🔄 場下投手 #${NAME_TO_JERSEY[newPitcher] ?? ''} ${newPitcher} 已登板投球！`);
+      }
+
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      if (typeof window !== 'undefined') window.activeGame = activeGame;
+
+      closePitcherChangeModal();
+      updateLivePitcherCard();
+      updateLiveBatterCard();
+      updateLiveScoreboard();
     };
 
     // 慢壘特化：對方進攻紀錄 (專注投手出局數、保送與失分控制)
@@ -6521,7 +6747,7 @@ window.toggleDiagnosticsCollapse = function() {
       if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       if (!activeGame) return;
 
-      const outsAdded = (eventType === 'DP') ? 2 : (['GO', 'FO', 'K', 'RUNNER_OUT'].includes(eventType) ? 1 : 0);
+      const outsAdded = (eventType === 'DP') ? 2 : (['GO', 'FO', 'K', '界外K', 'RUNNER_OUT'].includes(eventType) ? 1 : 0);
       activeGame.currentOuts = Math.min(3, (activeGame.currentOuts || 0) + outsAdded);
       activeGame.finalScore.opp = (activeGame.finalScore.opp || 0) + runs;
 
@@ -6545,6 +6771,7 @@ window.toggleDiagnosticsCollapse = function() {
         'GO': '內野滾地刺殺 (+1 出局)',
         'FO': '外野高飛/平飛接殺 (+1 出局)',
         'K': '投手送出漂亮三振 K！(+1 出局)',
+        '界外K': '投手好投逼出對手界外三振 (+1 出局)',
         'DP': '內野俐落雙殺 DP！(+2 出局)',
         'RUNNER_OUT': '我方守備觸殺/刺殺對方跑壘者出局 (+1 出局)',
         'BB': '投手投出四壞保送',
@@ -6612,6 +6839,7 @@ window.toggleDiagnosticsCollapse = function() {
       tbody.innerHTML = events.map((e, i) => {
         let typeBadge = `<span class="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300">${e.type}</span>`;
         if (e.type === 'K') typeBadge = `<span class="px-2 py-0.5 rounded text-[11px] bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold">三振 K</span>`;
+        else if (e.type === '界外K') typeBadge = `<span class="px-2 py-0.5 rounded text-[11px] bg-rose-500/30 text-amber-300 border border-amber-500/50 font-bold">界外K</span>`;
         else if (e.type === 'DP') typeBadge = `<span class="px-2 py-0.5 rounded text-[11px] bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold">雙殺 DP</span>`;
         else if (e.type === 'RUNNER_OUT') typeBadge = `<span class="px-2 py-0.5 rounded text-[11px] bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold">跑者出局</span>`;
         else if (e.type === 'BB') typeBadge = `<span class="px-2 py-0.5 rounded text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">保送 BB</span>`;
@@ -6829,8 +7057,8 @@ window.toggleDiagnosticsCollapse = function() {
       }
     };
 
-    window.recordQuickStrikeout = function() {
-      currentPlayInput.result = 'K';
+    window.recordQuickStrikeout = function(type = 'K') {
+      currentPlayInput.result = (type === '界外K' || type === 'foul') ? '界外K' : 'K';
       currentPlayInput.trajectory = 'none';
       currentPlayInput.location = 'C';
       currentPlayInput.x = 0.5;
