@@ -34,28 +34,28 @@
     "k": 0
   },
   {
-    "id": "log_game_game_20260315_mech_2",
+    "id": "log_game_game_20260315_mech_8",
     "date": "2026-03-15",
     "tag": "場記賽事: 春季友誼邀請賽 vs 機械系壘",
-    "name": "劉憬翰",
-    "jersey": 2,
+    "name": "簡承均",
+    "jersey": 8,
     "pa": 1,
     "ab": 1,
-    "h": 0,
+    "h": 1,
     "h1": 0,
     "h2": 0,
     "h3": 0,
-    "hr": 0,
+    "hr": 1,
     "bb": 0,
     "sf": 0,
     "k": 0
   },
   {
-    "id": "log_game_game_20260315_mech_98",
+    "id": "log_game_game_20260315_mech_99",
     "date": "2026-03-15",
     "tag": "場記賽事: 春季友誼邀請賽 vs 機械系壘",
-    "name": "陳柏翰",
-    "jersey": 98,
+    "name": "陳威騏",
+    "jersey": 99,
     "pa": 1,
     "ab": 1,
     "h": 0,
@@ -65,7 +65,7 @@
     "hr": 0,
     "bb": 0,
     "sf": 0,
-    "k": 0
+    "k": 1
   },
   {
     "id": "log_game_game_20260315_mech_30",
