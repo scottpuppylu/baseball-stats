@@ -649,6 +649,24 @@
 
       <!-- 分頁七：棒次分析與推薦 -->
       <div id="panelLineup" class="hidden space-y-6">
+        <!-- 今日出賽名單過濾 (出席/未到/請假勾選) -->
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3.5 backdrop-blur-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">ROSTER FILTER</span>
+              <h3 class="text-sm sm:text-base font-bold text-white tracking-tight">今日出席陣容篩選 (點擊剔除請假/未到選手)</h3>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="attendanceCountBadge" class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg"></span>
+              <button onclick="selectAllAttendance()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">全選出席</button>
+              <button onclick="selectPa15Attendance()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">PA≥15出席</button>
+              <button onclick="clearAttendance()" class="bg-slate-800 hover:bg-slate-700 text-rose-300 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">清空選取</button>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400">點擊球員卡片切換出席狀態（已剔除的未到/請假選手將呈灰底刪除線，不會納入 1~10 棒推薦與守備指派）：</p>
+          <div id="attendanceGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"></div>
+        </section>
+
         <!-- 建議先發十人棒次 -->
         <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 backdrop-blur-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
@@ -747,7 +765,7 @@
 
       <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs text-slate-300">
         <div class="bg-amber-950/20 border border-amber-800/40 rounded-xl p-3 text-[11px] text-amber-300/90 leading-relaxed">
-          <span class="font-bold">說明：</span>為慢速壘球 10 個正規守位個別指派選手適性順位（第 1 順位為先發首選，第 2/3 順位為備選）。此設定會即時推播至 GitHub 雲端資料庫（<code>data/defense.json</code>），並作為「最佳棒次推薦」指派守備位置與適性加權之依據。
+          <span class="font-bold">說明：</span>為慢速壘球 10 個正規守位個別指派選手適性順位（第 1 順位為先發首選，第 2～5 順位為備選/應急）。此設定會即時推播至 GitHub 雲端資料庫（<code>data/defense.json</code>），並作為「最佳棒次推薦」指派守備位置與適性加權之依據。
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="defenseRosterContainer"></div>
       </div>
@@ -859,16 +877,16 @@
 
     // 各守位預設守備能力順位 (第 1, 2, 3 順位)
     const DEFAULT_DEFENSE_RANKINGS = {
-      'P': ['盧宣嘉', '田耕宇', '陳威騏'],
-      'C': ['田耕宇', '陳泓銘', '楊智翔'],
-      '1B': ['廖仲毅', '吳侑宸', '孫煜哲'],
-      '2B': ['洪銘駿', '林楊大禎', '謝承祐'],
-      '3B': ['陳威騏', '劉憬翰', '陳柏翰'],
-      'SS': ['簡承均', '洪銘駿', '劉憬翰'],
-      'LF': ['劉憬翰', '陳柏翰', '謝承祐'],
-      'SF': ['謝承祐', '陳泓銘', '簡承均'],
-      'RC': ['陳泓銘', '孫煜哲', '田耕宇'],
-      'RF': ['陳柏翰', '吳侑宸', '楊智翔']
+      'P': ['盧宣嘉', '田耕宇', '陳威騏', '簡承均', '劉憬翰'],
+      'C': ['田耕宇', '陳泓銘', '楊智翔', '吳侑宸', '孫煜哲'],
+      '1B': ['廖仲毅', '吳侑宸', '孫煜哲', '田耕宇', '謝承祐'],
+      '2B': ['洪銘駿', '林楊大禎', '謝承祐', '陳威騏', '陳泓銘'],
+      '3B': ['陳威騏', '劉憬翰', '陳柏翰', '洪銘駿', '盧宣嘉'],
+      'SS': ['簡承均', '洪銘駿', '劉憬翰', '林楊大禎', '陳威騏'],
+      'LF': ['劉憬翰', '陳柏翰', '謝承祐', '陳泓銘', '簡承均'],
+      'SF': ['謝承祐', '陳泓銘', '簡承均', '孫煜哲', '劉憬翰'],
+      'RC': ['陳泓銘', '孫煜哲', '田耕宇', '陳柏翰', '廖仲毅'],
+      'RF': ['陳柏翰', '吳侑宸', '楊智翔', '林楊大禎', '廖仲毅']
     };
 
     let defenseRankings = JSON.parse(localStorage.getItem('rebas_defense_rankings')) || { ...DEFAULT_DEFENSE_RANKINGS };
@@ -1014,33 +1032,49 @@
         const r1 = ranks[0] || '';
         const r2 = ranks[1] || '';
         const r3 = ranks[2] || '';
+        const r4 = ranks[3] || '';
+        const r5 = ranks[4] || '';
 
         return `
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2.5">
             <div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
               <span class="font-bold text-amber-400 font-mono text-xs">${pos.label}</span>
-              <span class="text-[10px] text-slate-500 font-mono">守位適性順位設定</span>
+              <span class="text-[10px] text-slate-500 font-mono">1~5 順位能力設定</span>
             </div>
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
               <div>
-                <label class="block text-[10px] text-amber-300/80 mb-0.5 font-semibold">第 1 順位 (首選)</label>
-                <select id="pos_${pos.key}_r1" class="w-full bg-slate-900 border border-amber-700/60 text-slate-100 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-amber-500 font-medium">
+                <label class="block text-[10px] text-amber-300/90 mb-0.5 font-semibold">第 1 順位 (首選)</label>
+                <select id="pos_${pos.key}_r1" class="w-full bg-slate-900 border border-amber-700/60 text-slate-100 rounded-lg px-1.5 py-1 text-xs focus:outline-none focus:border-amber-500 font-medium">
                   <option value="">-- 無 --</option>
                   ${allPlayerNames.map(n => `<option value="${n}" ${n === r1 ? 'selected' : ''}>#${NAME_TO_JERSEY[n] ?? ''} ${n}</option>`).join('')}
                 </select>
               </div>
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">第 2 順位 (次選)</label>
-                <select id="pos_${pos.key}_r2" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                <label class="block text-[10px] text-slate-300 mb-0.5">第 2 順位 (次選)</label>
+                <select id="pos_${pos.key}_r2" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-1.5 py-1 text-xs focus:outline-none focus:border-amber-500">
                   <option value="">-- 無 --</option>
                   ${allPlayerNames.map(n => `<option value="${n}" ${n === r2 ? 'selected' : ''}>#${NAME_TO_JERSEY[n] ?? ''} ${n}</option>`).join('')}
                 </select>
               </div>
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">第 3 順位 (備選)</label>
-                <select id="pos_${pos.key}_r3" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                <label class="block text-[10px] text-slate-400 mb-0.5">第 3 順位 (三選)</label>
+                <select id="pos_${pos.key}_r3" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-1.5 py-1 text-xs focus:outline-none focus:border-amber-500">
                   <option value="">-- 無 --</option>
                   ${allPlayerNames.map(n => `<option value="${n}" ${n === r3 ? 'selected' : ''}>#${NAME_TO_JERSEY[n] ?? ''} ${n}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">第 4 順位 (備選)</label>
+                <select id="pos_${pos.key}_r4" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-1.5 py-1 text-xs focus:outline-none focus:border-amber-500">
+                  <option value="">-- 無 --</option>
+                  ${allPlayerNames.map(n => `<option value="${n}" ${n === r4 ? 'selected' : ''}>#${NAME_TO_JERSEY[n] ?? ''} ${n}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">第 5 順位 (應急)</label>
+                <select id="pos_${pos.key}_r5" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-1.5 py-1 text-xs focus:outline-none focus:border-amber-500">
+                  <option value="">-- 無 --</option>
+                  ${allPlayerNames.map(n => `<option value="${n}" ${n === r5 ? 'selected' : ''}>#${NAME_TO_JERSEY[n] ?? ''} ${n}</option>`).join('')}
                 </select>
               </div>
             </div>
@@ -1148,98 +1182,238 @@
         const r1 = document.getElementById(`pos_${pos.key}_r1`)?.value || '';
         const r2 = document.getElementById(`pos_${pos.key}_r2`)?.value || '';
         const r3 = document.getElementById(`pos_${pos.key}_r3`)?.value || '';
-        updated[pos.key] = [r1, r2, r3].filter(Boolean);
+        const r4 = document.getElementById(`pos_${pos.key}_r4`)?.value || '';
+        const r5 = document.getElementById(`pos_${pos.key}_r5`)?.value || '';
+        updated[pos.key] = [r1, r2, r3, r4, r5].filter(Boolean);
       });
 
       defenseRankings = updated;
       localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
       closeDefenseModal();
 
-      await commitDefenseToGitHub(defenseRankings, "update: update position defensive priority rankings");
+      await commitDefenseToGitHub(defenseRankings, "update: update 5-rank position defensive priority rankings");
     };
 
-    // 核心棒次推薦演算法 (慢速壘球現代賽伯計量 + 歷史總 PA >= 15 門檻篩選 + 守備排名加權指派)
+    // 今日出賽名單過濾 (出席/未到剔除狀態)
+    let presentPlayersSet = new Set();
+    let attendanceInitialized = false;
+
+    function initAttendance(allNames, historicalPaMap) {
+      if (!attendanceInitialized && allNames.length > 0) {
+        // 預設選取歷史總 PA >= 15 之選手；若人數小於 10 人則全選
+        const pa15 = allNames.filter(n => (historicalPaMap[n] || 0) >= 15);
+        if (pa15.length >= 10) {
+          presentPlayersSet = new Set(pa15);
+        } else {
+          presentPlayersSet = new Set(allNames);
+        }
+        attendanceInitialized = true;
+      }
+    }
+
+    window.selectAllAttendance = function() {
+      const allNames = Object.values(JERSEY_TO_NAME);
+      presentPlayersSet = new Set(allNames);
+      renderAll();
+    };
+
+    window.selectPa15Attendance = function() {
+      const historicalPaMap = {};
+      allLogs.forEach(l => {
+        historicalPaMap[l.name] = (historicalPaMap[l.name] || 0) + (Number(l.pa) || 0);
+      });
+      const allNames = Object.values(JERSEY_TO_NAME);
+      presentPlayersSet = new Set(allNames.filter(n => (historicalPaMap[n] || 0) >= 15));
+      renderAll();
+    };
+
+    window.clearAttendance = function() {
+      presentPlayersSet = new Set();
+      renderAll();
+    };
+
+    window.toggleAttendancePlayer = function(name) {
+      if (presentPlayersSet.has(name)) {
+        presentPlayersSet.delete(name);
+      } else {
+        presentPlayersSet.add(name);
+      }
+      renderAll();
+    };
+
+    function renderAttendanceGrid(historicalPaMap) {
+      const container = document.getElementById('attendanceGrid');
+      const countBadge = document.getElementById('attendanceCountBadge');
+      if (!container) return;
+
+      const count = presentPlayersSet.size;
+      if (countBadge) {
+        countBadge.textContent = `已出席: ${count} 人 ${count < 10 ? '(不足10人)' : '(陣容充足)'}`;
+        countBadge.className = count < 10
+          ? 'text-xs font-mono font-bold text-rose-400 bg-rose-950/60 border border-rose-800/60 px-2.5 py-1 rounded-lg'
+          : 'text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-lg';
+      }
+
+      const allNames = Object.values(JERSEY_TO_NAME);
+      container.innerHTML = allNames.map(name => {
+        const isPresent = presentPlayersSet.has(name);
+        const pa = historicalPaMap[name] || 0;
+        const jersey = NAME_TO_JERSEY[name] ?? '--';
+
+        return `
+          <div onclick="toggleAttendancePlayer('${name}')" class="cursor-pointer select-none rounded-xl p-2 border transition duration-150 flex items-center space-x-2.5 ${
+            isPresent
+              ? 'bg-sky-950/60 border-sky-500/70 shadow-sm hover:border-sky-400'
+              : 'bg-slate-950/40 border-slate-800/80 opacity-40 hover:opacity-75'
+          }">
+            <div class="shrink-0 relative">
+              ${renderAvatarElement(name, 'w-8 h-8 text-xs ring-1 ' + (isPresent ? 'ring-sky-400' : 'ring-slate-700'))}
+              <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold ${
+                isPresent ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+              }">
+                ${isPresent ? '✓' : '✕'}
+              </span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs truncate ${isPresent ? 'text-white' : 'text-slate-400 line-through'}">${name}</span>
+                <span class="text-[10px] font-mono text-slate-500">#${jersey}</span>
+              </div>
+              <span class="block text-[9px] font-mono ${pa >= 15 ? 'text-amber-400' : 'text-slate-500'}">歷史PA: ${pa}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 核心棒次推薦演算法 (現代賽伯計量學 The Book + 慢速壘球得分期望值模型 + 出席名單篩選 + 5 順位守位媒合)
     function calculateRecommendedLineup(players) {
       if (!players || players.length === 0) return [];
 
-      // 計算各球員在全歷史日誌中的累積總打席數 (Historical Total PA)
+      const allPlayerNames = Object.values(JERSEY_TO_NAME);
       const historicalPaMap = {};
       allLogs.forEach(l => {
         historicalPaMap[l.name] = (historicalPaMap[l.name] || 0) + (Number(l.pa) || 0);
       });
 
-      // 1. 歷史總 PA >= 15 門檻過濾
-      let pool = players.filter(p => (historicalPaMap[p.name] ?? p.pa) >= 15);
+      // 初始化今日出席名單
+      initAttendance(allPlayerNames, historicalPaMap);
 
-      // 若達到門檻的人數不足 10 人，則依歷史總 PA 排序依序補足至 10 人避免先發殘缺
-      if (pool.length < 10) {
-        const sortedAll = [...players].sort((a, b) => (historicalPaMap[b.name] ?? b.pa) - (historicalPaMap[a.name] ?? a.pa));
-        pool = sortedAll.slice(0, 10);
+      // 1. 出席名單過濾：僅保留今日出席之選手
+      let presentPool = players.filter(p => presentPlayersSet.has(p.name));
+      if (presentPool.length === 0) return [];
+
+      // 2. 歷史總 PA >= 15 優先順位分流
+      let primaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) >= 15);
+      let secondaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) < 15)
+        .sort((a, b) => (historicalPaMap[b.name] ?? b.pa) - (historicalPaMap[a.name] ?? a.pa));
+
+      // 若達到歷史門檻人數不足 10 人，從出席的次要池中依歷史 PA 遞補至 10 人
+      let activePool = [...primaryPool];
+      if (activePool.length < 10) {
+        const needed = Math.min(10 - activePool.length, secondaryPool.length);
+        activePool = activePool.concat(secondaryPool.slice(0, needed));
       }
 
-      // 2. 賽伯計量打線期望值排序 (1~10 棒排定)
-      let availablePool = [...pool];
+      // 若出席總人數仍未達 10 人，則依目前全部出席人數排定
+      const lineupSize = Math.min(10, activePool.length);
+      let pool = [...activePool];
 
-      // 第四棒 (終極重砲 Clean-up): ISO 權重 1.5 + SLG 最大
-      availablePool.sort((a, b) => (b.iso * 1.5 + b.slg) - (a.iso * 1.5 + a.slg));
-      const p4 = availablePool.shift();
+      // 3. 現代賽伯計量棒次排序公式 (Tom Tango "The Book" 核心法則 + 慢壘得點圈期望值模型)
+      // 依序評選：4棒 (清壘重砲) -> 2棒 (超強進攻核心) -> 1棒 (極高OBP開路) -> 3棒 (全能安打) -> 5棒 (重擊護衛) -> 10棒 (第二開路) -> 6~9棒 (流暢銜接)
 
-      // 第一棒 (開路先鋒 Leadoff): 最高 OBP 與選球紀律 SDI
-      availablePool.sort((a, b) => (b.obp * 2 + Math.max(0, b.sdi)) - (a.obp * 2 + Math.max(0, a.sdi)));
-      const p1 = availablePool.shift();
+      // (A) 第四棒 Clean-Up (終極長打砲手)：慢壘中壘上有最多跑者，需要最高長打與純破壞力
+      pool.sort((a, b) => {
+        const scoreA = (a.iso * 3.0) + (a.slg * 2.0) + (a.hr * 0.25) + ((a.wrc_plus || 100) / 100) * 1.0;
+        const scoreB = (b.iso * 3.0) + (b.slg * 2.0) + (b.hr * 0.25) + ((b.wrc_plus || 100) / 100) * 1.0;
+        return scoreB - scoreA;
+      });
+      const p4 = pool.shift();
 
-      // 第二棒 (現代強棒二棒): 高 wOBA、高 Contact%，極低 K%
-      availablePool.sort((a, b) => (b.woba * 1.5 + b.contact_pct) - (a.woba * 1.5 + a.contact_pct));
-      const p2 = availablePool.shift();
+      // (B) 第二棒 Modern Super-#2 (現代進攻核心)：首局0~1出局登場，需極高 wOBA、高 OBP、優質 Contact% 且極少揮空吞 K
+      pool.sort((a, b) => {
+        const scoreA = (a.woba * 3.0) + (a.obp * 2.0) + (a.slg * 0.8) + (a.contact_pct * 1.5) - (a.k_pct * 2.0);
+        const scoreB = (b.woba * 3.0) + (b.obp * 2.0) + (b.slg * 0.8) + (b.contact_pct * 1.5) - (b.k_pct * 2.0);
+        return scoreB - scoreA;
+      });
+      const p2 = pool.shift();
 
-      // 第三棒 (全能三棒): 穿透率 AVG 與 OPS 均衡
-      availablePool.sort((a, b) => (b.avg + b.ops) - (a.avg + a.ops));
-      const p3 = availablePool.shift();
+      // (C) 第一棒 Leadoff (上壘開路先鋒)：最大任務是不製造出局數。高 OBP + 慢壘紀律 SDI + 高 Contact%
+      pool.sort((a, b) => {
+        const scoreA = (a.obp * 3.5) + (Math.max(0, a.sdi) * 1.2) + (a.contact_pct * 1.0) - (a.k_pct * 2.5);
+        const scoreB = (b.obp * 3.5) + (Math.max(0, b.sdi) * 1.2) + (b.contact_pct * 1.0) - (b.k_pct * 2.5);
+        return scoreB - scoreA;
+      });
+      const p1 = pool.shift();
 
-      // 第五棒 (長打護衛 Protection): 次佳長打與打點威脅
-      availablePool.sort((a, b) => (b.slg + b.tb / Math.max(1, b.pa)) - (a.slg + a.tb / Math.max(1, a.pa)));
-      const p5 = availablePool.shift();
+      // (D) 第三棒 All-Around (全能打擊軸心)：首波得點圈得分機會，需要極高擊球率 AVG 與全面進攻指數 OPS
+      pool.sort((a, b) => {
+        const scoreA = (a.avg * 2.5) + (a.ops * 1.8) + (a.woba * 1.5) + (a.contact_pct * 1.0);
+        const scoreB = (b.avg * 2.5) + (b.ops * 1.8) + (b.woba * 1.5) + (b.contact_pct * 1.0);
+        return scoreB - scoreA;
+      });
+      const p3 = pool.shift();
 
-      // 第十棒 (十棒伏兵 Second Leadoff): 後段最高 OBP，為回到一棒做準備
-      availablePool.sort((a, b) => b.obp - a.obp);
-      const p10 = availablePool.length > 0 ? availablePool.shift() : null;
+      // (E) 第五棒 Protection (長打護衛與殘壘清掃)：保護四棒正面對決，具備次高 ISO 與高創造得分 RC
+      pool.sort((a, b) => {
+        const scoreA = (a.slg * 2.2) + (a.iso * 2.0) + ((a.rc || 0) / Math.max(1, a.pa)) * 1.5 + ((a.wrc_plus || 100) / 100) * 1.0;
+        const scoreB = (b.slg * 2.2) + (b.iso * 2.0) + ((b.rc || 0) / Math.max(1, b.pa)) * 1.5 + ((b.wrc_plus || 100) / 100) * 1.0;
+        return scoreB - scoreA;
+      });
+      const p5 = pool.shift();
 
-      // 第 6 ~ 9 棒: 依照 wRC+ 與 Contact% 依序排列
-      availablePool.sort((a, b) => b.wrc_plus - a.wrc_plus);
-      const p6 = availablePool.shift() || null;
-      const p7 = availablePool.shift() || null;
-      const p8 = availablePool.shift() || null;
-      const p9 = availablePool.shift() || null;
+      // (F) 第十棒 Second Leadoff (慢壘十棒小核彈/伏兵)：慢壘10人制精髓，在1棒之前登場，高 OBP 打者可為前段打線創造滾雪球得分
+      let p10 = null;
+      if (pool.length > 0 && lineupSize >= 10) {
+        pool.sort((a, b) => {
+          const scoreA = (a.obp * 3.0) + (a.contact_pct * 1.2) - (a.k_pct * 1.5);
+          const scoreB = (b.obp * 3.0) + (b.contact_pct * 1.2) - (b.k_pct * 1.5);
+          return scoreB - scoreA;
+        });
+        p10 = pool.shift();
+      }
+
+      // (G) 第 6 ~ 9 棒：剩餘打者依綜合進攻產能評分降冪排列
+      pool.sort((a, b) => {
+        const ratingA = (a.wrc_plus * 0.6) + (a.ops * 40) + (a.contact_pct * 20);
+        const ratingB = (b.wrc_plus * 0.6) + (b.ops * 40) + (b.contact_pct * 20);
+        return ratingB - ratingA;
+      });
+
+      const p6 = pool.shift() || null;
+      const p7 = pool.shift() || null;
+      const p8 = pool.shift() || null;
+      const p9 = pool.shift() || null;
 
       const rawBatters = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10].filter(Boolean);
 
-      // 3. 守備位置加權分配算法 (根據 defenseRankings 針對這 10 人進行最優守位媒合)
+      // 4. 守備位置 1~5 順位最適媒合
       const assignedPositions = matchPositionsForLineup(rawBatters);
 
       const roles = [
-        { num: 1, title: '開路先鋒 (Leadoff)', desc: '極高上壘率與選球紀律，破壞對方防線堆積首位壘包' },
-        { num: 2, title: '進攻延伸 (Secondary)', desc: '擊球掌握度頂尖且極少吞 K，持續延續首棒攻勢或執行強攻推進' },
-        { num: 3, title: '全能軸心 (All-Around)', desc: '兼具穿透打擊率與長打威脅，製造首波得點圈得分威脅' },
-        { num: 4, title: '終極重砲 (Clean-Up)', desc: '全隊純長打率 (ISO) 與全壘打威力最頂尖，得點圈致命清壘重擊' },
-        { num: 5, title: '火力護衛 (Protection)', desc: '保護四棒迫使對手正面對決，具備次佳壘包推進威脅' },
-        { num: 6, title: '中段突穿 (Mid Punch)', desc: '長打潛力優質，重啟第二波進攻串聯' },
-        { num: 7, title: '戰術銜接 (Rally Anchor)', desc: '具備穩定擊球掌握度，避免攻勢驟然中斷' },
-        { num: 8, title: '後段支撐 (Lower Core)', desc: '穩定出棒施壓，消耗對方守備體力' },
-        { num: 9, title: '伏兵前哨 (Pre-Turn)', desc: '降低出局機率，為打線輪轉回前段鋪路' },
-        { num: 10, title: '十棒伏兵 (Second Leadoff)', desc: '後段最佳上壘率打者，為 1~2 棒強棒打線銜接打點機會' }
+        { num: 1, title: '開路先鋒 (Leadoff)', desc: '【現代賽伯計量】：極大化 OBP 與選球紀律 (SDI)，避免出局堆積首壘跑者' },
+        { num: 2, title: '現代核心 (Super-#2)', desc: '【全隊最具破壞力打者之一】：高 wOBA、高 OBP、絕不輕易吞 K，首局首波強攻' },
+        { num: 3, title: '全能軸心 (All-Around)', desc: '【擊球穿透力】：高安打率 (AVG) 與 OPS 兼具，製造得點圈首波致命威脅' },
+        { num: 4, title: '終極重砲 (Clean-Up)', desc: '【壘包清道夫】：全隊最高純長打率 (ISO) 與 SLG，得點圈致命一棒擊沉' },
+        { num: 5, title: '火力護衛 (Protection)', desc: '【長打保護傘】：強大長打推進力迫使對手正面對決四棒，清掃殘留壘包' },
+        { num: 6, title: '中段突穿 (Mid Punch)', desc: '【重啟第二波攻勢】：優異進攻產能 (wRC+)，擊破對方後段防線' },
+        { num: 7, title: '戰術銜接 (Rally Anchor)', desc: '【打線流暢關鍵】：穩定擊球掌握度 (Contact%)，避免攻勢中段斷層' },
+        { num: 8, title: '後段支撐 (Lower Core)', desc: '【穩健施壓】：具備纏鬥與消耗球數能力，延續局數出局數' },
+        { num: 9, title: '伏兵前哨 (Pre-Turn)', desc: '【輪轉先驅】：極力避免出局，為打線輪回十棒與前段重砲鋪路' },
+        { num: 10, title: '十棒伏兵 (Second Leadoff)', desc: '【慢壘十棒小核彈】：後段最高上壘率 (OBP)，為 1~3 棒超強打線提前堆疊壘包' }
       ];
 
       return rawBatters.map((p, idx) => ({
         slot: idx + 1,
         player: p,
         posInfo: assignedPositions[p.name] || { posKey: 'DH', label: 'DH/指定打擊', rankText: '自由支援' },
-        role: roles[idx].title,
-        reason: roles[idx].desc,
+        role: roles[idx]?.title || '後備輪替',
+        reason: roles[idx]?.desc || '打線戰術支援',
         histPa: historicalPaMap[p.name] || p.pa
       }));
     }
 
-    // 依據各守位排名對先發 10 人進行最優守備位置匹配
+    // 依據各守位 1~5 順位排名對先發 10 人進行最優守備位置匹配
     function matchPositionsForLineup(lineupBatters) {
       const batterNames = lineupBatters.map(b => b.name);
       const posKeys = POSITIONS.map(p => p.key);
@@ -1248,43 +1422,23 @@
       const unassignedBatters = new Set(batterNames);
       const unassignedPositions = new Set(posKeys);
 
-      // 第一輪：媒合所有「第 1 順位」
-      for (const pos of posKeys) {
-        const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
-        const topChoice = ranks[0];
-        if (topChoice && unassignedBatters.has(topChoice) && unassignedPositions.has(pos)) {
-          const pObj = POSITIONS.find(p => p.key === pos);
-          result[topChoice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: '第 1 順位' };
-          unassignedBatters.delete(topChoice);
-          unassignedPositions.delete(pos);
+      const rankLabels = ['第 1 順位', '第 2 順位', '第 3 順位', '第 4 順位', '第 5 順位'];
+
+      // 依序媒合第 1 到第 5 順位
+      for (let r = 0; r < 5; r++) {
+        for (const pos of Array.from(unassignedPositions)) {
+          const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
+          const choice = ranks[r];
+          if (choice && unassignedBatters.has(choice)) {
+            const pObj = POSITIONS.find(p => p.key === pos);
+            result[choice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: rankLabels[r] };
+            unassignedBatters.delete(choice);
+            unassignedPositions.delete(pos);
+          }
         }
       }
 
-      // 第二輪：媒合剩餘守位的第 2 順位
-      for (const pos of Array.from(unassignedPositions)) {
-        const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
-        const secondChoice = ranks[1];
-        if (secondChoice && unassignedBatters.has(secondChoice)) {
-          const pObj = POSITIONS.find(p => p.key === pos);
-          result[secondChoice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: '第 2 順位' };
-          unassignedBatters.delete(secondChoice);
-          unassignedPositions.delete(pos);
-        }
-      }
-
-      // 第三輪：媒合第 3 順位
-      for (const pos of Array.from(unassignedPositions)) {
-        const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
-        const thirdChoice = ranks[2];
-        if (thirdChoice && unassignedBatters.has(thirdChoice)) {
-          const pObj = POSITIONS.find(p => p.key === pos);
-          result[thirdChoice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: '第 3 順位' };
-          unassignedBatters.delete(thirdChoice);
-          unassignedPositions.delete(pos);
-        }
-      }
-
-      // 最後一輪：剩餘人員依序填入剩餘守位
+      // 剩餘人員彈性分配至未媒合守位
       const remainingBattersList = Array.from(unassignedBatters);
       const remainingPosList = Array.from(unassignedPositions);
       for (let i = 0; i < remainingBattersList.length; i++) {
@@ -1302,10 +1456,29 @@
       const pList = agg.players;
       if (!pList || pList.length === 0) return;
 
-      const rec = calculateRecommendedLineup(pList);
+      const historicalPaMap = {};
+      allLogs.forEach(l => {
+        historicalPaMap[l.name] = (historicalPaMap[l.name] || 0) + (Number(l.pa) || 0);
+      });
+      renderAttendanceGrid(historicalPaMap);
 
-      // 渲染建議打線清單
+      const rec = calculateRecommendedLineup(pList);
       const tbody = document.getElementById('recommendedLineupBody');
+
+      if (rec.length < 10) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="p-8 text-center bg-slate-950/60 text-amber-400 font-mono space-y-2">
+              <div class="text-base font-bold">⚠️ 目前選取出席球員不足 10 人 (僅 ${rec.length} 位)</div>
+              <div class="text-xs text-slate-400">請在上方「今日出席陣容篩選」區塊點擊球員卡片勾選到場選手，或點擊「全選出席」以產生完整 1~10 棒推薦。</div>
+            </td>
+          </tr>
+        `;
+        renderCustomLineupPickers(pList);
+        evaluateCustomLineup(agg);
+        return;
+      }
+
       tbody.innerHTML = rec.map(item => `
         <tr class="hover:bg-slate-800/60 transition">
           <td class="p-3 text-center font-mono font-black text-rose-400 text-sm tabular-nums">${item.slot}</td>
