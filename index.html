@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0315</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0330</span>
         </div>
 
 
@@ -1752,6 +1752,9 @@
       </div>
     </div>
   </div>
+
+  <!-- 隱藏式球員頭像檔案上傳 input -->
+  <input type="file" id="hiddenAvatarInput" accept="image/*" class="hidden">
 
 
   <script>
@@ -3559,7 +3562,7 @@
 
       // 繪製打線進攻威脅流暢圖
       const canvas = document.getElementById('lineupFlowChart');
-      if (canvas) {
+      if (canvas && canvas.getContext) {
         const ctx = canvas.getContext('2d');
         if (lineupFlowChartInst) lineupFlowChartInst.destroy();
 
@@ -3886,23 +3889,23 @@ window.toggleDiagnosticsCollapse = function() {
         (async () => {
           try {
             const { content, sha } = await fetchGitHubContent(DATA_FILE_PATH);
-            allLogs = content;
+            allLogs = window.allLogs = content;
             currentFileSha = sha;
             logsSuccess = true;
             localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
           } catch (err) {
             try {
               const content = await fetchLocalContent(DATA_FILE_PATH);
-              allLogs = content;
+              allLogs = window.allLogs = content;
               logsSuccess = false;
               localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
             } catch (staticErr) {
               const cached = localStorage.getItem('rebas_logs');
               if (cached) {
-                try { allLogs = JSON.parse(cached); } catch(e) {}
+                try { allLogs = window.allLogs = JSON.parse(cached); } catch(e) {}
               }
               if (!allLogs || allLogs.length === 0) {
-                allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
+                allLogs = window.allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
               }
               logsSuccess = false;
             }
@@ -4219,12 +4222,21 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     window.triggerAvatarUpload = function() {
-      document.getElementById('hiddenAvatarInput').click();
+      let input = document.getElementById('hiddenAvatarInput');
+      if (!input) {
+        input = document.createElement('input');
+        input.type = 'file';
+        input.id = 'hiddenAvatarInput';
+        input.accept = 'image/*';
+        input.className = 'hidden';
+        document.body.appendChild(input);
+        input.addEventListener('change', handleAvatarFileChange);
+      }
+      input.click();
     };
 
-
-    document.getElementById('hiddenAvatarInput').addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
+    function handleAvatarFileChange(e) {
+      if (e.target.files && e.target.files.length > 0) {
         const file = e.target.files[0];
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -4233,7 +4245,12 @@ window.toggleDiagnosticsCollapse = function() {
         reader.readAsDataURL(file);
         e.target.value = '';
       }
-    });
+    }
+
+    const hiddenAvatarInput = document.getElementById('hiddenAvatarInput');
+    if (hiddenAvatarInput) {
+      hiddenAvatarInput.addEventListener('change', handleAvatarFileChange);
+    }
 
 
     window.clearAvatar = async function(name) {
@@ -4269,7 +4286,7 @@ window.toggleDiagnosticsCollapse = function() {
       const e = document.getElementById('filterEndDate').value;
 
       // 1. 手動登記日誌 (純手動輸入與建檔，受到絕對保護，永不被場記覆蓋)
-      const targetLogs = (typeof window !== 'undefined' && window.allLogs) ? window.allLogs : allLogs;
+      const targetLogs = (typeof window !== 'undefined' && window.allLogs && window.allLogs.length > 0) ? window.allLogs : allLogs;
       const manualLogs = targetLogs.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
 
       // 2. 歷史場記比賽動態轉化為日誌 (即時從 allGames 計算，記憶體動態合成，不寫死覆蓋 data/logs.json)
@@ -4745,7 +4762,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       const radarCanvas = document.getElementById('compareRadarChart');
-      if (radarCanvas) {
+      if (radarCanvas && radarCanvas.getContext) {
         const radarCtx = radarCanvas.getContext('2d');
         if (compareRadarChartInst) compareRadarChartInst.destroy();
 
@@ -4904,7 +4921,7 @@ window.toggleDiagnosticsCollapse = function() {
       `;
 
 
-      const radarCtx = document.getElementById('radarChart').getContext('2d');
+      const radarCanvas = document.getElementById('radarChart'); if (!radarCanvas || !radarCanvas.getContext) return; const radarCtx = radarCanvas.getContext('2d');
       if (radarChartInst) radarChartInst.destroy();
       radarChartInst = new Chart(radarCtx, {
         type: 'radar',
@@ -4935,7 +4952,7 @@ window.toggleDiagnosticsCollapse = function() {
       });
 
 
-      const donutCtx = document.getElementById('donutChart').getContext('2d');
+      const donutCanvas = document.getElementById('donutChart'); if (!donutCanvas || !donutCanvas.getContext) return; const donutCtx = donutCanvas.getContext('2d');
       if (donutChartInst) donutChartInst.destroy();
       donutChartInst = new Chart(donutCtx, {
         type: 'doughnut',
@@ -5126,7 +5143,7 @@ window.toggleDiagnosticsCollapse = function() {
 
     function renderQuadrantChart(agg) {
       const pList = agg.players;
-      const ctx = document.getElementById('quadrantChart').getContext('2d');
+      const qCanvas = document.getElementById('quadrantChart'); if (!qCanvas || !qCanvas.getContext) return; const ctx = qCanvas.getContext('2d');
       if (quadrantChartInst) quadrantChartInst.destroy();
 
 
@@ -5214,7 +5231,7 @@ window.toggleDiagnosticsCollapse = function() {
       const xKey = document.getElementById('customXVar').value;
       const yKey = document.getElementById('customYVar').value;
       const zKey = document.getElementById('customZVar').value;
-      const ctx = document.getElementById('customChart').getContext('2d');
+      const cCanvas = document.getElementById('customChart'); if (!cCanvas || !cCanvas.getContext) return; const ctx = cCanvas.getContext('2d');
 
 
       if (customChartInst) customChartInst.destroy();
@@ -7129,7 +7146,7 @@ window.toggleDiagnosticsCollapse = function() {
     window.syncAllGamesToTeamLogs = syncAllGamesToTeamLogs;
     function syncAllGamesToTeamLogs() {
       const targetGames = (typeof window !== 'undefined' && window.allGames && window.allGames.length > 0) ? window.allGames : allGames;
-      const targetLogs = (typeof window !== 'undefined' && window.allLogs) ? window.allLogs : allLogs;
+      const targetLogs = (typeof window !== 'undefined' && window.allLogs && window.allLogs.length > 0) ? window.allLogs : allLogs;
 
       // 1. 保留所有非場記賽事的純手動/基準日誌 (剔除舊有的場記自動日誌)
       const nonGameLogs = targetLogs.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
@@ -7984,7 +8001,7 @@ function renderSprayChartStudio() {
       if (cached) allLogs = JSON.parse(cached);
     } catch(e) {}
     if (!allLogs || allLogs.length === 0) {
-      allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
+      allLogs = window.allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
     }
     syncAllGamesToTeamLogs();
     syncJerseyMaps();
