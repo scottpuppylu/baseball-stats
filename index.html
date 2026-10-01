@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0600</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0620</span>
         </div>
 
 
@@ -4471,18 +4471,15 @@ window.toggleDiagnosticsCollapse = function() {
     function getFilteredLogs() {
       const s = document.getElementById('filterStartDate')?.value || '';
       const e = document.getElementById('filterEndDate')?.value || '';
-      // 賽事日誌與比賽紀錄徹底分離：日誌列表僅展示使用者登記之日誌，絕不自動由場記灌入日誌
-      const targetLogs = (typeof window !== 'undefined' && window.allLogs && window.allLogs.length > 0) ? window.allLogs : allLogs;
-      // 確保排除任何舊版殘留之自動日誌
-      const cleanLogs = targetLogs.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
-      return cleanLogs.filter(item => {
+      const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
+      const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
+      return targetLogs.filter(item => {
         if (s && item.date < s) return false;
         if (e && item.date > e) return false;
         return true;
       });
     }
 
-    // 取得當前分析用日誌（依據 includeChien 是否排除簡承均）
     function getAnalysisLogs() {
       const logs = getFilteredLogs();
       const shouldInclude = (typeof window !== 'undefined' && window.includeChien !== undefined) ? window.includeChien : includeChien;
@@ -5687,11 +5684,36 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     window.deleteSingleLog = async (id) => {
-      if (!confirm('確認自 GitHub 雲端資料庫永久刪除此筆日誌？')) return;
-      const updated = allLogs.filter(l => l.id !== id);
-      await commitLogsToGitHub(updated, `delete: remove match log ${id}`);
-    };
+      const targetLog = allLogs.find(l => l.id === id);
+      if (!targetLog) return;
 
+      if (id.startsWith('log_game_')) {
+        const gameId = targetLog.gameId || id.replace('log_game_', '').split('_')[0];
+        const matchGame = allGames.find(g => g.id === gameId);
+        const gameDesc = matchGame ? `${matchGame.date} vs ${matchGame.opponent}` : '此場比賽';
+        if (!confirm(`此筆日誌源自【場記賽事 (${gameDesc})】。\n確認要徹底刪除該場比賽及其所有球員日誌？\n（刪除後賽事庫與全隊日誌將同步清除並推播至 GitHub）`)) return;
+
+        // 1. 自 allGames 中移除該比賽
+        allGames = allGames.filter(g => g.id !== gameId);
+        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+
+        // 2. 自 allLogs 中清除該場比賽所有球員日誌
+        allLogs = allLogs.filter(l => !(l.id.startsWith(`log_game_${gameId}_`) || l.gameId === gameId));
+        localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+
+        // 3. 雙向同步推播至 GitHub
+        await commitGamesToGitHub(allGames, `刪除賽事: ${gameDesc}`);
+        await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${gameDesc}`);
+
+        renderAll();
+        showToast(`已徹底刪除【${gameDesc}】比賽紀錄與全隊對應日誌！`);
+      } else {
+        if (!confirm(`確認自 GitHub 雲端資料庫永久刪除此筆日誌（#${targetLog.jersey} ${targetLog.name} - ${targetLog.date}）？`)) return;
+        const updated = allLogs.filter(l => l.id !== id);
+        await commitLogsToGitHub(updated, `delete: remove manual log ${id}`);
+        showToast('已自雲端資料庫刪除該筆日誌');
+      }
+    };
 
     document.getElementById('toggleAddLogBtn').addEventListener('click', () => {
       document.getElementById('addLogForm').classList.toggle('hidden');
@@ -7419,9 +7441,7 @@ window.toggleDiagnosticsCollapse = function() {
 
         window.finishActiveGameAndSyncLogs = async function() {
       if (!activeGame) return;
-      if (!confirm(`確認正式完賽結束本場比賽（淡江航太 ${activeGame.finalScore.us} : ${activeGame.finalScore.opp} ${activeGame.opponent}）？
-
-賽事紀錄將儲存至歷史賽事庫，系統將自動同步此場數據至全隊歷史日誌與每位球員之個人累積成績！`)) return;
+      if (!confirm(`確認正式完賽結束本場比賽（淡江航太 ${activeGame.finalScore.us} : ${activeGame.finalScore.opp} ${activeGame.opponent}）？\n賽事紀錄將儲存至歷史賽事庫，系統將自動綁定日誌並即時統一全隊數據與球員個人三圍成績！`)) return;
 
       activeGame.status = 'finished';
       const finishedGame = JSON.parse(JSON.stringify(activeGame));
@@ -7437,8 +7457,9 @@ window.toggleDiagnosticsCollapse = function() {
       // 1. 同步賽事紀錄至 GitHub (data/games.json)
       await commitGamesToGitHub(allGames, `賽事完賽: vs ${finishedGame.opponent} (${finishedGame.finalScore.us}-${finishedGame.finalScore.opp})`);
 
-      // 2. 關鍵同步：將此場賽事個人打擊成績轉換並登入全隊日誌與個人三圍數據庫 (data/logs.json)
-      const syncedCount = await syncGameToTeamLogs(finishedGame);
+      // 2. 關鍵綁定：自動將比賽成績與全隊日誌綁定統一，並同步推播至 GitHub (data/logs.json)
+      const syncedCount = syncAllGamesToTeamLogs();
+      await commitLogsToGitHub(allLogs, `自動綁定賽事日誌: vs ${finishedGame.opponent}`);
 
       const finishedGameId = finishedGame.id;
       activeGame = null;
@@ -7450,7 +7471,7 @@ window.toggleDiagnosticsCollapse = function() {
       switchScorebookSubTab('review');
       renderGameReview();
       renderAll();
-      showToast(`🏆 比賽已完結！已同步 ${syncedCount} 位球員成績至全隊日誌與個人三圍數據庫！`);
+      showToast(`🏆 比賽已完結！數據已全面綁定統一，全隊戰況與個人成績已即時更新！`);
     };
 
     window.discardActiveGame = function() {
@@ -7484,14 +7505,84 @@ window.toggleDiagnosticsCollapse = function() {
     // ==========================================
     window.syncAllGamesToTeamLogs = syncAllGamesToTeamLogs;
     function syncAllGamesToTeamLogs() {
-      // 徹底落實比賽紀錄與日誌分離：場記比賽數據完整保留於歷史賽事庫，不污染全隊日誌
-      const targetLogs = (typeof window !== 'undefined' && window.allLogs && window.allLogs.length > 0) ? window.allLogs : allLogs;
-      const cleanLogs = targetLogs.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
-      allLogs = window.allLogs = cleanLogs;
+      // 重新綁定日誌與比賽結果：由歷史場記庫 (allGames) 自動計算每位正式隊員的攻守數據，與手動日誌合併統一數據
+      const targetGames = (typeof window !== 'undefined' && Array.isArray(window.allGames)) ? window.allGames : (Array.isArray(allGames) ? allGames : []);
+      const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
+      const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
+
+      // 1. 保留手動登記與大專總結等非場記日誌
+      const manualLogs = targetLogs.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+
+      // 2. 由每場歷史比賽動態生成標準賽事日誌
+      const generatedGameLogs = [];
+      const cleanGames = (targetGames || []).filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
+
+      cleanGames.forEach(game => {
+        const statsMap = {};
+        const allMatchBatters = getGameAllBatters(game);
+        allMatchBatters.forEach(name => {
+          // 支援外援選手只保留在該場 Box Score 中，不進入球隊正式常規日誌
+          const isGuest = (guestPlayers || []).some(g => g.name === name) || name.includes('支援');
+          if (isGuest) return;
+          statsMap[name] = {
+            name,
+            jersey: NAME_TO_JERSEY[name] ?? 0,
+            pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0
+          };
+        });
+
+        (game.innings || []).forEach(inn => {
+          (inn.plateAppearances || []).forEach(pa => {
+            // 慢壘鐵律：跑壘者出局 (RUNNER_OUT) 屬於跑壘事件，正在打擊之打者打席未結束，絕不能計入該打者 PA 或 AB！
+            if (pa.result === 'RUNNER_OUT' || pa.isRunnerOut) {
+              return;
+            }
+            const p = statsMap[pa.batterName];
+            if (p) {
+              p.pa++;
+              if (!['BB', 'SF'].includes(pa.result)) p.ab++;
+              if (pa.result === '1H') { p.h++; p.h1++; }
+              else if (pa.result === '2H') { p.h++; p.h2++; }
+              else if (pa.result === '3H') { p.h++; p.h3++; }
+              else if (pa.result === 'HR') { p.h++; p.hr++; }
+              else if (pa.result === 'BB') p.bb++;
+              else if (pa.result === 'SF') p.sf++;
+              else if (['K', 'K_FOUL', '界外K'].includes(pa.result)) p.k++;
+            }
+          });
+        });
+
+        Object.values(statsMap).forEach(p => {
+          if (p.pa > 0) {
+            generatedGameLogs.push({
+              id: `log_game_${game.id}_${p.jersey}`,
+              gameId: game.id,
+              date: game.date,
+              tag: `場記賽事: ${game.tag || '聯賽'} vs ${game.opponent}`,
+              name: p.name,
+              jersey: p.jersey,
+              pa: p.pa,
+              ab: p.ab,
+              h: p.h,
+              h1: p.h1,
+              h2: p.h2,
+              h3: p.h3,
+              hr: p.hr,
+              bb: p.bb,
+              sf: p.sf,
+              k: p.k
+            });
+          }
+        });
+      });
+
+      // 3. 完整綁定合併：以比賽日誌在前、手動日誌在後合成統一數據源
+      allLogs = window.allLogs = [...generatedGameLogs, ...manualLogs];
       localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
       syncJerseyMaps();
-      return 0;
+      return generatedGameLogs.length;
     }
+
     window.syncGameToTeamLogs = syncGameToTeamLogs;
     async function syncGameToTeamLogs(game) {
       if (!game) return 0;
@@ -8222,8 +8313,9 @@ window.toggleDiagnosticsCollapse = function() {
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
       await commitGamesToGitHub(allGames, `修改賽事紀錄: ${game.date} vs ${game.opponent}`);
 
-      // 同時重新計算該場比賽個人成績並同步至全隊日誌與個人三圍數據庫
-      await syncGameToTeamLogs(game);
+      // 重新計算並自動綁定更新全隊日誌與個人三圍
+      syncAllGamesToTeamLogs();
+      await commitLogsToGitHub(allLogs, `連動更新賽事日誌: ${game.date} vs ${game.opponent}`);
 
       isEditingReviewGame = false;
       renderAll();
