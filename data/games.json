@@ -1,5 +1,127 @@
 [
   {
+    "id": "game_20261001_0796",
+    "date": "2026-10-01",
+    "opponent": "友隊選手",
+    "tag": "系壘例行賽",
+    "hasDh": false,
+    "dhSlot": null,
+    "ourRole": "先攻",
+    "lineup": [
+      "孫煜哲",
+      "盧宣嘉",
+      "陳泓銘",
+      "簡承均",
+      "洪銘駿",
+      "劉憬翰",
+      "陳柏翰",
+      "田耕宇",
+      "陳威騏",
+      "廖仲毅"
+    ],
+    "pitcherName": "盧宣嘉",
+    "currentInning": 1,
+    "currentHalf": "top",
+    "currentOuts": 3,
+    "currentBases": {
+      "first": null,
+      "second": null,
+      "third": null
+    },
+    "currentBatterIdx": 5,
+    "status": "in_progress",
+    "finalScore": {
+      "us": 0,
+      "opp": 0
+    },
+    "innings": [
+      {
+        "inningNum": 1,
+        "topBottom": "top",
+        "runs": 0,
+        "hits": 0,
+        "plateAppearances": [
+          {
+            "playId": "play_1790879325786",
+            "batterName": "孫煜哲",
+            "slot": 1,
+            "result": "K",
+            "trajectory": "none",
+            "location": "C",
+            "x": 0.5,
+            "y": 0.93,
+            "rbi": 0,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 1,
+            "desc": "孫煜哲 揮棒落空遭三振 (+1 出局)"
+          },
+          {
+            "playId": "play_1790879326445",
+            "batterName": "盧宣嘉",
+            "slot": 2,
+            "result": "BB",
+            "trajectory": "none",
+            "location": "C",
+            "x": 0.5,
+            "y": 0.93,
+            "rbi": 0,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "盧宣嘉 選到四壞球保送上壘"
+          },
+          {
+            "playId": "play_1790879326960",
+            "batterName": "陳泓銘",
+            "slot": 3,
+            "result": "BB",
+            "trajectory": "none",
+            "location": "C",
+            "x": 0.5,
+            "y": 0.93,
+            "rbi": 0,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "陳泓銘 選到四壞球保送上壘"
+          },
+          {
+            "playId": "play_1790879328037",
+            "batterName": "簡承均",
+            "slot": 4,
+            "result": "K",
+            "trajectory": "none",
+            "location": "C",
+            "x": 0.5,
+            "y": 0.93,
+            "rbi": 0,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 2,
+            "desc": "簡承均 揮棒落空遭三振 (+1 出局)"
+          },
+          {
+            "playId": "play_1790879333774",
+            "batterName": "洪銘駿",
+            "slot": 5,
+            "result": "K",
+            "trajectory": "none",
+            "location": "C",
+            "x": 0.5,
+            "y": 0.93,
+            "rbi": 0,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "洪銘駿 揮棒落空遭三振 (+1 出局)"
+          }
+        ],
+        "defensiveEvents": []
+      }
+    ]
+  },
+  {
     "id": "game_20260315_mech",
     "date": "2026-03-15",
     "opponent": "機械系壘",
