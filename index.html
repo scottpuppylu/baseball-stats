@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261001.1745</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261001.1749</span>
         </div>
 
 
@@ -620,39 +620,29 @@
                 <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">MATCH RULES & SETUP</span>
                 <h3 class="text-sm sm:text-base font-bold text-white tracking-tight">賽制前置條件：指定打擊 (DH) 制度設定</h3>
               </div>
-              <p class="text-xs text-slate-400 mt-1">慢壘比賽依賽事規程可選擇「無 DH 全員攻守同一」或「啟用 DH 代替投手防守專職打擊」，即時連動推薦與自訂分析</p>
+              <p class="text-xs text-slate-400 mt-1">慢壘特化規程：有 DH 制時投手 (P) 依然要打擊，打線擴編為 11 棒（10 位守備員全打 + 1 位純 DH）；無 DH 制則為 10 棒全打全守</p>
             </div>
             <div class="flex items-center space-x-2 shrink-0">
-              <span class="text-xs text-slate-400 font-medium">當前賽制：</span>
+              <span class="text-xs text-slate-400 font-medium">打線賽制：</span>
               <div class="inline-flex rounded-xl p-1 bg-slate-950 border border-slate-800">
                 <button id="btnRuleNoDh" onclick="setDhRule(false)" class="text-xs px-3 py-1.5 rounded-lg font-bold transition">
-                  無 DH 制 (全打全守)
+                  無 DH 制 (10 棒・全打全守)
                 </button>
                 <button id="btnRuleWithDh" onclick="setDhRule(true)" class="text-xs px-3 py-1.5 rounded-lg font-bold transition">
-                  有 DH 制 (指定打擊)
+                  有 DH 制 (11 棒・投手含入打線)
                 </button>
               </div>
             </div>
           </div>
 
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs bg-slate-950/80 p-3 rounded-xl border border-slate-800/80">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-950/80 p-3 rounded-xl border border-slate-800/80">
             <div class="flex items-center gap-2">
               <span id="dhStatusExplanation" class="text-slate-300"></span>
             </div>
-            <div id="dhSubPosSelectorWrapper" class="flex items-center space-x-2 shrink-0">
-              <label class="text-slate-400 font-medium">被 DH 代打之守位：</label>
-              <select id="dhSubPositionSelect" onchange="setDhSubPosition(this.value)" class="bg-slate-900 border border-slate-700 text-amber-300 text-xs rounded-lg px-2.5 py-1 font-mono focus:outline-none focus:border-amber-500">
-                <option value="P" selected>投手 (P) [標準慢壘配置]</option>
-                <option value="C">捕手 (C)</option>
-                <option value="1B">一壘手 (1B)</option>
-                <option value="2B">二壘手 (2B)</option>
-                <option value="3B">三壘手 (3B)</option>
-                <option value="SS">游擊手 (SS)</option>
-                <option value="LF">左外野 (LF)</option>
-                <option value="SF">自由手 (SF)</option>
-                <option value="RC">右中外野 (RC)</option>
-                <option value="RF">右外野 (RF)</option>
-              </select>
+            <div class="flex items-center space-x-2 shrink-0">
+              <span class="text-[11px] font-mono text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-800/60 font-semibold flex items-center gap-1">
+                <span>⚾</span> 慢壘特化規程：10 位守備員 (含投手 P) 全打 + 1 純 DH = 11 棒打線
+              </span>
             </div>
           </div>
         </section>
@@ -681,9 +671,9 @@
             <div>
               <div class="flex items-center space-x-2.5">
                 <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">RECOMMENDED LINEUP</span>
-                <h2 class="text-xl font-black text-white tracking-tight">賽伯計量最佳棒次推薦 (歷史PA ≥ 15)</h2>
+                <h2 id="recLineupTitle" class="text-xl font-black text-white tracking-tight">賽伯計量最佳棒次推薦</h2>
               </div>
-              <p class="text-xs text-slate-400 mt-1">融合慢壘得分期望值模型與教練團「各守位排名設定」，自動過濾歷史總 PA &lt; 15 之球員，推算最佳先發 1~10 棒與守位適性</p>
+              <p id="recLineupSubtitle" class="text-xs text-slate-400 mt-1">融合慢壘得分期望值模型與教練團「各守位排名設定」，自動推算先發棒次與最佳守備適性</p>
             </div>
             <button onclick="applyRecommendedToCustom()" class="self-start md:self-auto bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-xs px-3.5 py-1.5 rounded-xl font-medium transition flex items-center gap-1.5">
               <span>帶入自訂棒次分析 ➔</span>
@@ -1467,20 +1457,27 @@
     // 核心棒次推薦演算法 (現代賽伯計量學 The Book + 慢速壘球得分期望值模型 + 出席名單篩選 + 5 順位守位媒合)
     
     // 指定打擊 (DH) 制度設定前置條件 (localStorage 持久化)
+    // 規則確認：有 DH 制時投手 (P) 依然要打，所以總共會變 11 棒 (10 位守備員全打 + 1 位純打擊 DH)
     let isDhEnabled = localStorage.getItem('rebas_has_dh') !== null ? JSON.parse(localStorage.getItem('rebas_has_dh')) : false;
-    let dhReplacedPosition = localStorage.getItem('rebas_dh_replaced_pos') || 'P';
     let customDhSlot = Number(localStorage.getItem('rebas_custom_dh_slot')) || 4;
 
     window.setDhRule = function(enableDh) {
       isDhEnabled = enableDh;
       localStorage.setItem('rebas_has_dh', JSON.stringify(isDhEnabled));
-      const agg = getAggregatedStats(getFilteredLogs());
-      renderLineupAnalysis(agg);
-    };
 
-    window.setDhSubPosition = function(pos) {
-      dhReplacedPosition = pos;
-      localStorage.setItem('rebas_dh_replaced_pos', dhReplacedPosition);
+      // 若切換為有 DH 制 (11 棒)，且自訂打線目前僅 10 人，自動補齊第 11 人
+      const allNames = Object.values(JERSEY_TO_NAME);
+      if (isDhEnabled && customLineup.length < 11) {
+        const unused = allNames.find(n => !customLineup.includes(n)) || allNames[0];
+        customLineup.push(unused);
+      } else if (!isDhEnabled && customLineup.length > 10) {
+        customLineup = customLineup.slice(0, 10);
+      }
+
+      if (customDhSlot > (isDhEnabled ? 11 : 10)) {
+        customDhSlot = isDhEnabled ? 4 : 4;
+      }
+
       const agg = getAggregatedStats(getFilteredLogs());
       renderLineupAnalysis(agg);
     };
@@ -1489,45 +1486,133 @@
       customDhSlot = Number(slot);
       localStorage.setItem('rebas_custom_dh_slot', customDhSlot);
       const agg = getAggregatedStats(getFilteredLogs());
+      renderCustomLineupPickers(agg.players);
       evaluateCustomLineup(agg);
     };
 
-    function findOptimalDhBatter(lineupBatters, dhReplacedPos) {
-      const targetPos = POSITIONS.filter(p => p.key !== dhReplacedPos).map(p => p.key);
-      let bestBatter = null;
+    // 智能挑選 11 人中最適合擔任 DH 的選手 (讓其餘 10 人去守 10 個守備位置之順位加權分最高)
+    function findOptimalDhIn11(lineupBatters) {
+      const batterNames = lineupBatters.map(b => b.name);
+      let bestChoice = batterNames[0];
       let bestScore = -99999;
 
-      for (const candidate of lineupBatters) {
-        const otherBatters = lineupBatters.filter(b => b.name !== candidate.name);
-        const unassignedBatters = new Set(otherBatters.map(b => b.name));
-        const unassignedPositions = new Set(targetPos);
-        let matchScore = 0;
+      for (const candidate of batterNames) {
+        const otherBatters = batterNames.filter(b => b !== candidate);
+        const unassignedB = new Set(otherBatters);
+        const unassignedP = new Set(POSITIONS.map(p => p.key));
+        let score = 0;
+
+        for (let r = 0; r < 5; r++) {
+          for (const pos of Array.from(unassignedP)) {
+            const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
+            if (r < ranks.length) {
+              const c = ranks[r];
+              if (unassignedB.has(c)) {
+                score += (5 - r);
+                unassignedB.delete(c);
+                unassignedP.delete(pos);
+              }
+            }
+          }
+        }
+        score -= unassignedP.size * 6; // 未滿足之守位扣重分
+
+        // 打擊長打火力加成 (長打型強砲更適合專職 DH)
+        const pObj = lineupBatters.find(b => b.name === candidate);
+        const iso = pObj ? (pObj.iso || 0) : 0;
+        const wrc = pObj ? (pObj.wrc_plus || 100) : 100;
+        const totalScore = score * 10 + (iso * 15) + (wrc * 0.1);
+
+        if (totalScore > bestScore) {
+          bestScore = totalScore;
+          bestChoice = candidate;
+        }
+      }
+      return bestChoice;
+    }
+
+    // 依據守位順位進行守位媒合 (支援無 DH 10 棒全打全守，以及有 DH 11 棒含投手全打+1純DH)
+    function matchPositionsForLineup(lineupBatters, hasDh, designatedDhName = null) {
+      const batterNames = lineupBatters.map(b => b.name);
+      const result = {};
+      const rankLabels = ['第 1 順位', '第 2 順位', '第 3 順位', '第 4 順位', '第 5 順位'];
+
+      if (!hasDh) {
+        // 無 DH 制：10 名打者必須全數守備 10 個守備位置 (P ~ RF)，無任何人為 DH
+        const targetBatters = batterNames.slice(0, 10);
+        const unassignedBatters = new Set(targetBatters);
+        const unassignedPositions = new Set(POSITIONS.map(p => p.key));
 
         for (let r = 0; r < 5; r++) {
           for (const pos of Array.from(unassignedPositions)) {
             const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
-            const choice = ranks[r];
-            if (choice && unassignedBatters.has(choice)) {
-              matchScore += (5 - r);
-              unassignedBatters.delete(choice);
-              unassignedPositions.delete(pos);
+            if (r < ranks.length) {
+              const choice = ranks[r];
+              if (unassignedBatters.has(choice)) {
+                const pObj = POSITIONS.find(p => p.key === pos);
+                result[choice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: rankLabels[r], isDh: false };
+                unassignedBatters.delete(choice);
+                unassignedPositions.delete(pos);
+              }
             }
           }
         }
-        matchScore -= unassignedPositions.size * 4;
-        const offensiveBonus = (candidate.iso || 0) * 10 + ((candidate.wrc_plus || 100) / 100) * 5;
-        const totalScore = matchScore * 10 + offensiveBonus;
 
-        if (totalScore > bestScore) {
-          bestScore = totalScore;
-          bestBatter = candidate;
+        const remainingBattersList = Array.from(unassignedBatters);
+        const remainingPosList = Array.from(unassignedPositions);
+        for (let i = 0; i < remainingBattersList.length; i++) {
+          const b = remainingBattersList[i];
+          const pos = remainingPosList[i] || '彈性支援';
+          const pObj = POSITIONS.find(p => p.key === pos);
+          result[b] = { posKey: pos, label: pObj ? pObj.label : '彈性支援', rankText: '彈性支援', isDh: false };
         }
+
+        return result;
+      } else {
+        // 有 DH 制：11 名打者 (10 位守備員包含投手 P 全打 + 1 位純 DH)
+        let dhPlayer = designatedDhName;
+        if (!dhPlayer || !batterNames.includes(dhPlayer)) {
+          dhPlayer = findOptimalDhIn11(lineupBatters);
+        }
+
+        result[dhPlayer] = { posKey: 'DH', label: 'DH (指定打擊)', rankText: '純打擊不守備', isDh: true };
+
+        // 剩下 10 位打者去配對 10 個守備位置 (包含投手 P！)
+        const unassignedBatters = new Set(batterNames.filter(n => n !== dhPlayer));
+        const unassignedPositions = new Set(POSITIONS.map(p => p.key));
+
+        for (let r = 0; r < 5; r++) {
+          for (const pos of Array.from(unassignedPositions)) {
+            const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
+            if (r < ranks.length) {
+              const choice = ranks[r];
+              if (unassignedBatters.has(choice)) {
+                const pObj = POSITIONS.find(p => p.key === pos);
+                result[choice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: rankLabels[r], isDh: false };
+                unassignedBatters.delete(choice);
+                unassignedPositions.delete(pos);
+              }
+            }
+          }
+        }
+
+        const remainingBattersList = Array.from(unassignedBatters);
+        const remainingPosList = Array.from(unassignedPositions);
+        for (let i = 0; i < remainingBattersList.length; i++) {
+          const b = remainingBattersList[i];
+          const pos = remainingPosList[i] || '彈性支援';
+          const pObj = POSITIONS.find(p => p.key === pos);
+          result[b] = { posKey: pos, label: pObj ? pObj.label : '彈性支援', rankText: '彈性支援', isDh: false };
+        }
+
+        return result;
       }
-      return bestBatter ? bestBatter.name : lineupBatters[0].name;
     }
 
+    // 核心棒次推薦演算法 (支援 10 棒無 DH 或 11 棒有 DH)
     function calculateRecommendedLineup(players) {
-      if (!players || players.length === 0) return { items: [], dedicatedFielder: null, hasDh: isDhEnabled };
+      const targetSize = isDhEnabled ? 11 : 10;
+      if (!players || players.length === 0) return { items: [], hasDh: isDhEnabled, targetSize };
 
       const allPlayerNames = Object.values(JERSEY_TO_NAME);
       const historicalPaMap = {};
@@ -1540,37 +1625,35 @@
 
       // 1. 出席名單過濾：僅保留今日出席之選手
       let presentPool = players.filter(p => presentPlayersSet.has(p.name));
-      if (presentPool.length === 0) return { items: [], dedicatedFielder: null, hasDh: isDhEnabled };
+      if (presentPool.length === 0) return { items: [], hasDh: isDhEnabled, targetSize };
 
       // 2. 歷史總 PA >= 15 優先順位分流
       let primaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) >= 15);
       let secondaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) < 15)
         .sort((a, b) => (historicalPaMap[b.name] ?? b.pa) - (historicalPaMap[a.name] ?? a.pa));
 
-      // 若達到歷史門檻人數不足 10 人，從出席的次要池中依歷史 PA 遞補至 10 人
+      // 若達到歷史門檻人數不足目標人數，從出席的次要池中依歷史 PA 遞補至目標人數
       let activePool = [...primaryPool];
-      if (activePool.length < 10) {
-        const needed = Math.min(10 - activePool.length, secondaryPool.length);
+      if (activePool.length < targetSize) {
+        const needed = Math.min(targetSize - activePool.length, secondaryPool.length);
         activePool = activePool.concat(secondaryPool.slice(0, needed));
       }
 
-      // 若採「無 DH 制」，且先發 10 人無人名列投手 (P) 順位，強制調入出席名單中最高順位之投手進入 10 人名單
-      if (!isDhEnabled) {
-        const pitcherRanks = defenseRankings['P'] || DEFAULT_DEFENSE_RANKINGS['P'] || [];
-        const hasPitcher = activePool.some(p => pitcherRanks.includes(p.name));
-        if (!hasPitcher) {
-          const availablePitcher = presentPool.find(p => pitcherRanks.includes(p.name));
-          if (availablePitcher && !activePool.some(p => p.name === availablePitcher.name)) {
-            activePool.pop(); // 移除打線第 10 人
-            activePool.push(availablePitcher); // 換入合格投手
-          }
+      // 投手 P 必保機制：因為不論有無 DH 投手都要打，若目前池中無人具備投手 P 順位，調入出席名單中最高順位之投手
+      const pitcherRanks = defenseRankings['P'] || DEFAULT_DEFENSE_RANKINGS['P'] || [];
+      const hasPitcher = activePool.some(p => pitcherRanks.includes(p.name));
+      if (!hasPitcher) {
+        const availablePitcher = presentPool.find(p => pitcherRanks.includes(p.name));
+        if (availablePitcher && !activePool.some(p => p.name === availablePitcher.name)) {
+          if (activePool.length >= targetSize) activePool.pop();
+          activePool.push(availablePitcher);
         }
       }
 
-      const lineupSize = Math.min(10, activePool.length);
+      const lineupSize = Math.min(targetSize, activePool.length);
       let pool = [...activePool];
 
-      // 3. 現代賽伯計量棒次排序公式 (Tom Tango "The Book" 核心法則 + 慢壘得點圈期望值模型)
+      // 3. 現代賽伯計量棒次排序
       // (A) 第四棒 Clean-Up (終極長打砲手)
       pool.sort((a, b) => {
         const scoreA = (a.iso * 3.0) + (a.slg * 2.0) + (a.hr * 0.25) + ((a.wrc_plus || 100) / 100) * 1.0;
@@ -1611,44 +1694,60 @@
       });
       const p5 = pool.shift();
 
-      // (F) 第十棒 Second Leadoff (慢壘十棒小核彈/伏兵)
-      let p10 = null;
-      if (pool.length > 0 && lineupSize >= 10) {
+      // (F) 末棒 (第 10 棒或第 11 棒：第二開路伏兵)
+      let pLast = null;
+      if (pool.length > 0) {
         pool.sort((a, b) => {
           const scoreA = (a.obp * 3.0) + (a.contact_pct * 1.2) - (a.k_pct * 1.5);
           const scoreB = (b.obp * 3.0) + (b.contact_pct * 1.2) - (b.k_pct * 1.5);
           return scoreB - scoreA;
         });
-        p10 = pool.shift();
+        pLast = pool.shift();
       }
 
-      // (G) 第 6 ~ 9 棒
+      // (G) 中段棒次排列
       pool.sort((a, b) => {
         const ratingA = (a.wrc_plus * 0.6) + (a.ops * 40) + (a.contact_pct * 20);
         const ratingB = (b.wrc_plus * 0.6) + (b.ops * 40) + (b.contact_pct * 20);
         return ratingB - ratingA;
       });
 
-      const p6 = pool.shift() || null;
-      const p7 = pool.shift() || null;
-      const p8 = pool.shift() || null;
-      const p9 = pool.shift() || null;
-
-      const rawBatters = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10].filter(Boolean);
-
-      // 板凳出席球員 (未排入 10 人先發打線者)
-      const benchPlayers = presentPool.filter(p => !rawBatters.some(b => b.name === p.name)).map(p => p.name);
-
-      // 4. 守備位置媒合 (依據是否啟用 DH 制)
-      let optimalDhName = null;
-      if (isDhEnabled && rawBatters.length >= 10) {
-        optimalDhName = findOptimalDhBatter(rawBatters, dhReplacedPosition);
+      let rawBatters = [];
+      if (isDhEnabled) {
+        // 11 棒打線: p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11(pLast)
+        const p6 = pool.shift() || null;
+        const p7 = pool.shift() || null;
+        const p8 = pool.shift() || null;
+        const p9 = pool.shift() || null;
+        const p10 = pool.shift() || null;
+        const p11 = pLast;
+        rawBatters = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11].filter(Boolean);
+      } else {
+        // 10 棒打線: p1, p2, p3, p4, p5, p6, p7, p8, p9, p10(pLast)
+        const p6 = pool.shift() || null;
+        const p7 = pool.shift() || null;
+        const p8 = pool.shift() || null;
+        const p9 = pool.shift() || null;
+        const p10 = pLast;
+        rawBatters = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10].filter(Boolean);
       }
 
-      const matchRes = matchPositionsForLineup(rawBatters, isDhEnabled, dhReplacedPosition, optimalDhName, benchPlayers);
-      const assignedPositions = matchRes.assignedPositions;
+      // 4. 守備位置媒合 (依據是否為有 DH 11 棒制)
+      const assignedPositions = matchPositionsForLineup(rawBatters, isDhEnabled);
 
-      const roles = [
+      const roles = isDhEnabled ? [
+        { num: 1, title: '開路先鋒 (Leadoff)', desc: '【現代賽伯計量】：極大化 OBP 與選球紀律 (SDI)，避免出局堆積首壘跑者' },
+        { num: 2, title: '現代核心 (Super-#2)', desc: '【全隊最具破壞力打者之一】：高 wOBA、高 OBP、絕不輕易吞 K，首局首波強攻' },
+        { num: 3, title: '全能軸心 (All-Around)', desc: '【擊球穿透力】：高安打率 (AVG) 與 OPS 兼具，製造得點圈首波致命威脅' },
+        { num: 4, title: '終極重砲 (Clean-Up)', desc: '【壘包清道夫】：全隊最高純長打率 (ISO) 與 SLG，得點圈致命一棒擊沉' },
+        { num: 5, title: '火力護衛 (Protection)', desc: '【長打保護傘】：強大長打推進力迫使對手正面對決四棒，清掃殘留壘包' },
+        { num: 6, title: '中段突穿 (Mid Punch)', desc: '【重啟第二波攻勢】：優異進攻產能 (wRC+)，擊破對方後段防線' },
+        { num: 7, title: '戰術銜接 (Rally Anchor)', desc: '【打線流暢關鍵】：穩定擊球掌握度 (Contact%)，避免攻勢中段斷層' },
+        { num: 8, title: '後段支撐 (Lower Core)', desc: '【穩健施壓】：具備纏鬥與消耗球數能力，延續局數出局數' },
+        { num: 9, title: '伏兵前哨 (Pre-Turn)', desc: '【輪轉先驅】：極力避免出局，為打線輪回十棒與前段重砲鋪路' },
+        { num: 10, title: '雙核伏兵 (Co-Turn)', desc: '【深層壘包堆積】：與十一棒形成後段雙伏兵，擴大前段重砲打點機會' },
+        { num: 11, title: '十一棒伏兵 (Second Leadoff)', desc: '【慢壘十一棒小核彈】：後段最高上壘率 (OBP)，為 1~3 棒超強打線提前堆疊壘包' }
+      ] : [
         { num: 1, title: '開路先鋒 (Leadoff)', desc: '【現代賽伯計量】：極大化 OBP 與選球紀律 (SDI)，避免出局堆積首壘跑者' },
         { num: 2, title: '現代核心 (Super-#2)', desc: '【全隊最具破壞力打者之一】：高 wOBA、高 OBP、絕不輕易吞 K，首局首波強攻' },
         { num: 3, title: '全能軸心 (All-Around)', desc: '【擊球穿透力】：高安打率 (AVG) 與 OPS 兼具，製造得點圈首波致命威脅' },
@@ -1662,10 +1761,12 @@
       ];
 
       const items = rawBatters.map((p, idx) => {
-        const posInfo = assignedPositions[p.name] || { posKey: 'DH', label: 'DH/指定打擊', rankText: '自由支援', isDh: isDhEnabled };
+        const posInfo = assignedPositions[p.name] || { posKey: 'DH', label: 'DH/指定打擊', rankText: '純打擊', isDh: false };
         let reason = roles[idx]?.desc || '打線戰術支援';
         if (posInfo.isDh) {
-          reason = `【專職打擊不守備】：免除防守體力消耗，全力釋放打線長打與上壘產能（代替 ${POSITIONS.find(pos=>pos.key===dhReplacedPosition)?.label || dhReplacedPosition} 打擊）`;
+          reason = '【專職 DH 指定打擊】：純打擊不守備，免除守備奔波與體力消耗，極大化打線重砲輸出';
+        } else if (posInfo.posKey === 'P') {
+          reason += '【投手兼任打擊】：符合慢壘規程投手登板投球同時扛起進攻責任';
         }
         return {
           slot: idx + 1,
@@ -1679,101 +1780,9 @@
 
       return {
         items,
-        dedicatedFielder: matchRes.dedicatedFielder,
         hasDh: isDhEnabled,
-        dhReplacedPosition
+        targetSize
       };
-    }
-
-    // 依據各守位 1~5 順位排名對先發 10 人進行最優守備位置匹配 (支援有/無 DH 雙模式)
-    function matchPositionsForLineup(lineupBatters, hasDh, dhReplacedPos = 'P', designatedDhName = null, benchPlayers = []) {
-      const batterNames = lineupBatters.map(b => b.name);
-      const result = {};
-      const rankLabels = ['第 1 順位', '第 2 順位', '第 3 順位', '第 4 順位', '第 5 順位'];
-
-      if (!hasDh) {
-        // 無 DH 制：10 名打者必須守備 10 個守備位置 (P ~ RF)，無任何人為 DH
-        const unassignedBatters = new Set(batterNames);
-        const unassignedPositions = new Set(POSITIONS.map(p => p.key));
-
-        for (let r = 0; r < 5; r++) {
-          for (const pos of Array.from(unassignedPositions)) {
-            const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
-            const choice = ranks[r];
-            if (choice && unassignedBatters.has(choice)) {
-              const pObj = POSITIONS.find(p => p.key === pos);
-              result[choice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: rankLabels[r], isDh: false };
-              unassignedBatters.delete(choice);
-              unassignedPositions.delete(pos);
-            }
-          }
-        }
-
-        const remainingBattersList = Array.from(unassignedBatters);
-        const remainingPosList = Array.from(unassignedPositions);
-        for (let i = 0; i < remainingBattersList.length; i++) {
-          const b = remainingBattersList[i];
-          const pos = remainingPosList[i] || 'DH';
-          const pObj = POSITIONS.find(p => p.key === pos);
-          result[b] = { posKey: pos, label: pObj ? pObj.label : '彈性支援', rankText: '彈性支援', isDh: false };
-        }
-
-        return { assignedPositions: result, dedicatedFielder: null };
-      } else {
-        // 有 DH 制：打線中 1 人為 DH (指定打擊)，其餘 9 人守備 9 個守位 (除 dhReplacedPos 以外)
-        let dhPlayer = designatedDhName;
-        if (!dhPlayer || !batterNames.includes(dhPlayer)) {
-          dhPlayer = findOptimalDhBatter(lineupBatters, dhReplacedPos);
-        }
-
-        result[dhPlayer] = { posKey: 'DH', label: 'DH (指定打擊)', rankText: '專職打擊', isDh: true };
-
-        const targetFieldingPos = POSITIONS.filter(p => p.key !== dhReplacedPos).map(p => p.key);
-        const unassignedBatters = new Set(batterNames.filter(n => n !== dhPlayer));
-        const unassignedPositions = new Set(targetFieldingPos);
-
-        for (let r = 0; r < 5; r++) {
-          for (const pos of Array.from(unassignedPositions)) {
-            const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
-            const choice = ranks[r];
-            if (choice && unassignedBatters.has(choice)) {
-              const pObj = POSITIONS.find(p => p.key === pos);
-              result[choice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: rankLabels[r], isDh: false };
-              unassignedBatters.delete(choice);
-              unassignedPositions.delete(pos);
-            }
-          }
-        }
-
-        const remainingBattersList = Array.from(unassignedBatters);
-        const remainingPosList = Array.from(unassignedPositions);
-        for (let i = 0; i < remainingBattersList.length; i++) {
-          const b = remainingBattersList[i];
-          const pos = remainingPosList[i] || '彈性支援';
-          const pObj = POSITIONS.find(p => p.key === pos);
-          result[b] = { posKey: pos, label: pObj ? pObj.label : '彈性支援', rankText: '彈性支援', isDh: false };
-        }
-
-        // 專職守備球員 (只守不打，負責 dhReplacedPos)
-        let dedicatedFielder = null;
-        const pObj = POSITIONS.find(p => p.key === dhReplacedPos);
-        const posLabel = pObj ? pObj.label : dhReplacedPos;
-
-        if (benchPlayers && benchPlayers.length > 0) {
-          const ranks = defenseRankings[dhReplacedPos] || DEFAULT_DEFENSE_RANKINGS[dhReplacedPos] || [];
-          for (const rChoice of ranks) {
-            if (benchPlayers.includes(rChoice)) {
-              dedicatedFielder = { name: rChoice, posKey: dhReplacedPos, label: posLabel };
-              break;
-            }
-          }
-          if (!dedicatedFielder) {
-            dedicatedFielder = { name: benchPlayers[0], posKey: dhReplacedPos, label: posLabel };
-          }
-        }
-
-        return { assignedPositions: result, dedicatedFielder };
-      }
     }
 
     // 渲染棒次推薦與自訂分析主模組
@@ -1791,40 +1800,40 @@
       const btnNoDh = document.getElementById('btnRuleNoDh');
       const btnWithDh = document.getElementById('btnRuleWithDh');
       const explanationEl = document.getElementById('dhStatusExplanation');
-      const subPosWrapper = document.getElementById('dhSubPosSelectorWrapper');
-      const subPosSelect = document.getElementById('dhSubPositionSelect');
+      const recTitleEl = document.getElementById('recLineupTitle');
+      const recSubtitleEl = document.getElementById('recLineupSubtitle');
 
       if (btnNoDh && btnWithDh) {
         if (!isDhEnabled) {
           btnNoDh.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-sky-600 text-white shadow transition';
           btnWithDh.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
           if (explanationEl) {
-            explanationEl.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="font-bold text-emerald-400">【無 DH 制 (全打全守)】</span><span class="text-slate-300">10 位打者全員下場防守，攻守同一，投手 (P) 必須親自上場打擊。</span></span>';
+            explanationEl.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="font-bold text-emerald-400">【無 DH 制 (10 棒打線)】</span><span class="text-slate-300">10 位打者全員下場防守（攻守合一），投手 (P) 親自打擊，場上無任何純指定打擊。</span></span>';
           }
-          if (subPosWrapper) subPosWrapper.classList.add('opacity-40', 'pointer-events-none');
+          if (recTitleEl) recTitleEl.textContent = '賽伯計量最佳棒次推薦 (無 DH 制・10 棒全打全守)';
+          if (recSubtitleEl) recSubtitleEl.textContent = '融合慢壘得分期望值模型與各守位排名，推算 10 位攻守合一打者與守備位置 (歷史PA ≥ 15)';
         } else {
           btnWithDh.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white shadow transition';
           btnNoDh.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
-          const posObj = POSITIONS.find(p => p.key === dhReplacedPosition);
-          const pName = posObj ? posObj.label : dhReplacedPosition;
           if (explanationEl) {
-            explanationEl.innerHTML = `<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span class="font-bold text-amber-400">【有 DH 制 (指定打擊)】</span><span class="text-slate-300">打線 10 棒中指派 1 位專職 DH，防守端由專職守備員（只守不打）鎮守 <span class="font-mono text-amber-300 font-bold">${pName}</span>。</span></span>`;
+            explanationEl.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span class="font-bold text-amber-400">【有 DH 制 (11 棒打線)】</span><span class="text-slate-300">10 位守備員（含投手 P）全員打擊 + 1 位純打擊 DH，總共 11 棒打線！投手依然要打！</span></span>';
           }
-          if (subPosWrapper) subPosWrapper.classList.remove('opacity-40', 'pointer-events-none');
-          if (subPosSelect) subPosSelect.value = dhReplacedPosition;
+          if (recTitleEl) recTitleEl.textContent = '賽伯計量最佳棒次推薦 (有 DH 制・11 棒打線・投手含入打線)';
+          if (recSubtitleEl) recSubtitleEl.textContent = '10 位守備員 (含投手 P) 全員上場打擊 + 1 位純打擊 DH，共推算 11 位先發棒次與最佳守位配置 (歷史PA ≥ 15)';
         }
       }
 
       const rec = calculateRecommendedLineup(pList);
       const tbody = document.getElementById('recommendedLineupBody');
       const recDedInfo = document.getElementById('recDedicatedFielderInfo');
+      const targetSize = isDhEnabled ? 11 : 10;
 
-      if (!rec.items || rec.items.length < 10) {
+      if (!rec.items || rec.items.length < targetSize) {
         tbody.innerHTML = `
           <tr>
             <td colspan="9" class="p-8 text-center bg-slate-950/60 text-amber-400 font-mono space-y-2">
-              <div class="text-base font-bold">⚠️ 目前選取出席球員不足 10 人 (僅 ${rec.items ? rec.items.length : 0} 位)</div>
-              <div class="text-xs text-slate-400">請在上方「今日出席陣容篩選」區塊點擊球員卡片勾選到場選手，或點擊「全選出席」以產生完整 1~10 棒推薦。</div>
+              <div class="text-base font-bold">⚠️ 目前選取出席球員不足 ${targetSize} 人 (僅 ${rec.items ? rec.items.length : 0} 位)</div>
+              <div class="text-xs text-slate-400">${isDhEnabled ? '有 DH 制需 11 位打者 (10 守備員含投手 + 1 純 DH)。' : '無 DH 制需 10 位打者 (全打全守)。'}請在上方「今日出席陣容篩選」區塊勾選到場選手，或點擊「全選出席」。</div>
             </td>
           </tr>
         `;
@@ -1837,14 +1846,14 @@
       tbody.innerHTML = rec.items.map(item => {
         let posBadge = '';
         if (item.posInfo.isDh) {
-          posBadge = `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-md inline-flex items-center gap-1 font-bold font-mono"><span>DH (指定打擊)</span><span class="text-[9px] text-amber-400/80 font-normal">(專職打擊)</span></span>`;
+          posBadge = `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-md inline-flex items-center gap-1 font-bold font-mono"><span>DH (指定打擊)</span><span class="text-[9px] text-amber-400/80 font-normal">(純打擊)</span></span>`;
         } else {
           posBadge = `<span class="bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded-md inline-flex items-center gap-1"><span>${item.posInfo.label}</span><span class="text-[9px] text-amber-400/80 font-normal">(${item.posInfo.rankText})</span></span>`;
         }
 
         return `
-          <tr class="hover:bg-slate-800/60 transition">
-            <td class="p-3 text-center font-mono font-black text-rose-400 text-sm tabular-nums">${item.slot}</td>
+          <tr class="hover:bg-slate-800/60 transition ${item.posInfo.isDh ? 'bg-amber-950/15' : ''}">
+            <td class="p-3 text-center font-mono font-black ${item.posInfo.isDh ? 'text-amber-400' : 'text-rose-400'} text-sm tabular-nums">${item.slot}</td>
             <td class="p-3 font-bold text-white flex items-center space-x-3">
               ${renderAvatarElement(item.player.name, 'w-8 h-8 text-xs ring-1 ring-slate-700')}
               <div>
@@ -1865,30 +1874,28 @@
         `;
       }).join('');
 
-      // 渲染推薦棒次之專職守備組提示
+      // 渲染推薦棒次之陣容配置說明卡
       if (recDedInfo) {
-        if (rec.hasDh && rec.dedicatedFielder) {
+        if (isDhEnabled) {
+          const dhItem = rec.items.find(i => i.posInfo.isDh);
+          const pItem = rec.items.find(i => i.posInfo.posKey === 'P');
           recDedInfo.innerHTML = `
             <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <div class="flex items-center space-x-3">
-                <span class="text-amber-400 font-bold flex items-center gap-1.5 shrink-0">
-                  <span>🛡️</span> 專職守備球員 (只守不打)：
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-amber-400 font-bold flex items-center gap-1.5">
+                  <span>⚾</span> 11 棒打線編制：
                 </span>
-                <div class="flex items-center space-x-2 font-bold text-white">
-                  ${renderAvatarElement(rec.dedicatedFielder.name, 'w-6 h-6 text-[10px]')}
-                  <span>#${NAME_TO_JERSEY[rec.dedicatedFielder.name] ?? ''} ${rec.dedicatedFielder.name}</span>
-                </div>
-                <span class="text-amber-300 font-mono bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60 font-semibold">
-                  負責守備：${rec.dedicatedFielder.label}
+                <span class="text-white">
+                  ${dhItem ? `第 ${dhItem.slot} 棒 #${NAME_TO_JERSEY[dhItem.player.name] ?? ''} <b>${dhItem.player.name}</b> (純 DH)` : ''}
                 </span>
+                <span class="text-slate-400">|</span>
+                <span class="text-sky-300">
+                  ${pItem ? `投手 P 位於第 ${pItem.slot} 棒 #${NAME_TO_JERSEY[pItem.player.name] ?? ''} <b>${pItem.player.name}</b> (兼任打擊)` : '投手 P 兼任打擊'}
+                </span>
+                <span class="text-slate-400">|</span>
+                <span class="text-emerald-300">全隊 10 位守備員全數上場打擊</span>
               </div>
-              <span class="text-[11px] text-slate-400 font-mono shrink-0">有 DH 制・10打10守+1人專職守備</span>
-            </div>
-          `;
-        } else if (rec.hasDh && !rec.dedicatedFielder) {
-          recDedInfo.innerHTML = `
-            <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-amber-800/60 flex items-center justify-between text-xs text-amber-300">
-              <span>⚠️ 提示：今日出席名單剛好 10 人，若採「有 DH 制」，建議場上由打線外第 11 人擔任專職守備；若全隊無多餘替補，建議切換為「無 DH 制 (全打全守)」。</span>
+              <span class="text-[11px] text-slate-400 font-mono shrink-0">有 DH 制・11 棒打線</span>
             </div>
           `;
         } else {
@@ -1897,19 +1904,20 @@
               <span class="flex items-center gap-1.5">
                 <span>✓</span> 攻守合一配置：10 位先發打者全員下場防守，完整覆蓋 10 個正規慢壘守備位置。
               </span>
-              <span class="text-[11px] text-slate-400 font-mono">無 DH 制・10人全員攻守同一</span>
+              <span class="text-[11px] text-slate-400 font-mono">無 DH 制・10 棒全打全守</span>
             </div>
           `;
         }
       }
 
-      // 若自訂打線尚未填滿 10 人，預設將推薦名單帶入自訂打線
-      if (customLineup.length !== 10) {
+      // 同步自訂打線長度 (10 棒 vs 11 棒)
+      if (customLineup.length !== targetSize) {
         customLineup = rec.items.map(r => r.player.name);
-        while (customLineup.length < 10) {
-          customLineup.push(pList[0].name);
+        while (customLineup.length < targetSize) {
+          const avail = pList.find(p => !customLineup.includes(p.name)) || pList[0];
+          customLineup.push(avail.name);
         }
-        if (rec.hasDh) {
+        if (isDhEnabled) {
           const dhIdx = rec.items.findIndex(r => r.posInfo.isDh);
           if (dhIdx !== -1) customDhSlot = dhIdx + 1;
         }
@@ -1932,7 +1940,7 @@
       }
       renderCustomLineupPickers(agg.players);
       evaluateCustomLineup(agg);
-      alert('已成功將賽伯計量建議打線 1~10 棒與守位配置帶入自訂分析引擎！');
+      alert(`已成功將賽伯計量建議打線 (${rec.items.length} 棒) 與守位配置帶入自訂分析引擎！`);
     };
 
     window.resetCustomLineupToDefault = function() {
@@ -1951,6 +1959,16 @@
       const container = document.getElementById('customLineupPickersContainer');
       const controlBar = document.getElementById('customDhControlBar');
       const allNames = Object.values(JERSEY_TO_NAME);
+      const targetSize = isDhEnabled ? 11 : 10;
+
+      // 確保 customLineup 長度正確
+      while (customLineup.length < targetSize) {
+        const unused = allNames.find(n => !customLineup.includes(n)) || allNames[0];
+        customLineup.push(unused);
+      }
+      if (customLineup.length > targetSize) {
+        customLineup = customLineup.slice(0, targetSize);
+      }
 
       if (controlBar) {
         if (isDhEnabled) {
@@ -1961,13 +1979,13 @@
                   <span>🎯</span> 指定打擊 (DH) 棒次指派：
                 </span>
                 <select onchange="setCustomDhSlot(this.value)" class="bg-slate-900 border border-amber-600/80 text-amber-300 text-xs rounded-lg px-2.5 py-1 font-mono focus:outline-none focus:border-amber-400 font-bold">
-                  ${Array.from({ length: 10 }, (_, i) => `
+                  ${Array.from({ length: 11 }, (_, i) => `
                     <option value="${i + 1}" ${customDhSlot === (i + 1) ? 'selected' : ''}>第 ${i + 1} 棒 (#${NAME_TO_JERSEY[customLineup[i]] ?? ''} ${customLineup[i] || '未定'})</option>
                   `).join('')}
                 </select>
               </div>
               <span class="text-[11px] text-slate-400 font-mono">
-                受代打守位：${POSITIONS.find(p => p.key === dhReplacedPosition)?.label || dhReplacedPosition} (由專職防守組擔任)
+                11 棒制：投手 (P) 依然要打擊！僅指派之 DH 棒次純打擊不守備，其餘 10 棒全數下場守備
               </span>
             </div>
           `;
@@ -1975,7 +1993,7 @@
           controlBar.innerHTML = `
             <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300">
               <span class="text-emerald-400 font-bold flex items-center gap-1.5">
-                <span>🛡️</span> 當前設定：無 DH 制 (10人全員攻守同一，投手必須親自打擊)
+                <span>🛡️</span> 當前設定：無 DH 制 (10 棒全打全守，投手必須親自打擊)
               </span>
               <span class="text-[11px] text-slate-500 font-mono">全隊 10 位打者皆需負擔守備</span>
             </div>
@@ -1983,7 +2001,11 @@
         }
       }
 
-      container.innerHTML = Array.from({ length: 10 }, (_, i) => {
+      container.className = isDhEnabled
+        ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3'
+        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3';
+
+      container.innerHTML = Array.from({ length: targetSize }, (_, i) => {
         const slot = i + 1;
         const currentName = customLineup[i] || allNames[0];
         const isCurrentDh = isDhEnabled && slot === customDhSlot;
@@ -1998,7 +2020,7 @@
               <span class="text-xs font-mono font-black ${isCurrentDh ? 'text-amber-400' : 'text-rose-400'}">第 ${slot} 棒</span>
               ${
                 isCurrentDh
-                  ? '<span class="text-[10px] text-amber-300 font-mono font-bold bg-amber-950/90 px-1.5 py-0.5 rounded border border-amber-600/70">DH 指定打擊</span>'
+                  ? '<span class="text-[10px] text-amber-300 font-mono font-bold bg-amber-950/90 px-1.5 py-0.5 rounded border border-amber-600/70">DH (純打)</span>'
                   : `<span class="text-[10px] text-slate-500 font-mono">BATTER ${slot}</span>`
               }
             </div>
@@ -2021,10 +2043,20 @@
       evaluateCustomLineup(agg);
     };
 
-    // 自訂棒次戰力診斷引擎 (深度數據分析升級版，支援有/無 DH 雙模式)
+    // 自訂棒次戰力診斷引擎 (深度數據分析升級版，支援 10 棒或 11 棒)
     function evaluateCustomLineup(agg) {
       const pList = agg.players;
       const allNames = Object.values(JERSEY_TO_NAME);
+      const targetSize = isDhEnabled ? 11 : 10;
+
+      // 確保陣列長度吻合
+      while (customLineup.length < targetSize) {
+        const unused = allNames.find(n => !customLineup.includes(n)) || allNames[0];
+        customLineup.push(unused);
+      }
+      if (customLineup.length > targetSize) {
+        customLineup = customLineup.slice(0, targetSize);
+      }
 
       const lineupPlayers = customLineup.map((name, idx) => {
         return pList.find(p => p.name === name) || {
@@ -2056,22 +2088,23 @@
       const midWrc = (lineupPlayers[5].wrc_plus + lineupPlayers[6].wrc_plus + lineupPlayers[7].wrc_plus) / 3;
       const midK = (lineupPlayers[5].k_pct + lineupPlayers[6].k_pct + lineupPlayers[7].k_pct) / 3;
 
-      // 4. 十棒伏兵與輪轉區 (9~10棒)
-      const p10 = lineupPlayers[9];
-      const p10Obp = p10.obp;
-      const turnObp = (lineupPlayers[8].obp + lineupPlayers[9].obp) / 2;
+      // 4. 末段伏兵與輪轉區 (10 棒為 9~10 棒；11 棒為 9~11 棒)
+      const pLast = lineupPlayers[targetSize - 1];
+      const pLastObp = pLast.obp;
+      const turnPlayers = lineupPlayers.slice(8);
+      const turnObp = turnPlayers.reduce((sum, p) => sum + p.obp, 0) / turnPlayers.length;
 
       // 5. 全打線宏觀指標
-      const totalOps = lineupPlayers.reduce((a, b) => a + b.ops, 0) / 10;
-      const totalWrc = lineupPlayers.reduce((a, b) => a + b.wrc_plus, 0) / 10;
+      const totalOps = lineupPlayers.reduce((a, b) => a + b.ops, 0) / targetSize;
+      const totalWrc = lineupPlayers.reduce((a, b) => a + b.wrc_plus, 0) / targetSize;
 
       // 預估單場總得分
-      const meanObp = lineupPlayers.reduce((a, b) => a + b.obp, 0) / 10;
-      const meanSlg = lineupPlayers.reduce((a, b) => a + b.slg, 0) / 10;
+      const meanObp = lineupPlayers.reduce((a, b) => a + b.obp, 0) / targetSize;
+      const meanSlg = lineupPlayers.reduce((a, b) => a + b.slg, 0) / targetSize;
       const projectedRuns = (meanObp * meanSlg * 14.5).toFixed(1);
 
       // 打線流暢係數 (斷層標準差)
-      const variance = lineupPlayers.reduce((sum, p) => sum + Math.pow(p.ops - totalOps, 2), 0) / 10;
+      const variance = lineupPlayers.reduce((sum, p) => sum + Math.pow(p.ops - totalOps, 2), 0) / targetSize;
       const stdDevOps = Math.sqrt(variance);
 
       // 渲染 8 大核心戰力指標卡片
@@ -2101,15 +2134,15 @@
           </div>
         </div>
         <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-          <span class="text-[10px] text-slate-400 block font-medium">十棒伏兵效應 (10棒 OBP)</span>
-          <span class="font-mono text-rose-400 font-black text-lg block tabular-nums">${p10Obp.toFixed(3)}</span>
+          <span class="text-[10px] text-slate-400 block font-medium">${isDhEnabled ? '十一棒伏兵 (11棒 OBP)' : '十棒伏兵 (10棒 OBP)'}</span>
+          <span class="font-mono text-rose-400 font-black text-lg block tabular-nums">${pLastObp.toFixed(3)}</span>
           <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono">
-            <span>9-10棒: ${turnObp.toFixed(3)}</span>
-            <span>${p10Obp >= 0.500 ? '頂級伏兵' : '堆疊一般'}</span>
+            <span>伏兵區均值: ${turnObp.toFixed(3)}</span>
+            <span>${pLastObp >= 0.500 ? '頂級開路伏兵' : '堆疊一般'}</span>
           </div>
         </div>
         <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-          <span class="text-[10px] text-slate-400 block font-medium">全打線平均 OPS</span>
+          <span class="text-[10px] text-slate-400 block font-medium">全打線平均 OPS (${targetSize}棒)</span>
           <div class="flex items-baseline space-x-1.5">
             <span class="font-mono text-white font-black text-lg block tabular-nums">${totalOps.toFixed(3)}</span>
             <span class="text-[10px] font-mono ${totalOps >= agg.teamOps ? 'text-emerald-400' : 'text-rose-400'}">
@@ -2119,7 +2152,7 @@
           <span class="text-[10px] text-slate-500 block truncate">慢壘綜合攻擊基準</span>
         </div>
         <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-          <span class="text-[10px] text-slate-400 block font-medium">全打線平均 wRC+</span>
+          <span class="text-[10px] text-slate-400 block font-medium">全打線平均 wRC+ (${targetSize}棒)</span>
           <span class="font-mono text-purple-300 font-black text-lg block tabular-nums">${totalWrc.toFixed(1)}</span>
           <span class="text-[10px] text-slate-500 block">${totalWrc >= 100 ? '優於團隊歷史平均' : '低於團隊歷史平均'}</span>
         </div>
@@ -2136,14 +2169,24 @@
       `;
 
       // 守備位置媒合 (自訂打線)
-      const benchPlayers = allNames.filter(n => presentPlayersSet.has(n) && !customLineup.includes(n));
       const designatedDhName = isDhEnabled ? customLineup[customDhSlot - 1] : null;
-      const customMatch = matchPositionsForLineup(lineupPlayers, isDhEnabled, dhReplacedPosition, designatedDhName, benchPlayers);
-      const assignedPositions = customMatch.assignedPositions;
+      const assignedPositions = matchPositionsForLineup(lineupPlayers, isDhEnabled, designatedDhName);
 
-      // 渲染 1~10 棒逐棒深度數據與適配度檢驗表 (含守備位置欄位)
+      // 渲染逐棒深度數據與適配度檢驗表
       const tableBody = document.getElementById('customLineupTableBody');
-      const tacticalRoles = [
+      const tacticalRoles = isDhEnabled ? [
+        '開路先鋒 (Leadoff)',
+        '現代超強二棒 (Super-#2)',
+        '全能攻擊軸心 (All-Around)',
+        '終極清壘重砲 (Clean-Up)',
+        '火力護衛推進 (Protection)',
+        '中段突穿打擊 (Mid Punch)',
+        '戰術銜接支撐 (Rally Anchor)',
+        '後段防線消耗 (Lower Core)',
+        '輪轉伏兵前哨 (Pre-Turn)',
+        '雙核伏兵串聯 (Co-Turn)',
+        '十一棒伏兵 (Second Leadoff)'
+      ] : [
         '開路先鋒 (Leadoff)',
         '現代超強二棒 (Super-#2)',
         '全能攻擊軸心 (All-Around)',
@@ -2176,7 +2219,7 @@
           if (p.avg >= 0.450 && p.ops >= 1.100) { fitGrade = 'S (全能軸心)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
         } else if (slot === 5) {
           if (p.slg >= 0.600) { fitGrade = 'S (優質保護)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
-        } else if (slot === 10) {
+        } else if (slot === targetSize) {
           if (p.obp >= 0.500) { fitGrade = 'S (黃金伏兵)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
           else if (p.obp < 0.380) { fitGrade = 'B (伏兵成效弱)'; fitClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40'; }
         }
@@ -2189,8 +2232,8 @@
         }
 
         return `
-          <tr class="hover:bg-slate-800/60 transition ${posInfo.isDh ? 'bg-amber-950/10' : ''}">
-            <td class="p-2.5 text-center font-bold text-rose-400">${slot}</td>
+          <tr class="hover:bg-slate-800/60 transition ${posInfo.isDh ? 'bg-amber-950/15' : ''}">
+            <td class="p-2.5 text-center font-bold ${posInfo.isDh ? 'text-amber-400' : 'text-rose-400'}">${slot}</td>
             <td class="p-2.5 font-bold text-white flex items-center space-x-2 font-sans">
               ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px] ring-1 ring-slate-700')}
               <span>#${NAME_TO_JERSEY[p.name] ?? ''} ${p.name}</span>
@@ -2214,40 +2257,34 @@
         `;
       }).join('');
 
-      // 專職守備組卡片提示 (自訂打線)
+      // 專職守備組與打線配置提示
       const customDedInfo = document.getElementById('customDedicatedFielderInfo');
       if (customDedInfo) {
-        if (isDhEnabled && customMatch.dedicatedFielder) {
+        if (isDhEnabled) {
+          const dhP = lineupPlayers[customDhSlot - 1];
+          const pitcherP = lineupPlayers.find(p => assignedPositions[p.name]?.posKey === 'P');
           customDedInfo.innerHTML = `
             <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <div class="flex items-center space-x-3">
-                <span class="text-amber-400 font-bold flex items-center gap-1.5 shrink-0">
-                  <span>🛡️</span> 本場專職守備球員 (只守不打)：
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-amber-400 font-bold flex items-center gap-1.5">
+                  <span>⚾</span> 11 棒打線編制：
                 </span>
-                <div class="flex items-center space-x-2 font-bold text-white">
-                  ${renderAvatarElement(customMatch.dedicatedFielder.name, 'w-6 h-6 text-[10px]')}
-                  <span>#${NAME_TO_JERSEY[customMatch.dedicatedFielder.name] ?? ''} ${customMatch.dedicatedFielder.name}</span>
-                </div>
-                <span class="text-amber-300 font-mono bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60 font-semibold">
-                  負責守備：${customMatch.dedicatedFielder.label}
-                </span>
+                <span class="text-white">第 ${customDhSlot} 棒 #${NAME_TO_JERSEY[dhP.name] ?? ''} <b>${dhP.name}</b> (純 DH)</span>
+                <span class="text-slate-400">|</span>
+                <span class="text-sky-300">${pitcherP ? `投手 P：第 ${lineupPlayers.indexOf(pitcherP)+1} 棒 #${NAME_TO_JERSEY[pitcherP.name] ?? ''} <b>${pitcherP.name}</b> (兼任打擊)` : '投手 P 兼任打擊'}</span>
+                <span class="text-slate-400">|</span>
+                <span class="text-emerald-300">10 位防守球員全體打擊 + 1 純 DH = 11 棒</span>
               </div>
-              <span class="text-[11px] text-slate-400 font-mono shrink-0">有 DH 制・10打10守+1人專職守備</span>
-            </div>
-          `;
-        } else if (isDhEnabled && !customMatch.dedicatedFielder) {
-          customDedInfo.innerHTML = `
-            <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-amber-800/60 flex items-center justify-between text-xs text-amber-300">
-              <span>⚠️ 提示：目前全隊出席名單僅 10 人，若採 DH 制，場上將缺少第 11 位專職守備員；若無其他替補球員，建議將賽制切換為「無 DH 制 (全打全守)」。</span>
+              <span class="text-[11px] text-slate-400 font-mono shrink-0">有 DH 制・11 棒打線</span>
             </div>
           `;
         } else {
           customDedInfo.innerHTML = `
             <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-emerald-800/60 flex items-center justify-between text-xs text-emerald-300">
               <span class="flex items-center gap-1.5">
-                <span>✓</span> 攻守合一配置：10 位自訂打者全員下場防守，完整覆蓋 10 個正規慢壘守備位置。
+                <span>✓</span> 攻守合一配置：10 位先發打者全員下場防守，完整覆蓋 10 個正規慢壘守備位置。
               </span>
-              <span class="text-[11px] text-slate-400 font-mono">無 DH 制・10人全員攻守同一</span>
+              <span class="text-[11px] text-slate-400 font-mono">無 DH 制・10 棒全打全守</span>
             </div>
           `;
         }
@@ -2261,39 +2298,36 @@
         notes.push({
           type: 'danger',
           title: '球員重複排入打線',
-          desc: `偵測到【${[...new Set(duplicates)].join('、')}】被重複指派至多個棒次，請確認先發 1~10 棒無重複球員。`
+          desc: `偵測到【${[...new Set(duplicates)].join('、')}】被重複指派至多個棒次，請確認先發 ${targetSize} 棒無重複球員。`
         });
       }
 
-      // 無 DH 制 vs 有 DH 制專屬守備與戰術診斷
-      if (!isDhEnabled) {
-        // 無 DH 制：檢驗 10 人是否有人能守 P 投手
-        const pitcherRanks = defenseRankings['P'] || DEFAULT_DEFENSE_RANKINGS['P'] || [];
-        const hasPitcher = lineupPlayers.some(p => pitcherRanks.includes(p.name));
-        if (!hasPitcher) {
-          notes.push({
-            type: 'danger',
-            title: '【無 DH 制致命漏洞】：先發 10 棒無合格投手 (P)',
-            desc: '目前為「無 DH 制」（10人全員攻守合一），但自訂 10 棒打者中無人具備合格投手 (P) 順位！慢壘將無投手可登板投球，比賽防線將面臨崩潰！建議調整至少 1 位具備投球資格之球員入打線。'
-          });
-        } else {
-          notes.push({
-            type: 'success',
-            title: '【無 DH 防守完整】：投手與關鍵中線配置正常',
-            desc: '先發 10 棒包含合格投手與內外野防守人員，符合無 DH 制全員攻守兼具之作戰要求。'
-          });
-        }
+      // 投手 P 必保檢驗：不論有無 DH 投手都要打擊！
+      const pitcherRanks = defenseRankings['P'] || DEFAULT_DEFENSE_RANKINGS['P'] || [];
+      const hasPitcher = lineupPlayers.some(p => pitcherRanks.includes(p.name));
+      if (!hasPitcher) {
+        notes.push({
+          type: 'danger',
+          title: '【致命防守漏洞】：打線中無合格投手 (P)',
+          desc: `先發 ${targetSize} 棒中無人具備合格投手 (P) 順位！慢壘投手必須親自打擊，若打線無投手將面臨無人可登板投球之嚴重防守崩潰風險！建議調整至少 1 位具備投球資格之球員入打線。`
+        });
       } else {
-        // 有 DH 制：檢驗 DH 本身之打擊破壞力
-        const dhPlayer = lineupPlayers[customDhSlot - 1];
-        const subPosObj = POSITIONS.find(p => p.key === dhReplacedPosition);
-        const subPosName = subPosObj ? subPosObj.label : dhReplacedPosition;
+        const pitcherBatter = lineupPlayers.find(p => pitcherRanks.includes(p.name));
+        notes.push({
+          type: 'success',
+          title: '【投手戰力就緒】：打線已包含合格投手',
+          desc: `先發打線中包含投手 #${NAME_TO_JERSEY[pitcherBatter.name] ?? ''} ${pitcherBatter.name}，符合慢壘規程投手登板投球同時扛起進攻責任之作戰需求。`
+        });
+      }
 
+      // 有 DH 制專屬 DH 火力檢驗
+      if (isDhEnabled) {
+        const dhPlayer = lineupPlayers[customDhSlot - 1];
         if (dhPlayer.wrc_plus < 100 || dhPlayer.ops < agg.teamOps) {
           notes.push({
             type: 'warning',
             title: `第 ${customDhSlot} 棒 DH (${dhPlayer.name}) 打擊產能不足`,
-            desc: `第 ${customDhSlot} 棒 ${dhPlayer.name} 被指派為指定打擊 (DH)，但攻擊產出 (wRC+ ${dhPlayer.wrc_plus.toFixed(1)}) 低於隊均基準 100，未能發揮指定打擊免除守備奔波、專注重砲清壘之核心戰術效益，建議更換長打或上壘率更頂尖之強打者！`
+            desc: `第 ${customDhSlot} 棒 ${dhPlayer.name} 被指派為指定打擊 (DH)，但攻擊產出 (wRC+ ${dhPlayer.wrc_plus.toFixed(1)}) 低於隊均基準 100，未能發揮 DH 免除守備奔波、專注重砲清壘之核心戰術效益，建議更換長打或上壘率更頂尖之強打者！`
           });
         } else if (dhPlayer.wrc_plus >= 120 || dhPlayer.iso >= 0.250) {
           notes.push({
@@ -2302,12 +2336,6 @@
             desc: `第 ${customDhSlot} 棒 ${dhPlayer.name} (wRC+ ${dhPlayer.wrc_plus.toFixed(1)} / OPS ${dhPlayer.ops.toFixed(3)}) 專職指定打擊，有效免除守備體力消耗，極大化打線重砲清壘破壞力！`
           });
         }
-
-        notes.push({
-          type: 'success',
-          title: '【有 DH 制守備分工】：防守端獲得有效掩護',
-          desc: `啟用指定打擊成功掩護專職守備球員（${subPosName}），兼顧防守專注控球與打線火力最大化。`
-        });
       }
 
       if (lineupPlayers[0].obp < 0.450) {
@@ -2343,7 +2371,7 @@
       }
 
       // 相鄰棒次落差檢驗
-      for (let i = 0; i <= 8; i++) {
+      for (let i = 0; i <= targetSize - 2; i++) {
         const gap = lineupPlayers[i].ops - lineupPlayers[i + 1].ops;
         if (gap >= 0.450) {
           notes.push({
@@ -2356,7 +2384,7 @@
       }
 
       // 連續高三振區間檢驗
-      for (let i = 0; i <= 8; i++) {
+      for (let i = 0; i <= targetSize - 2; i++) {
         if (lineupPlayers[i].k_pct >= 0.10 && lineupPlayers[i+1].k_pct >= 0.10) {
           notes.push({
             type: 'warning',
@@ -2367,11 +2395,11 @@
         }
       }
 
-      if (lineupPlayers[9].obp >= 0.500) {
+      if (pLast.obp >= 0.500) {
         notes.push({
           type: 'success',
-          title: '慢壘十棒小核彈戰術成效顯著',
-          desc: `第 10 棒 ${lineupPlayers[9].name} OBP 達 ${lineupPlayers[9].obp.toFixed(3)}，局數輪轉時能極高機率為 1~3 棒超強打線提前堆疊壘包！`
+          title: `第 ${targetSize} 棒伏兵小核彈戰術成效顯著`,
+          desc: `第 ${targetSize} 棒 ${pLast.name} OBP 達 ${pLast.obp.toFixed(3)}，局數輪轉時能極高機率為 1~3 棒超強打線提前堆疊壘包！`
         });
       }
 
@@ -2379,7 +2407,7 @@
         notes.push({
           type: 'success',
           title: '打線配置符合現代賽伯計量高得分期望值',
-          desc: '1~10 棒前後段串聯流暢，中心棒次長打破壞力充沛，斷層標準差小，具備高延續性與強大得分產能。'
+          desc: `1~${targetSize} 棒前後段串聯流暢，中心棒次長打破壞力充沛，斷層標準差小，具備高延續性與強大得分產能。`
         });
       }
 
@@ -2396,7 +2424,7 @@
         </div>
       `).join('');
 
-      // 繪製打線進攻威脅流暢圖 (含隊均基準線)
+      // 繪製打線進攻威脅流暢圖
       const canvas = document.getElementById('lineupFlowChart');
       if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -2431,7 +2459,7 @@
               {
                 type: 'line',
                 label: `全隊平均 OPS (${agg.teamOps.toFixed(3)})`,
-                data: Array(10).fill(agg.teamOps),
+                data: Array(targetSize).fill(agg.teamOps),
                 borderColor: '#34d399',
                 borderDash: [5, 5],
                 borderWidth: 1.5,
@@ -2468,8 +2496,7 @@
         });
       }
     }
-
-    window.toggleDiagnosticsCollapse = function() {
+window.toggleDiagnosticsCollapse = function() {
       const content = document.getElementById('diagnosticsContent');
       const icon = document.getElementById('diagToggleIcon');
       const text = document.getElementById('diagToggleText');
