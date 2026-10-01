@@ -42,7 +42,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v2610.1400</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261001.1727</span>
         </div>
 
         <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
@@ -79,13 +79,13 @@
             <svg class="w-3.5 h-3.5 text-pink-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
             <span>雙雄攻守對決</span>
           </button>
-          <button onclick="switchMainTab('tabGlossary')" id="btnTabGlossary" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
-            <svg class="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-            <span>名詞圖書館</span>
-          </button>
           <button onclick="switchMainTab('tabLineup')" id="btnTabLineup" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
             <span>棒次分析與推薦</span>
+          </button>
+          <button onclick="switchMainTab('tabGlossary')" id="btnTabGlossary" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
+            <svg class="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <span>名詞圖書館</span>
           </button>
         </nav>
 
@@ -579,75 +579,7 @@
         </section>
       </div>
 
-      <!-- 分頁六：名詞圖書館 -->
-      <div id="panelGlossary" class="hidden space-y-6">
-        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-6 backdrop-blur-sm">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-            <div>
-              <div class="flex items-center space-x-2.5">
-                <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">ENCYCLOPEDIA</span>
-                <h2 class="text-xl font-black text-white tracking-tight">專有名詞圖書館與統計公式手冊</h2>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">完整收錄淡江航太系壘賽伯計量模型、慢壘特化指標推導與進攻破壞力評估準則</p>
-            </div>
-          </div>
-
-          <div class="space-y-6 text-xs text-slate-300 leading-relaxed">
-            <div class="space-y-3 bg-sky-950/20 border border-sky-800/40 rounded-xl p-4">
-              <div class="flex items-center space-x-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
-                <h3 class="text-sm sm:text-base font-bold text-sky-300">一、慢壘特化核心指標：好球帶紀律指數 (Softball Discipline Index, SDI)</h3>
-              </div>
-              <div class="space-y-2 pl-4">
-                <p><span class="font-semibold text-slate-200">【定義】</span>專為慢速壘球運動特性研發之淨好球帶控制指標，用於五維能力雷達圖中取代傳統棒球失真的純四壞率（BB%）。</p>
-                <p><span class="font-semibold text-slate-200">【計算公式】</span><span class="font-mono text-amber-300 font-bold bg-slate-950 px-2 py-0.5 rounded border border-slate-800">SDI = (BB - 1.5 × K) / PA</span></p>
-                <p><span class="font-semibold text-slate-200">【實戰解讀】</span>慢壘具備「好球帶寬廣、球速相對慢、開局多為 1 好 1 壞」之特性，強打者以積極攻擊好球為主，四壞保送天然偏少；相對地，在慢壘吞 K 出局代價極高，通常代表追打惡劣壞球。公式給予三振 1.5 倍懲罰權重，破除「不保送就等於不會選球」的盲點，真實回饋積極出棒且從不吞 K 的強打者。</p>
-              </div>
-            </div>
-
-            <div class="space-y-3">
-              <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                <h3 class="text-sm sm:text-base font-bold text-emerald-300">二、賽伯計量進階指標 (Sabermetrics)</h3>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <span class="font-bold text-white block text-sm">加權得分創造 (wRC+)</span>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wRC+ = (wOBA / Team_wOBA) × 100</span></p>
-                  <p><span class="text-slate-400">意義：</span>綜合考量上壘品質與長打推進，排除場地與賽制偏差，是公認最客觀的個人全能進攻身價標準。</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <span class="font-bold text-white block text-sm">加權上壘率 (wOBA)</span>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA</span></p>
-                  <p><span class="text-slate-400">意義：</span>依據賽伯計量得分期望值賦予各進攻事件精確線性權重。</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <span class="font-bold text-white block text-sm">預估創造得分 (RC)</span>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">RC = (H + BB) × TB / (AB + BB)</span></p>
-                  <p><span class="text-slate-400">意義：</span>將「上壘因子」乘上「壘包推進因子」，直觀評估為球隊製造之實體分數。</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <span class="font-bold text-white block text-sm">純長打率 (ISO)</span>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">ISO = SLG - AVG</span></p>
-                  <p><span class="text-slate-400">意義：</span>過濾一壘安打水分，純粹衡量長打破壞力。</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <span class="font-bold text-white block text-sm">場內安打率 (BABIP)</span>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BABIP = (H - HR) / (AB - K - HR + SF)</span></p>
-                  <p><span class="text-slate-400">意義：</span>擊球員將球擊入場內形成安打的機率，反映擊球落點品質與初速。</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <span class="font-bold text-white block text-sm">標準化攻擊指數 (OPS+)</span>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OPS+ = (OPS / Team_OPS) × 100</span></p>
-                  <p><span class="text-slate-400">意義：</span>個人 OPS 相較於全隊平均的正規化指數。</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- 分頁七：棒次分析與推薦 -->
+<!-- 分頁六：棒次分析與推薦 -->
       <div id="panelLineup" class="hidden space-y-6">
         <!-- 今日出賽名單過濾 (出席/未到/請假勾選) -->
         <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3.5 backdrop-blur-sm">
@@ -721,8 +653,40 @@
           <!-- 自訂打線 1~10 棒選單網格 -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" id="customLineupPickersContainer"></div>
 
-          <!-- 打線戰力總評儀表 -->
+          <!-- 打線戰力總評儀表 (8大核心維度) -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2" id="lineupEvalMetrics"></div>
+
+          <!-- 自訂打線 1~10 棒逐棒深度數據與適配度檢驗表 -->
+          <div class="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/90 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                自訂打線 1~10 棒逐棒攻守數據與適配評等 (即時聯動)
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono">慢壘戰術矩陣</span>
+            </div>
+            <div class="overflow-x-auto rounded-xl border border-slate-800/80 -mx-1 sm:mx-0">
+              <table class="w-full text-left text-xs whitespace-nowrap">
+                <thead class="bg-slate-950 text-slate-400 uppercase select-none font-mono">
+                  <tr>
+                    <th class="p-2.5 text-center w-12">棒次</th>
+                    <th class="p-2.5">選手</th>
+                    <th class="p-2.5">角色定位</th>
+                    <th class="p-2.5 text-center">AVG</th>
+                    <th class="p-2.5 text-center">OBP</th>
+                    <th class="p-2.5 text-center">SLG</th>
+                    <th class="p-2.5 text-center">OPS</th>
+                    <th class="p-2.5 text-center">wRC+</th>
+                    <th class="p-2.5 text-center">ISO</th>
+                    <th class="p-2.5 text-center">SDI</th>
+                    <th class="p-2.5 text-center">Contact%</th>
+                    <th class="p-2.5 text-center font-bold text-indigo-400">棒次適配度</th>
+                  </tr>
+                </thead>
+                <tbody id="customLineupTableBody" class="divide-y divide-slate-800/80 bg-slate-900/40 font-mono"></tbody>
+              </table>
+            </div>
+          </div>
 
           <!-- 打線進攻威脅曲線圖與弱點診斷 -->
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -747,7 +711,74 @@
         </section>
       </div>
 
-    </main>
+<!-- 分頁七：名詞圖書館 -->
+      <div id="panelGlossary" class="hidden space-y-6">
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-6 backdrop-blur-sm">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center space-x-2.5">
+                <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">ENCYCLOPEDIA</span>
+                <h2 class="text-xl font-black text-white tracking-tight">專有名詞圖書館與統計公式手冊</h2>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">完整收錄淡江航太系壘賽伯計量模型、慢壘特化指標推導與進攻破壞力評估準則</p>
+            </div>
+          </div>
+
+          <div class="space-y-6 text-xs text-slate-300 leading-relaxed">
+            <div class="space-y-3 bg-sky-950/20 border border-sky-800/40 rounded-xl p-4">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-sky-300">一、慢壘特化核心指標：好球帶紀律指數 (Softball Discipline Index, SDI)</h3>
+              </div>
+              <div class="space-y-2 pl-4">
+                <p><span class="font-semibold text-slate-200">【定義】</span>專為慢速壘球運動特性研發之淨好球帶控制指標，用於五維能力雷達圖中取代傳統棒球失真的純四壞率（BB%）。</p>
+                <p><span class="font-semibold text-slate-200">【計算公式】</span><span class="font-mono text-amber-300 font-bold bg-slate-950 px-2 py-0.5 rounded border border-slate-800">SDI = (BB - 1.5 × K) / PA</span></p>
+                <p><span class="font-semibold text-slate-200">【實戰解讀】</span>慢壘具備「好球帶寬廣、球速相對慢、開局多為 1 好 1 壞」之特性，強打者以積極攻擊好球為主，四壞保送天然偏少；相對地，在慢壘吞 K 出局代價極高，通常代表追打惡劣壞球。公式給予三振 1.5 倍懲罰權重，破除「不保送就等於不會選球」的盲點，真實回饋積極出棒且從不吞 K 的強打者。</p>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-emerald-300">二、賽伯計量進階指標 (Sabermetrics)</h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">加權得分創造 (wRC+)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wRC+ = (wOBA / Team_wOBA) × 100</span></p>
+                  <p><span class="text-slate-400">意義：</span>綜合考量上壘品質與長打推進，排除場地與賽制偏差，是公認最客觀的個人全能進攻身價標準。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">加權上壘率 (wOBA)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA</span></p>
+                  <p><span class="text-slate-400">意義：</span>依據賽伯計量得分期望值賦予各進攻事件精確線性權重。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">預估創造得分 (RC)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">RC = (H + BB) × TB / (AB + BB)</span></p>
+                  <p><span class="text-slate-400">意義：</span>將「上壘因子」乘上「壘包推進因子」，直觀評估為球隊製造之實體分數。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">純長打率 (ISO)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">ISO = SLG - AVG</span></p>
+                  <p><span class="text-slate-400">意義：</span>過濾一壘安打水分，純粹衡量長打破壞力。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">場內安打率 (BABIP)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BABIP = (H - HR) / (AB - K - HR + SF)</span></p>
+                  <p><span class="text-slate-400">意義：</span>擊球員將球擊入場內形成安打的機率，反映擊球落點品質與初速。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <span class="font-bold text-white block text-sm">標準化攻擊指數 (OPS+)</span>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OPS+ = (OPS / Team_OPS) × 100</span></p>
+                  <p><span class="text-slate-400">意義：</span>個人 OPS 相較於全隊平均的正規化指數。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+        </main>
   </div>
 
   <input type="file" id="hiddenAvatarInput" accept="image/*" class="hidden">
@@ -1562,12 +1593,14 @@
       evaluateCustomLineup(agg);
     };
 
-    // 自訂棒次戰力診斷引擎
+    // 自訂棒次戰力診斷引擎 (深度數據分析升級版)
     function evaluateCustomLineup(agg) {
       const pList = agg.players;
+      const allNames = Object.values(JERSEY_TO_NAME);
+
       const lineupPlayers = customLineup.map((name, idx) => {
         return pList.find(p => p.name === name) || {
-          name, avg: 0, obp: 0, slg: 0, ops: 0, iso: 0, wrc_plus: 100, k_pct: 0, sdi: 0
+          name, avg: 0, obp: 0, slg: 0, ops: 0, iso: 0, wrc_plus: 100, k_pct: 0, sdi: 0, contact_pct: 1.0, hr: 0, pa: 0, rc: 0
         };
       });
 
@@ -1579,36 +1612,162 @@
         seen.add(p.name);
       });
 
-      // 區段指標計算
+      // 區段深度指標計算
+      // 1. 前段發動區 (1~2棒)
       const topObp = (lineupPlayers[0].obp + lineupPlayers[1].obp) / 2;
+      const topSdi = (lineupPlayers[0].sdi + lineupPlayers[1].sdi) / 2;
+      const topContact = (lineupPlayers[0].contact_pct + lineupPlayers[1].contact_pct) / 2;
+
+      // 2. 中心重砲區 (3~5棒)
       const coreSlg = (lineupPlayers[2].slg + lineupPlayers[3].slg + lineupPlayers[4].slg) / 3;
       const coreIso = (lineupPlayers[2].iso + lineupPlayers[3].iso + lineupPlayers[4].iso) / 3;
-      const lowerOps = lineupPlayers.slice(5, 10).reduce((a, b) => a + b.ops, 0) / 5;
-      const totalOps = lineupPlayers.reduce((a, b) => a + b.ops, 0) / 10;
+      const coreHr = lineupPlayers[2].hr + lineupPlayers[3].hr + lineupPlayers[4].hr;
 
-      // 渲染診斷總評指標卡片
+      // 3. 中段銜接區 (6~8棒)
+      const midOps = (lineupPlayers[5].ops + lineupPlayers[6].ops + lineupPlayers[7].ops) / 3;
+      const midWrc = (lineupPlayers[5].wrc_plus + lineupPlayers[6].wrc_plus + lineupPlayers[7].wrc_plus) / 3;
+      const midK = (lineupPlayers[5].k_pct + lineupPlayers[6].k_pct + lineupPlayers[7].k_pct) / 3;
+
+      // 4. 十棒伏兵與輪轉區 (9~10棒)
+      const p10 = lineupPlayers[9];
+      const p10Obp = p10.obp;
+      const turnObp = (lineupPlayers[8].obp + lineupPlayers[9].obp) / 2;
+
+      // 5. 全打線宏觀指標
+      const totalOps = lineupPlayers.reduce((a, b) => a + b.ops, 0) / 10;
+      const totalWrc = lineupPlayers.reduce((a, b) => a + b.wrc_plus, 0) / 10;
+
+      // 預估單場總得分 (慢速壘球 Base-Out 期望值模型)
+      const meanObp = lineupPlayers.reduce((a, b) => a + b.obp, 0) / 10;
+      const meanSlg = lineupPlayers.reduce((a, b) => a + b.slg, 0) / 10;
+      const projectedRuns = (meanObp * meanSlg * 14.5).toFixed(1);
+
+      // 打線攻勢流暢度係數 (OPS 標準差：越小代表各棒次銜接越平順無斷層)
+      const variance = lineupPlayers.reduce((sum, p) => sum + Math.pow(p.ops - totalOps, 2), 0) / 10;
+      const stdDevOps = Math.sqrt(variance);
+
+      // 渲染 8 大核心戰力指標卡片
       document.getElementById('lineupEvalMetrics').innerHTML = `
-        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-          <span class="text-[10px] text-slate-400 block">前段上壘力 (1~2棒 OBP)</span>
-          <span class="font-mono text-emerald-400 font-black text-lg block mt-0.5 tabular-nums">${topObp.toFixed(3)}</span>
-          <span class="text-[10px] text-slate-500 block">${topObp >= 0.500 ? '優異・上壘威脅極高' : '一般・攻勢發動偏緩'}</span>
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-medium">前段上壘發動 (1~2棒 OBP)</span>
+          <span class="font-mono text-emerald-400 font-black text-lg block tabular-nums">${topObp.toFixed(3)}</span>
+          <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+            <span>SDI: ${(topSdi >= 0 ? '+' : '') + topSdi.toFixed(3)}</span>
+            <span>Contact: ${(topContact * 100).toFixed(0)}%</span>
+          </div>
         </div>
-        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-          <span class="text-[10px] text-slate-400 block">中心長打力 (3~5棒 SLG)</span>
-          <span class="font-mono text-sky-400 font-black text-lg block mt-0.5 tabular-nums">${coreSlg.toFixed(3)}</span>
-          <span class="text-[10px] text-slate-500 block">ISO: ${coreIso.toFixed(3)}</span>
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-medium">中心長打火力 (3~5棒 SLG)</span>
+          <span class="font-mono text-sky-400 font-black text-lg block tabular-nums">${coreSlg.toFixed(3)}</span>
+          <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+            <span>ISO: ${coreIso.toFixed(3)}</span>
+            <span>HR: ${coreHr} 支</span>
+          </div>
         </div>
-        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-          <span class="text-[10px] text-slate-400 block">後段延續性 (6~10棒 OPS)</span>
-          <span class="font-mono text-amber-400 font-black text-lg block mt-0.5 tabular-nums">${lowerOps.toFixed(3)}</span>
-          <span class="text-[10px] text-slate-500 block">${lowerOps >= 0.900 ? '健康・攻勢少斷層' : '斷層・易快速出局'}</span>
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-medium">中段突穿銜接 (6~8棒 OPS)</span>
+          <span class="font-mono text-amber-400 font-black text-lg block tabular-nums">${midOps.toFixed(3)}</span>
+          <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+            <span>wRC+: ${midWrc.toFixed(1)}</span>
+            <span>K%: ${(midK * 100).toFixed(1)}%</span>
+          </div>
         </div>
-        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-          <span class="text-[10px] text-slate-400 block">全打線預期平均 OPS</span>
-          <span class="font-mono text-rose-400 font-black text-lg block mt-0.5 tabular-nums">${totalOps.toFixed(3)}</span>
-          <span class="text-[10px] text-slate-500 block">慢壘團隊破壞指數</span>
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-medium">十棒伏兵效應 (10棒 OBP)</span>
+          <span class="font-mono text-rose-400 font-black text-lg block tabular-nums">${p10Obp.toFixed(3)}</span>
+          <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+            <span>9-10棒: ${turnObp.toFixed(3)}</span>
+            <span>${p10Obp >= 0.500 ? '頂級伏兵' : '堆疊一般'}</span>
+          </div>
+        </div>
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-medium">全打線平均 OPS</span>
+          <div class="flex items-baseline space-x-1.5">
+            <span class="font-mono text-white font-black text-lg block tabular-nums">${totalOps.toFixed(3)}</span>
+            <span class="text-[10px] font-mono ${totalOps >= agg.teamOps ? 'text-emerald-400' : 'text-rose-400'}">
+              (${totalOps >= agg.teamOps ? '+' : ''}${((totalOps - agg.teamOps) * 1000).toFixed(0)} vs隊均)
+            </span>
+          </div>
+          <span class="text-[10px] text-slate-500 block truncate">慢壘綜合攻擊基準</span>
+        </div>
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-medium">全打線平均 wRC+</span>
+          <span class="font-mono text-purple-300 font-black text-lg block tabular-nums">${totalWrc.toFixed(1)}</span>
+          <span class="text-[10px] text-slate-500 block">${totalWrc >= 100 ? '優於團隊歷史平均' : '低於團隊歷史平均'}</span>
+        </div>
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-medium">預估單場總得分 (Runs/7局)</span>
+          <span class="font-mono text-cyan-400 font-black text-lg block tabular-nums">${projectedRuns} 分</span>
+          <span class="text-[10px] text-slate-500 block">壘包期望值演算法推估</span>
+        </div>
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-medium">打線流暢係數 (斷層標準差)</span>
+          <span class="font-mono text-emerald-300 font-black text-lg block tabular-nums">σ ${stdDevOps.toFixed(3)}</span>
+          <span class="text-[10px] text-slate-500 block">${stdDevOps < 0.280 ? '非常平順・無顯著斷層' : stdDevOps < 0.400 ? '正常落差・中心棒次偏重' : '劇烈落差・攻勢易驟斷'}</span>
         </div>
       `;
+
+      // 渲染 1~10 棒逐棒深度數據與適配度檢驗表
+      const tableBody = document.getElementById('customLineupTableBody');
+      const tacticalRoles = [
+        '開路先鋒 (Leadoff)',
+        '現代超強二棒 (Super-#2)',
+        '全能攻擊軸心 (All-Around)',
+        '終極清壘重砲 (Clean-Up)',
+        '火力護衛推進 (Protection)',
+        '中段突穿打擊 (Mid Punch)',
+        '戰術銜接支撐 (Rally Anchor)',
+        '後段防線消耗 (Lower Core)',
+        '輪轉伏兵前哨 (Pre-Turn)',
+        '十棒第二開路 (Second Leadoff)'
+      ];
+
+      tableBody.innerHTML = lineupPlayers.map((p, idx) => {
+        const slot = idx + 1;
+        // 計算該棒次的戰術適配度 (Fit Score)
+        let fitGrade = 'A';
+        let fitClass = 'bg-sky-500/20 text-sky-300 border-sky-500/40';
+
+        if (slot === 1) {
+          if (p.obp >= 0.550 && p.k_pct <= 0.05) { fitGrade = 'S (完美開路)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
+          else if (p.obp < 0.450) { fitGrade = 'C (上壘偏低)'; fitClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40'; }
+        } else if (slot === 2) {
+          if (p.woba >= 0.550 && p.contact_pct >= 0.90) { fitGrade = 'S (超強核心)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
+          else if (p.k_pct > 0.10) { fitGrade = 'B (注意吞K)'; fitClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40'; }
+        } else if (slot === 4) {
+          if (p.iso >= 0.280 && p.slg >= 0.700) { fitGrade = 'S (重砲清道夫)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
+          else if (p.iso < 0.180) { fitGrade = 'C (長打不足)'; fitClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40'; }
+        } else if (slot === 3) {
+          if (p.avg >= 0.450 && p.ops >= 1.100) { fitGrade = 'S (全能軸心)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
+        } else if (slot === 5) {
+          if (p.slg >= 0.600) { fitGrade = 'S (優質保護)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
+        } else if (slot === 10) {
+          if (p.obp >= 0.500) { fitGrade = 'S (黃金伏兵)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
+          else if (p.obp < 0.380) { fitGrade = 'B (伏兵成效弱)'; fitClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40'; }
+        }
+
+        return `
+          <tr class="hover:bg-slate-800/60 transition">
+            <td class="p-2.5 text-center font-bold text-rose-400">${slot}</td>
+            <td class="p-2.5 font-bold text-white flex items-center space-x-2 font-sans">
+              ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px] ring-1 ring-slate-700')}
+              <span>#${NAME_TO_JERSEY[p.name] ?? ''} ${p.name}</span>
+            </td>
+            <td class="p-2.5 text-slate-300 font-sans text-[11px]">${tacticalRoles[idx]}</td>
+            <td class="p-2.5 text-center text-slate-300 tabular-nums">${p.avg.toFixed(3)}</td>
+            <td class="p-2.5 text-center text-emerald-400 font-bold tabular-nums">${p.obp.toFixed(3)}</td>
+            <td class="p-2.5 text-center text-sky-400 font-bold tabular-nums">${p.slg.toFixed(3)}</td>
+            <td class="p-2.5 text-center text-white font-bold tabular-nums">${p.ops.toFixed(3)}</td>
+            <td class="p-2.5 text-center text-amber-400 font-bold tabular-nums">${p.wrc_plus.toFixed(1)}</td>
+            <td class="p-2.5 text-center text-slate-300 tabular-nums">${p.iso.toFixed(3)}</td>
+            <td class="p-2.5 text-center text-slate-300 tabular-nums">${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}</td>
+            <td class="p-2.5 text-center text-slate-300 tabular-nums">${(p.contact_pct * 100).toFixed(1)}%</td>
+            <td class="p-2.5 text-center font-sans">
+              <span class="text-[10px] px-2 py-0.5 rounded-full border font-medium ${fitClass}">${fitGrade}</span>
+            </td>
+          </tr>
+        `;
+      }).join('');
 
       // 戰術診斷回饋
       const feedbackEl = document.getElementById('lineupDiagnosticFeedback');
@@ -1618,84 +1777,138 @@
         notes.push({
           type: 'danger',
           title: '球員重複排入打線',
-          desc: `偵測到【${[...new Set(duplicates)].join('、')}】被重複指派至多個棒次，請確認先發名單無重複。`
+          desc: `偵測到【${[...new Set(duplicates)].join('、')}】被重複指派至多個棒次，請確認先發 1~10 棒無重複球員。`
         });
       }
 
       if (lineupPlayers[0].obp < 0.450) {
         notes.push({
           type: 'warning',
-          title: '一棒上壘率偏低',
-          desc: `第 1 棒 ${lineupPlayers[0].name} OBP 僅 ${lineupPlayers[0].obp.toFixed(3)}，開路堆疊壘包效率較弱，建議調配更高上壘率之選手。`
+          title: '一棒上壘率偏低 (開路堆疊效率弱)',
+          desc: `第 1 棒 ${lineupPlayers[0].name} OBP 僅 ${lineupPlayers[0].obp.toFixed(3)}，無法有效在首局首出局前堆積壘包，建議調換 OBP 更高之選手。`
+        });
+      }
+
+      if (lineupPlayers[1].wrc_plus < 100 && lineupPlayers[1].obp < 0.480) {
+        notes.push({
+          type: 'warning',
+          title: '現代二棒火力不足 (Super-#2 缺口)',
+          desc: `現代賽伯計量二棒是首局前段最強攻擊點，第 2 棒 ${lineupPlayers[1].name} wRC+ (${lineupPlayers[1].wrc_plus.toFixed(1)}) 低於隊均，建議配置高 wOBA 強棒。`
         });
       }
 
       if (lineupPlayers[3].iso < 0.200) {
         notes.push({
           type: 'warning',
-          title: '第四棒長打穿透力缺口',
-          desc: `第 4 棒 ${lineupPlayers[3].name} 純長打率 (ISO) 僅 ${lineupPlayers[3].iso.toFixed(3)}，得點圈長打清壘威脅不足。`
+          title: '第四棒長打穿透力缺口 (Clean-up 威脅不足)',
+          desc: `第 4 棒 ${lineupPlayers[3].name} 純長打率 (ISO) 僅 ${lineupPlayers[3].iso.toFixed(3)}，壘上有跑者時難以給予對手長打清壘威脅。`
         });
       }
 
-      // 檢查連續 2 棒吞 K 率過高
+      if (lineupPlayers[4].slg < 0.500) {
+        notes.push({
+          type: 'warning',
+          title: '第五棒長打保護傘不足',
+          desc: `第 5 棒 ${lineupPlayers[4].name} 長打率偏低 (${lineupPlayers[4].slg.toFixed(3)})，對手投手容易策略性閃避第四棒正面投球。`
+        });
+      }
+
+      // 相鄰棒次落差檢驗
       for (let i = 0; i <= 8; i++) {
-        if (lineupPlayers[i].k_pct >= 0.10 && lineupPlayers[i+1].k_pct >= 0.10) {
+        const gap = lineupPlayers[i].ops - lineupPlayers[i + 1].ops;
+        if (gap >= 0.450) {
           notes.push({
             type: 'warning',
-            title: `第 ${i+1}～${i+2} 棒連續高三振區間`,
-            desc: `${lineupPlayers[i].name} 與 ${lineupPlayers[i+1].name} 三振率均偏高，容易在局中形成快速兩出局攻勢斷層。`
+            title: `第 ${i + 1} 棒至第 ${i + 2} 棒斷崖式斷層`,
+            desc: `${lineupPlayers[i].name} (OPS ${lineupPlayers[i].ops.toFixed(3)}) 到 ${lineupPlayers[i + 1].name} (OPS ${lineupPlayers[i + 1].ops.toFixed(3)}) 攻擊指數驟降，容易使該局進攻瞬間中斷。`
           });
           break;
         }
       }
 
-      if (notes.length === 0) {
+      // 連續高三振區間檢驗
+      for (let i = 0; i <= 8; i++) {
+        if (lineupPlayers[i].k_pct >= 0.10 && lineupPlayers[i+1].k_pct >= 0.10) {
+          notes.push({
+            type: 'warning',
+            title: `第 ${i+1}～${i+2} 棒連續高三振區間`,
+            desc: `${lineupPlayers[i].name} 與 ${lineupPlayers[i+1].name} 三振率均偏高，慢壘中容易因追打壞球快速送出兩出局。`
+          });
+          break;
+        }
+      }
+
+      if (lineupPlayers[9].obp >= 0.500) {
         notes.push({
           type: 'success',
-          title: '棒次配置兼顧上壘與長打流暢度',
-          desc: '此打線前後段串聯流暢，中心棒次長打破壞力充沛，未發現明顯攻勢阻斷點。'
+          title: '慢壘十棒小核彈戰術成效顯著',
+          desc: `第 10 棒 ${lineupPlayers[9].name} OBP 達 ${lineupPlayers[9].obp.toFixed(3)}，局數輪轉時能極高機率為 1~3 棒超強打線提前堆疊壘包！`
+        });
+      }
+
+      if (notes.filter(n => n.type !== 'success').length === 0) {
+        notes.push({
+          type: 'success',
+          title: '打線配置符合現代賽伯計量高得分期望值',
+          desc: '1~10 棒前後段串聯流暢，中心棒次長打破壞力充沛，斷層標準差小，具備高延續性與強大得分產能。'
         });
       }
 
       feedbackEl.innerHTML = notes.map(n => `
-        <div class="p-2.5 rounded-lg border ${n.type === 'danger' ? 'bg-rose-950/30 border-rose-800/60 text-rose-300' : n.type === 'warning' ? 'bg-amber-950/30 border-amber-800/60 text-amber-300' : 'bg-emerald-950/30 border-emerald-800/60 text-emerald-300'}">
+        <div class="p-2.5 rounded-lg border ${
+          n.type === 'danger'
+            ? 'bg-rose-950/30 border-rose-800/60 text-rose-300'
+            : n.type === 'warning'
+            ? 'bg-amber-950/30 border-amber-800/60 text-amber-300'
+            : 'bg-emerald-950/30 border-emerald-800/60 text-emerald-300'
+        }">
           <span class="font-bold block text-xs mb-0.5">${n.title}</span>
           <span class="text-[11px] text-slate-300 block leading-relaxed">${n.desc}</span>
         </div>
       `).join('');
 
-      // 繪製打線進攻威脅流暢圖
+      // 繪製打線進攻威脅流暢圖 (含隊均基準線)
       const canvas = document.getElementById('lineupFlowChart');
       if (canvas) {
         const ctx = canvas.getContext('2d');
         if (lineupFlowChartInst) lineupFlowChartInst.destroy();
 
         lineupFlowChartInst = new Chart(ctx, {
-          type: 'line',
+          type: 'bar',
           data: {
             labels: lineupPlayers.map((p, i) => `${i + 1}棒 ${p.name}`),
             datasets: [
               {
-                label: '攻擊指數 (OPS)',
+                type: 'bar',
+                label: '個人攻擊指數 (OPS)',
                 data: lineupPlayers.map(p => p.ops),
-                borderColor: '#38bdf8',
-                backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 5,
-                pointBackgroundColor: '#38bdf8',
+                backgroundColor: lineupPlayers.map(p => p.ops >= agg.teamOps ? 'rgba(56, 189, 248, 0.45)' : 'rgba(244, 63, 94, 0.45)'),
+                borderColor: lineupPlayers.map(p => p.ops >= agg.teamOps ? '#38bdf8' : '#f43f5e'),
+                borderWidth: 1.5,
                 yAxisID: 'y'
               },
               {
-                label: '得分創造 (wRC+)',
+                type: 'line',
+                label: '加權得分創造 (wRC+)',
                 data: lineupPlayers.map(p => p.wrc_plus),
                 borderColor: '#f59e0b',
                 backgroundColor: '#f59e0b',
-                borderDash: [4, 4],
+                borderWidth: 2,
                 tension: 0.3,
                 pointRadius: 4,
+                pointHoverRadius: 6,
                 yAxisID: 'y1'
+              },
+              {
+                type: 'line',
+                label: `全隊平均 OPS (${agg.teamOps.toFixed(3)})`,
+                data: Array(10).fill(agg.teamOps),
+                borderColor: '#34d399',
+                borderDash: [5, 5],
+                borderWidth: 1.5,
+                pointRadius: 0,
+                fill: false,
+                yAxisID: 'y'
               }
             ]
           },
@@ -1704,7 +1917,7 @@
             maintainAspectRatio: false,
             scales: {
               y: {
-                title: { display: true, text: 'OPS', color: '#38bdf8' },
+                title: { display: true, text: 'OPS (綠虛線: 隊均)', color: '#38bdf8' },
                 grid: { color: 'rgba(255,255,255,0.05)' }
               },
               y1: {
