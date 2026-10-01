@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0135</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0155</span>
         </div>
 
 
@@ -358,7 +358,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
               <div class="flex items-center space-x-2.5 w-full sm:w-auto">
                 <label class="text-xs text-slate-400 font-medium shrink-0">診斷檢視模式：</label>
-                <select id="diagFilterMode" onchange="renderDiagnostics(getAggregatedStats(getFilteredLogs()))" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-rose-500 font-medium w-full sm:w-auto">
+                <select id="diagFilterMode" onchange="renderDiagnostics(getAnalysisAgg())" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-rose-500 font-medium w-full sm:w-auto">
                   <option value="single" selected>目前選取球員專屬診斷報告</option>
                   <option value="all">全隊隊員總體診斷矩陣</option>
                   <option value="urgent">優先急迫改善名單 (好球帶追打/高三振率)</option>
@@ -1495,7 +1495,7 @@
     const DEFENSE_FILE_PATH = "data/defense.json";
     const GAMES_FILE_PATH = "data/games.json";
     let currentGamesSha = null;
-    let allGames = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
+    let allGames = window.allGames = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
     let activeGame = JSON.parse(localStorage.getItem('rebas_active_game')) || null;
 
 
@@ -1590,7 +1590,37 @@
     }
 
 
-    let allLogs = [];
+    let allLogs = window.allLogs = [];
+
+    // 全域 Toast 輕量通知提示組件 (解決點擊無反應與回饋缺失問題)
+    function showToast(msg, type = 'info') {
+      let toastContainer = document.getElementById('globalToastContainer');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'globalToastContainer';
+        toastContainer.className = 'fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm';
+        document.body.appendChild(toastContainer);
+      }
+      const toast = document.createElement('div');
+      const isErr = type === 'error' || (typeof msg === 'string' && (msg.includes('失敗') || msg.includes('錯誤')));
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl border shadow-2xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 flex items-center space-x-2 ${
+        isErr 
+          ? 'bg-rose-950/90 border-rose-600 text-rose-200' 
+          : 'bg-slate-900/95 border-amber-500/70 text-amber-200'
+      }`;
+      toast.innerHTML = `<span>${msg}</span>`;
+      toastContainer.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+      });
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
     let currentFileSha = null;
     let currentAvatarsSha = null;
     let currentTagsSha = null;
@@ -1694,17 +1724,25 @@
       });
 
 
-      const agg = getAggregatedStats(getFilteredLogs());
       if (tabId === 'tabAnalytics') {
-        renderQuadrantChart(agg);
-        renderCustomChart(agg);
+        const anaAgg = getAnalysisAgg();
+        renderQuadrantChart(anaAgg);
+        renderCustomChart(anaAgg);
       } else if (tabId === 'tabCompare') {
-        renderComparison(agg);
+        renderComparison(getFullAgg());
       } else if (tabId === 'tabProfile') {
-        renderPlayerProfile(agg);
-        renderDiagnostics(agg);
+        const anaAgg = getAnalysisAgg();
+        renderPlayerProfile(anaAgg);
+        renderDiagnostics(anaAgg);
+      } else if (tabId === 'tabLeaderboard') {
+        renderLeaderboard(getAnalysisAgg());
+      } else if (tabId === 'tabOverview') {
+        const anaAgg = getAnalysisAgg();
+        renderSummaryCards(anaAgg);
+        renderSummaryTable(anaAgg);
+        renderLogsTable(getAnalysisLogs());
       } else if (tabId === 'tabLineup') {
-        renderLineupAnalysis(agg);
+        renderLineupAnalysis(getFullAgg());
       } else if (tabId === 'tabScorebook') {
         renderScorebook();
       }
@@ -3293,8 +3331,8 @@ window.toggleDiagnosticsCollapse = function() {
       }
       playerTags[playerName] = [...currentList, cleanTag];
       localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
-      const agg = getAggregatedStats(getFilteredLogs());
-      renderPlayerProfile(agg);
+      const anaAgg = getAnalysisAgg();
+      renderPlayerProfile(anaAgg);
       await commitTagsToGitHub(playerTags, `feat: add nickname tag "${cleanTag}" for ${playerName}`);
     };
 
@@ -3310,8 +3348,8 @@ window.toggleDiagnosticsCollapse = function() {
         playerTags[playerName] = currentList;
       }
       localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
-      const agg = getAggregatedStats(getFilteredLogs());
-      renderPlayerProfile(agg);
+      const anaAgg = getAnalysisAgg();
+      renderPlayerProfile(anaAgg);
       await commitTagsToGitHub(playerTags, `delete: remove tag "${targetTag}" for ${playerName}`);
     };
 
@@ -3703,6 +3741,25 @@ window.toggleDiagnosticsCollapse = function() {
         if (e && item.date > e) return false;
         return true;
       });
+    }
+
+    // 取得當前分析用日誌（依據 includeChien 是否排除簡承均）
+    function getAnalysisLogs() {
+      const logs = getFilteredLogs();
+      const shouldInclude = (typeof window !== 'undefined' && window.includeChien !== undefined) ? window.includeChien : includeChien;
+      return shouldInclude ? logs : logs.filter(l => l.name !== '簡承均');
+    }
+
+    // 取得當前分析用聚合數據（用於：1.戰況日誌 2.球員個人檔案與診斷 3.數據排行榜 4.賽伯計量實驗室）
+    window.getAnalysisAgg = getAnalysisAgg;
+    function getAnalysisAgg() {
+      return getAggregatedStats(getAnalysisLogs());
+    }
+
+    // 取得全體完整聚合數據（用於：5.雙雄攻守對決 6.棒次分析與推薦 7.數位圖像場記）
+    window.getFullAgg = getFullAgg;
+    function getFullAgg() {
+      return getAggregatedStats(getFilteredLogs());
     }
 
 
@@ -4427,7 +4484,7 @@ window.toggleDiagnosticsCollapse = function() {
         card.innerHTML = `
           <div>
             <div class="flex items-center space-x-3 border-b border-slate-800/80 pb-3">
-              <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${p.name}'; renderPlayerProfile(getAggregatedStats(getFilteredLogs()));" title="鎖定該球員檔案">
+              <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${p.name}'; renderPlayerProfile(getAnalysisAgg());" title="鎖定該球員檔案">
                 ${renderAvatarElement(p.name, 'w-12 h-12 sm:w-14 sm:h-14 text-lg sm:text-xl ring-2 ring-rose-500/50 shadow-md')}
               </div>
               <div class="flex-1 min-w-0">
@@ -4795,7 +4852,7 @@ window.toggleDiagnosticsCollapse = function() {
 
     window.changeLogsPage = function(targetPage) {
       currentLogsPage = targetPage;
-      renderLogsTable(getFilteredLogs());
+      renderLogsTable(getAnalysisLogs());
     };
 
 
@@ -5098,12 +5155,13 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     // 簡承均超標數據納入/排除開關 (預設納入，儲存於 localStorage)
-    let includeChien = localStorage.getItem('rebas_include_chien') !== null 
+    let includeChien = window.includeChien = localStorage.getItem('rebas_include_chien') !== null 
       ? JSON.parse(localStorage.getItem('rebas_include_chien')) 
       : true;
 
     window.toggleChienFilter = function() {
       includeChien = !includeChien;
+      window.includeChien = includeChien;
       localStorage.setItem('rebas_include_chien', JSON.stringify(includeChien));
       updateChienFilterButton();
       renderAll();
@@ -5180,17 +5238,17 @@ window.toggleDiagnosticsCollapse = function() {
       if (badgeEl) {
         badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-7 h-7 sm:w-8 sm:h-8 text-xs ring-2 ring-sky-400/80 shadow');
       }
-      const agg = getAggregatedStats(getFilteredLogs());
-      renderPlayerProfile(agg);
-      renderDiagnostics(agg);
+      const anaAgg = getAnalysisAgg();
+      renderPlayerProfile(anaAgg);
+      renderDiagnostics(anaAgg);
     });
 
 
     document.getElementById('leaderboardMetricSelect').addEventListener('change', () => {
-      renderLeaderboard(getAggregatedStats(getFilteredLogs()));
+      renderLeaderboard(getAnalysisAgg());
     });
     document.getElementById('leaderboardMinPa').addEventListener('input', () => {
-      renderLeaderboard(getAggregatedStats(getFilteredLogs()));
+      renderLeaderboard(getAnalysisAgg());
     });
 
 
@@ -5206,7 +5264,7 @@ window.toggleDiagnosticsCollapse = function() {
 
     ['customChartType', 'customXVar', 'customYVar', 'customZVar'].forEach(id => {
       document.getElementById(id).addEventListener('change', () => {
-        renderCustomChart(getAggregatedStats(getFilteredLogs()));
+        renderCustomChart(getAnalysisAgg());
       });
     });
 
@@ -5264,6 +5322,15 @@ window.toggleDiagnosticsCollapse = function() {
     let currentScorebookSubTab = 'live'; // 'live', 'review', 'spray'
     let currentFieldTargetPos = 'P';
     let currentFieldCoords = { x: 0.50, y: 0.65 };
+    let currentPlayInput = window.currentPlayInput = {
+      result: '1H',
+      trajectory: 'grounder',
+      location: 'P',
+      x: 0.50,
+      y: 0.65,
+      rbi: 0,
+      runsScored: 0
+    };
     let currentSelectedTraj = 'grounder'; // 'grounder', 'line', 'fly', 'popup', 'none'
     let currentSelectedOutcome = '1H';
     let currentSelectedRbi = 0;
@@ -6202,9 +6269,6 @@ window.toggleDiagnosticsCollapse = function() {
       activeGame.currentBatterIdx = (activeGame.currentBatterIdx + 1) % activeGame.lineup.length;
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
 
-      // 即時同步個人成績日誌
-      syncGameToTeamLogs(activeGame);
-
       updateLiveScoreboard();
       updateBasesAndOutsDisplay();
       updateLiveBatterCard();
@@ -6231,8 +6295,6 @@ window.toggleDiagnosticsCollapse = function() {
 
       activeGame.currentBatterIdx = (activeGame.currentBatterIdx - 1 + activeGame.lineup.length) % activeGame.lineup.length;
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
-
-      syncGameToTeamLogs(activeGame);
 
       updateLiveScoreboard();
       updateBasesAndOutsDisplay();
@@ -6308,7 +6370,6 @@ window.toggleDiagnosticsCollapse = function() {
       }
 
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
-      syncGameToTeamLogs(activeGame);
       renderLiveScorer();
       showToast(`已換局！現在進入第 ${activeGame.currentInning} 局 ${activeGame.currentHalf === 'top' ? '上半' : '下半'}`);
     };
@@ -6326,8 +6387,7 @@ window.toggleDiagnosticsCollapse = function() {
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
 
       await commitGamesToGitHub(allGames, `場記同步: 第${activeGame.currentInning}局 vs ${activeGame.opponent}`);
-      syncGameToTeamLogs(activeGame);
-      showToast('✅ 當局場記與選手個人日誌已成功同步推播至 GitHub！');
+      showToast('✅ 當局場記已成功同步推播至 GitHub！');
     };
 
     window.finishActiveGameAndSyncLogs = async function() {
@@ -6369,6 +6429,7 @@ window.toggleDiagnosticsCollapse = function() {
     // ==========================================
     // 賽事日誌自動整合與個人數據同步管線
     // ==========================================
+    window.syncGameToTeamLogs = syncGameToTeamLogs;
     function syncGameToTeamLogs(game) {
       if (!game) return 0;
       const statsMap = {};
@@ -6436,6 +6497,31 @@ window.toggleDiagnosticsCollapse = function() {
     // 歷史賽事覆盤與賽伯診斷 (Game Review)
     // ==========================================
     let isEditingReviewGame = false;
+    // 檢核該場比賽是否已經登入全隊日誌庫
+    window.isGameAlreadyLogged = isGameAlreadyLogged;
+    function isGameAlreadyLogged(gameId) {
+      if (!gameId) return false;
+      const prefix1 = `log_game_${gameId}_`;
+      const prefix2 = `log_auto_${gameId}_`;
+      return allLogs.some(l => l.id.startsWith(prefix1) || l.id.startsWith(prefix2));
+    }
+
+    window.undoGameFromTeamLogs = async function(gameId) {
+      const game = allGames.find(g => g.id === gameId);
+      if (!game) return;
+      if (!confirm(`確定要將本場比賽（${game.date} vs ${game.opponent}）自全隊日誌庫中撤銷移除？\n移除後全隊戰況與球員個人累計三圍將扣除此場成績。`)) return;
+
+      const prefix1 = `log_game_${game.id}_`;
+      const prefix2 = `log_auto_${game.id}_`;
+      allLogs = allLogs.filter(l => !l.id.startsWith(prefix1) && !l.id.startsWith(prefix2));
+      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+      await commitLogsToGitHub(allLogs, `撤銷賽事日誌: ${game.date} vs ${game.opponent}`);
+
+      renderAll();
+      renderSelectedGameReview(game.id);
+      showToast('已自全隊日誌庫撤銷本場比賽紀錄！');
+    };
+
 
     function renderGameReview() {
       const select = document.getElementById('reviewGameSelect');
@@ -6472,7 +6558,9 @@ window.toggleDiagnosticsCollapse = function() {
       const game = allGames.find(g => g.id === selectedReviewGameId);
       if (!game) return;
       const count = syncGameToTeamLogs(game);
-      showToast(`⚡ 成功將本場比賽 ${count} 位球員的數據同步至全隊日誌庫 (data/logs.json)！`);
+      renderAll();
+      renderSelectedGameReview(game.id);
+      showToast(`⚡ 成功將本場比賽 ${count} 位球員的數據正式登入全隊日誌與個人三圍！`);
     };
 
     window.deleteReviewGame = async function() {
@@ -6503,8 +6591,11 @@ window.toggleDiagnosticsCollapse = function() {
       const badge = document.getElementById('reviewGameSummaryBadge');
 
       if (!game || !container) return;
+      game.finalScore = game.finalScore || { us: 0, opp: 0 };
 
       const isWin = (game.finalScore.us > game.finalScore.opp);
+      const isLogged = isGameAlreadyLogged(game.id);
+
       if (badge) {
         badge.innerHTML = `
           <div class="flex items-center space-x-2">
@@ -6514,9 +6605,18 @@ window.toggleDiagnosticsCollapse = function() {
             <button onclick="toggleEditCurrentReviewGame()" class="bg-amber-950/50 hover:bg-amber-900/70 border border-amber-600/70 text-amber-300 text-xs px-2.5 py-1 rounded-lg transition font-medium">
               ${isEditingReviewGame ? '✕ 取消編輯' : '✏️ 編輯賽事紀錄'}
             </button>
-            <button onclick="syncReviewGameToTeamLogs()" class="bg-sky-950/50 hover:bg-sky-900/70 border border-sky-600/70 text-sky-300 text-xs px-2.5 py-1 rounded-lg transition font-medium">
-              ⚡ 登入日誌庫
-            </button>
+            ${!isLogged ? `
+              <button id="btnSyncGameLogs" onclick="syncReviewGameToTeamLogs()" class="bg-sky-600 hover:bg-sky-500 text-white text-xs px-3 py-1 rounded-lg transition font-bold shadow flex items-center gap-1.5">
+                <span>⚡</span><span>登入日誌庫</span>
+              </button>
+            ` : `
+              <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs px-2.5 py-1 rounded-lg font-mono font-bold flex items-center gap-1 shadow-sm">
+                <span>✓</span><span>已登入全隊日誌</span>
+              </span>
+              <button onclick="undoGameFromTeamLogs('${game.id}')" class="text-[11px] text-slate-400 hover:text-rose-400 underline font-mono transition" title="從全隊日誌移除此場比賽數據">
+                撤銷登入
+              </button>
+            `}
             <button onclick="deleteReviewGame()" class="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-400 text-xs px-2 py-1 rounded-lg transition">
               🗑️
             </button>
@@ -6969,13 +7069,17 @@ window.toggleDiagnosticsCollapse = function() {
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
       await commitGamesToGitHub(allGames, `修改賽事紀錄: ${game.date} vs ${game.opponent}`);
 
-      // 自動重新同步更新至全隊賽事日誌庫
-      const count = syncGameToTeamLogs(game);
+      // 若本場比賽原本已登入日誌庫，則自動更新日誌庫數據
+      let msg = '💾 賽事修改已儲存至歷史賽事庫！';
+      if (isGameAlreadyLogged(game.id)) {
+        const count = syncGameToTeamLogs(game);
+        msg = `💾 賽事修改已儲存！已自動同步更新全隊日誌庫中 ${count} 位球員之成績！`;
+      }
 
       isEditingReviewGame = false;
       renderAll();
       renderGameReview();
-      showToast(`💾 賽事修改已儲存！已同步更新 ${count} 位球員之全隊日誌與個人三圍！`);
+      showToast(msg);
     };
 function renderSprayChartStudio() {
       const select = document.getElementById('sprayPlayerSelect');
