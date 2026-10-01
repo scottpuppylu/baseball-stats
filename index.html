@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261001.1749</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0115</span>
         </div>
 
 
@@ -85,6 +85,10 @@
           <button onclick="switchMainTab('tabLineup')" id="btnTabLineup" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
             <span>棒次分析與推薦</span>
+          </button>
+          <button onclick="switchMainTab('tabScorebook')" id="btnTabScorebook" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
+            <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            <span>數位圖像場記與落點</span>
           </button>
           <button onclick="switchMainTab('tabGlossary')" id="btnTabGlossary" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
@@ -789,6 +793,468 @@
       </div>
 
 
+<!-- 分頁七：數位圖像化場記與落點覆盤 -->
+      <div id="panelScorebook" class="hidden space-y-6">
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4 backdrop-blur-sm">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">DIGITAL SCOREBOOK & SPRAY CHART</span>
+                <h2 class="text-xl font-black text-white tracking-tight">慢速壘球數位圖像化場記系統</h2>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">實況球場圖像記錄、球員打球落點噴流圖、歷史賽事覆盤診斷，支援每局結束 GitHub 雲端一鍵同步</p>
+            </div>
+            <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar bg-slate-950/80 p-1 rounded-xl border border-slate-800 shrink-0">
+              <button onclick="switchScorebookSubTab('live')" id="btnScoreSubLive" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white shadow transition whitespace-nowrap">
+                實況即時記分
+              </button>
+              <button onclick="switchScorebookSubTab('review')" id="btnScoreSubReview" class="text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+                歷史賽事覆盤
+              </button>
+              <button onclick="switchScorebookSubTab('spray')" id="btnScoreSubSpray" class="text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+                打球落點噴流圖
+              </button>
+            </div>
+          </div>
+
+          <!-- 子分頁 1: 實況即時記分主介面 -->
+          <div id="scoreSubPanelLive" class="space-y-6">
+            <!-- 賽事開賽設定表單 (若無進行中比賽) -->
+            <div id="newGameSetupCard" class="hidden bg-slate-950/90 border border-amber-700/50 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xl">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center space-x-2">
+                  <span class="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
+                  <h3 class="text-base font-bold text-white tracking-tight">建立並開始全新實況場記比賽</h3>
+                </div>
+                <span class="text-xs text-amber-400 font-mono">支援 10 棒無 DH 或 11 棒有 DH 慢壘規程</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <label class="block text-slate-400 mb-1 font-semibold">比賽日期 <span class="text-rose-400">*</span></label>
+                  <input type="date" id="setup_game_date" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1 font-semibold">對手隊伍名稱 <span class="text-rose-400">*</span></label>
+                  <input type="text" id="setup_game_opponent" placeholder="例如: 機械系壘、化材系壘" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1 font-semibold">賽事/盃賽標籤</label>
+                  <input type="text" id="setup_game_tag" placeholder="預設: 航太系壘例行賽" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1 font-semibold">我方攻守身分</label>
+                  <select id="setup_game_role" class="w-full bg-slate-900 border border-slate-700 text-amber-300 rounded-lg px-2.5 py-1.5 font-bold focus:outline-none focus:border-amber-500">
+                    <option value="先攻" selected>先攻 (上半局我方打擊)</option>
+                    <option value="先守">先守 (下半局我方打擊)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- 快捷載入打線按鈕 -->
+              <div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                <span class="text-xs text-slate-300 font-medium">先發打線快速載入：</span>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" onclick="loadLineupIntoGameSetup('recommended')" class="bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-600/60 px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                    <span>⚡</span> 載入賽伯計量最佳推薦打線
+                  </button>
+                  <button type="button" onclick="loadLineupIntoGameSetup('custom')" class="bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-600/60 px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                    <span>⚡</span> 載入自訂打線配置
+                  </button>
+                </div>
+              </div>
+
+              <!-- 先發 10 或 11 棒指派選單 -->
+              <div>
+                <label class="block text-xs font-bold text-slate-300 mb-2">確認今日先發打線 (依當前賽制自動適配 10 棒或 11 棒)：</label>
+                <div id="setupLineupGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs"></div>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="startNewGameFromSetup()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2 rounded-xl text-xs shadow-lg transition flex items-center gap-1.5">
+                  <span>🚀</span> 正式開賽，啟動實況場記
+                </button>
+              </div>
+            </div>
+
+            <!-- 實況進行中比賽主介面 (Active Match) -->
+            <div id="activeGameContainer" class="space-y-6">
+              <!-- 實況對戰資訊頂部橫幅 -->
+              <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xl">
+                <div class="flex items-center space-x-3">
+                  <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shrink-0"></div>
+                  <div>
+                    <div class="flex items-center space-x-2">
+                      <span id="liveGameTeamsTitle" class="text-base sm:text-lg font-black text-white">淡江航太系壘 VS 對手</span>
+                      <span id="liveGameRuleBadge" class="text-[10px] font-mono px-2 py-0.5 rounded font-bold">11棒有DH</span>
+                    </div>
+                    <span id="liveGameMetaSubtitle" class="text-xs text-slate-400 font-mono">2026-10-02 | 例行賽</span>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button onclick="finishActiveGameAndSyncLogs()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow transition flex items-center gap-1">
+                    <span>🏁</span> 結束比賽並同步全隊日誌
+                  </button>
+                  <button onclick="discardActiveGame()" class="bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border border-slate-700 text-xs px-2.5 py-1.5 rounded-xl transition">
+                    清除此場
+                  </button>
+                </div>
+              </div>
+
+              <!-- 實況比分板 (Inning Line Scoreboard) 與情勢指示器 -->
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <!-- 逐局記分板 -->
+                <div class="lg:col-span-8 bg-slate-950/80 p-4 rounded-2xl border border-slate-800 overflow-x-auto space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5 font-mono">
+                      <span>📊</span> 逐局記分板 (LINE SCORE)
+                    </span>
+                    <span class="text-[10px] text-slate-500 font-mono">慢速壘球 7 局制</span>
+                  </div>
+                  <table class="w-full text-center text-xs font-mono">
+                    <thead class="text-slate-400 border-b border-slate-800">
+                      <tr>
+                        <th class="p-2 text-left w-24">隊伍</th>
+                        <th class="p-2 w-8">1</th><th class="p-2 w-8">2</th><th class="p-2 w-8">3</th><th class="p-2 w-8">4</th><th class="p-2 w-8">5</th><th class="p-2 w-8">6</th><th class="p-2 w-8">7</th>
+                        <th class="p-2 w-10 text-amber-400 font-bold border-l border-slate-800">R</th>
+                        <th class="p-2 w-10 text-sky-400 font-bold">H</th>
+                      </tr>
+                    </thead>
+                    <tbody id="liveScoreboardBody" class="divide-y divide-slate-800/60 text-slate-200"></tbody>
+                  </table>
+                </div>
+
+                <!-- 當前出局數 & 壘包圖形情勢儀表 -->
+                <div class="lg:col-span-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-3">
+                  <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span id="liveInningTitleBadge" class="text-xs font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/60 font-mono">
+                      第 1 局 上半
+                    </span>
+                    <!-- 出局數指示燈 (3 顆大燈) -->
+                    <div class="flex items-center space-x-1.5">
+                      <span class="text-[11px] font-mono font-bold text-slate-400 mr-1">OUT:</span>
+                      <span id="outLamp1" class="w-3.5 h-3.5 rounded-full border border-slate-700 bg-slate-800 transition"></span>
+                      <span id="outLamp2" class="w-3.5 h-3.5 rounded-full border border-slate-700 bg-slate-800 transition"></span>
+                      <span id="outLamp3" class="w-3.5 h-3.5 rounded-full border border-slate-700 bg-slate-800 transition"></span>
+                    </div>
+                  </div>
+
+                  <!-- 鑽石壘包動態圖形 -->
+                  <div class="flex items-center justify-around py-1">
+                    <div class="relative w-28 h-24 flex items-center justify-center">
+                      <!-- 二壘 (頂) -->
+                      <button onclick="toggleBaseRunner('second')" id="baseDiamond2" class="absolute top-0 w-6 h-6 rotate-45 border-2 border-slate-600 bg-slate-800 hover:border-amber-400 transition cursor-pointer shadow" title="點擊切換二壘跑者"></button>
+                      <!-- 三壘 (左) -->
+                      <button onclick="toggleBaseRunner('third')" id="baseDiamond3" class="absolute left-2 top-8 w-6 h-6 rotate-45 border-2 border-slate-600 bg-slate-800 hover:border-amber-400 transition cursor-pointer shadow" title="點擊切換三壘跑者"></button>
+                      <!-- 一壘 (右) -->
+                      <button onclick="toggleBaseRunner('first')" id="baseDiamond1" class="absolute right-2 top-8 w-6 h-6 rotate-45 border-2 border-slate-600 bg-slate-800 hover:border-amber-400 transition cursor-pointer shadow" title="點擊切換一壘跑者"></button>
+                      <!-- 本壘板 (底) -->
+                      <div class="absolute bottom-0 w-4 h-4 bg-slate-600 rotate-45"></div>
+                    </div>
+                    <div class="text-xs space-y-1 text-slate-300 font-mono">
+                      <div>當局得分：<span id="currentInningRunsDisplay" class="font-bold text-emerald-400 text-sm">0</span> 分</div>
+                      <div>當局安打：<span id="currentInningHitsDisplay" class="font-bold text-sky-400 text-sm">0</span> 支</div>
+                      <div>累計總分：<span id="totalTeamRunsDisplay" class="font-black text-amber-400 text-base">0</span> 分</div>
+                    </div>
+                  </div>
+
+                  <!-- 對手得分手動快速加減 -->
+                  <div class="flex items-center justify-between bg-slate-900/90 p-2 rounded-xl border border-slate-800 text-xs">
+                    <span class="text-slate-400">對手總得分：<b id="opponentScoreVal" class="text-rose-400 font-mono text-sm font-black">0</b></span>
+                    <div class="flex space-x-1">
+                      <button onclick="adjustOpponentScore(-1)" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-bold font-mono">-</button>
+                      <button onclick="adjustOpponentScore(1)" class="w-6 h-6 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-bold font-mono">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 當前打者卡片 (Batter Plate Status) -->
+              <div id="liveCurrentBatterCard" class="bg-slate-950 p-3.5 sm:p-4 rounded-2xl border border-amber-500/40 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3"></div>
+
+              <!-- 數字圖像化球場與打擊動作盤 (Visual Softball Field & Action Pad) -->
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- 左側：慢速壘球 10 守位互動式球場 (SVG 400x380) -->
+                <div class="lg:col-span-6 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
+                  <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                      慢速壘球 10 守位圖像化落點 (點擊球場標定)
+                    </span>
+                    <span id="selectedLocationDisplay" class="text-[11px] font-mono text-amber-300 font-bold">📍 點擊球場標定落點</span>
+                  </div>
+
+                  <!-- SVG 壘球場 -->
+                  <div class="relative w-full max-w-[380px] mx-auto aspect-square select-none">
+                    <svg id="interactiveFieldSvg" viewBox="0 0 400 400" class="w-full h-full rounded-xl cursor-crosshair border border-slate-800/80 bg-[#0d1712]">
+                      <!-- 外野草皮深綠底 -->
+                      <rect width="400" height="400" fill="#0d1712" />
+                      
+                      <!-- 外野弧形全壘打牆 -->
+                      <path d="M 30 200 A 210 210 0 0 1 370 200 L 200 370 Z" fill="#14291c" stroke="#22c55e" stroke-width="2" />
+                      
+                      <!-- 兩側界內白線 (Foul Lines) -->
+                      <line x1="200" y1="365" x2="25" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                      <line x1="200" y1="365" x2="375" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                      
+                      <!-- 內野紅土扇形區 (Infield Dirt) -->
+                      <path d="M 120 285 A 95 95 0 0 1 280 285 L 200 365 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                      <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
+                      
+                      <!-- 內野壘線 (45度鑽石) -->
+                      <polygon points="200,365 275,285 200,210 125,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                      
+                      <!-- 投手板 -->
+                      <rect x="194" y="258" width="12" height="4" fill="#ffffff" rx="1" />
+                      <!-- 本壘板 (5邊形) -->
+                      <polygon points="196,365 204,365 205,368 200,373 195,368" fill="#ffffff" />
+                      <!-- 一壘、二壘、三壘壘包 -->
+                      <polygon points="275,280 280,285 275,290 270,285" fill="#ffffff" />
+                      <polygon points="200,205 205,210 200,215 195,210" fill="#ffffff" />
+                      <polygon points="125,280 130,285 125,290 120,285" fill="#ffffff" />
+                      
+                      <!-- 10 個守備位置文字與圖示 (P, C, 1B, 2B, 3B, SS, LF, SF, RC, RF) -->
+                      <g id="svgPosLabels" class="text-[10px] font-mono font-bold select-none pointer-events-none fill-slate-300">
+                        <text x="200" y="390" text-anchor="middle" fill="#94a3b8">C 捕手</text>
+                        <text x="200" y="275" text-anchor="middle" fill="#f59e0b">P 投手</text>
+                        <text x="300" y="285" text-anchor="start" fill="#cbd5e1">1B</text>
+                        <text x="245" y="215" text-anchor="start" fill="#cbd5e1">2B</text>
+                        <text x="100" y="285" text-anchor="end" fill="#cbd5e1">3B</text>
+                        <text x="150" y="215" text-anchor="end" fill="#cbd5e1">SS</text>
+                        <text x="85" y="130" text-anchor="middle" fill="#38bdf8">LF 左外</text>
+                        <text x="160" y="90" text-anchor="middle" fill="#34d399">SF 自由</text>
+                        <text x="240" y="90" text-anchor="middle" fill="#34d399">RC 右中</text>
+                        <text x="315" y="130" text-anchor="middle" fill="#38bdf8">RF 右外</text>
+                      </g>
+
+                      <!-- 動態定位準心 (Target Crosshair & Ripple) -->
+                      <g id="fieldTargetMarker" class="transition-all duration-150" transform="translate(200, 260)">
+                        <circle cx="0" cy="0" r="14" fill="none" stroke="#f59e0b" stroke-width="2" class="animate-ping" opacity="0.75" />
+                        <circle cx="0" cy="0" r="6" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5" />
+                        <line x1="-12" y1="0" x2="12" y2="0" stroke="#f59e0b" stroke-width="1.5" />
+                        <line x1="0" y1="-12" x2="0" y2="12" stroke="#f59e0b" stroke-width="1.5" />
+                      </g>
+                    </svg>
+                  </div>
+
+                  <!-- 10 個守備位置快捷點選按鈕 (手機上極速點選) -->
+                  <div>
+                    <span class="text-[10px] text-slate-400 block mb-1">或直接點選守備位置：</span>
+                    <div class="grid grid-cols-5 gap-1.5 text-xs font-mono" id="fieldPosButtonsContainer"></div>
+                  </div>
+                </div>
+
+                <!-- 右側：打擊動作盤 (Action Pad) -->
+                <div class="lg:col-span-6 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                  <!-- 最直覺快捷鍵：三振與保送 (無需選落點) -->
+                  <div>
+                    <span class="text-xs font-bold text-slate-300 block mb-1.5">一鍵直覺記錄 (無需選落點)：</span>
+                    <div class="grid grid-cols-2 gap-2.5">
+                      <button onclick="recordQuickStrikeout()" class="bg-rose-950/60 hover:bg-rose-900 border border-rose-700/80 text-rose-300 p-3 rounded-xl font-black text-sm transition flex items-center justify-center gap-2 shadow-lg">
+                        <span class="text-lg">🔴</span>
+                        <span>三振出局 (K)</span>
+                      </button>
+                      <button onclick="recordQuickWalk()" class="bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 p-3 rounded-xl font-black text-sm transition flex items-center justify-center gap-2 shadow-lg">
+                        <span class="text-lg">🟢</span>
+                        <span>四壞保送 (BB)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- 擊球型態 (Trajectory) -->
+                  <div class="border-t border-slate-800 pt-3">
+                    <span class="text-xs font-bold text-slate-300 block mb-1.5">擊球型態 (Batted Ball)：</span>
+                    <div class="grid grid-cols-4 gap-1.5 text-xs" id="trajectoryButtonGroup">
+                      <button onclick="selectTrajectory('grounder')" id="traj_grounder" class="py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium transition">滾地球</button>
+                      <button onclick="selectTrajectory('line')" id="traj_line" class="py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium transition">平飛球</button>
+                      <button onclick="selectTrajectory('fly')" id="traj_fly" class="py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium transition">高飛球</button>
+                      <button onclick="selectTrajectory('popup')" id="traj_popup" class="py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium transition">內野飛球</button>
+                    </div>
+                  </div>
+
+                  <!-- 打擊結果 (Outcome / Result) -->
+                  <div class="border-t border-slate-800 pt-3 space-y-2">
+                    <span class="text-xs font-bold text-slate-300 block">打擊結果 (Outcome)：</span>
+                    <!-- 安打類 -->
+                    <div class="grid grid-cols-4 gap-1.5 text-xs font-bold font-mono">
+                      <button onclick="selectOutcome('1H')" id="res_1H" class="py-2 rounded-lg border border-emerald-600/70 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/60 transition">1H 一安</button>
+                      <button onclick="selectOutcome('2H')" id="res_2H" class="py-2 rounded-lg border border-sky-600/70 bg-sky-950/40 text-sky-300 hover:bg-sky-900/60 transition">2H 二安</button>
+                      <button onclick="selectOutcome('3H')" id="res_3H" class="py-2 rounded-lg border border-purple-600/70 bg-purple-950/40 text-purple-300 hover:bg-purple-900/60 transition">3H 三安</button>
+                      <button onclick="selectOutcome('HR')" id="res_HR" class="py-2 rounded-lg border border-amber-500/80 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60 transition">HR 全壘打</button>
+                    </div>
+                    <!-- 出局類 -->
+                    <div class="grid grid-cols-4 gap-1.5 text-xs font-medium font-mono">
+                      <button onclick="selectOutcome('GO')" id="res_GO" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">GO 滾地刺</button>
+                      <button onclick="selectOutcome('FO')" id="res_FO" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">FO 飛球殺</button>
+                      <button onclick="selectOutcome('LO')" id="res_LO" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">LO 平飛殺</button>
+                      <button onclick="selectOutcome('SF')" id="res_SF" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">SF 高飛犧</button>
+                    </div>
+                    <!-- 其他上壘與雙殺 -->
+                    <div class="grid grid-cols-3 gap-1.5 text-xs font-medium font-mono">
+                      <button onclick="selectOutcome('E')" id="res_E" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-amber-300 hover:bg-slate-800 transition">E 守備失誤</button>
+                      <button onclick="selectOutcome('FC')" id="res_FC" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">FC 野手選擇</button>
+                      <button onclick="selectOutcome('DP')" id="res_DP" class="py-1.5 rounded-lg border border-rose-900/70 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 transition">DP 雙殺打</button>
+                    </div>
+                  </div>
+
+                  <!-- 打點 (RBI) 與回壘得分 (Runs Scored) -->
+                  <div class="grid grid-cols-2 gap-3 border-t border-slate-800 pt-3 text-xs">
+                    <div>
+                      <label class="block text-slate-400 mb-1 font-semibold">打點 (RBI)：</label>
+                      <div class="flex items-center space-x-1" id="rbiButtonGroup">
+                        <button onclick="selectRbi(0)" id="rbi_0" class="flex-1 py-1 rounded bg-amber-600 text-white font-bold font-mono">0</button>
+                        <button onclick="selectRbi(1)" id="rbi_1" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">1</button>
+                        <button onclick="selectRbi(2)" id="rbi_2" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">2</button>
+                        <button onclick="selectRbi(3)" id="rbi_3" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">3</button>
+                        <button onclick="selectRbi(4)" id="rbi_4" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">4</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-slate-400 mb-1 font-semibold">本回合得分 (R)：</label>
+                      <div class="flex items-center space-x-1" id="runsScoredButtonGroup">
+                        <button onclick="selectRunsScored(0)" id="runs_0" class="flex-1 py-1 rounded bg-emerald-600 text-white font-bold font-mono">0</button>
+                        <button onclick="selectRunsScored(1)" id="runs_1" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">1</button>
+                        <button onclick="selectRunsScored(2)" id="runs_2" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">2</button>
+                        <button onclick="selectRunsScored(3)" id="runs_3" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">3</button>
+                        <button onclick="selectRunsScored(4)" id="runs_4" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">4</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 登打送出大按鈕 -->
+                  <div class="pt-2">
+                    <button onclick="submitBattedBallPlay()" class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-sm shadow-xl transition flex items-center justify-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                      <span>登打送出此打席紀錄 (Submit Play)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 當局打席實況紀錄表 (Current Inning Play-by-Play Table) -->
+              <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>📋</span> 本半局打席進攻實況歷程
+                  </span>
+                  <span class="text-[10px] text-slate-500 font-mono">本地即時秒級暫存</span>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-800 -mx-1 sm:mx-0">
+                  <table class="w-full text-left text-xs whitespace-nowrap">
+                    <thead class="bg-slate-950 text-slate-400 uppercase select-none font-mono">
+                      <tr>
+                        <th class="p-2.5 text-center w-12">打序</th>
+                        <th class="p-2.5 text-center w-12">棒次</th>
+                        <th class="p-2.5">選手</th>
+                        <th class="p-2.5 text-center">結果</th>
+                        <th class="p-2.5 text-center">擊球型態</th>
+                        <th class="p-2.5 text-center">落點守位</th>
+                        <th class="p-2.5 text-center">打點</th>
+                        <th class="p-2.5 text-center">出局數</th>
+                        <th class="p-2.5">實況描述</th>
+                        <th class="p-2.5 text-center">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="currentInningPlaysTableBody" class="divide-y divide-slate-800 bg-slate-900/40 font-mono"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 每局結束即時上傳與換局專區 (防刷新核心保護) -->
+              <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-amber-950/40 border border-amber-500/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-xs font-bold text-amber-300">防呆與 GitHub 雲端每局同步</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-0.5">每局記完請點擊右方按鈕，即時推播本局紀錄至 GitHub 雲端資料庫（<code>data/games.json</code>），換頁刷新免擔憂！</p>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0">
+                  <button onclick="switchInningNext()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                    <span>🔄</span> 換局 (推進下一局)
+                  </button>
+                  <button onclick="syncCurrentInningToCloud()" id="btnInningCloudSync" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-amber-600/30 transition flex items-center gap-1.5">
+                    <span>☁️</span> 上傳本局戰況至 GitHub
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 子分頁 2: 歷史賽事覆盤 (Game Review) -->
+          <div id="scoreSubPanelReview" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+              <div class="flex items-center space-x-2.5">
+                <label class="text-xs text-slate-400 font-semibold shrink-0">選取歷史賽事：</label>
+                <select id="reviewGameSelect" onchange="renderSelectedGameReview(this.value)" class="bg-slate-900 border border-slate-700 text-amber-300 text-xs rounded-lg px-2.5 py-1.5 font-bold focus:outline-none focus:border-amber-500"></select>
+              </div>
+              <span id="reviewGameSummaryBadge" class="text-xs font-mono text-slate-400"></span>
+            </div>
+
+            <!-- 歷史賽事詳細覆盤內容容器 -->
+            <div id="gameReviewDetailContainer" class="space-y-6"></div>
+          </div>
+
+          <!-- 子分頁 3: 打球落點噴流圖 (Spray Chart) -->
+          <div id="scoreSubPanelSpray" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center space-x-2">
+                  <label class="text-xs text-slate-400 font-semibold">目標打者：</label>
+                  <select id="sprayPlayerSelect" onchange="renderSprayChartStudio()" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-medium"></select>
+                </div>
+                <div class="flex items-center space-x-1" id="sprayFilterGroup">
+                  <button onclick="setSprayFilter('all')" id="spray_btn_all" class="text-xs px-2.5 py-1 rounded bg-amber-600 text-white font-bold transition">全部擊球</button>
+                  <button onclick="setSprayFilter('hits')" id="spray_btn_hits" class="text-xs px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-700 transition">僅安打</button>
+                  <button onclick="setSprayFilter('extra')" id="spray_btn_extra" class="text-xs px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-700 transition">僅長打</button>
+                  <button onclick="setSprayFilter('outs')" id="spray_btn_outs" class="text-xs px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-700 transition">僅出局球</button>
+                </div>
+              </div>
+              <span class="text-[11px] font-mono text-slate-500">慢壘擊球噴流熱區 2.0</span>
+            </div>
+
+            <!-- 噴流圖球場與方向指標 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div class="lg:col-span-7 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>🎯</span> 球員球場擊球噴流圖 (Spray Chart)
+                  </span>
+                  <div class="flex items-center space-x-3 text-[10px] font-mono text-slate-400">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>一安</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400"></span>二安</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span>三安</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span>全壘打</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400"></span>出局</span>
+                  </div>
+                </div>
+                <div class="relative w-full max-w-[420px] mx-auto aspect-square select-none">
+                  <svg id="sprayChartSvg" viewBox="0 0 400 400" class="w-full h-full rounded-xl border border-slate-800/80 bg-[#0d1712]">
+                    <rect width="400" height="400" fill="#0d1712" />
+                    <path d="M 30 200 A 210 210 0 0 1 370 200 L 200 370 Z" fill="#14291c" stroke="#22c55e" stroke-width="2" />
+                    <line x1="200" y1="365" x2="25" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                    <line x1="200" y1="365" x2="375" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                    <path d="M 120 285 A 95 95 0 0 1 280 285 L 200 365 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                    <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
+                    <polygon points="200,365 275,285 200,210 125,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                    <rect x="194" y="258" width="12" height="4" fill="#ffffff" rx="1" />
+                    <polygon points="196,365 204,365 205,368 200,373 195,368" fill="#ffffff" />
+                    <polygon points="275,280 280,285 275,290 270,285" fill="#ffffff" />
+                    <polygon points="200,205 205,210 200,215 195,210" fill="#ffffff" />
+                    <polygon points="125,280 130,285 125,290 120,285" fill="#ffffff" />
+                    <!-- 動態噴流落點群 -->
+                    <g id="sprayPointsContainer"></g>
+                  </svg>
+                </div>
+                <div id="sprayPointTooltip" class="min-h-[22px] text-center text-xs font-mono text-amber-300"></div>
+              </div>
+
+              <!-- 右側：5 大方向與球型統計指標 -->
+              <div class="lg:col-span-5 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-4" id="sprayMetricsContainer"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
 <!-- 分頁七：名詞圖書館 -->
       <div id="panelGlossary" class="hidden space-y-6">
         <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-6 backdrop-blur-sm">
@@ -945,6 +1411,10 @@
     const AVATARS_FILE_PATH = "data/avatars.json";
     const TAGS_FILE_PATH = "data/tags.json";
     const DEFENSE_FILE_PATH = "data/defense.json";
+    const GAMES_FILE_PATH = "data/games.json";
+    let currentGamesSha = null;
+    let allGames = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
+    let activeGame = JSON.parse(localStorage.getItem('rebas_active_game')) || null;
 
 
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
@@ -1116,7 +1586,8 @@
         tabAnalytics: document.getElementById('panelAnalytics'),
         tabCompare: document.getElementById('panelCompare'),
         tabGlossary: document.getElementById('panelGlossary'),
-        tabLineup: document.getElementById('panelLineup')
+        tabLineup: document.getElementById('panelLineup'),
+        tabScorebook: document.getElementById('panelScorebook')
       };
       const buttons = {
         tabOverview: document.getElementById('btnTabOverview'),
@@ -1125,7 +1596,8 @@
         tabAnalytics: document.getElementById('btnTabAnalytics'),
         tabCompare: document.getElementById('btnTabCompare'),
         tabGlossary: document.getElementById('btnTabGlossary'),
-        tabLineup: document.getElementById('btnTabLineup')
+        tabLineup: document.getElementById('btnTabLineup'),
+        tabScorebook: document.getElementById('btnTabScorebook')
       };
 
 
@@ -1151,6 +1623,8 @@
         renderDiagnostics(agg);
       } else if (tabId === 'tabLineup') {
         renderLineupAnalysis(agg);
+      } else if (tabId === 'tabScorebook') {
+        renderScorebook();
       }
     };
 
@@ -2769,6 +3243,7 @@ window.toggleDiagnosticsCollapse = function() {
       await loadAvatarsFromGitHub();
       await loadTagsFromGitHub();
       await loadDefenseFromGitHub();
+      await loadGamesFromGitHub();
 
 
       try {
@@ -4630,6 +5105,1493 @@ window.toggleDiagnosticsCollapse = function() {
       a.click();
     });
 
+
+    
+    // ==========================================
+    // 數位圖像化場記系統與打球落點噴流分析引擎
+    // ==========================================
+
+    const POS_CANONICAL_COORDS = {
+      'C':  { x: 0.50, y: 0.94, px: 200, py: 375, label: '捕手 (C)' },
+      'P':  { x: 0.50, y: 0.65, px: 200, py: 260, label: '投手 (P)' },
+      '1B': { x: 0.69, y: 0.71, px: 275, py: 285, label: '一壘 (1B)' },
+      '2B': { x: 0.59, y: 0.55, px: 235, py: 220, label: '二壘 (2B)' },
+      '3B': { x: 0.31, y: 0.71, px: 125, py: 285, label: '三壘 (3B)' },
+      'SS': { x: 0.41, y: 0.55, px: 165, py: 220, label: '游擊 (SS)' },
+      'LF': { x: 0.22, y: 0.32, px: 90,  py: 130, label: '左外野 (LF)' },
+      'SF': { x: 0.41, y: 0.24, px: 165, py: 95,  label: '自由/左中 (SF)' },
+      'RC': { x: 0.59, y: 0.24, px: 235, py: 95,  label: '右中外野 (RC)' },
+      'RF': { x: 0.78, y: 0.32, px: 310, py: 130, label: '右外野 (RF)' }
+    };
+
+    let currentScorebookSubTab = 'live'; // 'live', 'review', 'spray'
+    let currentFieldTargetPos = 'P';
+    let currentFieldCoords = { x: 0.50, y: 0.65 };
+    let currentSelectedTraj = 'grounder'; // 'grounder', 'line', 'fly', 'popup', 'none'
+    let currentSelectedOutcome = '1H';
+    let currentSelectedRbi = 0;
+    let currentSelectedRuns = 0;
+
+    let setupLineupList = [];
+    let selectedReviewGameId = '';
+    let selectedSprayPlayer = 'all';
+    let currentSprayFilter = 'all'; // 'all', 'hits', 'extra', 'outs'
+
+    // 內建示範歷史比賽 (若雲端與本地皆為空時作為初始展示)
+    const baselineSampleGames = [
+      {
+        id: "game_20260315_mech",
+        date: "2026-03-15",
+        opponent: "機械系壘",
+        tag: "春季友誼邀請賽",
+        hasDh: true,
+        ourRole: "先攻",
+        lineup: ["廖仲毅", "盧宣嘉", "劉憬翰", "簡承均", "陳柏翰", "陳威騏", "陳泓銘", "洪銘駿", "孫煜哲", "田耕宇", "謝承祐"],
+        dhSlot: 9,
+        status: "finished",
+        finalScore: { us: 10, opp: 6 },
+        innings: [
+          {
+            inningNum: 1,
+            topBottom: "top",
+            runs: 3,
+            hits: 3,
+            plateAppearances: [
+              { batterOrder: 1, batterName: "廖仲毅", jersey: 41, result: "BB", trajectory: "none", location: "C", x: 0.50, y: 0.94, rbi: 0, runsScored: 0, outsAdded: 0, textSummary: "選球精準四壞保送上壘", outsAtEnd: 0 },
+              { batterOrder: 2, batterName: "盧宣嘉", jersey: 44, result: "2H", trajectory: "line", location: "LF", x: 0.22, y: 0.32, rbi: 1, runsScored: 1, outsAdded: 0, textSummary: "左外野深遠平飛二壘安打 (1分打點)", outsAtEnd: 0 },
+              { batterOrder: 3, batterName: "劉憬翰", jersey: 2, result: "FO", trajectory: "fly", location: "SF", x: 0.41, y: 0.24, rbi: 0, runsScored: 0, outsAdded: 1, textSummary: "左中外野深遠高飛球遭接殺 (1出局)", outsAtEnd: 1 },
+              { batterOrder: 4, batterName: "簡承均", jersey: 8, result: "HR", trajectory: "fly", location: "RC", x: 0.65, y: 0.12, rbi: 2, runsScored: 2, outsAdded: 0, textSummary: "右中外野兩分砲！一棒清壘！", outsAtEnd: 1 },
+              { batterOrder: 5, batterName: "陳柏翰", jersey: 98, result: "GO", trajectory: "grounder", location: "SS", x: 0.41, y: 0.55, rbi: 0, runsScored: 0, outsAdded: 1, textSummary: "游擊方向強勁滾地球刺殺 (2出局)", outsAtEnd: 2 },
+              { batterOrder: 6, batterName: "陳威騏", jersey: 99, result: "K", trajectory: "none", location: "C", x: 0.50, y: 0.94, rbi: 0, runsScored: 0, outsAdded: 1, textSummary: "揮棒落空吞三振 (3出局)", outsAtEnd: 3 }
+            ]
+          },
+          {
+            inningNum: 2,
+            topBottom: "top",
+            runs: 2,
+            hits: 2,
+            plateAppearances: [
+              { batterOrder: 7, batterName: "陳泓銘", jersey: 4, result: "1H", trajectory: "line", location: "2B", x: 0.59, y: 0.55, rbi: 0, runsScored: 0, outsAdded: 0, textSummary: "穿越二壘防線平飛安打", outsAtEnd: 0 },
+              { batterOrder: 8, batterName: "洪銘駿", jersey: 30, result: "1H", trajectory: "grounder", location: "1B", x: 0.69, y: 0.71, rbi: 0, runsScored: 0, outsAdded: 0, textSummary: "穿越一二壘間強勁滾地安打", outsAtEnd: 0 },
+              { batterOrder: 9, batterName: "孫煜哲", jersey: 31, result: "BB", trajectory: "none", location: "C", x: 0.50, y: 0.94, rbi: 0, runsScored: 0, outsAdded: 0, textSummary: "專職DH保送滿壘", outsAtEnd: 0 },
+              { batterOrder: 10, batterName: "田耕宇", jersey: 72, result: "GO", trajectory: "grounder", location: "P", x: 0.50, y: 0.65, rbi: 1, runsScored: 1, outsAdded: 1, textSummary: "投手前滾地球推進帶有 1 分打點 (1出局)", outsAtEnd: 1 },
+              { batterOrder: 11, batterName: "謝承祐", jersey: 47, result: "SF", trajectory: "fly", location: "RF", x: 0.78, y: 0.32, rbi: 1, runsScored: 1, outsAdded: 1, textSummary: "右外野高飛犧牲打，再添 1 分 (2出局)", outsAtEnd: 2 },
+              { batterOrder: 1, batterName: "廖仲毅", jersey: 41, result: "LO", trajectory: "line", location: "3B", x: 0.31, y: 0.71, rbi: 0, runsScored: 0, outsAdded: 1, textSummary: "三壘強勁平飛球遭直接接殺 (3出局)", outsAtEnd: 3 }
+            ]
+          }
+        ]
+      }
+    ];
+
+    async function loadGamesFromGitHub() {
+      try {
+        const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        if (apiRes.ok) {
+          const data = await apiRes.json();
+          currentGamesSha = data.sha;
+          const decoded = base64ToUtf8(data.content);
+          const cloudGames = JSON.parse(decoded);
+          allGames = Array.isArray(cloudGames) ? cloudGames : [];
+          localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        } else if (apiRes.status === 404) {
+          currentGamesSha = null;
+        }
+      } catch (err) {
+        try {
+          const res = await fetch(`./${GAMES_FILE_PATH}?t=${Date.now()}`);
+          if (res.ok) {
+            allGames = await res.json();
+            localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+          }
+        } catch (e) {}
+      }
+
+      if (!allGames || allGames.length === 0) {
+        allGames = JSON.parse(JSON.stringify(baselineSampleGames));
+        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      }
+    }
+
+    async function commitGamesToGitHub(updatedGames, commitMessage = "update: sync scorebook games via portal") {
+      const statusBadge = document.getElementById('syncStatusBadge');
+      statusBadge.textContent = '雲端資料庫：正在同步場記數據至 GitHub...';
+      statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+
+      const inningSyncBtn = document.getElementById('btnInningCloudSync');
+      if (inningSyncBtn) {
+        inningSyncBtn.innerHTML = '<span>⏳</span> 雲端寫入中...';
+        inningSyncBtn.disabled = true;
+      }
+
+      try {
+        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
+        });
+        if (getShaRes.ok) {
+          const shaData = await getShaRes.json();
+          currentGamesSha = shaData.sha;
+        } else {
+          currentGamesSha = null;
+        }
+
+        const base64Content = utf8ToBase64(JSON.stringify(updatedGames, null, 2));
+        const putBody = {
+          message: commitMessage,
+          content: base64Content,
+          branch: GITHUB_BRANCH
+        };
+        if (currentGamesSha) putBody.sha = currentGamesSha;
+
+        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(putBody)
+        });
+
+        if (!putRes.ok) {
+          const errData = await putRes.json();
+          throw new Error(errData.message || 'GitHub API 場記寫入拒絕');
+        }
+
+        const resData = await putRes.json();
+        currentGamesSha = resData.content.sha;
+        allGames = updatedGames;
+        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+
+        statusBadge.textContent = `[連線正常] 場記資料庫：已即時同步 (Commit: ${currentGamesSha.substring(0, 7)})`;
+        statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+
+        if (inningSyncBtn) {
+          inningSyncBtn.innerHTML = '<span>✓</span> 本局雲端同步成功！';
+          inningSyncBtn.className = 'bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg transition flex items-center gap-1.5';
+          setTimeout(() => {
+            if (inningSyncBtn) {
+              inningSyncBtn.innerHTML = '<span>☁️</span> 上傳本局戰況至 GitHub';
+              inningSyncBtn.className = 'bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-amber-600/30 transition flex items-center gap-1.5';
+              inningSyncBtn.disabled = false;
+            }
+          }, 3000);
+        }
+
+        return true;
+      } catch (err) {
+        statusBadge.textContent = `[寫入失敗] 場記同步失敗: ${err.message}`;
+        statusBadge.className = 'text-rose-400 font-mono text-[11px]';
+        if (inningSyncBtn) {
+          inningSyncBtn.innerHTML = '<span>✕</span> 同步失敗重試';
+          inningSyncBtn.disabled = false;
+        }
+        alert(`場記資料同步至 GitHub 失敗：${err.message}\n（本地 localStorage 已安全暫存，資料不會遺失！）`);
+        return false;
+      }
+    }
+
+    // 防止手滑刷新遺失比賽中數據
+    window.addEventListener('beforeunload', (e) => {
+      if (activeGame && activeGame.status === 'in_progress') {
+        e.preventDefault();
+        e.returnValue = '實況比賽正在進行中，確定要離開嗎？';
+      }
+    });
+
+    window.switchScorebookSubTab = function(subTab) {
+      currentScorebookSubTab = subTab;
+      const btnLive = document.getElementById('btnScoreSubLive');
+      const btnReview = document.getElementById('btnScoreSubReview');
+      const btnSpray = document.getElementById('btnScoreSubSpray');
+
+      const panelLive = document.getElementById('scoreSubPanelLive');
+      const panelReview = document.getElementById('scoreSubPanelReview');
+      const panelSpray = document.getElementById('scoreSubPanelSpray');
+
+      const activeBtnClass = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white shadow transition whitespace-nowrap';
+      const inactiveBtnClass = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition whitespace-nowrap';
+
+      [btnLive, btnReview, btnSpray].forEach(b => { if (b) b.className = inactiveBtnClass; });
+      [panelLive, panelReview, panelSpray].forEach(p => { if (p) p.classList.add('hidden'); });
+
+      if (subTab === 'live') {
+        if (btnLive) btnLive.className = activeBtnClass;
+        if (panelLive) panelLive.classList.remove('hidden');
+        renderLiveScorer();
+      } else if (subTab === 'review') {
+        if (btnReview) btnReview.className = activeBtnClass;
+        if (panelReview) panelReview.classList.remove('hidden');
+        renderGameReview();
+      } else if (subTab === 'spray') {
+        if (btnSpray) btnSpray.className = activeBtnClass;
+        if (panelSpray) panelSpray.classList.remove('hidden');
+        renderSprayChartStudio();
+      }
+    };
+
+    function renderScorebook() {
+      switchScorebookSubTab(currentScorebookSubTab);
+    }
+
+    // 初始化開賽表單打線
+    function initNewGameSetup() {
+      const today = new Date().toISOString().slice(0, 10);
+      const dateEl = document.getElementById('setup_game_date');
+      if (dateEl && !dateEl.value) dateEl.value = today;
+
+      const targetSize = isDhEnabled ? 11 : 10;
+      if (setupLineupList.length !== targetSize) {
+        loadLineupIntoGameSetup('custom');
+      } else {
+        renderSetupLineupGrid();
+      }
+    }
+
+    window.loadLineupIntoGameSetup = function(sourceType) {
+      const agg = getAggregatedStats(getFilteredLogs());
+      const targetSize = isDhEnabled ? 11 : 10;
+      const allNames = Object.values(JERSEY_TO_NAME);
+
+      if (sourceType === 'recommended') {
+        const rec = calculateRecommendedLineup(agg.players);
+        setupLineupList = rec.items.map(r => r.player.name);
+      } else {
+        setupLineupList = [...customLineup];
+      }
+
+      while (setupLineupList.length < targetSize) {
+        const unused = allNames.find(n => !setupLineupList.includes(n)) || allNames[0];
+        setupLineupList.push(unused);
+      }
+      if (setupLineupList.length > targetSize) {
+        setupLineupList = setupLineupList.slice(0, targetSize);
+      }
+
+      renderSetupLineupGrid();
+    };
+
+    function renderSetupLineupGrid() {
+      const container = document.getElementById('setupLineupGrid');
+      if (!container) return;
+
+      const allNames = Object.values(JERSEY_TO_NAME);
+      const targetSize = isDhEnabled ? 11 : 10;
+
+      container.innerHTML = Array.from({ length: targetSize }, (_, i) => {
+        const slot = i + 1;
+        const currentName = setupLineupList[i] || allNames[0];
+        const isDh = isDhEnabled && (slot === (customDhSlot || 4));
+
+        return `
+          <div class="p-2.5 rounded-xl border bg-slate-900/90 ${isDh ? 'border-amber-500/80' : 'border-slate-800'} space-y-1">
+            <div class="flex items-center justify-between text-[11px] font-mono">
+              <span class="font-bold ${isDh ? 'text-amber-400' : 'text-slate-300'}">第 ${slot} 棒</span>
+              ${isDh ? '<span class="text-[9px] text-amber-300 bg-amber-950 px-1 rounded border border-amber-700/60 font-bold">DH</span>' : ''}
+            </div>
+            <select onchange="updateSetupLineupSlot(${i}, this.value)" class="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded px-1.5 py-1 text-xs focus:outline-none focus:border-amber-500 font-medium">
+              ${allNames.map(name => `
+                <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name}</option>
+              `).join('')}
+            </select>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.updateSetupLineupSlot = function(index, name) {
+      setupLineupList[index] = name;
+      renderSetupLineupGrid();
+    };
+
+    window.startNewGameFromSetup = function() {
+      const date = document.getElementById('setup_game_date').value || new Date().toISOString().slice(0, 10);
+      const opponent = document.getElementById('setup_game_opponent').value.trim() || '友隊選手';
+      const tag = document.getElementById('setup_game_tag').value.trim() || '系壘例行賽';
+      const role = document.getElementById('setup_game_role').value || '先攻';
+      const targetSize = isDhEnabled ? 11 : 10;
+
+      if (!opponent) {
+        alert('請填寫對手隊伍名稱！');
+        return;
+      }
+
+      const cleanLineup = setupLineupList.slice(0, targetSize);
+      const gameId = `game_${date.replace(/-/g, '')}_${Date.now().toString().slice(-4)}`;
+
+      activeGame = {
+        id: gameId,
+        date,
+        opponent,
+        tag,
+        hasDh: isDhEnabled,
+        dhSlot: isDhEnabled ? (customDhSlot || 4) : null,
+        ourRole: role,
+        lineup: cleanLineup,
+        currentInning: 1,
+        currentHalf: role === '先攻' ? 'top' : 'bottom',
+        currentOuts: 0,
+        currentBases: { first: null, second: null, third: null },
+        currentBatterIdx: 0,
+        status: 'in_progress',
+        finalScore: { us: 0, opp: 0 },
+        innings: [
+          {
+            inningNum: 1,
+            topBottom: role === '先攻' ? 'top' : 'bottom',
+            runs: 0,
+            hits: 0,
+            plateAppearances: []
+          }
+        ]
+      };
+
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      renderLiveScorer();
+    };
+
+    // 渲染實況記分介面
+    function renderLiveScorer() {
+      const setupCard = document.getElementById('newGameSetupCard');
+      const activeContainer = document.getElementById('activeGameContainer');
+
+      if (!activeGame || activeGame.status !== 'in_progress') {
+        if (setupCard) setupCard.classList.remove('hidden');
+        if (activeContainer) activeContainer.classList.add('hidden');
+        initNewGameSetup();
+        return;
+      }
+
+      if (setupCard) setupCard.classList.add('hidden');
+      if (activeContainer) activeContainer.classList.remove('hidden');
+
+      // 更新頂部資訊橫幅
+      const titleEl = document.getElementById('liveGameTeamsTitle');
+      const ruleBadge = document.getElementById('liveGameRuleBadge');
+      const metaSub = document.getElementById('liveGameMetaSubtitle');
+
+      if (titleEl) titleEl.textContent = `淡江航太系壘 VS ${activeGame.opponent}`;
+      if (ruleBadge) {
+        ruleBadge.textContent = activeGame.hasDh ? '11棒有DH (投手打擊)' : '10棒全打全守';
+        ruleBadge.className = activeGame.hasDh
+          ? 'text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40'
+          : 'text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      }
+      if (metaSub) metaSub.textContent = `${activeGame.date} | ${activeGame.tag} | 我方${activeGame.ourRole}`;
+
+      // 渲染比分板與情勢儀表
+      updateLiveScoreboard();
+      updateLiveBatterCard();
+      updateBasesAndOutsDisplay();
+      setupInteractiveField();
+      renderCurrentInningPlaysTable();
+    }
+
+    function updateLiveScoreboard() {
+      const tbody = document.getElementById('liveScoreboardBody');
+      const innTitleBadge = document.getElementById('liveInningTitleBadge');
+      const curRunsEl = document.getElementById('currentInningRunsDisplay');
+      const curHitsEl = document.getElementById('currentInningHitsDisplay');
+      const totalRunsEl = document.getElementById('totalTeamRunsDisplay');
+      const oppScoreEl = document.getElementById('opponentScoreVal');
+
+      if (!activeGame || !tbody) return;
+
+      const maxInning = Math.max(7, activeGame.currentInning);
+      const curInningObj = activeGame.innings.find(inn => inn.inningNum === activeGame.currentInning && inn.topBottom === activeGame.currentHalf) || activeGame.innings[activeGame.innings.length - 1];
+
+      if (innTitleBadge) {
+        innTitleBadge.textContent = `第 ${activeGame.currentInning} 局 ${activeGame.currentHalf === 'top' ? '上半' : '下半'}`;
+      }
+      if (curRunsEl) curRunsEl.textContent = curInningObj ? curInningObj.runs : 0;
+      if (curHitsEl) curHitsEl.textContent = curInningObj ? curInningObj.hits : 0;
+      if (totalRunsEl) totalRunsEl.textContent = activeGame.finalScore.us;
+      if (oppScoreEl) oppScoreEl.textContent = activeGame.finalScore.opp;
+
+      // 逐局計算我方各局得分
+      const inningRunsMap = {};
+      const inningHitsMap = {};
+      activeGame.innings.forEach(inn => {
+        inningRunsMap[inn.inningNum] = (inningRunsMap[inn.inningNum] || 0) + inn.runs;
+        inningHitsMap[inn.inningNum] = (inningHitsMap[inn.inningNum] || 0) + inn.hits;
+      });
+
+      const ourRowCells = [];
+      const oppRowCells = [];
+
+      for (let i = 1; i <= 7; i++) {
+        const rVal = inningRunsMap[i] !== undefined ? inningRunsMap[i] : (i > activeGame.currentInning ? '-' : '0');
+        ourRowCells.push(`<td class="p-2 font-mono ${i === activeGame.currentInning ? 'bg-amber-500/20 text-amber-300 font-bold' : ''}">${rVal}</td>`);
+        oppRowCells.push(`<td class="p-2 font-mono text-slate-500">-</td>`);
+      }
+
+      tbody.innerHTML = `
+        <tr class="hover:bg-slate-900 transition">
+          <td class="p-2 text-left font-bold text-sky-400">淡江航太</td>
+          ${ourRowCells.join('')}
+          <td class="p-2 font-bold text-amber-400 border-l border-slate-800 text-sm">${activeGame.finalScore.us}</td>
+          <td class="p-2 font-bold text-sky-400 text-sm">${Object.values(inningHitsMap).reduce((a,b)=>a+b, 0)}</td>
+        </tr>
+        <tr class="hover:bg-slate-900 transition">
+          <td class="p-2 text-left font-bold text-slate-400 truncate max-w-[90px]">${activeGame.opponent}</td>
+          ${oppRowCells.join('')}
+          <td class="p-2 font-bold text-rose-400 border-l border-slate-800 text-sm">${activeGame.finalScore.opp}</td>
+          <td class="p-2 font-bold text-slate-400 text-sm">-</td>
+        </tr>
+      `;
+    }
+
+    function updateLiveBatterCard() {
+      const card = document.getElementById('liveCurrentBatterCard');
+      if (!card || !activeGame) return;
+
+      const idx = activeGame.currentBatterIdx;
+      const batterName = activeGame.lineup[idx] || activeGame.lineup[0];
+      const slot = idx + 1;
+      const jersey = NAME_TO_JERSEY[batterName] ?? '--';
+      const isDh = activeGame.hasDh && (slot === (activeGame.dhSlot || 4));
+
+      // 統計該打者此場累積成績
+      let matchPa = 0, matchAb = 0, matchH = 0, matchHr = 0, matchBb = 0, matchRbi = 0, matchR = 0;
+      activeGame.innings.forEach(inn => {
+        inn.plateAppearances.forEach(pa => {
+          if (pa.batterName === batterName) {
+            matchPa++;
+            if (!['BB', 'SF'].includes(pa.result)) matchAb++;
+            if (['1H', '2H', '3H', 'HR'].includes(pa.result)) matchH++;
+            if (pa.result === 'HR') matchHr++;
+            if (pa.result === 'BB') matchBb++;
+            matchRbi += (pa.rbi || 0);
+            matchR += (pa.runsScored || 0);
+          }
+        });
+      });
+
+      const nextIdx = (idx + 1) % activeGame.lineup.length;
+      const nextName = activeGame.lineup[nextIdx];
+      const nextSlot = nextIdx + 1;
+
+      card.innerHTML = `
+        <div class="flex items-center space-x-3.5">
+          <div class="relative shrink-0">
+            ${renderAvatarElement(batterName, 'w-14 h-14 sm:w-16 sm:h-16 text-xl ring-2 ring-amber-400 shadow-lg')}
+            <span class="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 font-black text-[10px] px-1.5 py-0.5 rounded-full font-mono">
+              第 ${slot} 棒
+            </span>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-base sm:text-lg font-black text-white">#${jersey} ${batterName}</span>
+              ${isDh ? '<span class="text-[10px] text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-600 font-bold">DH 指定打擊</span>' : ''}
+            </div>
+            <div class="text-xs text-amber-300 font-mono mt-0.5 flex flex-wrap gap-2">
+              <span>今日戰績：${matchPa} 打席 | ${matchAb} 打數 ${matchH} 安打</span>
+              <span>${matchHr > 0 ? `| ${matchHr} 支全壘打` : ''}</span>
+              <span>| ${matchRbi} 打點</span>
+              <span>| ${matchBb} 保送</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col sm:items-end justify-between text-xs space-y-1">
+          <div class="text-slate-400 font-mono text-[11px]">
+            次棒預告 (On Deck)：<b class="text-slate-200">第 ${nextSlot} 棒 #${NAME_TO_JERSEY[nextName] ?? ''} ${nextName}</b>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[10px] text-slate-500">換打者/代打：</span>
+            <select onchange="changeCurrentBatterIndex(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 text-[11px] rounded px-1.5 py-0.5 font-mono">
+              ${activeGame.lineup.map((n, i) => `
+                <option value="${i}" ${i === idx ? 'selected' : ''}>第 ${i + 1} 棒 #${NAME_TO_JERSEY[n] ?? ''} ${n}</option>
+              `).join('')}
+            </select>
+          </div>
+        </div>
+      `;
+    }
+
+    window.changeCurrentBatterIndex = function(targetIdx) {
+      if (!activeGame) return;
+      activeGame.currentBatterIdx = Number(targetIdx);
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      updateLiveBatterCard();
+    };
+
+    function updateBasesAndOutsDisplay() {
+      if (!activeGame) return;
+
+      // 更新出局指示燈 (3 顆大圓燈)
+      const outs = activeGame.currentOuts;
+      const o1 = document.getElementById('outLamp1');
+      const o2 = document.getElementById('outLamp2');
+      const o3 = document.getElementById('outLamp3');
+
+      const onClass = 'w-3.5 h-3.5 rounded-full border border-rose-500 bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)] transition';
+      const offClass = 'w-3.5 h-3.5 rounded-full border border-slate-700 bg-slate-800 transition';
+
+      if (o1) o1.className = outs >= 1 ? onClass : offClass;
+      if (o2) o2.className = outs >= 2 ? onClass : offClass;
+      if (o3) o3.className = outs >= 3 ? onClass : offClass;
+
+      // 更新鑽石壘包圖形
+      const bases = activeGame.currentBases || { first: null, second: null, third: null };
+      const b1 = document.getElementById('baseDiamond1');
+      const b2 = document.getElementById('baseDiamond2');
+      const b3 = document.getElementById('baseDiamond3');
+
+      const baseOnClass = 'absolute w-6 h-6 rotate-45 border-2 border-amber-400 bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.9)] transition cursor-pointer';
+      const baseOffClass = 'absolute w-6 h-6 rotate-45 border-2 border-slate-600 bg-slate-800 hover:border-amber-400 transition cursor-pointer shadow';
+
+      if (b1) {
+        b1.className = bases.first ? baseOnClass : baseOffClass;
+        b1.style.right = '0.5rem'; b1.style.top = '2rem';
+      }
+      if (b2) {
+        b2.className = bases.second ? baseOnClass : baseOffClass;
+        b2.style.top = '0rem';
+      }
+      if (b3) {
+        b3.className = bases.third ? baseOnClass : baseOffClass;
+        b3.style.left = '0.5rem'; b3.style.top = '2rem';
+      }
+    }
+
+    window.toggleBaseRunner = function(baseKey) {
+      if (!activeGame) return;
+      if (!activeGame.currentBases) activeGame.currentBases = { first: null, second: null, third: null };
+      activeGame.currentBases[baseKey] = activeGame.currentBases[baseKey] ? null : '跑者';
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      updateBasesAndOutsDisplay();
+    };
+
+    window.adjustOpponentScore = function(delta) {
+      if (!activeGame) return;
+      activeGame.finalScore.opp = Math.max(0, (activeGame.finalScore.opp || 0) + delta);
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      updateLiveScoreboard();
+    };
+
+    // 慢壘 10 守位互動式球場點擊與按鈕設置
+    function setupInteractiveField() {
+      const svg = document.getElementById('interactiveFieldSvg');
+      const btnContainer = document.getElementById('fieldPosButtonsContainer');
+
+      if (svg && !svg.hasAttribute('data-bound')) {
+        svg.setAttribute('data-bound', 'true');
+        svg.addEventListener('click', handleFieldClick);
+      }
+
+      if (btnContainer) {
+        btnContainer.innerHTML = POSITIONS.map(p => `
+          <button type="button" onclick="selectFieldPosition('${p.key}')" id="btnPos_${p.key}" class="py-1 px-1 rounded-lg border text-center font-bold text-[11px] transition ${
+            currentFieldTargetPos === p.key
+              ? 'bg-amber-600 text-white border-amber-400 shadow-md'
+              : 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
+          }">
+            ${p.key}
+          </button>
+        `).join('');
+      }
+
+      updateFieldTargetDisplay();
+    }
+
+    function handleFieldClick(e) {
+      const svg = document.getElementById('interactiveFieldSvg');
+      if (!svg) return;
+
+      const rect = svg.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      // 轉換為 400x400 viewBox 坐標
+      const svgX = (clickX / rect.width) * 400;
+      const svgY = (clickY / rect.height) * 400;
+
+      const normX = Math.max(0, Math.min(1, svgX / 400));
+      const normY = Math.max(0, Math.min(1, svgY / 400));
+
+      currentFieldCoords = { x: Number(normX.toFixed(3)), y: Number(normY.toFixed(3)) };
+
+      // 自動依落點判定最接近之慢壘守備區域
+      currentFieldTargetPos = detectPositionFromCoords(normX, normY);
+
+      updateFieldTargetDisplay();
+    }
+
+    function detectPositionFromCoords(normX, normY) {
+      if (normY > 0.85) return 'C';
+      if (normY > 0.48) {
+        // 內野區 (P, 1B, 2B, 3B, SS)
+        const infieldCandidates = ['P', '1B', '2B', '3B', 'SS'];
+        let closest = 'P';
+        let minD = 99999;
+        infieldCandidates.forEach(key => {
+          const c = POS_CANONICAL_COORDS[key];
+          const d = Math.hypot(normX - c.x, normY - c.y);
+          if (d < minD) { minD = d; closest = key; }
+        });
+        return closest;
+      } else {
+        // 外野區 (LF, SF, RC, RF)
+        if (normX < 0.32) return 'LF';
+        if (normX < 0.50) return 'SF';
+        if (normX < 0.68) return 'RC';
+        return 'RF';
+      }
+    }
+
+    window.selectFieldPosition = function(posKey) {
+      currentFieldTargetPos = posKey;
+      const coord = POS_CANONICAL_COORDS[posKey];
+      if (coord) {
+        currentFieldCoords = { x: coord.x, y: coord.y };
+      }
+      updateFieldTargetDisplay();
+    };
+
+    function updateFieldTargetDisplay() {
+      const marker = document.getElementById('fieldTargetMarker');
+      const displayEl = document.getElementById('selectedLocationDisplay');
+      const posObj = POS_CANONICAL_COORDS[currentFieldTargetPos] || POS_CANONICAL_COORDS['P'];
+
+      const px = currentFieldCoords.x * 400;
+      const py = currentFieldCoords.y * 400;
+
+      if (marker) {
+        marker.setAttribute('transform', `translate(${px}, ${py})`);
+      }
+
+      if (displayEl) {
+        displayEl.innerHTML = `📍 落點：<span class="text-amber-400 font-bold">${posObj.label}</span> <span class="text-[10px] text-slate-400">(X:${currentFieldCoords.x}, Y:${currentFieldCoords.y})</span>`;
+      }
+
+      // 更新快捷按鈕高亮
+      POSITIONS.forEach(p => {
+        const btn = document.getElementById(`btnPos_${p.key}`);
+        if (btn) {
+          btn.className = currentFieldTargetPos === p.key
+            ? 'py-1 px-1 rounded-lg border text-center font-bold text-[11px] transition bg-amber-600 text-white border-amber-400 shadow-md'
+            : 'py-1 px-1 rounded-lg border text-center font-bold text-[11px] transition bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800';
+        }
+      });
+    }
+
+    // 擊球型態與打擊結果選擇
+    window.selectTrajectory = function(traj) {
+      currentSelectedTraj = traj;
+      ['grounder', 'line', 'fly', 'popup'].forEach(t => {
+        const btn = document.getElementById(`traj_${t}`);
+        if (btn) {
+          btn.className = t === traj
+            ? 'py-2 rounded-lg border border-amber-500 bg-amber-600 text-white font-bold transition shadow'
+            : 'py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium transition';
+        }
+      });
+    };
+
+    window.selectOutcome = function(outc) {
+      currentSelectedOutcome = outc;
+      const allOutcomes = ['1H', '2H', '3H', 'HR', 'GO', 'FO', 'LO', 'SF', 'E', 'FC', 'DP'];
+      allOutcomes.forEach(o => {
+        const btn = document.getElementById(`res_${o}`);
+        if (btn) {
+          if (o === outc) {
+            btn.classList.add('ring-2', 'ring-white', 'scale-105', 'shadow-lg');
+          } else {
+            btn.classList.remove('ring-2', 'ring-white', 'scale-105', 'shadow-lg');
+          }
+        }
+      });
+
+      // 自動預填合理打點與得分
+      if (outc === 'HR') {
+        selectRunsScored(1);
+        selectRbi(1);
+      } else if (outc === 'SF') {
+        selectRunsScored(1);
+        selectRbi(1);
+      }
+    };
+
+    window.selectRbi = function(val) {
+      currentSelectedRbi = val;
+      for (let i = 0; i <= 4; i++) {
+        const btn = document.getElementById(`rbi_${i}`);
+        if (btn) {
+          btn.className = i === val
+            ? 'flex-1 py-1 rounded bg-amber-600 text-white font-bold font-mono shadow'
+            : 'flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono';
+        }
+      }
+    };
+
+    window.selectRunsScored = function(val) {
+      currentSelectedRuns = val;
+      for (let i = 0; i <= 4; i++) {
+        const btn = document.getElementById(`runs_${i}`);
+        if (btn) {
+          btn.className = i === val
+            ? 'flex-1 py-1 rounded bg-emerald-600 text-white font-bold font-mono shadow'
+            : 'flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono';
+        }
+      }
+    };
+
+    // 一鍵快速登打：三振 (K)
+    window.recordQuickStrikeout = function() {
+      if (!activeGame) return;
+      const idx = activeGame.currentBatterIdx;
+      const batterName = activeGame.lineup[idx];
+
+      const paObj = {
+        batterOrder: idx + 1,
+        batterName,
+        jersey: NAME_TO_JERSEY[batterName] ?? 0,
+        result: 'K',
+        trajectory: 'none',
+        location: 'C',
+        x: 0.50,
+        y: 0.94,
+        rbi: 0,
+        runsScored: 0,
+        outsAdded: 1,
+        textSummary: '揮棒落空 / 見振三振出局 (增加 1 出局)',
+        outsAtEnd: Math.min(3, activeGame.currentOuts + 1)
+      };
+
+      appendPlayToActiveGame(paObj);
+    };
+
+    // 一鍵快速登打：四壞保送 (BB)
+    window.recordQuickWalk = function() {
+      if (!activeGame) return;
+      const idx = activeGame.currentBatterIdx;
+      const batterName = activeGame.lineup[idx];
+
+      // 壘包被迫進壘推算
+      let runsScoredOnBb = 0;
+      const bases = { ...activeGame.currentBases };
+      if (bases.first && bases.second && bases.third) {
+        runsScoredOnBb = 1; // 滿壘擠回 1 分
+      }
+      if (bases.first && bases.second) bases.third = '跑者';
+      if (bases.first) bases.second = '跑者';
+      bases.first = batterName;
+
+      const paObj = {
+        batterOrder: idx + 1,
+        batterName,
+        jersey: NAME_TO_JERSEY[batterName] ?? 0,
+        result: 'BB',
+        trajectory: 'none',
+        location: 'C',
+        x: 0.50,
+        y: 0.94,
+        rbi: runsScoredOnBb,
+        runsScored: runsScoredOnBb,
+        outsAdded: 0,
+        textSummary: runsScoredOnBb > 0 ? '滿壘選到四壞保送！擠回 1 分打點' : '四壞球保送上一壘',
+        outsAtEnd: activeGame.currentOuts
+      };
+
+      activeGame.currentBases = bases;
+      appendPlayToActiveGame(paObj);
+    };
+
+    // 登打打進場內之打席 (In-Play Batted Ball)
+    window.submitBattedBallPlay = function() {
+      if (!activeGame) return;
+      const idx = activeGame.currentBatterIdx;
+      const batterName = activeGame.lineup[idx];
+      const posObj = POS_CANONICAL_COORDS[currentFieldTargetPos] || POS_CANONICAL_COORDS['P'];
+
+      let outsAdded = 0;
+      if (['GO', 'FO', 'LO', 'SF', 'FC'].includes(currentSelectedOutcome)) {
+        outsAdded = 1;
+      } else if (currentSelectedOutcome === 'DP') {
+        outsAdded = 2;
+      }
+
+      const trajMap = { grounder: '滾地球', line: '平飛球', fly: '高飛球', popup: '內野飛球' };
+      const outcMap = {
+        '1H': '一壘安打', '2H': '二壘安打', '3H': '三壘安打', 'HR': '全壘打！',
+        'GO': '滾地刺殺出局', 'FO': '飛球接殺出局', 'LO': '平飛球接殺出局', 'SF': '高飛犧牲打',
+        'E': '守備失誤上壘', 'FC': '野手選擇上壘', 'DP': '雙殺打'
+      };
+
+      let summary = `${posObj.label} 方向 ${trajMap[currentSelectedTraj] || ''}，形成 ${outcMap[currentSelectedOutcome] || ''}`;
+      if (currentSelectedRbi > 0) summary += ` (${currentSelectedRbi}分打點)`;
+      if (outsAdded > 0) summary += ` [出局數+${outsAdded}]`;
+
+      // 壘包簡易推進推算
+      const bases = { ...activeGame.currentBases };
+      if (currentSelectedOutcome === '1H') {
+        if (bases.second) { bases.third = bases.second; bases.second = null; }
+        if (bases.first) bases.second = bases.first;
+        bases.first = batterName;
+      } else if (currentSelectedOutcome === '2H') {
+        if (bases.second) bases.second = null;
+        if (bases.first) { bases.third = bases.first; bases.first = null; }
+        bases.second = batterName;
+      } else if (currentSelectedOutcome === '3H') {
+        bases.first = null; bases.second = null; bases.third = batterName;
+      } else if (currentSelectedOutcome === 'HR') {
+        bases.first = null; bases.second = null; bases.third = null;
+      } else if (currentSelectedOutcome === 'DP') {
+        bases.first = null; bases.second = null;
+      }
+
+      const paObj = {
+        batterOrder: idx + 1,
+        batterName,
+        jersey: NAME_TO_JERSEY[batterName] ?? 0,
+        result: currentSelectedOutcome,
+        trajectory: currentSelectedTraj,
+        location: currentFieldTargetPos,
+        x: currentFieldCoords.x,
+        y: currentFieldCoords.y,
+        rbi: currentSelectedRbi,
+        runsScored: currentSelectedRuns,
+        outsAdded,
+        textSummary: summary,
+        outsAtEnd: Math.min(3, activeGame.currentOuts + outsAdded)
+      };
+
+      activeGame.currentBases = bases;
+      appendPlayToActiveGame(paObj);
+
+      // 重置打點得分暫存
+      selectRbi(0);
+      selectRunsScored(0);
+    };
+
+    function appendPlayToActiveGame(paObj) {
+      let curInningObj = activeGame.innings[activeGame.innings.length - 1];
+      if (!curInningObj || curInningObj.inningNum !== activeGame.currentInning || curInningObj.topBottom !== activeGame.currentHalf) {
+        curInningObj = {
+          inningNum: activeGame.currentInning,
+          topBottom: activeGame.currentHalf,
+          runs: 0,
+          hits: 0,
+          plateAppearances: []
+        };
+        activeGame.innings.push(curInningObj);
+      }
+
+      curInningObj.plateAppearances.push(paObj);
+      curInningObj.runs += paObj.runsScored;
+      activeGame.finalScore.us += paObj.runsScored;
+
+      if (['1H', '2H', '3H', 'HR'].includes(paObj.result)) {
+        curInningObj.hits++;
+      }
+
+      activeGame.currentOuts = Math.min(3, activeGame.currentOuts + paObj.outsAdded);
+      activeGame.currentBatterIdx = (activeGame.currentBatterIdx + 1) % activeGame.lineup.length;
+
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+
+      renderLiveScorer();
+
+      if (activeGame.currentOuts >= 3) {
+        setTimeout(() => {
+          alert(`🔔 第 ${activeGame.currentInning} 局已達 3 出局！\n請記得點擊下方「上傳本局戰況至 GitHub 雲端」同步保存，並點擊「換局」進入下一局！`);
+        }, 150);
+      }
+    }
+
+    // 撤銷/刪除當局最新一筆打席
+    window.deleteInningPlay = function(playIdx) {
+      if (!activeGame) return;
+      const curInningObj = activeGame.innings[activeGame.innings.length - 1];
+      if (!curInningObj || !curInningObj.plateAppearances[playIdx]) return;
+
+      if (!confirm('確認撤銷/刪除此打席紀錄？')) return;
+
+      const removed = curInningObj.plateAppearances.splice(playIdx, 1)[0];
+      if (removed) {
+        curInningObj.runs = Math.max(0, curInningObj.runs - (removed.runsScored || 0));
+        activeGame.finalScore.us = Math.max(0, activeGame.finalScore.us - (removed.runsScored || 0));
+        if (['1H', '2H', '3H', 'HR'].includes(removed.result)) {
+          curInningObj.hits = Math.max(0, curInningObj.hits - 1);
+        }
+        activeGame.currentOuts = Math.max(0, activeGame.currentOuts - (removed.outsAdded || 0));
+        activeGame.currentBatterIdx = (activeGame.currentBatterIdx - 1 + activeGame.lineup.length) % activeGame.lineup.length;
+      }
+
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      renderLiveScorer();
+    };
+
+    function renderCurrentInningPlaysTable() {
+      const tbody = document.getElementById('currentInningPlaysTableBody');
+      if (!tbody || !activeGame) return;
+
+      const curInningObj = activeGame.innings[activeGame.innings.length - 1];
+      if (!curInningObj || curInningObj.plateAppearances.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-500 font-mono">本半局尚未登打任何打席紀錄，請使用上方動作盤開始記錄</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = curInningObj.plateAppearances.map((pa, idx) => {
+        let resBadge = '';
+        if (['1H', '2H', '3H', 'HR'].includes(pa.result)) {
+          resBadge = `<span class="px-2 py-0.5 rounded font-bold ${pa.result === 'HR' ? 'bg-amber-500 text-slate-950' : pa.result === '3H' ? 'bg-purple-600 text-white' : pa.result === '2H' ? 'bg-sky-600 text-white' : 'bg-emerald-600 text-white'}">${pa.result}</span>`;
+        } else if (['BB'].includes(pa.result)) {
+          resBadge = `<span class="px-2 py-0.5 rounded font-bold bg-teal-600 text-white">BB 保送</span>`;
+        } else if (['K'].includes(pa.result)) {
+          resBadge = `<span class="px-2 py-0.5 rounded font-bold bg-rose-600 text-white">K 三振</span>`;
+        } else {
+          resBadge = `<span class="px-2 py-0.5 rounded font-medium bg-slate-800 text-slate-300 border border-slate-700">${pa.result}</span>`;
+        }
+
+        const trajName = { grounder: '滾地球', line: '平飛球', fly: '高飛球', popup: '內野飛球', none: '-' }[pa.trajectory] || '-';
+
+        return `
+          <tr class="hover:bg-slate-800/50 transition">
+            <td class="p-2.5 text-center text-slate-400">${idx + 1}</td>
+            <td class="p-2.5 text-center font-bold text-amber-400">#${pa.batterOrder}</td>
+            <td class="p-2.5 font-bold text-white flex items-center space-x-2">
+              ${renderAvatarElement(pa.batterName, 'w-6 h-6 text-[10px]')}
+              <span>#${pa.jersey} ${pa.batterName}</span>
+            </td>
+            <td class="p-2.5 text-center">${resBadge}</td>
+            <td class="p-2.5 text-center text-slate-300 text-xs">${trajName}</td>
+            <td class="p-2.5 text-center text-amber-300 font-bold">${pa.location || '-'}</td>
+            <td class="p-2.5 text-center text-emerald-400 font-bold">${pa.rbi || 0}</td>
+            <td class="p-2.5 text-center text-rose-400 font-bold">${pa.outsAtEnd} 出局</td>
+            <td class="p-2.5 text-slate-300 text-[11px] truncate max-w-xs" title="${pa.textSummary}">${pa.textSummary}</td>
+            <td class="p-2.5 text-center">
+              <button onclick="deleteInningPlay(${idx})" class="text-rose-400 hover:text-rose-200 text-xs px-2 py-0.5 rounded bg-rose-950/40 border border-rose-900/60 transition">撤銷</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 換局 (Switch Inning)
+    window.switchInningNext = function() {
+      if (!activeGame) return;
+      const curInn = activeGame.currentInning;
+      const curHalf = activeGame.currentHalf;
+
+      if (!confirm(`確認結束第 ${curInn} 局 ${curHalf === 'top' ? '上半' : '下半'}，推進至下一半局？`)) return;
+
+      if (curHalf === 'top') {
+        activeGame.currentHalf = 'bottom';
+      } else {
+        activeGame.currentInning = curInn + 1;
+        activeGame.currentHalf = 'top';
+      }
+
+      activeGame.currentOuts = 0;
+      activeGame.currentBases = { first: null, second: null, third: null };
+
+      // 新增下一局物件
+      activeGame.innings.push({
+        inningNum: activeGame.currentInning,
+        topBottom: activeGame.currentHalf,
+        runs: 0,
+        hits: 0,
+        plateAppearances: []
+      });
+
+      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      renderLiveScorer();
+    };
+
+    // 每局結束即時上傳至 GitHub 雲端 (核心防刷新機制)
+    window.syncCurrentInningToCloud = async function() {
+      if (!activeGame) return;
+      const curInn = activeGame.currentInning;
+      const curHalf = activeGame.currentHalf === 'top' ? '上半' : '下半';
+
+      // 檢查是否已有此場賽事在 allGames，若有則更新，若無則追加
+      const existingIdx = allGames.findIndex(g => g.id === activeGame.id);
+      if (existingIdx !== -1) {
+        allGames[existingIdx] = JSON.parse(JSON.stringify(activeGame));
+      } else {
+        allGames.unshift(JSON.parse(JSON.stringify(activeGame)));
+      }
+
+      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+
+      const commitMsg = `feat(scorebook): sync inning ${curInn} (${curHalf}) for ${activeGame.id} vs ${activeGame.opponent}`;
+      await commitGamesToGitHub(allGames, commitMsg);
+    };
+
+    // 結束整場比賽，自動統計並匯入全隊數據日誌 (allLogs)
+    window.finishActiveGameAndSyncLogs = async function() {
+      if (!activeGame) return;
+      if (!confirm(`確認正式結束本場比賽（淡江航太 ${activeGame.finalScore.us} : ${activeGame.finalScore.opp} ${activeGame.opponent}）？\n\n系統將自動統計所有球員的安打、全壘打、打數與保送，直接同步寫入全隊日誌資料庫，無需手動二次登打！`)) return;
+
+      activeGame.status = 'finished';
+
+      // 依比賽各打者表現自動生成賽事日誌
+      const generatedLogs = [];
+      activeGame.lineup.forEach(name => {
+        let pa = 0, h1 = 0, h2 = 0, h3 = 0, hr = 0, bb = 0, sf = 0, k = 0;
+        activeGame.innings.forEach(inn => {
+          inn.plateAppearances.forEach(p => {
+            if (p.batterName === name) {
+              pa++;
+              if (p.result === '1H') h1++;
+              else if (p.result === '2H') h2++;
+              else if (p.result === '3H') h3++;
+              else if (p.result === 'HR') hr++;
+              else if (p.result === 'BB') bb++;
+              else if (p.result === 'SF') sf++;
+              else if (p.result === 'K') k++;
+            }
+          });
+        });
+
+        if (pa > 0) {
+          const h = h1 + h2 + h3 + hr;
+          const ab = Math.max(0, pa - bb - sf);
+          const jersey = NAME_TO_JERSEY[name] ?? 0;
+          generatedLogs.push({
+            id: `log_auto_${activeGame.id}_${jersey}`,
+            date: activeGame.date,
+            tag: `${activeGame.tag} (場記自動匯入)`,
+            name,
+            jersey,
+            pa, ab, h, h1, h2, h3, hr, bb, sf, k
+          });
+        }
+      });
+
+      // 保存至 allGames
+      const existingIdx = allGames.findIndex(g => g.id === activeGame.id);
+      if (existingIdx !== -1) {
+        allGames[existingIdx] = JSON.parse(JSON.stringify(activeGame));
+      } else {
+        allGames.unshift(JSON.parse(JSON.stringify(activeGame)));
+      }
+
+      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+
+      // 同步匯入全隊 logs
+      const updatedLogs = [...allLogs, ...generatedLogs];
+      await commitLogsToGitHub(updatedLogs, `feat(game): finalize match vs ${activeGame.opponent} (${activeGame.finalScore.us}-${activeGame.finalScore.opp}) and auto-import ${generatedLogs.length} player logs`);
+      await commitGamesToGitHub(allGames, `feat(game): store completed scorebook game ${activeGame.id}`);
+
+      alert(`🎉 比賽已順利結束！\n已成功將 ${generatedLogs.length} 位隊員的攻守日誌直接匯入全隊雲端數據庫！`);
+
+      activeGame = null;
+      localStorage.removeItem('rebas_active_game');
+      switchScorebookSubTab('review');
+    };
+
+    window.discardActiveGame = function() {
+      if (!confirm('確定要捨棄/重置目前進行中的這場比賽記錄嗎？')) return;
+      activeGame = null;
+      localStorage.removeItem('rebas_active_game');
+      renderLiveScorer();
+    };
+
+    // ==========================================
+    // 歷史賽事覆盤與賽伯診斷 (Game Review)
+    // ==========================================
+    function renderGameReview() {
+      const select = document.getElementById('reviewGameSelect');
+      const badge = document.getElementById('reviewGameSummaryBadge');
+      const container = document.getElementById('gameReviewDetailContainer');
+
+      if (!select || !container) return;
+
+      if (!allGames || allGames.length === 0) {
+        select.innerHTML = '<option value="">目前尚無歷史賽事紀錄</option>';
+        container.innerHTML = '<div class="p-8 text-center text-slate-500 font-mono">尚無比賽紀錄，請至「實況即時記分」開啟新比賽。</div>';
+        return;
+      }
+
+      select.innerHTML = allGames.map(g => `
+        <option value="${g.id}" ${g.id === selectedReviewGameId ? 'selected' : ''}>
+          ${g.date} vs ${g.opponent} (${g.finalScore ? g.finalScore.us + ':' + g.finalScore.opp : '進行中'}) [${g.tag || '聯賽'}]
+        </option>
+      `).join('');
+
+      if (!selectedReviewGameId || !allGames.find(g => g.id === selectedReviewGameId)) {
+        selectedReviewGameId = allGames[0].id;
+      }
+
+      renderSelectedGameReview(selectedReviewGameId);
+    }
+
+    window.renderSelectedGameReview = function(gameId) {
+      selectedReviewGameId = gameId;
+      const game = allGames.find(g => g.id === gameId);
+      const container = document.getElementById('gameReviewDetailContainer');
+      const badge = document.getElementById('reviewGameSummaryBadge');
+
+      if (!game || !container) return;
+
+      const isWin = (game.finalScore.us > game.finalScore.opp);
+      if (badge) {
+        badge.innerHTML = `<span class="px-2.5 py-0.5 rounded-full font-bold text-xs ${isWin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}">${isWin ? 'VICTORY 勝利' : 'DEFEAT 落敗'} (${game.finalScore.us} - ${game.finalScore.opp})</span>`;
+      }
+
+      // 1. 逐局計分板 (Line Score)
+      const maxInning = Math.max(7, ...game.innings.map(i => i.inningNum));
+      const ourInnRuns = {};
+      const ourInnHits = {};
+      game.innings.forEach(inn => {
+        ourInnRuns[inn.inningNum] = (ourInnRuns[inn.inningNum] || 0) + inn.runs;
+        ourInnHits[inn.inningNum] = (ourInnHits[inn.inningNum] || 0) + inn.hits;
+      });
+
+      const lineScoreHeaders = [];
+      const ourLineScoreCells = [];
+      const oppLineScoreCells = [];
+
+      for (let i = 1; i <= maxInning; i++) {
+        lineScoreHeaders.push(`<th class="p-2 w-8">${i}</th>`);
+        ourLineScoreCells.push(`<td class="p-2 font-bold font-mono">${ourInnRuns[i] !== undefined ? ourInnRuns[i] : '0'}</td>`);
+        oppLineScoreCells.push(`<td class="p-2 font-mono text-slate-500">-</td>`);
+      }
+
+      // 2. 全場盒式攻守數據表 (Full Box Score)
+      const boxScoreMap = {};
+      game.lineup.forEach(name => {
+        boxScoreMap[name] = {
+          name, jersey: NAME_TO_JERSEY[name] ?? 0,
+          pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0, rbi: 0, r: 0,
+          details: []
+        };
+      });
+
+      let totalPAs = 0;
+      let totalLOB = 0;
+      game.innings.forEach(inn => {
+        inn.plateAppearances.forEach(pa => {
+          totalPAs++;
+          const p = boxScoreMap[pa.batterName];
+          if (p) {
+            p.pa++;
+            if (!['BB', 'SF'].includes(pa.result)) p.ab++;
+            if (pa.result === '1H') { p.h++; p.h1++; }
+            else if (pa.result === '2H') { p.h++; p.h2++; }
+            else if (pa.result === '3H') { p.h++; p.h3++; }
+            else if (pa.result === 'HR') { p.h++; p.hr++; }
+            else if (pa.result === 'BB') p.bb++;
+            else if (pa.result === 'SF') p.sf++;
+            else if (pa.result === 'K') p.k++;
+            p.rbi += (pa.rbi || 0);
+            p.r += (pa.runsScored || 0);
+            p.details.push(`${pa.result}(${pa.location || ''})`);
+          }
+        });
+      });
+
+      const boxRows = game.lineup.map((name, i) => {
+        const p = boxScoreMap[name] || { pa: 0, ab: 0, h: 0, bb: 0, k: 0, rbi: 0, r: 0, details: [] };
+        const avg = p.ab > 0 ? (p.h / p.ab).toFixed(3) : '.000';
+        const obp = (p.ab + p.bb + p.sf) > 0 ? ((p.h + p.bb) / (p.ab + p.bb + p.sf)).toFixed(3) : '.000';
+        const tb = p.h1 + 2*p.h2 + 3*p.h3 + 4*p.hr;
+        const slg = p.ab > 0 ? (tb / p.ab).toFixed(3) : '.000';
+        const ops = (Number(obp) + Number(slg)).toFixed(3);
+
+        return `
+          <tr class="hover:bg-slate-800/50 transition">
+            <td class="p-2.5 text-center font-bold text-amber-400">${i + 1}</td>
+            <td class="p-2.5 font-bold text-white flex items-center space-x-2">
+              ${renderAvatarElement(name, 'w-6 h-6 text-[10px]')}
+              <span>#${p.jersey} ${name}</span>
+            </td>
+            <td class="p-2.5 text-center">${p.pa}</td>
+            <td class="p-2.5 text-center font-bold text-slate-200">${p.ab}</td>
+            <td class="p-2.5 text-center font-bold text-emerald-400">${p.h}</td>
+            <td class="p-2.5 text-center font-bold text-amber-400">${p.rbi}</td>
+            <td class="p-2.5 text-center text-sky-400 font-bold">${p.r}</td>
+            <td class="p-2.5 text-center text-slate-300">${p.bb}</td>
+            <td class="p-2.5 text-center text-rose-400">${p.k}</td>
+            <td class="p-2.5 text-center text-emerald-400">${avg}</td>
+            <td class="p-2.5 text-center text-sky-400 font-bold">${ops}</td>
+            <td class="p-2.5 text-slate-400 text-[11px] truncate max-w-[140px]">${p.details.join(', ') || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 3. 該場擊球落點噴流點繪製
+      const sprayPointsHtml = [];
+      game.innings.forEach(inn => {
+        inn.plateAppearances.forEach(pa => {
+          if (pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none') {
+            const px = pa.x * 400;
+            const py = pa.y * 400;
+            let dotColor = '#f43f5e'; // 出局紅色
+            let dotRadius = 4.5;
+            if (pa.result === 'HR') { dotColor = '#f59e0b'; dotRadius = 7; }
+            else if (pa.result === '3H') { dotColor = '#a855f7'; dotRadius = 6; }
+            else if (pa.result === '2H') { dotColor = '#38bdf8'; dotRadius = 5.5; }
+            else if (pa.result === '1H') { dotColor = '#22c55e'; dotRadius = 5; }
+
+            sprayPointsHtml.push(`
+              <circle cx="${px}" cy="${py}" r="${dotRadius}" fill="${dotColor}" stroke="#ffffff" stroke-width="1.5" opacity="0.85">
+                <title>${pa.batterName} | 第${inn.inningNum}局 | ${pa.result} | ${pa.trajectory} | ${pa.location}</title>
+              </circle>
+            `);
+          }
+        });
+      });
+
+      // 4. 賽事覆盤問題診斷 (Tactical Diagnosis)
+      const diagnosisNotes = [];
+      const totalHits = Object.values(ourInnHits).reduce((a, b) => a + b, 0);
+      const totalRuns = game.finalScore.us;
+
+      if (totalHits >= 10 && totalRuns < 6) {
+        diagnosisNotes.push({
+          type: 'danger',
+          title: '得點圈打擊串聯斷層 (殘壘偏高)',
+          desc: `全場累計擊出 ${totalHits} 支安打，卻僅換得 ${totalRuns} 分，得點圈長打推進力不足，攻勢多終結於二三壘有人之無效滾地或高飛球接殺。`
+        });
+      } else {
+        diagnosisNotes.push({
+          type: 'success',
+          title: '得分轉換效率優異',
+          desc: `全場擊出 ${totalHits} 支安打即攻下 ${totalRuns} 分，中心棒次清壘掌握度高，攻勢串聯效率極佳。`
+        });
+      }
+
+      container.innerHTML = `
+        <!-- 逐局比分板 -->
+        <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 overflow-x-auto space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-300 font-mono">逐局記分板 (LINE SCORE)</span>
+            <span class="text-[10px] text-slate-500 font-mono">${game.date} | ${game.tag}</span>
+          </div>
+          <table class="w-full text-center text-xs font-mono">
+            <thead class="text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="p-2 text-left w-24">隊伍</th>
+                ${lineScoreHeaders.join('')}
+                <th class="p-2 w-10 text-amber-400 font-bold border-l border-slate-800">R</th>
+                <th class="p-2 w-10 text-sky-400 font-bold">H</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60 text-slate-200">
+              <tr>
+                <td class="p-2 text-left font-bold text-sky-400">淡江航太</td>
+                ${ourLineScoreCells.join('')}
+                <td class="p-2 font-bold text-amber-400 border-l border-slate-800 text-sm">${game.finalScore.us}</td>
+                <td class="p-2 font-bold text-sky-400 text-sm">${totalHits}</td>
+              </tr>
+              <tr>
+                <td class="p-2 text-left font-bold text-slate-400">${game.opponent}</td>
+                ${oppLineScoreCells.join('')}
+                <td class="p-2 font-bold text-rose-400 border-l border-slate-800 text-sm">${game.finalScore.opp}</td>
+                <td class="p-2 font-bold text-slate-400 text-sm">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 盒式攻守紀錄表 -->
+        <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+          <span class="text-xs font-bold text-slate-200 block">打擊盒式成績表 (BOX SCORE)</span>
+          <div class="overflow-x-auto rounded-xl border border-slate-800 -mx-1 sm:mx-0">
+            <table class="w-full text-left text-xs whitespace-nowrap font-mono">
+              <thead class="bg-slate-900 text-slate-400 uppercase">
+                <tr>
+                  <th class="p-2.5 text-center w-10">棒次</th>
+                  <th class="p-2.5">選手</th>
+                  <th class="p-2.5 text-center">打席</th>
+                  <th class="p-2.5 text-center">打數</th>
+                  <th class="p-2.5 text-center">安打</th>
+                  <th class="p-2.5 text-center">打點</th>
+                  <th class="p-2.5 text-center">得分</th>
+                  <th class="p-2.5 text-center">保送</th>
+                  <th class="p-2.5 text-center">三振</th>
+                  <th class="p-2.5 text-center">AVG</th>
+                  <th class="p-2.5 text-center">OPS</th>
+                  <th class="p-2.5">打擊歷程內容</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 bg-slate-900/40">${boxRows}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 該場擊球落點噴流圖 & 賽事問題診斷 -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div class="lg:col-span-6 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span class="text-xs font-bold text-white">該場比賽全體打擊落點分佈</span>
+              <span class="text-[10px] font-mono text-slate-500">共 ${sprayPointsHtml.length} 顆擊球</span>
+            </div>
+            <div class="relative w-full max-w-[340px] mx-auto aspect-square select-none">
+              <svg viewBox="0 0 400 400" class="w-full h-full rounded-xl border border-slate-800 bg-[#0d1712]">
+                <rect width="400" height="400" fill="#0d1712" />
+                <path d="M 30 200 A 210 210 0 0 1 370 200 L 200 370 Z" fill="#14291c" stroke="#22c55e" stroke-width="2" />
+                <line x1="200" y1="365" x2="25" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                <line x1="200" y1="365" x2="375" y2="190" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                <path d="M 120 285 A 95 95 0 0 1 280 285 L 200 365 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
+                <polygon points="200,365 275,285 200,210 125,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                <polygon points="196,365 204,365 205,368 200,373 195,368" fill="#ffffff" />
+                <polygon points="275,280 280,285 275,290 270,285" fill="#ffffff" />
+                <polygon points="200,205 205,210 200,215 195,210" fill="#ffffff" />
+                <polygon points="125,280 130,285 125,290 120,285" fill="#ffffff" />
+                <g>${sprayPointsHtml.join('')}</g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="lg:col-span-6 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <span class="text-xs font-bold text-amber-300 block">賽事覆盤問題診斷與戰術檢討</span>
+            <div class="space-y-2.5">
+              ${diagnosisNotes.map(n => `
+                <div class="p-3 rounded-xl border ${n.type === 'danger' ? 'bg-rose-950/30 border-rose-800/60 text-rose-300' : 'bg-emerald-950/30 border-emerald-800/60 text-emerald-300'}">
+                  <span class="font-bold block text-xs mb-1">${n.title}</span>
+                  <p class="text-[11px] text-slate-300 leading-relaxed">${n.desc}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // 打球落點噴流圖工作室 (Spray Chart Studio)
+    // ==========================================
+    function renderSprayChartStudio() {
+      const select = document.getElementById('sprayPlayerSelect');
+      const container = document.getElementById('sprayPointsContainer');
+      const metricsContainer = document.getElementById('sprayMetricsContainer');
+      const tooltip = document.getElementById('sprayPointTooltip');
+
+      if (!select || !container || !metricsContainer) return;
+
+      const allPlayerNames = Object.values(JERSEY_TO_NAME);
+      if (select.children.length === 0) {
+        select.innerHTML = `
+          <option value="all">全隊所有擊球落點 (綜合)</option>
+          ${allPlayerNames.map(n => `<option value="${n}">#${NAME_TO_JERSEY[n] ?? ''} ${n}</option>`).join('')}
+        `;
+      }
+
+      selectedSprayPlayer = select.value || 'all';
+
+      // 提取符合條件的落點事件
+      const points = [];
+      allGames.forEach(game => {
+        game.innings.forEach(inn => {
+          inn.plateAppearances.forEach(pa => {
+            if (selectedSprayPlayer !== 'all' && pa.batterName !== selectedSprayPlayer) return;
+            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none') return;
+
+            const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
+            const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
+            const isOut = !isHit && pa.result !== 'BB';
+
+            if (currentSprayFilter === 'hits' && !isHit) return;
+            if (currentSprayFilter === 'extra' && !isExtra) return;
+            if (currentSprayFilter === 'outs' && !isOut) return;
+
+            points.push({ ...pa, gameDate: game.date, opponent: game.opponent, inningNum: inn.inningNum });
+          });
+        });
+      });
+
+      // 繪製落點圓點
+      container.innerHTML = points.map((p, idx) => {
+        const px = p.x * 400;
+        const py = p.y * 400;
+        let color = '#f43f5e'; // 出局
+        let r = 5;
+        if (p.result === 'HR') { color = '#f59e0b'; r = 7.5; }
+        else if (p.result === '3H') { color = '#a855f7'; r = 6.5; }
+        else if (p.result === '2H') { color = '#38bdf8'; r = 6; }
+        else if (p.result === '1H') { color = '#22c55e'; r = 5.5; }
+
+        return `
+          <circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.85" class="hover:scale-125 transition cursor-pointer" onmouseenter="showSprayTooltip('${p.batterName}', '${p.gameDate}', '${p.opponent}', '${p.inningNum}', '${p.result}', '${p.trajectory}', '${p.location}')">
+            <title>${p.batterName} | ${p.result} | ${p.trajectory} | ${p.location}</title>
+          </circle>
+        `;
+      }).join('');
+
+      // 計算 5 大方向與球型統計
+      const totalBatted = points.length;
+      let pullCount = 0, centerCount = 0, oppoCount = 0;
+      let gbCount = 0, fbCount = 0, ldCount = 0, popCount = 0;
+
+      points.forEach(p => {
+        if (p.x < 0.40) pullCount++;
+        else if (p.x <= 0.60) centerCount++;
+        else oppoCount++;
+
+        if (p.trajectory === 'grounder') gbCount++;
+        else if (p.trajectory === 'fly') fbCount++;
+        else if (p.trajectory === 'line') ldCount++;
+        else if (p.trajectory === 'popup') popCount++;
+      });
+
+      const pullPct = totalBatted > 0 ? (pullCount / totalBatted * 100).toFixed(1) : '0.0';
+      const centerPct = totalBatted > 0 ? (centerCount / totalBatted * 100).toFixed(1) : '0.0';
+      const oppoPct = totalBatted > 0 ? (oppoCount / totalBatted * 100).toFixed(1) : '0.0';
+      const gbPct = totalBatted > 0 ? (gbCount / totalBatted * 100).toFixed(1) : '0.0';
+      const fbPct = totalBatted > 0 ? (fbCount / totalBatted * 100).toFixed(1) : '0.0';
+      const goAo = fbCount > 0 ? (gbCount / fbCount).toFixed(2) : gbCount.toFixed(2);
+
+      metricsContainer.innerHTML = `
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <span class="text-xs font-bold text-amber-300 font-mono">噴流擊球型態與落點分析</span>
+          <span class="text-[11px] font-mono text-slate-400">總有效樣本: ${totalBatted} 球</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-slate-400 text-[10px] block">拉打率 (Pull%)</span>
+            <span class="text-amber-400 font-mono font-black text-lg block">${pullPct}%</span>
+            <span class="text-[9px] text-slate-500">左半邊 / 三游外野落點</span>
+          </div>
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-slate-400 text-[10px] block">中線率 (Center%)</span>
+            <span class="text-sky-400 font-mono font-black text-lg block">${centerPct}%</span>
+            <span class="text-[9px] text-slate-500">二游中線 / 自由中外野</span>
+          </div>
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-slate-400 text-[10px] block">推打率 (Oppo%)</span>
+            <span class="text-emerald-400 font-mono font-black text-lg block">${oppoPct}%</span>
+            <span class="text-[9px] text-slate-500">右半邊 / 一二壘右外野</span>
+          </div>
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-slate-400 text-[10px] block">滾飛比 (GO / AO)</span>
+            <span class="text-purple-400 font-mono font-black text-lg block">${goAo}</span>
+            <span class="text-[9px] text-slate-500">滾地球 ${gbPct}% vs 飛球 ${fbPct}%</span>
+          </div>
+        </div>
+        <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-300 leading-relaxed">
+          <span class="font-bold text-amber-300">💡 慢壘球探實戰解讀：</span>
+          ${Number(pullPct) > 55 ? '打者具備極高比例之拉打傾向，對手外野容易左移佈陣，建議練習反方向推打。' : Number(oppoPct) > 40 ? '打者推打穿透力強，常擊向右半邊防線漏洞，屬全方位廣角型打者。' : '擊球落點分佈非常均衡，具備全場無死角破壞力。'}
+        </div>
+      `;
+    }
+
+    window.showSprayTooltip = function(name, date, opp, inn, res, traj, loc) {
+      const tooltip = document.getElementById('sprayPointTooltip');
+      if (tooltip) {
+        tooltip.innerHTML = `<span>#${NAME_TO_JERSEY[name] ?? ''} <b>${name}</b> | ${date} vs ${opp} (${inn}局) | <b class="text-white">${res}</b> | ${traj} | 落點: ${loc}</span>`;
+      }
+    };
+
+    window.setSprayFilter = function(filterType) {
+      currentSprayFilter = filterType;
+      ['all', 'hits', 'extra', 'outs'].forEach(t => {
+        const btn = document.getElementById(`spray_btn_${t}`);
+        if (btn) {
+          btn.className = t === filterType
+            ? 'text-xs px-2.5 py-1 rounded bg-amber-600 text-white font-bold transition shadow'
+            : 'text-xs px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-700 transition';
+        }
+      });
+      renderSprayChartStudio();
+    };
 
     loadLogsFromGitHub();
   </script>
