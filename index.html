@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
@@ -26,6 +26,7 @@
 </head>
 <body class="bg-[#070a12] text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white">
 
+
   <!-- Apple 風格頂部全域懸浮導覽列 -->
   <header class="sticky top-0 z-50 nav-blur bg-[#070a12]/90 border-b border-slate-800/80 transition-all duration-300">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -42,8 +43,9 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261001.1727</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261001.1745</span>
         </div>
+
 
         <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           <span id="syncStatusBadge" class="hidden lg:inline text-[11px] text-emerald-400 font-mono">雲端資料庫：連線中...</span>
@@ -55,6 +57,7 @@
           <button id="exportCsvBtn" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap">匯出 CSV</button>
         </div>
       </div>
+
 
       <!-- 下層：7 大核心功能分頁導覽與日期篩選 -->
       <div class="flex flex-col md:flex-row md:items-center justify-between py-2 gap-2">
@@ -89,6 +92,7 @@
           </button>
         </nav>
 
+
         <div class="flex items-center overflow-x-auto no-scrollbar space-x-1.5 shrink-0 text-xs py-0.5">
           <input type="date" id="filterStartDate" class="bg-slate-950 border border-slate-700/80 text-slate-200 text-[11px] sm:text-xs rounded-lg px-2 py-1 font-mono focus:outline-none focus:border-sky-500 max-w-[125px] sm:max-w-none">
           <span class="text-slate-500 text-xs">-</span>
@@ -103,14 +107,18 @@
     </div>
   </header>
 
+
   <div class="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8 space-y-6">
+
 
     <!-- 主體內容分頁群 -->
     <main class="space-y-6">
 
+
       <!-- 分頁一：全隊戰況與日誌 -->
       <div id="panelOverview" class="space-y-6">
         <section class="grid grid-cols-2 md:grid-cols-6 gap-2.5 sm:gap-3.5" id="teamSummaryCards"></section>
+
 
         <section class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4 backdrop-blur-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
@@ -123,6 +131,7 @@
               <button id="toggleAddPlayerBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 sm:px-3.5 py-1.5 rounded-lg transition font-medium self-start md:self-auto">+ 新增球隊球員</button>
             </div>
           </div>
+
 
           <!-- 登打表單 -->
           <form id="addLogForm" class="hidden bg-slate-950/90 p-4 rounded-xl border border-emerald-900/60 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
@@ -193,6 +202,7 @@
             </div>
           </form>
 
+
           <!-- 新增球員表單 -->
           <form id="addPlayerForm" class="hidden bg-slate-950/90 p-4 rounded-xl border border-indigo-900/60 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
             <div class="col-span-1 md:col-span-4 flex items-center justify-between border-b border-slate-800 pb-2">
@@ -220,6 +230,7 @@
               <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg font-medium">建立檔案並同步至 GitHub</button>
             </div>
           </form>
+
 
           <!-- 匯總總表 -->
           <div id="viewSummary" class="overflow-x-auto rounded-xl border border-slate-800/80 -mx-1 sm:mx-0">
@@ -254,6 +265,7 @@
             </table>
           </div>
 
+
           <!-- 詳細日誌 -->
           <div id="viewLogs" class="hidden space-y-3">
             <div class="overflow-x-auto rounded-xl border border-slate-800/80 -mx-1 sm:mx-0">
@@ -283,6 +295,7 @@
         </section>
       </div>
 
+
       <!-- 分頁二：球員深度檔案與整合式弱點診斷 -->
       <div id="panelProfile" class="hidden space-y-6">
         <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-6 backdrop-blur-sm">
@@ -301,6 +314,7 @@
             </div>
           </div>
 
+
           <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
             <div class="md:col-span-5 space-y-4" id="playerProfileCard"></div>
             <div class="md:col-span-4 h-72 sm:h-80 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-between">
@@ -318,6 +332,7 @@
           </div>
         </section>
 
+
         <!-- 弱點診斷與改善方針 -->
         <section class="bg-slate-900/80 border border-rose-900/40 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 backdrop-blur-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
@@ -334,6 +349,7 @@
             </button>
           </div>
 
+
           <div id="diagnosticsContent" class="space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
               <div class="flex items-center space-x-2.5 w-full sm:w-auto">
@@ -349,10 +365,12 @@
               <span class="text-[10px] sm:text-[11px] text-slate-500 font-mono">慢壘實戰特化診斷矩陣 2.0</span>
             </div>
 
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="diagnosticsCardsContainer"></div>
           </div>
         </section>
       </div>
+
 
       <!-- 分頁三：全隊排行榜模組 -->
       <div id="panelLeaderboard" class="hidden space-y-6">
@@ -366,6 +384,7 @@
               <p class="text-xs text-slate-400 mt-1">支援傳統三圍、進階賽伯計量與紀律控制全維度指標切換</p>
             </div>
           </div>
+
 
           <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 sm:p-3.5 rounded-xl border border-slate-800/80">
             <div class="flex items-center space-x-2.5 w-full sm:w-auto">
@@ -408,9 +427,12 @@
             </div>
           </div>
 
+
           <div id="leaderboardMetricCard" class="bg-slate-950/80 border border-amber-500/30 rounded-xl p-3.5 space-y-1.5 transition"></div>
 
+
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4" id="leaderboardPodium"></div>
+
 
           <div class="overflow-x-auto rounded-xl border border-slate-800 -mx-1 sm:mx-0">
             <table class="w-full text-left text-xs whitespace-nowrap">
@@ -436,6 +458,7 @@
         </section>
       </div>
 
+
       <!-- 分頁四：賽伯計量實驗室 -->
       <div id="panelAnalytics" class="hidden space-y-6">
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -451,6 +474,7 @@
               <canvas id="quadrantChart"></canvas>
             </div>
           </div>
+
 
           <div class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col justify-between backdrop-blur-sm">
             <div>
@@ -518,6 +542,7 @@
         </section>
       </div>
 
+
       <!-- 分頁五：雙雄攻守對決 -->
       <div id="panelCompare" class="hidden space-y-6">
         <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-6 backdrop-blur-sm">
@@ -528,6 +553,7 @@
             </div>
             <p class="text-xs text-slate-400 mt-1">選取任意兩位球員進行全維度攻守數據對決、優勢指標標記與五維雷達重疊對比</p>
           </div>
+
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-slate-950 p-4 rounded-2xl border border-sky-500/30 space-y-3 shadow-lg">
@@ -540,6 +566,7 @@
               <div id="compareCardA"></div>
             </div>
 
+
             <div class="bg-slate-950 p-4 rounded-2xl border border-amber-500/30 space-y-3 shadow-lg">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
@@ -550,6 +577,7 @@
               <div id="compareCardB"></div>
             </div>
           </div>
+
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <div class="lg:col-span-7 overflow-x-auto rounded-xl border border-slate-800 -mx-1 sm:mx-0">
@@ -566,6 +594,7 @@
               </table>
             </div>
 
+
             <div class="lg:col-span-5 bg-slate-950/60 p-4 rounded-2xl border border-slate-800 flex flex-col items-center">
               <div class="w-full flex justify-between items-center mb-2">
                 <span class="text-xs font-bold text-slate-300">五維能力 PR 重疊雷達對決</span>
@@ -579,8 +608,54 @@
         </section>
       </div>
 
+
 <!-- 分頁六：棒次分析與推薦 -->
       <div id="panelLineup" class="hidden space-y-6">
+
+        <!-- 賽制前置條件：指定打擊 (DH) 制度設定 -->
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3.5 backdrop-blur-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">MATCH RULES & SETUP</span>
+                <h3 class="text-sm sm:text-base font-bold text-white tracking-tight">賽制前置條件：指定打擊 (DH) 制度設定</h3>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">慢壘比賽依賽事規程可選擇「無 DH 全員攻守同一」或「啟用 DH 代替投手防守專職打擊」，即時連動推薦與自訂分析</p>
+            </div>
+            <div class="flex items-center space-x-2 shrink-0">
+              <span class="text-xs text-slate-400 font-medium">當前賽制：</span>
+              <div class="inline-flex rounded-xl p-1 bg-slate-950 border border-slate-800">
+                <button id="btnRuleNoDh" onclick="setDhRule(false)" class="text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                  無 DH 制 (全打全守)
+                </button>
+                <button id="btnRuleWithDh" onclick="setDhRule(true)" class="text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                  有 DH 制 (指定打擊)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs bg-slate-950/80 p-3 rounded-xl border border-slate-800/80">
+            <div class="flex items-center gap-2">
+              <span id="dhStatusExplanation" class="text-slate-300"></span>
+            </div>
+            <div id="dhSubPosSelectorWrapper" class="flex items-center space-x-2 shrink-0">
+              <label class="text-slate-400 font-medium">被 DH 代打之守位：</label>
+              <select id="dhSubPositionSelect" onchange="setDhSubPosition(this.value)" class="bg-slate-900 border border-slate-700 text-amber-300 text-xs rounded-lg px-2.5 py-1 font-mono focus:outline-none focus:border-amber-500">
+                <option value="P" selected>投手 (P) [標準慢壘配置]</option>
+                <option value="C">捕手 (C)</option>
+                <option value="1B">一壘手 (1B)</option>
+                <option value="2B">二壘手 (2B)</option>
+                <option value="3B">三壘手 (3B)</option>
+                <option value="SS">游擊手 (SS)</option>
+                <option value="LF">左外野 (LF)</option>
+                <option value="SF">自由手 (SF)</option>
+                <option value="RC">右中外野 (RC)</option>
+                <option value="RF">右外野 (RF)</option>
+              </select>
+            </div>
+          </div>
+        </section>
         <!-- 今日出賽名單過濾 (出席/未到/請假勾選) -->
         <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3.5 backdrop-blur-sm">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
@@ -599,6 +674,7 @@
           <div id="attendanceGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"></div>
         </section>
 
+
         <!-- 建議先發十人棒次 -->
         <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 backdrop-blur-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
@@ -613,6 +689,7 @@
               <span>帶入自訂棒次分析 ➔</span>
             </button>
           </div>
+
 
           <!-- 建議棒次表格 -->
           <div class="overflow-x-auto rounded-xl border border-slate-800 -mx-1 sm:mx-0">
@@ -633,7 +710,9 @@
               <tbody id="recommendedLineupBody" class="divide-y divide-slate-800/80 bg-slate-900/50"></tbody>
             </table>
           </div>
+          <div id="recDedicatedFielderInfo"></div>
         </section>
+
 
         <!-- 自訂棒次分析與戰力診斷 -->
         <section class="bg-slate-900/80 border border-indigo-900/40 rounded-2xl p-4 sm:p-6 shadow-xl space-y-6 backdrop-blur-sm">
@@ -650,11 +729,15 @@
             </button>
           </div>
 
+
           <!-- 自訂打線 1~10 棒選單網格 -->
+          <div id="customDhControlBar" class="mb-2"></div>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" id="customLineupPickersContainer"></div>
+
 
           <!-- 打線戰力總評儀表 (8大核心維度) -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2" id="lineupEvalMetrics"></div>
+
 
           <!-- 自訂打線 1~10 棒逐棒深度數據與適配度檢驗表 -->
           <div class="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/90 space-y-3">
@@ -671,6 +754,7 @@
                   <tr>
                     <th class="p-2.5 text-center w-12">棒次</th>
                     <th class="p-2.5">選手</th>
+                    <th class="p-2.5 text-center">守備位置</th>
                     <th class="p-2.5">角色定位</th>
                     <th class="p-2.5 text-center">AVG</th>
                     <th class="p-2.5 text-center">OBP</th>
@@ -686,7 +770,9 @@
                 <tbody id="customLineupTableBody" class="divide-y divide-slate-800/80 bg-slate-900/40 font-mono"></tbody>
               </table>
             </div>
+            <div id="customDedicatedFielderInfo"></div>
           </div>
+
 
           <!-- 打線進攻威脅曲線圖與弱點診斷 -->
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -700,6 +786,7 @@
               </div>
             </div>
 
+
             <div class="lg:col-span-5 bg-slate-950/70 p-4 rounded-2xl border border-slate-800/90 space-y-3">
               <span class="text-xs font-bold text-rose-300 flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -710,6 +797,7 @@
           </div>
         </section>
       </div>
+
 
 <!-- 分頁七：名詞圖書館 -->
       <div id="panelGlossary" class="hidden space-y-6">
@@ -724,6 +812,7 @@
             </div>
           </div>
 
+
           <div class="space-y-6 text-xs text-slate-300 leading-relaxed">
             <div class="space-y-3 bg-sky-950/20 border border-sky-800/40 rounded-xl p-4">
               <div class="flex items-center space-x-2">
@@ -736,6 +825,7 @@
                 <p><span class="font-semibold text-slate-200">【實戰解讀】</span>慢壘具備「好球帶寬廣、球速相對慢、開局多為 1 好 1 壞」之特性，強打者以積極攻擊好球為主，四壞保送天然偏少；相對地，在慢壘吞 K 出局代價極高，通常代表追打惡劣壞球。公式給予三振 1.5 倍懲罰權重，破除「不保送就等於不會選球」的盲點，真實回饋積極出棒且從不吞 K 的強打者。</p>
               </div>
             </div>
+
 
             <div class="space-y-3">
               <div class="flex items-center space-x-2 border-b border-slate-800 pb-2">
@@ -781,7 +871,9 @@
         </main>
   </div>
 
+
   <input type="file" id="hiddenAvatarInput" accept="image/*" class="hidden">
+
 
   <!-- 守備能力手動排名彈窗 (內部教練專用：支援各守位順位 1~3 排名與 GitHub 雲端同步) -->
   <div id="defenseModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
@@ -794,12 +886,14 @@
         <button onclick="closeDefenseModal()" class="text-slate-400 hover:text-white text-2xl font-bold leading-none">&times;</button>
       </div>
 
+
       <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs text-slate-300">
         <div class="bg-amber-950/20 border border-amber-800/40 rounded-xl p-3 text-[11px] text-amber-300/90 leading-relaxed">
           <span class="font-bold">說明：</span>為慢速壘球 10 個正規守位個別指派選手適性順位（第 1 順位為先發首選，第 2～5 順位為備選/應急）。此設定會即時推播至 GitHub 雲端資料庫（<code>data/defense.json</code>），並作為「最佳棒次推薦」指派守備位置與適性加權之依據。
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="defenseRosterContainer"></div>
       </div>
+
 
       <div class="p-3 sm:p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between">
         <span id="defenseModalSyncStatus" class="text-[11px] font-mono text-slate-500"></span>
@@ -813,6 +907,7 @@
     </div>
   </div>
 
+
   <!-- Instagram 風格頭像裁切彈窗 -->
   <div id="cropModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 sm:p-5 max-w-[340px] sm:max-w-sm w-full shadow-2xl flex flex-col items-center space-y-4">
@@ -824,9 +919,11 @@
         <button onclick="closeCropperModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
       </div>
 
+
       <div class="relative w-[260px] h-[260px] sm:w-[300px] sm:h-[300px] rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shadow-inner select-none cursor-grab active:cursor-grabbing">
         <canvas id="cropCanvas" width="300" height="300" class="touch-none w-full h-full"></canvas>
       </div>
+
 
       <div class="w-full space-y-2 text-xs">
         <div class="flex items-center justify-between text-slate-400">
@@ -836,10 +933,12 @@
         <input type="range" id="zoomSlider" min="1" max="3" step="0.05" value="1" class="w-full accent-sky-500 bg-slate-800 rounded h-1.5 cursor-pointer">
       </div>
 
+
       <div class="flex items-center justify-between w-full gap-2 text-xs">
         <button onclick="rotateCropImage()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded-lg border border-slate-700 transition">旋轉 90°</button>
         <button onclick="resetCropTransform()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded-lg border border-slate-700 transition">置中重置</button>
       </div>
+
 
       <div class="flex items-center justify-end w-full space-x-2 border-t border-slate-800 pt-3">
         <button onclick="closeCropperModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-lg text-xs transition">取消</button>
@@ -847,6 +946,7 @@
       </div>
     </div>
   </div>
+
 
   <script>
     const GITHUB_REPO = "scottpuppylu/baseball-stats";
@@ -856,7 +956,9 @@
     const TAGS_FILE_PATH = "data/tags.json";
     const DEFENSE_FILE_PATH = "data/defense.json";
 
+
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
+
 
     const DEFAULT_JERSEY_MAP = {
       30: "洪銘駿",
@@ -875,6 +977,7 @@
       98: "陳柏翰"
     };
 
+
     const baseline2025Logs = [
       {"id":"log_2025_1","date":"2025-12-31","tag":"2025年度總結","name":"洪銘駿","jersey":30,"pa":31,"ab":27,"h":14,"h1":13,"h2":1,"h3":0,"hr":0,"bb":2,"sf":2,"k":5},
       {"id":"log_2025_2","date":"2025-12-31","tag":"2025年度總結","name":"陳威騏","jersey":99,"pa":29,"ab":27,"h":14,"h1":13,"h2":1,"h3":0,"hr":0,"bb":2,"sf":0,"k":2},
@@ -892,6 +995,7 @@
       {"id":"log_2025_14","date":"2025-12-31","tag":"2025年度總結","name":"陳柏翰","jersey":98,"pa":16,"ab":15,"h":9,"h1":5,"h2":4,"h3":0,"hr":0,"bb":1,"sf":0,"k":0}
     ];
 
+
     // 慢壘標準 10 個守備位置定義
     const POSITIONS = [
       { key: 'P', label: '投手 (P)' },
@@ -905,6 +1009,7 @@
       { key: 'RC', label: '右中外野 (RC)' },
       { key: 'RF', label: '右外野 (RF)' }
     ];
+
 
     // 各守位預設守備能力順位 (第 1, 2, 3 順位)
     const DEFAULT_DEFENSE_RANKINGS = {
@@ -920,12 +1025,15 @@
       'RF': ['陳柏翰', '吳侑宸', '楊智翔', '林楊大禎', '廖仲毅']
     };
 
+
     let defenseRankings = JSON.parse(localStorage.getItem('rebas_defense_rankings')) || { ...DEFAULT_DEFENSE_RANKINGS };
+
 
     let JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
     let NAME_TO_JERSEY = Object.fromEntries(
       Object.entries(JERSEY_TO_NAME).map(([k, v]) => [v, Number(k)])
     );
+
 
     function syncJerseyMaps() {
       JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
@@ -939,6 +1047,7 @@
       );
     }
 
+
     let allLogs = [];
     let currentFileSha = null;
     let currentAvatarsSha = null;
@@ -948,8 +1057,10 @@
     let playerAvatars = JSON.parse(localStorage.getItem('rebas_player_avatars')) || {};
     let playerTags = JSON.parse(localStorage.getItem('rebas_player_tags')) || {};
 
+
     let currentLogsPage = 1;
     const LOGS_PER_PAGE = 15;
+
 
     let radarChartInst = null;
     let donutChartInst = null;
@@ -960,8 +1071,10 @@
     let comparePlayerAName = "";
     let comparePlayerBName = "";
 
+
     // 自訂打線 1~10 棒全域選取陣列
     let customLineup = [];
+
 
     let activeCropImage = null;
     let cropTargetPlayer = '';
@@ -974,10 +1087,12 @@
     let dragStartX = 0, dragStartY = 0;
     let dragStartOffsetX = 0, dragStartOffsetY = 0;
 
+
     const CROP_CANVAS_SIZE = 300;
     const CROP_DIAMETER = 220;
     const CROP_RADIUS = 110;
     const CROP_CENTER = 150;
+
 
     const leaderboardGlossary = {
       wrc_plus: { title: "加權得分創造 (wRC+)", formula: "wRC+ = (wOBA / Team_wOBA) × 100", desc: "以全隊平均 wOBA 為基準的綜合進攻效率指數，透過加權上壘率反映真實得分效益。" },
@@ -1002,6 +1117,7 @@
       pa: { title: "打席數 (PA)", formula: "PA = AB + BB + SF", desc: "打者完成完整打擊輪次的總次數。" }
     };
 
+
     window.switchMainTab = function(tabId) {
       const panels = {
         tabOverview: document.getElementById('panelOverview'),
@@ -1022,6 +1138,7 @@
         tabLineup: document.getElementById('btnTabLineup')
       };
 
+
       Object.keys(panels).forEach(key => {
         if (key === tabId) {
           if (panels[key]) panels[key].classList.remove('hidden');
@@ -1031,6 +1148,7 @@
           if (buttons[key]) buttons[key].className = 'text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0';
         }
       });
+
 
       const agg = getAggregatedStats(getFilteredLogs());
       if (tabId === 'tabAnalytics') {
@@ -1046,6 +1164,7 @@
       }
     };
 
+
     window.openDefenseModal = function() {
       renderDefenseModalUI();
       document.getElementById('defenseModal').classList.remove('hidden');
@@ -1054,9 +1173,11 @@
       document.getElementById('defenseModal').classList.add('hidden');
     };
 
+
     function renderDefenseModalUI() {
       const container = document.getElementById('defenseRosterContainer');
       const allPlayerNames = Object.values(JERSEY_TO_NAME);
+
 
       container.innerHTML = POSITIONS.map(pos => {
         const ranks = defenseRankings[pos.key] || DEFAULT_DEFENSE_RANKINGS[pos.key] || [];
@@ -1065,6 +1186,7 @@
         const r3 = ranks[2] || '';
         const r4 = ranks[3] || '';
         const r5 = ranks[4] || '';
+
 
         return `
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2.5">
@@ -1114,6 +1236,7 @@
       }).join('');
     }
 
+
     async function loadDefenseFromGitHub() {
       try {
         const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -1144,13 +1267,16 @@
       }
     }
 
+
     async function commitDefenseToGitHub(updatedDefense, commitMessage = "update: sync defense position rankings via portal") {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端：正在同步各守位排名至 GitHub...';
       statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
 
+
       const modalStatus = document.getElementById('defenseModalSyncStatus');
       if (modalStatus) modalStatus.textContent = '正在寫入 GitHub 雲端...';
+
 
       try {
         const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -1163,7 +1289,9 @@
           currentDefenseSha = null;
         }
 
+
         const base64Content = utf8ToBase64(JSON.stringify(updatedDefense, null, 2));
+
 
         const putBody = {
           message: commitMessage,
@@ -1171,6 +1299,7 @@
           branch: GITHUB_BRANCH
         };
         if (currentDefenseSha) putBody.sha = currentDefenseSha;
+
 
         const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}`, {
           method: 'PUT',
@@ -1181,19 +1310,23 @@
           body: JSON.stringify(putBody)
         });
 
+
         if (!putRes.ok) {
           const errData = await putRes.json();
           throw new Error(errData.message || 'GitHub API 守備排名寫入拒絕');
         }
+
 
         const resData = await putRes.json();
         currentDefenseSha = resData.content.sha;
         defenseRankings = updatedDefense;
         localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
 
+
         statusBadge.textContent = `[連線正常] 守位排名與資料庫：已即時同步`;
         statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
         if (modalStatus) modalStatus.textContent = '雲端同步完成！';
+
 
         const agg = getAggregatedStats(getFilteredLogs());
         renderLineupAnalysis(agg);
@@ -1207,6 +1340,7 @@
       }
     }
 
+
     window.saveDefenseRankings = async function() {
       const updated = {};
       POSITIONS.forEach(pos => {
@@ -1218,16 +1352,20 @@
         updated[pos.key] = [r1, r2, r3, r4, r5].filter(Boolean);
       });
 
+
       defenseRankings = updated;
       localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
       closeDefenseModal();
 
+
       await commitDefenseToGitHub(defenseRankings, "update: update 5-rank position defensive priority rankings");
     };
+
 
     // 今日出賽名單過濾 (出席/未到剔除狀態)
     let presentPlayersSet = new Set();
     let attendanceInitialized = false;
+
 
     function initAttendance(allNames, historicalPaMap) {
       if (!attendanceInitialized && allNames.length > 0) {
@@ -1242,11 +1380,13 @@
       }
     }
 
+
     window.selectAllAttendance = function() {
       const allNames = Object.values(JERSEY_TO_NAME);
       presentPlayersSet = new Set(allNames);
       renderAll();
     };
+
 
     window.selectPa15Attendance = function() {
       const historicalPaMap = {};
@@ -1258,10 +1398,12 @@
       renderAll();
     };
 
+
     window.clearAttendance = function() {
       presentPlayersSet = new Set();
       renderAll();
     };
+
 
     window.toggleAttendancePlayer = function(name) {
       if (presentPlayersSet.has(name)) {
@@ -1272,10 +1414,12 @@
       renderAll();
     };
 
+
     function renderAttendanceGrid(historicalPaMap) {
       const container = document.getElementById('attendanceGrid');
       const countBadge = document.getElementById('attendanceCountBadge');
       if (!container) return;
+
 
       const count = presentPlayersSet.size;
       if (countBadge) {
@@ -1285,11 +1429,13 @@
           : 'text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-lg';
       }
 
+
       const allNames = Object.values(JERSEY_TO_NAME);
       container.innerHTML = allNames.map(name => {
         const isPresent = presentPlayersSet.has(name);
         const pa = historicalPaMap[name] || 0;
         const jersey = NAME_TO_JERSEY[name] ?? '--';
+
 
         return `
           <div onclick="toggleAttendancePlayer('${name}')" class="cursor-pointer select-none rounded-xl p-2 border transition duration-150 flex items-center space-x-2.5 ${
@@ -1317,9 +1463,71 @@
       }).join('');
     }
 
+
     // 核心棒次推薦演算法 (現代賽伯計量學 The Book + 慢速壘球得分期望值模型 + 出席名單篩選 + 5 順位守位媒合)
+    
+    // 指定打擊 (DH) 制度設定前置條件 (localStorage 持久化)
+    let isDhEnabled = localStorage.getItem('rebas_has_dh') !== null ? JSON.parse(localStorage.getItem('rebas_has_dh')) : false;
+    let dhReplacedPosition = localStorage.getItem('rebas_dh_replaced_pos') || 'P';
+    let customDhSlot = Number(localStorage.getItem('rebas_custom_dh_slot')) || 4;
+
+    window.setDhRule = function(enableDh) {
+      isDhEnabled = enableDh;
+      localStorage.setItem('rebas_has_dh', JSON.stringify(isDhEnabled));
+      const agg = getAggregatedStats(getFilteredLogs());
+      renderLineupAnalysis(agg);
+    };
+
+    window.setDhSubPosition = function(pos) {
+      dhReplacedPosition = pos;
+      localStorage.setItem('rebas_dh_replaced_pos', dhReplacedPosition);
+      const agg = getAggregatedStats(getFilteredLogs());
+      renderLineupAnalysis(agg);
+    };
+
+    window.setCustomDhSlot = function(slot) {
+      customDhSlot = Number(slot);
+      localStorage.setItem('rebas_custom_dh_slot', customDhSlot);
+      const agg = getAggregatedStats(getFilteredLogs());
+      evaluateCustomLineup(agg);
+    };
+
+    function findOptimalDhBatter(lineupBatters, dhReplacedPos) {
+      const targetPos = POSITIONS.filter(p => p.key !== dhReplacedPos).map(p => p.key);
+      let bestBatter = null;
+      let bestScore = -99999;
+
+      for (const candidate of lineupBatters) {
+        const otherBatters = lineupBatters.filter(b => b.name !== candidate.name);
+        const unassignedBatters = new Set(otherBatters.map(b => b.name));
+        const unassignedPositions = new Set(targetPos);
+        let matchScore = 0;
+
+        for (let r = 0; r < 5; r++) {
+          for (const pos of Array.from(unassignedPositions)) {
+            const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
+            const choice = ranks[r];
+            if (choice && unassignedBatters.has(choice)) {
+              matchScore += (5 - r);
+              unassignedBatters.delete(choice);
+              unassignedPositions.delete(pos);
+            }
+          }
+        }
+        matchScore -= unassignedPositions.size * 4;
+        const offensiveBonus = (candidate.iso || 0) * 10 + ((candidate.wrc_plus || 100) / 100) * 5;
+        const totalScore = matchScore * 10 + offensiveBonus;
+
+        if (totalScore > bestScore) {
+          bestScore = totalScore;
+          bestBatter = candidate;
+        }
+      }
+      return bestBatter ? bestBatter.name : lineupBatters[0].name;
+    }
+
     function calculateRecommendedLineup(players) {
-      if (!players || players.length === 0) return [];
+      if (!players || players.length === 0) return { items: [], dedicatedFielder: null, hasDh: isDhEnabled };
 
       const allPlayerNames = Object.values(JERSEY_TO_NAME);
       const historicalPaMap = {};
@@ -1332,7 +1540,7 @@
 
       // 1. 出席名單過濾：僅保留今日出席之選手
       let presentPool = players.filter(p => presentPlayersSet.has(p.name));
-      if (presentPool.length === 0) return [];
+      if (presentPool.length === 0) return { items: [], dedicatedFielder: null, hasDh: isDhEnabled };
 
       // 2. 歷史總 PA >= 15 優先順位分流
       let primaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) >= 15);
@@ -1346,14 +1554,24 @@
         activePool = activePool.concat(secondaryPool.slice(0, needed));
       }
 
-      // 若出席總人數仍未達 10 人，則依目前全部出席人數排定
+      // 若採「無 DH 制」，且先發 10 人無人名列投手 (P) 順位，強制調入出席名單中最高順位之投手進入 10 人名單
+      if (!isDhEnabled) {
+        const pitcherRanks = defenseRankings['P'] || DEFAULT_DEFENSE_RANKINGS['P'] || [];
+        const hasPitcher = activePool.some(p => pitcherRanks.includes(p.name));
+        if (!hasPitcher) {
+          const availablePitcher = presentPool.find(p => pitcherRanks.includes(p.name));
+          if (availablePitcher && !activePool.some(p => p.name === availablePitcher.name)) {
+            activePool.pop(); // 移除打線第 10 人
+            activePool.push(availablePitcher); // 換入合格投手
+          }
+        }
+      }
+
       const lineupSize = Math.min(10, activePool.length);
       let pool = [...activePool];
 
       // 3. 現代賽伯計量棒次排序公式 (Tom Tango "The Book" 核心法則 + 慢壘得點圈期望值模型)
-      // 依序評選：4棒 (清壘重砲) -> 2棒 (超強進攻核心) -> 1棒 (極高OBP開路) -> 3棒 (全能安打) -> 5棒 (重擊護衛) -> 10棒 (第二開路) -> 6~9棒 (流暢銜接)
-
-      // (A) 第四棒 Clean-Up (終極長打砲手)：慢壘中壘上有最多跑者，需要最高長打與純破壞力
+      // (A) 第四棒 Clean-Up (終極長打砲手)
       pool.sort((a, b) => {
         const scoreA = (a.iso * 3.0) + (a.slg * 2.0) + (a.hr * 0.25) + ((a.wrc_plus || 100) / 100) * 1.0;
         const scoreB = (b.iso * 3.0) + (b.slg * 2.0) + (b.hr * 0.25) + ((b.wrc_plus || 100) / 100) * 1.0;
@@ -1361,7 +1579,7 @@
       });
       const p4 = pool.shift();
 
-      // (B) 第二棒 Modern Super-#2 (現代進攻核心)：首局0~1出局登場，需極高 wOBA、高 OBP、優質 Contact% 且極少揮空吞 K
+      // (B) 第二棒 Modern Super-#2 (現代進攻核心)
       pool.sort((a, b) => {
         const scoreA = (a.woba * 3.0) + (a.obp * 2.0) + (a.slg * 0.8) + (a.contact_pct * 1.5) - (a.k_pct * 2.0);
         const scoreB = (b.woba * 3.0) + (b.obp * 2.0) + (b.slg * 0.8) + (b.contact_pct * 1.5) - (b.k_pct * 2.0);
@@ -1369,7 +1587,7 @@
       });
       const p2 = pool.shift();
 
-      // (C) 第一棒 Leadoff (上壘開路先鋒)：最大任務是不製造出局數。高 OBP + 慢壘紀律 SDI + 高 Contact%
+      // (C) 第一棒 Leadoff (上壘開路先鋒)
       pool.sort((a, b) => {
         const scoreA = (a.obp * 3.5) + (Math.max(0, a.sdi) * 1.2) + (a.contact_pct * 1.0) - (a.k_pct * 2.5);
         const scoreB = (b.obp * 3.5) + (Math.max(0, b.sdi) * 1.2) + (b.contact_pct * 1.0) - (b.k_pct * 2.5);
@@ -1377,7 +1595,7 @@
       });
       const p1 = pool.shift();
 
-      // (D) 第三棒 All-Around (全能打擊軸心)：首波得點圈得分機會，需要極高擊球率 AVG 與全面進攻指數 OPS
+      // (D) 第三棒 All-Around (全能打擊軸心)
       pool.sort((a, b) => {
         const scoreA = (a.avg * 2.5) + (a.ops * 1.8) + (a.woba * 1.5) + (a.contact_pct * 1.0);
         const scoreB = (b.avg * 2.5) + (b.ops * 1.8) + (b.woba * 1.5) + (b.contact_pct * 1.0);
@@ -1385,7 +1603,7 @@
       });
       const p3 = pool.shift();
 
-      // (E) 第五棒 Protection (長打護衛與殘壘清掃)：保護四棒正面對決，具備次高 ISO 與高創造得分 RC
+      // (E) 第五棒 Protection (長打護衛與殘壘清掃)
       pool.sort((a, b) => {
         const scoreA = (a.slg * 2.2) + (a.iso * 2.0) + ((a.rc || 0) / Math.max(1, a.pa)) * 1.5 + ((a.wrc_plus || 100) / 100) * 1.0;
         const scoreB = (b.slg * 2.2) + (b.iso * 2.0) + ((b.rc || 0) / Math.max(1, b.pa)) * 1.5 + ((b.wrc_plus || 100) / 100) * 1.0;
@@ -1393,7 +1611,7 @@
       });
       const p5 = pool.shift();
 
-      // (F) 第十棒 Second Leadoff (慢壘十棒小核彈/伏兵)：慢壘10人制精髓，在1棒之前登場，高 OBP 打者可為前段打線創造滾雪球得分
+      // (F) 第十棒 Second Leadoff (慢壘十棒小核彈/伏兵)
       let p10 = null;
       if (pool.length > 0 && lineupSize >= 10) {
         pool.sort((a, b) => {
@@ -1404,7 +1622,7 @@
         p10 = pool.shift();
       }
 
-      // (G) 第 6 ~ 9 棒：剩餘打者依綜合進攻產能評分降冪排列
+      // (G) 第 6 ~ 9 棒
       pool.sort((a, b) => {
         const ratingA = (a.wrc_plus * 0.6) + (a.ops * 40) + (a.contact_pct * 20);
         const ratingB = (b.wrc_plus * 0.6) + (b.ops * 40) + (b.contact_pct * 20);
@@ -1418,8 +1636,17 @@
 
       const rawBatters = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10].filter(Boolean);
 
-      // 4. 守備位置 1~5 順位最適媒合
-      const assignedPositions = matchPositionsForLineup(rawBatters);
+      // 板凳出席球員 (未排入 10 人先發打線者)
+      const benchPlayers = presentPool.filter(p => !rawBatters.some(b => b.name === p.name)).map(p => p.name);
+
+      // 4. 守備位置媒合 (依據是否啟用 DH 制)
+      let optimalDhName = null;
+      if (isDhEnabled && rawBatters.length >= 10) {
+        optimalDhName = findOptimalDhBatter(rawBatters, dhReplacedPosition);
+      }
+
+      const matchRes = matchPositionsForLineup(rawBatters, isDhEnabled, dhReplacedPosition, optimalDhName, benchPlayers);
+      const assignedPositions = matchRes.assignedPositions;
 
       const roles = [
         { num: 1, title: '開路先鋒 (Leadoff)', desc: '【現代賽伯計量】：極大化 OBP 與選球紀律 (SDI)，避免出局堆積首壘跑者' },
@@ -1434,52 +1661,119 @@
         { num: 10, title: '十棒伏兵 (Second Leadoff)', desc: '【慢壘十棒小核彈】：後段最高上壘率 (OBP)，為 1~3 棒超強打線提前堆疊壘包' }
       ];
 
-      return rawBatters.map((p, idx) => ({
-        slot: idx + 1,
-        player: p,
-        posInfo: assignedPositions[p.name] || { posKey: 'DH', label: 'DH/指定打擊', rankText: '自由支援' },
-        role: roles[idx]?.title || '後備輪替',
-        reason: roles[idx]?.desc || '打線戰術支援',
-        histPa: historicalPaMap[p.name] || p.pa
-      }));
+      const items = rawBatters.map((p, idx) => {
+        const posInfo = assignedPositions[p.name] || { posKey: 'DH', label: 'DH/指定打擊', rankText: '自由支援', isDh: isDhEnabled };
+        let reason = roles[idx]?.desc || '打線戰術支援';
+        if (posInfo.isDh) {
+          reason = `【專職打擊不守備】：免除防守體力消耗，全力釋放打線長打與上壘產能（代替 ${POSITIONS.find(pos=>pos.key===dhReplacedPosition)?.label || dhReplacedPosition} 打擊）`;
+        }
+        return {
+          slot: idx + 1,
+          player: p,
+          posInfo,
+          role: roles[idx]?.title || '後備輪替',
+          reason,
+          histPa: historicalPaMap[p.name] || p.pa
+        };
+      });
+
+      return {
+        items,
+        dedicatedFielder: matchRes.dedicatedFielder,
+        hasDh: isDhEnabled,
+        dhReplacedPosition
+      };
     }
 
-    // 依據各守位 1~5 順位排名對先發 10 人進行最優守備位置匹配
-    function matchPositionsForLineup(lineupBatters) {
+    // 依據各守位 1~5 順位排名對先發 10 人進行最優守備位置匹配 (支援有/無 DH 雙模式)
+    function matchPositionsForLineup(lineupBatters, hasDh, dhReplacedPos = 'P', designatedDhName = null, benchPlayers = []) {
       const batterNames = lineupBatters.map(b => b.name);
-      const posKeys = POSITIONS.map(p => p.key);
       const result = {};
-
-      const unassignedBatters = new Set(batterNames);
-      const unassignedPositions = new Set(posKeys);
-
       const rankLabels = ['第 1 順位', '第 2 順位', '第 3 順位', '第 4 順位', '第 5 順位'];
 
-      // 依序媒合第 1 到第 5 順位
-      for (let r = 0; r < 5; r++) {
-        for (const pos of Array.from(unassignedPositions)) {
-          const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
-          const choice = ranks[r];
-          if (choice && unassignedBatters.has(choice)) {
-            const pObj = POSITIONS.find(p => p.key === pos);
-            result[choice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: rankLabels[r] };
-            unassignedBatters.delete(choice);
-            unassignedPositions.delete(pos);
+      if (!hasDh) {
+        // 無 DH 制：10 名打者必須守備 10 個守備位置 (P ~ RF)，無任何人為 DH
+        const unassignedBatters = new Set(batterNames);
+        const unassignedPositions = new Set(POSITIONS.map(p => p.key));
+
+        for (let r = 0; r < 5; r++) {
+          for (const pos of Array.from(unassignedPositions)) {
+            const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
+            const choice = ranks[r];
+            if (choice && unassignedBatters.has(choice)) {
+              const pObj = POSITIONS.find(p => p.key === pos);
+              result[choice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: rankLabels[r], isDh: false };
+              unassignedBatters.delete(choice);
+              unassignedPositions.delete(pos);
+            }
           }
         }
-      }
 
-      // 剩餘人員彈性分配至未媒合守位
-      const remainingBattersList = Array.from(unassignedBatters);
-      const remainingPosList = Array.from(unassignedPositions);
-      for (let i = 0; i < remainingBattersList.length; i++) {
-        const b = remainingBattersList[i];
-        const pos = remainingPosList[i] || 'DH';
-        const pObj = POSITIONS.find(p => p.key === pos);
-        result[b] = { posKey: pos, label: pObj ? pObj.label : '指定代打/彈性', rankText: '彈性支援' };
-      }
+        const remainingBattersList = Array.from(unassignedBatters);
+        const remainingPosList = Array.from(unassignedPositions);
+        for (let i = 0; i < remainingBattersList.length; i++) {
+          const b = remainingBattersList[i];
+          const pos = remainingPosList[i] || 'DH';
+          const pObj = POSITIONS.find(p => p.key === pos);
+          result[b] = { posKey: pos, label: pObj ? pObj.label : '彈性支援', rankText: '彈性支援', isDh: false };
+        }
 
-      return result;
+        return { assignedPositions: result, dedicatedFielder: null };
+      } else {
+        // 有 DH 制：打線中 1 人為 DH (指定打擊)，其餘 9 人守備 9 個守位 (除 dhReplacedPos 以外)
+        let dhPlayer = designatedDhName;
+        if (!dhPlayer || !batterNames.includes(dhPlayer)) {
+          dhPlayer = findOptimalDhBatter(lineupBatters, dhReplacedPos);
+        }
+
+        result[dhPlayer] = { posKey: 'DH', label: 'DH (指定打擊)', rankText: '專職打擊', isDh: true };
+
+        const targetFieldingPos = POSITIONS.filter(p => p.key !== dhReplacedPos).map(p => p.key);
+        const unassignedBatters = new Set(batterNames.filter(n => n !== dhPlayer));
+        const unassignedPositions = new Set(targetFieldingPos);
+
+        for (let r = 0; r < 5; r++) {
+          for (const pos of Array.from(unassignedPositions)) {
+            const ranks = defenseRankings[pos] || DEFAULT_DEFENSE_RANKINGS[pos] || [];
+            const choice = ranks[r];
+            if (choice && unassignedBatters.has(choice)) {
+              const pObj = POSITIONS.find(p => p.key === pos);
+              result[choice] = { posKey: pos, label: pObj ? pObj.label : pos, rankText: rankLabels[r], isDh: false };
+              unassignedBatters.delete(choice);
+              unassignedPositions.delete(pos);
+            }
+          }
+        }
+
+        const remainingBattersList = Array.from(unassignedBatters);
+        const remainingPosList = Array.from(unassignedPositions);
+        for (let i = 0; i < remainingBattersList.length; i++) {
+          const b = remainingBattersList[i];
+          const pos = remainingPosList[i] || '彈性支援';
+          const pObj = POSITIONS.find(p => p.key === pos);
+          result[b] = { posKey: pos, label: pObj ? pObj.label : '彈性支援', rankText: '彈性支援', isDh: false };
+        }
+
+        // 專職守備球員 (只守不打，負責 dhReplacedPos)
+        let dedicatedFielder = null;
+        const pObj = POSITIONS.find(p => p.key === dhReplacedPos);
+        const posLabel = pObj ? pObj.label : dhReplacedPos;
+
+        if (benchPlayers && benchPlayers.length > 0) {
+          const ranks = defenseRankings[dhReplacedPos] || DEFAULT_DEFENSE_RANKINGS[dhReplacedPos] || [];
+          for (const rChoice of ranks) {
+            if (benchPlayers.includes(rChoice)) {
+              dedicatedFielder = { name: rChoice, posKey: dhReplacedPos, label: posLabel };
+              break;
+            }
+          }
+          if (!dedicatedFielder) {
+            dedicatedFielder = { name: benchPlayers[0], posKey: dhReplacedPos, label: posLabel };
+          }
+        }
+
+        return { assignedPositions: result, dedicatedFielder };
+      }
     }
 
     // 渲染棒次推薦與自訂分析主模組
@@ -1493,53 +1787,131 @@
       });
       renderAttendanceGrid(historicalPaMap);
 
+      // 更新頂部 DH 賽制控制按鈕與說明
+      const btnNoDh = document.getElementById('btnRuleNoDh');
+      const btnWithDh = document.getElementById('btnRuleWithDh');
+      const explanationEl = document.getElementById('dhStatusExplanation');
+      const subPosWrapper = document.getElementById('dhSubPosSelectorWrapper');
+      const subPosSelect = document.getElementById('dhSubPositionSelect');
+
+      if (btnNoDh && btnWithDh) {
+        if (!isDhEnabled) {
+          btnNoDh.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-sky-600 text-white shadow transition';
+          btnWithDh.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
+          if (explanationEl) {
+            explanationEl.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="font-bold text-emerald-400">【無 DH 制 (全打全守)】</span><span class="text-slate-300">10 位打者全員下場防守，攻守同一，投手 (P) 必須親自上場打擊。</span></span>';
+          }
+          if (subPosWrapper) subPosWrapper.classList.add('opacity-40', 'pointer-events-none');
+        } else {
+          btnWithDh.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white shadow transition';
+          btnNoDh.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
+          const posObj = POSITIONS.find(p => p.key === dhReplacedPosition);
+          const pName = posObj ? posObj.label : dhReplacedPosition;
+          if (explanationEl) {
+            explanationEl.innerHTML = `<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span class="font-bold text-amber-400">【有 DH 制 (指定打擊)】</span><span class="text-slate-300">打線 10 棒中指派 1 位專職 DH，防守端由專職守備員（只守不打）鎮守 <span class="font-mono text-amber-300 font-bold">${pName}</span>。</span></span>`;
+          }
+          if (subPosWrapper) subPosWrapper.classList.remove('opacity-40', 'pointer-events-none');
+          if (subPosSelect) subPosSelect.value = dhReplacedPosition;
+        }
+      }
+
       const rec = calculateRecommendedLineup(pList);
       const tbody = document.getElementById('recommendedLineupBody');
+      const recDedInfo = document.getElementById('recDedicatedFielderInfo');
 
-      if (rec.length < 10) {
+      if (!rec.items || rec.items.length < 10) {
         tbody.innerHTML = `
           <tr>
             <td colspan="9" class="p-8 text-center bg-slate-950/60 text-amber-400 font-mono space-y-2">
-              <div class="text-base font-bold">⚠️ 目前選取出席球員不足 10 人 (僅 ${rec.length} 位)</div>
+              <div class="text-base font-bold">⚠️ 目前選取出席球員不足 10 人 (僅 ${rec.items ? rec.items.length : 0} 位)</div>
               <div class="text-xs text-slate-400">請在上方「今日出席陣容篩選」區塊點擊球員卡片勾選到場選手，或點擊「全選出席」以產生完整 1~10 棒推薦。</div>
             </td>
           </tr>
         `;
+        if (recDedInfo) recDedInfo.innerHTML = '';
         renderCustomLineupPickers(pList);
         evaluateCustomLineup(agg);
         return;
       }
 
-      tbody.innerHTML = rec.map(item => `
-        <tr class="hover:bg-slate-800/60 transition">
-          <td class="p-3 text-center font-mono font-black text-rose-400 text-sm tabular-nums">${item.slot}</td>
-          <td class="p-3 font-bold text-white flex items-center space-x-3">
-            ${renderAvatarElement(item.player.name, 'w-8 h-8 text-xs ring-1 ring-slate-700')}
-            <div>
-              <span>#${NAME_TO_JERSEY[item.player.name] ?? ''} ${item.player.name}</span>
-              <span class="block text-[10px] text-slate-500 font-mono">歷史 PA: ${item.histPa}</span>
+      tbody.innerHTML = rec.items.map(item => {
+        let posBadge = '';
+        if (item.posInfo.isDh) {
+          posBadge = `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-md inline-flex items-center gap-1 font-bold font-mono"><span>DH (指定打擊)</span><span class="text-[9px] text-amber-400/80 font-normal">(專職打擊)</span></span>`;
+        } else {
+          posBadge = `<span class="bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded-md inline-flex items-center gap-1"><span>${item.posInfo.label}</span><span class="text-[9px] text-amber-400/80 font-normal">(${item.posInfo.rankText})</span></span>`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-800/60 transition">
+            <td class="p-3 text-center font-mono font-black text-rose-400 text-sm tabular-nums">${item.slot}</td>
+            <td class="p-3 font-bold text-white flex items-center space-x-3">
+              ${renderAvatarElement(item.player.name, 'w-8 h-8 text-xs ring-1 ring-slate-700')}
+              <div>
+                <span>#${NAME_TO_JERSEY[item.player.name] ?? ''} ${item.player.name}</span>
+                <span class="block text-[10px] text-slate-500 font-mono">歷史 PA: ${item.histPa}</span>
+              </div>
+            </td>
+            <td class="p-3 text-center font-mono font-bold text-amber-300">
+              ${posBadge}
+            </td>
+            <td class="p-3 font-medium text-slate-200">${item.role}</td>
+            <td class="p-3 text-center font-mono text-emerald-400 font-bold tabular-nums">${item.player.obp.toFixed(3)}</td>
+            <td class="p-3 text-center font-mono text-sky-400 font-bold tabular-nums">${item.player.slg.toFixed(3)}</td>
+            <td class="p-3 text-center font-mono font-bold tabular-nums">${item.player.ops.toFixed(3)}</td>
+            <td class="p-3 text-center font-mono text-amber-400 font-bold tabular-nums">${item.player.wrc_plus.toFixed(1)}</td>
+            <td class="p-3 text-slate-400 text-[11px] leading-relaxed max-w-xs truncate" title="${item.reason}">${item.reason}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 渲染推薦棒次之專職守備組提示
+      if (recDedInfo) {
+        if (rec.hasDh && rec.dedicatedFielder) {
+          recDedInfo.innerHTML = `
+            <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div class="flex items-center space-x-3">
+                <span class="text-amber-400 font-bold flex items-center gap-1.5 shrink-0">
+                  <span>🛡️</span> 專職守備球員 (只守不打)：
+                </span>
+                <div class="flex items-center space-x-2 font-bold text-white">
+                  ${renderAvatarElement(rec.dedicatedFielder.name, 'w-6 h-6 text-[10px]')}
+                  <span>#${NAME_TO_JERSEY[rec.dedicatedFielder.name] ?? ''} ${rec.dedicatedFielder.name}</span>
+                </div>
+                <span class="text-amber-300 font-mono bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60 font-semibold">
+                  負責守備：${rec.dedicatedFielder.label}
+                </span>
+              </div>
+              <span class="text-[11px] text-slate-400 font-mono shrink-0">有 DH 制・10打10守+1人專職守備</span>
             </div>
-          </td>
-          <td class="p-3 text-center font-mono font-bold text-amber-300">
-            <span class="bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
-              <span>${item.posInfo.label}</span>
-              <span class="text-[9px] text-amber-400/80 font-normal">(${item.posInfo.rankText})</span>
-            </span>
-          </td>
-          <td class="p-3 font-medium text-slate-200">${item.role}</td>
-          <td class="p-3 text-center font-mono text-emerald-400 font-bold tabular-nums">${item.player.obp.toFixed(3)}</td>
-          <td class="p-3 text-center font-mono text-sky-400 font-bold tabular-nums">${item.player.slg.toFixed(3)}</td>
-          <td class="p-3 text-center font-mono font-bold tabular-nums">${item.player.ops.toFixed(3)}</td>
-          <td class="p-3 text-center font-mono text-amber-400 font-bold tabular-nums">${item.player.wrc_plus.toFixed(1)}</td>
-          <td class="p-3 text-slate-400 text-[11px] leading-relaxed max-w-xs truncate" title="${item.reason}">${item.reason}</td>
-        </tr>
-      `).join('');
+          `;
+        } else if (rec.hasDh && !rec.dedicatedFielder) {
+          recDedInfo.innerHTML = `
+            <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-amber-800/60 flex items-center justify-between text-xs text-amber-300">
+              <span>⚠️ 提示：今日出席名單剛好 10 人，若採「有 DH 制」，建議場上由打線外第 11 人擔任專職守備；若全隊無多餘替補，建議切換為「無 DH 制 (全打全守)」。</span>
+            </div>
+          `;
+        } else {
+          recDedInfo.innerHTML = `
+            <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-emerald-800/60 flex items-center justify-between text-xs text-emerald-300">
+              <span class="flex items-center gap-1.5">
+                <span>✓</span> 攻守合一配置：10 位先發打者全員下場防守，完整覆蓋 10 個正規慢壘守備位置。
+              </span>
+              <span class="text-[11px] text-slate-400 font-mono">無 DH 制・10人全員攻守同一</span>
+            </div>
+          `;
+        }
+      }
 
       // 若自訂打線尚未填滿 10 人，預設將推薦名單帶入自訂打線
       if (customLineup.length !== 10) {
-        customLineup = rec.map(r => r.player.name);
+        customLineup = rec.items.map(r => r.player.name);
         while (customLineup.length < 10) {
           customLineup.push(pList[0].name);
+        }
+        if (rec.hasDh) {
+          const dhIdx = rec.items.findIndex(r => r.posInfo.isDh);
+          if (dhIdx !== -1) customDhSlot = dhIdx + 1;
         }
       }
 
@@ -1550,34 +1922,89 @@
     window.applyRecommendedToCustom = function() {
       const agg = getAggregatedStats(getFilteredLogs());
       const rec = calculateRecommendedLineup(agg.players);
-      customLineup = rec.map(r => r.player.name);
+      customLineup = rec.items.map(r => r.player.name);
+      if (rec.hasDh) {
+        const dhIdx = rec.items.findIndex(r => r.posInfo.isDh);
+        if (dhIdx !== -1) {
+          customDhSlot = dhIdx + 1;
+          localStorage.setItem('rebas_custom_dh_slot', customDhSlot);
+        }
+      }
       renderCustomLineupPickers(agg.players);
       evaluateCustomLineup(agg);
-      alert('已成功將賽伯計量建議打線 1~10 棒帶入自訂分析引擎！');
+      alert('已成功將賽伯計量建議打線 1~10 棒與守位配置帶入自訂分析引擎！');
     };
 
     window.resetCustomLineupToDefault = function() {
       const agg = getAggregatedStats(getFilteredLogs());
       const rec = calculateRecommendedLineup(agg.players);
-      customLineup = rec.map(r => r.player.name);
+      customLineup = rec.items.map(r => r.player.name);
+      if (rec.hasDh) {
+        const dhIdx = rec.items.findIndex(r => r.posInfo.isDh);
+        if (dhIdx !== -1) customDhSlot = dhIdx + 1;
+      }
       renderCustomLineupPickers(agg.players);
       evaluateCustomLineup(agg);
     };
 
     function renderCustomLineupPickers(players) {
       const container = document.getElementById('customLineupPickersContainer');
+      const controlBar = document.getElementById('customDhControlBar');
       const allNames = Object.values(JERSEY_TO_NAME);
+
+      if (controlBar) {
+        if (isDhEnabled) {
+          controlBar.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950 border border-amber-500/40 shadow-sm">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs text-amber-300 font-bold flex items-center gap-1.5">
+                  <span>🎯</span> 指定打擊 (DH) 棒次指派：
+                </span>
+                <select onchange="setCustomDhSlot(this.value)" class="bg-slate-900 border border-amber-600/80 text-amber-300 text-xs rounded-lg px-2.5 py-1 font-mono focus:outline-none focus:border-amber-400 font-bold">
+                  ${Array.from({ length: 10 }, (_, i) => `
+                    <option value="${i + 1}" ${customDhSlot === (i + 1) ? 'selected' : ''}>第 ${i + 1} 棒 (#${NAME_TO_JERSEY[customLineup[i]] ?? ''} ${customLineup[i] || '未定'})</option>
+                  `).join('')}
+                </select>
+              </div>
+              <span class="text-[11px] text-slate-400 font-mono">
+                受代打守位：${POSITIONS.find(p => p.key === dhReplacedPosition)?.label || dhReplacedPosition} (由專職防守組擔任)
+              </span>
+            </div>
+          `;
+        } else {
+          controlBar.innerHTML = `
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300">
+              <span class="text-emerald-400 font-bold flex items-center gap-1.5">
+                <span>🛡️</span> 當前設定：無 DH 制 (10人全員攻守同一，投手必須親自打擊)
+              </span>
+              <span class="text-[11px] text-slate-500 font-mono">全隊 10 位打者皆需負擔守備</span>
+            </div>
+          `;
+        }
+      }
 
       container.innerHTML = Array.from({ length: 10 }, (_, i) => {
         const slot = i + 1;
         const currentName = customLineup[i] || allNames[0];
+        const isCurrentDh = isDhEnabled && slot === customDhSlot;
+
         return `
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+          <div class="p-3 rounded-xl border space-y-2 transition ${
+            isCurrentDh
+              ? 'bg-amber-950/20 border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
+              : 'bg-slate-950 border-slate-800'
+          }">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-mono font-black text-rose-400">第 ${slot} 棒</span>
-              <span class="text-[10px] text-slate-500 font-mono">BATTER ${slot}</span>
+              <span class="text-xs font-mono font-black ${isCurrentDh ? 'text-amber-400' : 'text-rose-400'}">第 ${slot} 棒</span>
+              ${
+                isCurrentDh
+                  ? '<span class="text-[10px] text-amber-300 font-mono font-bold bg-amber-950/90 px-1.5 py-0.5 rounded border border-amber-600/70">DH 指定打擊</span>'
+                  : `<span class="text-[10px] text-slate-500 font-mono">BATTER ${slot}</span>`
+              }
             </div>
-            <select onchange="updateCustomLineupSlot(${i}, this.value)" class="w-full bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-rose-500 font-medium">
+            <select onchange="updateCustomLineupSlot(${i}, this.value)" class="w-full bg-slate-900 border text-slate-100 text-xs rounded-lg px-2 py-1.5 focus:outline-none font-medium ${
+              isCurrentDh ? 'border-amber-600/80 focus:border-amber-400' : 'border-slate-700 focus:border-rose-500'
+            }">
               ${allNames.map(name => `
                 <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name}</option>
               `).join('')}
@@ -1590,10 +2017,11 @@
     window.updateCustomLineupSlot = function(index, name) {
       customLineup[index] = name;
       const agg = getAggregatedStats(getFilteredLogs());
+      renderCustomLineupPickers(agg.players);
       evaluateCustomLineup(agg);
     };
 
-    // 自訂棒次戰力診斷引擎 (深度數據分析升級版)
+    // 自訂棒次戰力診斷引擎 (深度數據分析升級版，支援有/無 DH 雙模式)
     function evaluateCustomLineup(agg) {
       const pList = agg.players;
       const allNames = Object.values(JERSEY_TO_NAME);
@@ -1637,12 +2065,12 @@
       const totalOps = lineupPlayers.reduce((a, b) => a + b.ops, 0) / 10;
       const totalWrc = lineupPlayers.reduce((a, b) => a + b.wrc_plus, 0) / 10;
 
-      // 預估單場總得分 (慢速壘球 Base-Out 期望值模型)
+      // 預估單場總得分
       const meanObp = lineupPlayers.reduce((a, b) => a + b.obp, 0) / 10;
       const meanSlg = lineupPlayers.reduce((a, b) => a + b.slg, 0) / 10;
       const projectedRuns = (meanObp * meanSlg * 14.5).toFixed(1);
 
-      // 打線攻勢流暢度係數 (OPS 標準差：越小代表各棒次銜接越平順無斷層)
+      // 打線流暢係數 (斷層標準差)
       const variance = lineupPlayers.reduce((sum, p) => sum + Math.pow(p.ops - totalOps, 2), 0) / 10;
       const stdDevOps = Math.sqrt(variance);
 
@@ -1707,7 +2135,13 @@
         </div>
       `;
 
-      // 渲染 1~10 棒逐棒深度數據與適配度檢驗表
+      // 守備位置媒合 (自訂打線)
+      const benchPlayers = allNames.filter(n => presentPlayersSet.has(n) && !customLineup.includes(n));
+      const designatedDhName = isDhEnabled ? customLineup[customDhSlot - 1] : null;
+      const customMatch = matchPositionsForLineup(lineupPlayers, isDhEnabled, dhReplacedPosition, designatedDhName, benchPlayers);
+      const assignedPositions = customMatch.assignedPositions;
+
+      // 渲染 1~10 棒逐棒深度數據與適配度檢驗表 (含守備位置欄位)
       const tableBody = document.getElementById('customLineupTableBody');
       const tacticalRoles = [
         '開路先鋒 (Leadoff)',
@@ -1724,7 +2158,8 @@
 
       tableBody.innerHTML = lineupPlayers.map((p, idx) => {
         const slot = idx + 1;
-        // 計算該棒次的戰術適配度 (Fit Score)
+        const posInfo = assignedPositions[p.name] || { posKey: 'DH', label: 'DH/指定打擊', rankText: '彈性支援', isDh: false };
+
         let fitGrade = 'A';
         let fitClass = 'bg-sky-500/20 text-sky-300 border-sky-500/40';
 
@@ -1746,12 +2181,22 @@
           else if (p.obp < 0.380) { fitGrade = 'B (伏兵成效弱)'; fitClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40'; }
         }
 
+        let posBadge = '';
+        if (posInfo.isDh) {
+          posBadge = `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-bold font-mono">DH (指定打擊)</span>`;
+        } else {
+          posBadge = `<span class="text-slate-200 font-mono">${posInfo.label}</span> <span class="text-[9px] text-slate-500 font-mono">(${posInfo.rankText})</span>`;
+        }
+
         return `
-          <tr class="hover:bg-slate-800/60 transition">
+          <tr class="hover:bg-slate-800/60 transition ${posInfo.isDh ? 'bg-amber-950/10' : ''}">
             <td class="p-2.5 text-center font-bold text-rose-400">${slot}</td>
             <td class="p-2.5 font-bold text-white flex items-center space-x-2 font-sans">
               ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px] ring-1 ring-slate-700')}
               <span>#${NAME_TO_JERSEY[p.name] ?? ''} ${p.name}</span>
+            </td>
+            <td class="p-2.5 text-center font-sans text-xs">
+              ${posBadge}
             </td>
             <td class="p-2.5 text-slate-300 font-sans text-[11px]">${tacticalRoles[idx]}</td>
             <td class="p-2.5 text-center text-slate-300 tabular-nums">${p.avg.toFixed(3)}</td>
@@ -1769,6 +2214,45 @@
         `;
       }).join('');
 
+      // 專職守備組卡片提示 (自訂打線)
+      const customDedInfo = document.getElementById('customDedicatedFielderInfo');
+      if (customDedInfo) {
+        if (isDhEnabled && customMatch.dedicatedFielder) {
+          customDedInfo.innerHTML = `
+            <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div class="flex items-center space-x-3">
+                <span class="text-amber-400 font-bold flex items-center gap-1.5 shrink-0">
+                  <span>🛡️</span> 本場專職守備球員 (只守不打)：
+                </span>
+                <div class="flex items-center space-x-2 font-bold text-white">
+                  ${renderAvatarElement(customMatch.dedicatedFielder.name, 'w-6 h-6 text-[10px]')}
+                  <span>#${NAME_TO_JERSEY[customMatch.dedicatedFielder.name] ?? ''} ${customMatch.dedicatedFielder.name}</span>
+                </div>
+                <span class="text-amber-300 font-mono bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/60 font-semibold">
+                  負責守備：${customMatch.dedicatedFielder.label}
+                </span>
+              </div>
+              <span class="text-[11px] text-slate-400 font-mono shrink-0">有 DH 制・10打10守+1人專職守備</span>
+            </div>
+          `;
+        } else if (isDhEnabled && !customMatch.dedicatedFielder) {
+          customDedInfo.innerHTML = `
+            <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-amber-800/60 flex items-center justify-between text-xs text-amber-300">
+              <span>⚠️ 提示：目前全隊出席名單僅 10 人，若採 DH 制，場上將缺少第 11 位專職守備員；若無其他替補球員，建議將賽制切換為「無 DH 制 (全打全守)」。</span>
+            </div>
+          `;
+        } else {
+          customDedInfo.innerHTML = `
+            <div class="mt-3 p-3 bg-slate-950/80 rounded-xl border border-emerald-800/60 flex items-center justify-between text-xs text-emerald-300">
+              <span class="flex items-center gap-1.5">
+                <span>✓</span> 攻守合一配置：10 位自訂打者全員下場防守，完整覆蓋 10 個正規慢壘守備位置。
+              </span>
+              <span class="text-[11px] text-slate-400 font-mono">無 DH 制・10人全員攻守同一</span>
+            </div>
+          `;
+        }
+      }
+
       // 戰術診斷回饋
       const feedbackEl = document.getElementById('lineupDiagnosticFeedback');
       const notes = [];
@@ -1778,6 +2262,51 @@
           type: 'danger',
           title: '球員重複排入打線',
           desc: `偵測到【${[...new Set(duplicates)].join('、')}】被重複指派至多個棒次，請確認先發 1~10 棒無重複球員。`
+        });
+      }
+
+      // 無 DH 制 vs 有 DH 制專屬守備與戰術診斷
+      if (!isDhEnabled) {
+        // 無 DH 制：檢驗 10 人是否有人能守 P 投手
+        const pitcherRanks = defenseRankings['P'] || DEFAULT_DEFENSE_RANKINGS['P'] || [];
+        const hasPitcher = lineupPlayers.some(p => pitcherRanks.includes(p.name));
+        if (!hasPitcher) {
+          notes.push({
+            type: 'danger',
+            title: '【無 DH 制致命漏洞】：先發 10 棒無合格投手 (P)',
+            desc: '目前為「無 DH 制」（10人全員攻守合一），但自訂 10 棒打者中無人具備合格投手 (P) 順位！慢壘將無投手可登板投球，比賽防線將面臨崩潰！建議調整至少 1 位具備投球資格之球員入打線。'
+          });
+        } else {
+          notes.push({
+            type: 'success',
+            title: '【無 DH 防守完整】：投手與關鍵中線配置正常',
+            desc: '先發 10 棒包含合格投手與內外野防守人員，符合無 DH 制全員攻守兼具之作戰要求。'
+          });
+        }
+      } else {
+        // 有 DH 制：檢驗 DH 本身之打擊破壞力
+        const dhPlayer = lineupPlayers[customDhSlot - 1];
+        const subPosObj = POSITIONS.find(p => p.key === dhReplacedPosition);
+        const subPosName = subPosObj ? subPosObj.label : dhReplacedPosition;
+
+        if (dhPlayer.wrc_plus < 100 || dhPlayer.ops < agg.teamOps) {
+          notes.push({
+            type: 'warning',
+            title: `第 ${customDhSlot} 棒 DH (${dhPlayer.name}) 打擊產能不足`,
+            desc: `第 ${customDhSlot} 棒 ${dhPlayer.name} 被指派為指定打擊 (DH)，但攻擊產出 (wRC+ ${dhPlayer.wrc_plus.toFixed(1)}) 低於隊均基準 100，未能發揮指定打擊免除守備奔波、專注重砲清壘之核心戰術效益，建議更換長打或上壘率更頂尖之強打者！`
+          });
+        } else if (dhPlayer.wrc_plus >= 120 || dhPlayer.iso >= 0.250) {
+          notes.push({
+            type: 'success',
+            title: `第 ${customDhSlot} 棒 DH (${dhPlayer.name}) 展現頂級重砲價值`,
+            desc: `第 ${customDhSlot} 棒 ${dhPlayer.name} (wRC+ ${dhPlayer.wrc_plus.toFixed(1)} / OPS ${dhPlayer.ops.toFixed(3)}) 專職指定打擊，有效免除守備體力消耗，極大化打線重砲清壘破壞力！`
+          });
+        }
+
+        notes.push({
+          type: 'success',
+          title: '【有 DH 制守備分工】：防守端獲得有效掩護',
+          desc: `啟用指定打擊成功掩護專職守備球員（${subPosName}），兼顧防守專注控球與打線火力最大化。`
         });
       }
 
@@ -1876,7 +2405,7 @@
         lineupFlowChartInst = new Chart(ctx, {
           type: 'bar',
           data: {
-            labels: lineupPlayers.map((p, i) => `${i + 1}棒 ${p.name}`),
+            labels: lineupPlayers.map((p, i) => `${i + 1}棒 ${p.name}${isDhEnabled && (i+1)===customDhSlot ? ' (DH)' : ''}`),
             datasets: [
               {
                 type: 'bar',
@@ -1956,6 +2485,7 @@
       }
     };
 
+
     function utf8ToBase64(str) {
       const bytes = new TextEncoder().encode(str);
       let binary = '';
@@ -1968,6 +2498,7 @@
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       return new TextDecoder().decode(bytes);
     }
+
 
     async function loadAvatarsFromGitHub() {
       try {
@@ -1999,10 +2530,12 @@
       }
     }
 
+
     async function commitAvatarsToGitHub(updatedAvatars, commitMessage = "update: sync player avatars via portal") {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端：正在同步球員頭像至 GitHub...';
       statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+
 
       try {
         const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -2015,7 +2548,9 @@
           currentAvatarsSha = null;
         }
 
+
         const base64Content = utf8ToBase64(JSON.stringify(updatedAvatars, null, 2));
+
 
         const putBody = {
           message: commitMessage,
@@ -2023,6 +2558,7 @@
           branch: GITHUB_BRANCH
         };
         if (currentAvatarsSha) putBody.sha = currentAvatarsSha;
+
 
         const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}`, {
           method: 'PUT',
@@ -2033,18 +2569,22 @@
           body: JSON.stringify(putBody)
         });
 
+
         if (!putRes.ok) {
           const errData = await putRes.json();
           throw new Error(errData.message || 'GitHub API 頭像寫入拒絕');
         }
+
 
         const resData = await putRes.json();
         currentAvatarsSha = resData.content.sha;
         playerAvatars = updatedAvatars;
         localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
 
+
         statusBadge.textContent = `[連線正常] 頭像與資料庫：已即時同步`;
         statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+
 
         renderAll();
         return true;
@@ -2055,6 +2595,7 @@
         return false;
       }
     }
+
 
     async function loadTagsFromGitHub() {
       try {
@@ -2086,10 +2627,12 @@
       }
     }
 
+
     async function commitTagsToGitHub(updatedTags, commitMessage = "update: sync player tags via portal") {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端：正在同步隊內標籤至 GitHub...';
       statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+
 
       try {
         const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -2102,7 +2645,9 @@
           currentTagsSha = null;
         }
 
+
         const base64Content = utf8ToBase64(JSON.stringify(updatedTags, null, 2));
+
 
         const putBody = {
           message: commitMessage,
@@ -2110,6 +2655,7 @@
           branch: GITHUB_BRANCH
         };
         if (currentTagsSha) putBody.sha = currentTagsSha;
+
 
         const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}`, {
           method: 'PUT',
@@ -2120,18 +2666,22 @@
           body: JSON.stringify(putBody)
         });
 
+
         if (!putRes.ok) {
           const errData = await putRes.json();
           throw new Error(errData.message || 'GitHub API 標籤寫入拒絕');
         }
+
 
         const resData = await putRes.json();
         currentTagsSha = resData.content.sha;
         playerTags = updatedTags;
         localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
 
+
         statusBadge.textContent = `[連線正常] 標籤與資料庫：已即時同步`;
         statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+
 
         const agg = getAggregatedStats(getFilteredLogs());
         renderPlayerProfile(agg);
@@ -2143,6 +2693,7 @@
         return false;
       }
     }
+
 
     window.addPlayerTag = async function(playerName) {
       const currentList = playerTags[playerName] || [];
@@ -2164,6 +2715,7 @@
       await commitTagsToGitHub(playerTags, `feat: add nickname tag "${cleanTag}" for ${playerName}`);
     };
 
+
     window.removePlayerTag = async function(playerName, tagIndex) {
       const currentList = playerTags[playerName] || [];
       const targetTag = currentList[tagIndex];
@@ -2180,14 +2732,17 @@
       await commitTagsToGitHub(playerTags, `delete: remove tag "${targetTag}" for ${playerName}`);
     };
 
+
     async function loadLogsFromGitHub() {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端資料庫：載入中...';
       statusBadge.className = 'text-amber-400 font-mono text-[11px]';
 
+
       await loadAvatarsFromGitHub();
       await loadTagsFromGitHub();
       await loadDefenseFromGitHub();
+
 
       try {
         const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -2196,6 +2751,7 @@
             'Accept': 'application/vnd.github.v3+json'
           }
         });
+
 
         if (apiRes.ok) {
           const data = await apiRes.json();
@@ -2221,6 +2777,7 @@
         }
       }
 
+
       syncJerseyMaps();
       if (allLogs.length > 0 && !selectedPlayerName) {
         selectedPlayerName = allLogs[0].name;
@@ -2228,14 +2785,17 @@
       renderAll();
     }
 
+
     window.manualRefresh = function() {
       loadLogsFromGitHub();
     };
+
 
     async function commitLogsToGitHub(updatedLogs, commitMessage = "update: sync match logs via portal") {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端資料庫：正在寫入 GitHub...';
       statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+
 
       try {
         const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -2246,7 +2806,9 @@
           currentFileSha = shaData.sha;
         }
 
+
         const base64Content = utf8ToBase64(JSON.stringify(updatedLogs, null, 2));
+
 
         const putBody = {
           message: commitMessage,
@@ -2254,6 +2816,7 @@
           branch: GITHUB_BRANCH
         };
         if (currentFileSha) putBody.sha = currentFileSha;
+
 
         const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`, {
           method: 'PUT',
@@ -2264,18 +2827,22 @@
           body: JSON.stringify(putBody)
         });
 
+
         if (!putRes.ok) {
           const errData = await putRes.json();
           throw new Error(errData.message || 'GitHub API 寫入拒絕');
         }
+
 
         const resData = await putRes.json();
         currentFileSha = resData.content.sha;
         allLogs = updatedLogs;
         syncJerseyMaps();
 
+
         statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (Commit: ${currentFileSha.substring(0,7)})`;
         statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+
 
         renderAll();
         return true;
@@ -2286,6 +2853,7 @@
         return false;
       }
     }
+
 
     function renderAvatarElement(name, sizeClass = 'w-9 h-9 text-xs') {
       const avatarData = playerAvatars[name];
@@ -2299,6 +2867,7 @@
         </div>
       `;
     }
+
 
     function openCropper(imageSource, targetPlayer) {
       cropTargetPlayer = targetPlayer;
@@ -2320,15 +2889,18 @@
       img.src = imageSource;
     }
 
+
     window.closeCropperModal = function() {
       document.getElementById('cropModal').classList.add('hidden');
       activeCropImage = null;
     };
 
+
     window.rotateCropImage = function() {
       cropRotation = (cropRotation + 90) % 360;
       drawCropCanvas();
     };
+
 
     window.resetCropTransform = function() {
       cropScale = 1.0;
@@ -2340,11 +2912,13 @@
       drawCropCanvas();
     };
 
+
     function drawCropCanvas() {
       if (!activeCropImage) return;
       const canvas = document.getElementById('cropCanvas');
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, CROP_CANVAS_SIZE, CROP_CANVAS_SIZE);
+
 
       ctx.save();
       ctx.translate(CROP_CENTER + cropOffsetX, CROP_CENTER + cropOffsetY);
@@ -2354,6 +2928,7 @@
       ctx.drawImage(activeCropImage, -activeCropImage.width / 2, -activeCropImage.height / 2);
       ctx.restore();
 
+
       ctx.save();
       ctx.fillStyle = 'rgba(7, 10, 18, 0.85)';
       ctx.beginPath();
@@ -2361,11 +2936,13 @@
       ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2, true);
       ctx.fill('evenodd');
 
+
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2);
       ctx.stroke();
+
 
       ctx.beginPath();
       ctx.arc(CROP_CENTER, CROP_CENTER, CROP_RADIUS, 0, Math.PI * 2);
@@ -2383,7 +2960,9 @@
       ctx.restore();
     }
 
+
     const cropCanvas = document.getElementById('cropCanvas');
+
 
     cropCanvas.addEventListener('mousedown', (e) => {
       isDragging = true;
@@ -2393,6 +2972,7 @@
       dragStartOffsetY = cropOffsetY;
     });
 
+
     window.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
       cropOffsetX = dragStartOffsetX + (e.clientX - dragStartX);
@@ -2400,7 +2980,9 @@
       drawCropCanvas();
     });
 
+
     window.addEventListener('mouseup', () => { isDragging = false; });
+
 
     cropCanvas.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
@@ -2412,6 +2994,7 @@
       }
     }, { passive: false });
 
+
     cropCanvas.addEventListener('touchmove', (e) => {
       if (!isDragging || e.touches.length !== 1) return;
       e.preventDefault();
@@ -2420,7 +3003,9 @@
       drawCropCanvas();
     }, { passive: false });
 
+
     cropCanvas.addEventListener('touchend', () => { isDragging = false; });
+
 
     cropCanvas.addEventListener('wheel', (e) => {
       e.preventDefault();
@@ -2432,19 +3017,23 @@
       drawCropCanvas();
     }, { passive: false });
 
+
     document.getElementById('zoomSlider').addEventListener('input', (e) => {
       cropScale = parseFloat(e.target.value);
       document.getElementById('zoomDisplay').textContent = `${cropScale.toFixed(2)}x`;
       drawCropCanvas();
     });
 
+
     window.confirmCropAndSave = async function() {
       if (!activeCropImage) return;
+
 
       const offCanvas = document.createElement('canvas');
       offCanvas.width = CROP_CANVAS_SIZE;
       offCanvas.height = CROP_CANVAS_SIZE;
       const offCtx = offCanvas.getContext('2d');
+
 
       offCtx.translate(CROP_CENTER + cropOffsetX, CROP_CENTER + cropOffsetY);
       offCtx.rotate((cropRotation * Math.PI) / 180);
@@ -2452,32 +3041,41 @@
       offCtx.scale(totalScale, totalScale);
       offCtx.drawImage(activeCropImage, -activeCropImage.width / 2, -activeCropImage.height / 2);
 
+
       const outCanvas = document.createElement('canvas');
       const outSize = 160;
       outCanvas.width = outSize;
       outCanvas.height = outSize;
       const outCtx = outCanvas.getContext('2d');
 
+
       const sourceLeft = CROP_CENTER - CROP_RADIUS;
       const sourceTop = CROP_CENTER - CROP_RADIUS;
 
+
       outCtx.drawImage(offCanvas, sourceLeft, sourceTop, CROP_DIAMETER, CROP_DIAMETER, 0, 0, outSize, outSize);
+
 
       const targetPlayer = cropTargetPlayer;
       const newAvatarData = outCanvas.toDataURL('image/jpeg', 0.85);
 
+
       closeCropperModal();
+
 
       playerAvatars[targetPlayer] = newAvatarData;
       localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
       renderAll();
 
+
       await commitAvatarsToGitHub(playerAvatars, `feat: update avatar for ${targetPlayer}`);
     };
+
 
     window.triggerAvatarUpload = function() {
       document.getElementById('hiddenAvatarInput').click();
     };
+
 
     document.getElementById('hiddenAvatarInput').addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
@@ -2491,6 +3089,7 @@
       }
     });
 
+
     window.clearAvatar = async function(name) {
       if (confirm(`確認自雲端清除 ${name} 的自訂頭像？`)) {
         delete playerAvatars[name];
@@ -2499,6 +3098,7 @@
         await commitAvatarsToGitHub(playerAvatars, `delete: remove avatar for ${name}`);
       }
     };
+
 
     window.setDateRange = function(range) {
       currentLogsPage = 1;
@@ -2510,6 +3110,7 @@
       renderAll();
     };
 
+
     function getFilteredLogs() {
       const s = document.getElementById('filterStartDate').value;
       const e = document.getElementById('filterEndDate').value;
@@ -2519,6 +3120,7 @@
         return true;
       });
     }
+
 
     function getAggregatedStats(filteredLogs) {
       const grouped = {};
@@ -2534,6 +3136,7 @@
         const hitSum = h1 + h2 + h3 + hr;
         const rawH = Number(l.h) || 0;
 
+
         if (hitSum > 0) {
           grouped[l.name].h1 += h1;
           grouped[l.name].h2 += h2;
@@ -2545,12 +3148,15 @@
           grouped[l.name].h += rawH;
         }
 
+
         grouped[l.name].bb += Number(l.bb) || 0;
         grouped[l.name].sf += Number(l.sf) || 0;
         grouped[l.name].k += Number(l.k) || 0;
 
+
         grouped[l.name].ab = Math.max(0, grouped[l.name].pa - grouped[l.name].bb - grouped[l.name].sf);
       });
+
 
       const list = Object.values(grouped);
       const teamAb = list.reduce((a, b) => a + b.ab, 0);
@@ -2562,10 +3168,12 @@
       const teamBb = list.reduce((a, b) => a + b.bb, 0);
       const teamSf = list.reduce((a, b) => a + b.sf, 0);
 
+
       const teamAvg = teamAb > 0 ? teamH / teamAb : 0;
       const teamObp = (teamAb + teamBb + teamSf) > 0 ? (teamH + teamBb) / (teamAb + teamBb + teamSf) : 0;
       const teamSlg = teamAb > 0 ? (teamH1 + 2*teamH2 + 3*teamH3 + 4*teamHr) / teamAb : 0;
       const teamOps = teamObp + teamSlg;
+
 
       const teamPa = list.reduce((a, b) => a + b.pa, 0);
       const teamBbVal = list.reduce((a, b) => a + b.bb, 0);
@@ -2575,6 +3183,7 @@
       const teamHrVal = list.reduce((a, b) => a + b.hr, 0);
       const teamWobaNum = 0.69 * teamBbVal + 0.89 * teamH1Val + 1.27 * teamH2Val + 1.62 * teamH3Val + 2.10 * teamHrVal;
       const teamWoba = teamPa > 0 ? teamWobaNum / teamPa : 0;
+
 
       list.forEach(p => {
         p.avg = p.ab > 0 ? p.h / p.ab : 0;
@@ -2588,6 +3197,7 @@
         p.wrc_plus = teamWoba > 0 ? (p.woba / teamWoba) * 100 : 100;
         p.sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
 
+
         const bipDenom = p.ab - p.k - p.hr + p.sf;
         p.babip = bipDenom > 0 ? (p.h - p.hr) / bipDenom : 0;
         p.rc = (p.ab + p.bb) > 0 ? ((p.h + p.bb) * p.tb) / (p.ab + p.bb) : 0;
@@ -2598,6 +3208,7 @@
         p.bb_k_ratio = p.k > 0 ? p.bb / p.k : p.bb;
       });
 
+
       return {
         players: list,
         teamAvg, teamObp, teamSlg, teamOps,
@@ -2607,11 +3218,13 @@
       };
     }
 
+
     function renderSummaryCards(agg) {
       const pList = agg.players;
       const topAvg = [...pList].sort((a,b) => b.avg - a.avg)[0];
       const topHr = [...pList].sort((a,b) => b.hr - a.hr)[0];
       const topWrc = [...pList].sort((a,b) => b.wrc_plus - a.wrc_plus)[0];
+
 
       const cards = [
         { label: '團隊打擊率', val: agg.teamAvg.toFixed(3), sub: `安打: ${agg.totalH}`, player: null },
@@ -2621,6 +3234,7 @@
         { label: '區間全壘打王', val: topHr ? `${topHr.hr} 支` : '0 支', sub: topHr ? `#${NAME_TO_JERSEY[topHr.name] ?? ''} ${topHr.name}` : '-', player: topHr ? topHr.name : null },
         { label: '進攻破壞王', val: topWrc ? topWrc.wrc_plus.toFixed(1) : '100', sub: topWrc ? `#${NAME_TO_JERSEY[topWrc.name] ?? ''} ${topWrc.name}` : '-', player: topWrc ? topWrc.name : null }
       ];
+
 
       document.getElementById('teamSummaryCards').innerHTML = cards.map(c => `
         <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-2 sm:gap-3 shadow-lg hover:border-slate-700 transition">
@@ -2634,9 +3248,11 @@
       `).join('');
     }
 
+
     function renderLeaderboard(agg) {
       const metric = document.getElementById('leaderboardMetricSelect').value;
       const minPa = Number(document.getElementById('leaderboardMinPa').value) || 0;
+
 
       const info = leaderboardGlossary[metric] || { title: metric, formula: '', desc: '' };
       document.getElementById('leaderboardMetricCard').innerHTML = `
@@ -2647,16 +3263,20 @@
         <p class="text-[10px] sm:text-[11px] text-slate-300 leading-relaxed">${info.desc}</p>
       `;
 
+
       let filtered = agg.players.filter(p => p.pa >= minPa);
+
 
       const isAscending = metric.endsWith('_asc');
       const realKey = isAscending ? metric.replace('_asc', '') : metric;
+
 
       filtered.sort((a, b) => {
         const valA = a[realKey] ?? 0;
         const valB = b[realKey] ?? 0;
         return isAscending ? valA - valB : valB - valA;
       });
+
 
       const formatVal = (val, key) => {
         if (['avg', 'obp', 'slg', 'iso', 'babip', 'woba', 'seca'].includes(key)) return Number(val).toFixed(3);
@@ -2667,6 +3287,7 @@
         return val;
       };
 
+
       const podium = document.getElementById('leaderboardPodium');
       const top3 = filtered.slice(0, 3);
       const podiumColors = [
@@ -2674,6 +3295,7 @@
         { border: 'border-slate-300/60', bg: 'bg-gradient-to-br from-slate-800/40 to-slate-900', text: 'text-slate-200', title: '亞軍 / 2nd', ring: 'ring-4 ring-slate-300 shadow-xl shadow-slate-400/20' },
         { border: 'border-amber-700/60', bg: 'bg-gradient-to-br from-amber-900/25 to-slate-900', text: 'text-amber-600', title: '季軍 / 3rd', ring: 'ring-4 ring-amber-700 shadow-xl shadow-amber-800/20' }
       ];
+
 
       podium.innerHTML = top3.map((p, idx) => `
         <div class="border ${podiumColors[idx].border} ${podiumColors[idx].bg} rounded-2xl p-3.5 sm:p-4 flex items-center space-x-3.5 shadow-xl">
@@ -2694,6 +3316,7 @@
         </div>
       `).join('');
 
+
       const tbody = document.getElementById('leaderboardTableBody');
       tbody.innerHTML = '';
       filtered.forEach((p, idx) => {
@@ -2704,9 +3327,11 @@
           switchMainTab('tabProfile');
         };
 
+
         const rankBadge = idx < 3
           ? `<span class="px-2.5 py-0.5 rounded-full font-black text-xs ${idx === 0 ? 'bg-amber-500/20 text-amber-300' : idx === 1 ? 'bg-slate-300/20 text-slate-200' : 'bg-amber-700/20 text-amber-500'}">${idx + 1}</span>`
           : `<span class="text-slate-500 font-mono">${idx + 1}</span>`;
+
 
         tr.innerHTML = `
           <td class="p-3 text-center tabular-nums">${rankBadge}</td>
@@ -2729,10 +3354,12 @@
       });
     }
 
+
     function populateCompareSelect(players) {
       const selA = document.getElementById('comparePlayerA');
       const selB = document.getElementById('comparePlayerB');
       if (!selA || !selB || players.length === 0) return;
+
 
       if (!comparePlayerAName || !players.find(p => p.name === comparePlayerAName)) {
         comparePlayerAName = players[0].name;
@@ -2740,6 +3367,7 @@
       if (!comparePlayerBName || !players.find(p => p.name === comparePlayerBName)) {
         comparePlayerBName = players.length > 1 ? players[1].name : players[0].name;
       }
+
 
       selA.innerHTML = players.map(d => {
         const j = NAME_TO_JERSEY[d.name] !== undefined ? `#${NAME_TO_JERSEY[d.name]} ` : '';
@@ -2751,14 +3379,18 @@
       }).join('');
     }
 
+
     function renderComparison(agg) {
       const pList = agg.players;
       if (pList.length === 0) return;
 
+
       populateCompareSelect(pList);
+
 
       const pA = pList.find(p => p.name === comparePlayerAName) || pList[0];
       const pB = pList.find(p => p.name === comparePlayerBName) || (pList.length > 1 ? pList[1] : pList[0]);
+
 
       document.getElementById('compareHeadA').innerHTML = `
         <div class="flex items-center justify-center gap-2">
@@ -2773,8 +3405,10 @@
         </div>
       `;
 
+
       const tagsA = (playerTags[pA.name] || []).map(t => `<span class="bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded-full font-medium">#${t}</span>`).join(' ');
       const tagsB = (playerTags[pB.name] || []).map(t => `<span class="bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded-full font-medium">#${t}</span>`).join(' ');
+
 
       document.getElementById('compareCardA').innerHTML = `
         <div class="flex items-center space-x-3 sm:space-x-4">
@@ -2793,6 +3427,7 @@
         </div>
       `;
 
+
       document.getElementById('compareCardB').innerHTML = `
         <div class="flex items-center space-x-3 sm:space-x-4">
           <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${pB.name}'; switchMainTab('tabProfile');" title="點擊檢視 ${pB.name} 檔案">
@@ -2809,6 +3444,7 @@
           </div>
         </div>
       `;
+
 
       const metricsMeta = [
         { key: 'pa', label: '打席數 (PA)', fmt: v => v },
@@ -2832,17 +3468,21 @@
         { key: 'bb_k_ratio', label: '保送三振比 (BB/K)', fmt: v => v.toFixed(2) }
       ];
 
+
       const tbody = document.getElementById('compareTableBody');
       tbody.innerHTML = '';
+
 
       metricsMeta.forEach(m => {
         const valA = Number(pA[m.key]) || 0;
         const valB = Number(pB[m.key]) || 0;
         const lower = m.lowerBetter || false;
 
+
         let leadHtml = '';
         let classA = 'font-mono text-slate-300 tabular-nums';
         let classB = 'font-mono text-slate-300 tabular-nums';
+
 
         if (valA === valB) {
           leadHtml = '<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">平手</span>';
@@ -2853,6 +3493,7 @@
           leadHtml = `<span class="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800/60 font-mono font-bold">${pB.name} 領先</span>`;
           classB = 'font-mono text-amber-400 font-bold tabular-nums';
         }
+
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/50 transition';
@@ -2865,11 +3506,13 @@
         tbody.appendChild(tr);
       });
 
+
       const prContactA = getPercentile(pA.avg, 'avg', pList);
       const prPowerA = getPercentile(pA.iso, 'iso', pList);
       const prDisciplineA = getPercentile(pA.sdi, 'sdi', pList);
       const prControlA = getPercentile(pA.k_pct, 'k_pct', pList, true);
       const prWrcA = getPercentile(pA.wrc_plus, 'wrc_plus', pList);
+
 
       const prContactB = getPercentile(pB.avg, 'avg', pList);
       const prPowerB = getPercentile(pB.iso, 'iso', pList);
@@ -2877,10 +3520,12 @@
       const prControlB = getPercentile(pB.k_pct, 'k_pct', pList, true);
       const prWrcB = getPercentile(pB.wrc_plus, 'wrc_plus', pList);
 
+
       const radarCanvas = document.getElementById('compareRadarChart');
       if (radarCanvas) {
         const radarCtx = radarCanvas.getContext('2d');
         if (compareRadarChartInst) compareRadarChartInst.destroy();
+
 
         compareRadarChartInst = new Chart(radarCtx, {
           type: 'radar',
@@ -2928,6 +3573,7 @@
       }
     }
 
+
     function getPercentile(val, key, pList, invert = false) {
       const vals = pList.map(d => {
         if (key === 'bb_pct') return d.pa > 0 ? d.bb / d.pa : 0;
@@ -2943,6 +3589,7 @@
       return Math.round(Math.max(5, Math.min(99, pr)));
     }
 
+
     function renderPlayerProfile(agg) {
       const pList = agg.players;
       let p = pList.find(d => d.name === selectedPlayerName);
@@ -2955,6 +3602,7 @@
         return;
       }
 
+
       const p_sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
       const k_pct = p.pa > 0 ? p.k / p.pa : 0;
       const prContact = getPercentile(p.avg, 'avg', pList);
@@ -2963,7 +3611,9 @@
       const prControl = getPercentile(k_pct, 'k_pct', pList, true);
       const prWrc = getPercentile(p.wrc_plus, 'wrc_plus', pList);
 
+
       const currentTags = playerTags[p.name] || [];
+
 
       document.getElementById('playerProfileCard').innerHTML = `
         <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5 sm:gap-6 border-b border-slate-800/80 pb-5 sm:pb-6">
@@ -2984,6 +3634,7 @@
               ${playerAvatars[p.name] ? `<button onclick="clearAvatar('${p.name}')" class="text-xs text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
             </div>
 
+
             <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 mt-2">
               ${currentTags.map((t, idx) => `
                 <span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[11px] px-2.5 py-0.5 rounded-full font-medium shadow-sm group">
@@ -2998,6 +3649,7 @@
                 </button>
               ` : ''}
             </div>
+
 
             <p class="text-xs text-slate-400 mt-2 font-mono tabular-nums">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 高犧: ${p.sf} | 三振: ${p.k}</p>
             <div class="mt-3.5">
@@ -3027,6 +3679,7 @@
           </div>
         </div>
       `;
+
 
       const radarCtx = document.getElementById('radarChart').getContext('2d');
       if (radarChartInst) radarChartInst.destroy();
@@ -3058,6 +3711,7 @@
         }
       });
 
+
       const donutCtx = document.getElementById('donutChart').getContext('2d');
       if (donutChartInst) donutChartInst.destroy();
       donutChartInst = new Chart(donutCtx, {
@@ -3079,17 +3733,21 @@
       });
     }
 
+
     function renderDiagnostics(agg) {
       const container = document.getElementById('diagnosticsCardsContainer');
       const mode = document.getElementById('diagFilterMode').value;
       if (!container) return;
 
+
       container.innerHTML = '';
       const pList = agg.players;
+
 
       const targetList = mode === 'single'
         ? pList.filter(p => p.name === selectedPlayerName)
         : pList;
+
 
       targetList.forEach(p => {
         const issues = [];
@@ -3097,6 +3755,7 @@
         const tips = [];
         let profileTag = "攻守均衡打者";
         let tagColor = "border-slate-700 bg-slate-800 text-slate-300";
+
 
         if (p.k_pct >= 0.12 && p.pa >= 5) {
           issues.push({
@@ -3110,6 +3769,7 @@
           strengths.push(`零三振掌控機器 (K% 0.0%)：球眼辨識與抗揮空穩定度屬全隊頂尖。`);
         }
 
+
         if (p.contact_pct < 0.85 && p.pa >= 6) {
           issues.push({
             title: `擊球掌握度偏低 (Contact% ${(p.contact_pct * 100).toFixed(1)}%)`,
@@ -3117,6 +3777,7 @@
           });
           tips.push(`【節奏控制】：練習將球放深擊球，確保前足著地時重心平穩不前傾。` );
         }
+
 
         if (p.bb_pct < 0.05 && p.pa >= 12) {
           issues.push({
@@ -3126,12 +3787,14 @@
           tips.push(`【打擊策略】：一好球前僅鎖定個人熱區，未達甜區堅決放過逼出好球。`);
         }
 
+
         if (p.sdi < 0 && p.pa >= 8) {
           issues.push({
             title: `慢壘淨紀律指標為負 (SDI ${(p.sdi).toFixed(3)})`,
             desc: `三振扣分大於保送加權，好球帶控制對團隊邊際貢獻呈負值。`
           });
         }
+
 
         if (p.iso <= 0.120 && p.avg >= 0.300 && p.pa >= 8) {
           issues.push({
@@ -3149,6 +3812,7 @@
           tagColor = "border-sky-700/60 bg-sky-950/40 text-sky-300";
         }
 
+
         if (p.babip < 0.350 && p.avg < 0.400 && p.pa >= 8) {
           issues.push({
             title: `擊球穿透力偏弱 (BABIP ${p.babip.toFixed(3)})`,
@@ -3157,9 +3821,11 @@
           tips.push(`【水平砍擊】：修正倒棒或向上撈球動作，由上往下水平砍擊球心上半部。`);
         }
 
+
         if (mode === 'urgent' && !issues.some(i => i.title.includes('三振') || i.title.includes('紀律') || i.title.includes('揮空'))) return;
         if (mode === 'power' && !issues.some(i => i.title.includes('長打'))) return;
         if (mode === 'contact' && !issues.some(i => i.title.includes('掌握度'))) return;
+
 
         if (issues.length === 0) {
           issues.push({
@@ -3169,8 +3835,10 @@
           tips.push(`【戰術強化】：維持當前甜蜜點，得點圈有人時多加練習反方向推打。`);
         }
 
+
         const card = document.createElement('div');
         card.className = 'bg-slate-950/90 p-3.5 sm:p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-between space-y-3.5 shadow-lg hover:border-slate-700 transition duration-150';
+
 
         card.innerHTML = `
           <div>
@@ -3196,6 +3864,7 @@
               </div>
             </div>
 
+
             <div class="mt-3 space-y-2">
               <span class="text-[10px] sm:text-[11px] font-bold text-rose-400 flex items-center gap-1">
                 <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -3211,6 +3880,7 @@
               </ul>
             </div>
 
+
             ${tips.length > 0 ? `
               <div class="mt-3 pt-2.5 border-t border-slate-800/80">
                 <span class="text-[10px] sm:text-[11px] font-bold text-emerald-400 flex items-center gap-1 mb-1.5">
@@ -3225,14 +3895,17 @@
           </div>
         `;
 
+
         container.appendChild(card);
       });
     }
+
 
     function renderQuadrantChart(agg) {
       const pList = agg.players;
       const ctx = document.getElementById('quadrantChart').getContext('2d');
       if (quadrantChartInst) quadrantChartInst.destroy();
+
 
       quadrantChartInst = new Chart(ctx, {
         type: 'scatter',
@@ -3270,10 +3943,12 @@
             const xPixel = scales.x.getPixelForValue(agg.teamObp);
             const yPixel = scales.y.getPixelForValue(agg.teamSlg);
 
+
             ctx.save();
             ctx.lineWidth = 2;
             ctx.strokeStyle = '#34d399';
             ctx.setLineDash([4, 4]);
+
 
             if (xPixel >= chartArea.left && xPixel <= chartArea.right) {
               ctx.beginPath();
@@ -3281,11 +3956,13 @@
               ctx.lineTo(xPixel, chartArea.bottom);
               ctx.stroke();
 
+
               ctx.fillStyle = '#34d399';
               ctx.font = 'bold 10px monospace';
               ctx.textAlign = 'center';
               ctx.fillText(`OBP: ${agg.teamObp.toFixed(3)}`, xPixel, chartArea.top + 12);
             }
+
 
             if (yPixel >= chartArea.top && yPixel <= chartArea.bottom) {
               ctx.beginPath();
@@ -3293,17 +3970,20 @@
               ctx.lineTo(chartArea.right, yPixel);
               ctx.stroke();
 
+
               ctx.fillStyle = '#34d399';
               ctx.font = 'bold 10px monospace';
               ctx.textAlign = 'left';
               ctx.fillText(`SLG: ${agg.teamSlg.toFixed(3)}`, chartArea.left + 4, yPixel - 4);
             }
 
+
             ctx.restore();
           }
         }]
       });
     }
+
 
     function renderCustomChart(agg) {
       const pList = agg.players;
@@ -3313,11 +3993,14 @@
       const zKey = document.getElementById('customZVar').value;
       const ctx = document.getElementById('customChart').getContext('2d');
 
+
       if (customChartInst) customChartInst.destroy();
+
 
       const xVals = pList.map(d => Number(d[xKey]) || 0);
       const yVals = pList.map(d => Number(d[yKey]) || 0);
       const n = xVals.length;
+
 
       let rText = 'r: --';
       if (n > 1) {
@@ -3339,10 +4022,12 @@
       }
       document.getElementById('correlationIndicator').textContent = rText;
 
+
       if (type === 'bubble') {
         const zVals = pList.map(d => Number(d[zKey]) || 1);
         const minZ = Math.min(...zVals);
         const maxZ = Math.max(...zVals);
+
 
         customChartInst = new Chart(ctx, {
           type: 'bubble',
@@ -3479,6 +4164,7 @@
       }
     }
 
+
     function renderSummaryTable(agg) {
       const tbody = document.getElementById('summaryTableBody');
       tbody.innerHTML = '';
@@ -3489,6 +4175,7 @@
           selectedPlayerName = p.name;
           switchMainTab('tabProfile');
         };
+
 
         tr.innerHTML = `
           <td class="p-3 font-bold text-white flex items-center space-x-3">
@@ -3521,28 +4208,34 @@
       });
     }
 
+
     window.changeLogsPage = function(targetPage) {
       currentLogsPage = targetPage;
       renderLogsTable(getFilteredLogs());
     };
+
 
     function renderLogsTable(filteredLogs) {
       const tbody = document.getElementById('logsTableBody');
       const paginationEl = document.getElementById('logsPagination');
       tbody.innerHTML = '';
 
+
       const sortedLogs = [...filteredLogs].slice().reverse().sort((a, b) => {
         if (b.date !== a.date) return b.date.localeCompare(a.date);
         return 0;
       });
+
 
       const totalLogs = sortedLogs.length;
       const totalPages = Math.max(1, Math.ceil(totalLogs / LOGS_PER_PAGE));
       if (currentLogsPage > totalPages) currentLogsPage = totalPages;
       if (currentLogsPage < 1) currentLogsPage = 1;
 
+
       const startIndex = (currentLogsPage - 1) * LOGS_PER_PAGE;
       const pageLogs = sortedLogs.slice(startIndex, startIndex + LOGS_PER_PAGE);
+
 
       if (pageLogs.length === 0) {
         tbody.innerHTML = `<tr><td colspan="13" class="p-6 text-center text-slate-500 font-mono">此統計區間內尚無賽事紀錄</td></tr>`;
@@ -3550,12 +4243,14 @@
         return;
       }
 
+
       pageLogs.forEach(l => {
         const avg = l.ab > 0 ? (l.h / l.ab).toFixed(3) : '.000';
         const tb = (Number(l.h1)||0) + 2*(Number(l.h2)||0) + 3*(Number(l.h3)||0) + 4*(Number(l.hr)||0);
         const slg = l.ab > 0 ? (tb / l.ab) : 0;
         const obp = (l.ab + l.bb + (l.sf||0)) > 0 ? ((l.h + l.bb) / (l.ab + l.bb + (l.sf||0))) : 0;
         const ops = (obp + slg).toFixed(3);
+
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/60 transition';
@@ -3582,9 +4277,11 @@
         tbody.appendChild(tr);
       });
 
+
       if (paginationEl) {
         const startNum = startIndex + 1;
         const endNum = Math.min(startIndex + LOGS_PER_PAGE, totalLogs);
+
 
         paginationEl.innerHTML = `
           <div class="text-slate-400 font-mono">
@@ -3605,11 +4302,13 @@
       }
     }
 
+
     window.deleteSingleLog = async (id) => {
       if (!confirm('確認自 GitHub 雲端資料庫永久刪除此筆日誌？')) return;
       const updated = allLogs.filter(l => l.id !== id);
       await commitLogsToGitHub(updated, `delete: remove match log ${id}`);
     };
+
 
     document.getElementById('toggleAddLogBtn').addEventListener('click', () => {
       document.getElementById('addLogForm').classList.toggle('hidden');
@@ -3617,6 +4316,7 @@
       const today = new Date().toISOString().slice(0, 10);
       if (!document.getElementById('new_date').value) document.getElementById('new_date').value = today;
     });
+
 
     document.getElementById('cancelAddLogBtn').addEventListener('click', () => {
       document.getElementById('addLogForm').classList.add('hidden');
@@ -3628,6 +4328,7 @@
       if (previewHEl) previewHEl.value = '0';
     });
 
+
     document.getElementById('toggleAddPlayerBtn').addEventListener('click', () => {
       document.getElementById('addPlayerForm').classList.toggle('hidden');
       document.getElementById('addLogForm').classList.add('hidden');
@@ -3635,9 +4336,11 @@
       if (!document.getElementById('reg_date').value) document.getElementById('reg_date').value = today;
     });
 
+
     document.getElementById('cancelAddPlayerBtn').addEventListener('click', () => {
       document.getElementById('addPlayerForm').classList.add('hidden');
     });
+
 
     document.getElementById('new_jersey').addEventListener('input', (e) => {
       const num = Number(e.target.value.trim());
@@ -3655,12 +4358,14 @@
       }
     });
 
+
     function updateCalculatedPreviews() {
       const pa = Number(document.getElementById('new_pa').value) || 0;
       const bb = Number(document.getElementById('new_bb').value) || 0;
       const sf = Number(document.getElementById('new_sf').value) || 0;
       const previewAbEl = document.getElementById('preview_ab');
       if (previewAbEl) previewAbEl.value = Math.max(0, pa - bb - sf);
+
 
       const h1 = Number(document.getElementById('new_h1').value) || 0;
       const h2 = Number(document.getElementById('new_h2').value) || 0;
@@ -3670,6 +4375,7 @@
       if (previewHEl) previewHEl.value = h1 + h2 + h3 + hr;
     }
 
+
     ['new_pa', 'new_bb', 'new_sf', 'new_h1', 'new_h2', 'new_h3', 'new_hr'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
@@ -3677,6 +4383,7 @@
         el.addEventListener('change', updateCalculatedPreviews);
       }
     });
+
 
     document.getElementById('addLogForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -3686,12 +4393,14 @@
         return;
       }
 
+
       const jerseyNum = Number(document.getElementById('new_jersey').value.trim());
       const playerName = JERSEY_TO_NAME[jerseyNum];
       if (!playerName) {
         alert(`查無背號 #${jerseyNum} 之球員！\n請先點擊「+ 新增球隊球員」建立檔案。`);
         return;
       }
+
 
       const paVal = document.getElementById('new_pa').value;
       if (!paVal) {
@@ -3704,6 +4413,7 @@
       const sf = Number(document.getElementById('new_sf').value) || 0;
       const ab = Math.max(0, pa - bb - sf);
 
+
       const h1 = Number(document.getElementById('new_h1').value) || 0;
       const h2 = Number(document.getElementById('new_h2').value) || 0;
       const h3 = Number(document.getElementById('new_h3').value) || 0;
@@ -3711,15 +4421,18 @@
       const h = h1 + h2 + h3 + hr;
       const k = Number(document.getElementById('new_k').value) || 0;
 
+
       const newEntry = {
         id: 'log_' + Date.now(),
         date, tag, name: playerName, jersey: jerseyNum,
         pa, ab, h, h1, h2, h3, hr, bb, sf, k
       };
 
+
       const updated = [...allLogs, newEntry];
       selectedPlayerName = newEntry.name;
       currentLogsPage = 1;
+
 
       const success = await commitLogsToGitHub(updated, `feat: add match record for #${jerseyNum} ${newEntry.name} on ${newEntry.date}`);
       if (success) {
@@ -3734,12 +4447,14 @@
       }
     });
 
+
     document.getElementById('addPlayerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const num = Number(document.getElementById('reg_jersey').value.trim());
       const name = document.getElementById('reg_name').value.trim();
       const date = document.getElementById('reg_date').value;
       const tag = document.getElementById('reg_tag').value.trim() || '選手建檔';
+
 
       if (!name) {
         alert('請輸入球員姓名！');
@@ -3758,8 +4473,10 @@
         return;
       }
 
+
       JERSEY_TO_NAME[num] = name;
       NAME_TO_JERSEY[name] = num;
+
 
       const regLog = {
         id: 'reg_' + Date.now(),
@@ -3767,8 +4484,10 @@
         pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0
       };
 
+
       const updated = [...allLogs, regLog];
       selectedPlayerName = name;
+
 
       const success = await commitLogsToGitHub(updated, `feat: register player #${num} ${name}`);
       if (success) {
@@ -3776,6 +4495,7 @@
         document.getElementById('addPlayerForm').classList.add('hidden');
       }
     });
+
 
     function populatePlayerSelect(players) {
       const sel = document.getElementById('playerSelect');
@@ -3788,6 +4508,7 @@
         badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-7 h-7 sm:w-8 sm:h-8 text-xs ring-2 ring-sky-400/80 shadow');
       }
     }
+
 
     function renderAll() {
       const filteredLogs = getFilteredLogs();
@@ -3804,6 +4525,7 @@
       renderDiagnostics(agg);
       renderLineupAnalysis(agg);
     }
+
 
     document.getElementById('filterStartDate').addEventListener('change', () => {
       currentLogsPage = 1;
@@ -3824,12 +4546,14 @@
       renderDiagnostics(agg);
     });
 
+
     document.getElementById('leaderboardMetricSelect').addEventListener('change', () => {
       renderLeaderboard(getAggregatedStats(getFilteredLogs()));
     });
     document.getElementById('leaderboardMinPa').addEventListener('input', () => {
       renderLeaderboard(getAggregatedStats(getFilteredLogs()));
     });
+
 
     document.getElementById('comparePlayerA').addEventListener('change', (e) => {
       comparePlayerAName = e.target.value;
@@ -3840,11 +4564,13 @@
       renderComparison(getAggregatedStats(getFilteredLogs()));
     });
 
+
     ['customChartType', 'customXVar', 'customYVar', 'customZVar'].forEach(id => {
       document.getElementById(id).addEventListener('change', () => {
         renderCustomChart(getAggregatedStats(getFilteredLogs()));
       });
     });
+
 
     document.getElementById('tabSummaryBtn').addEventListener('click', () => {
       document.getElementById('viewSummary').classList.remove('hidden');
@@ -3853,12 +4579,14 @@
       document.getElementById('tabLogsBtn').className = 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 sm:px-3.5 py-1.5 rounded-lg font-medium';
     });
 
+
     document.getElementById('tabLogsBtn').addEventListener('click', () => {
       document.getElementById('viewSummary').classList.add('hidden');
       document.getElementById('viewLogs').classList.remove('hidden');
       document.getElementById('tabLogsBtn').className = 'bg-sky-600 text-white text-xs px-3 sm:px-3.5 py-1.5 rounded-lg font-bold shadow';
       document.getElementById('tabSummaryBtn').className = 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 sm:px-3.5 py-1.5 rounded-lg font-medium';
     });
+
 
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
       const agg = getAggregatedStats(getFilteredLogs());
@@ -3875,8 +4603,8 @@
       a.click();
     });
 
+
     loadLogsFromGitHub();
   </script>
 </body>
 </html>
-
