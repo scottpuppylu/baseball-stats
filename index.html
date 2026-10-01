@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0155</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0215</span>
         </div>
 
 
@@ -844,8 +844,8 @@
                 <div>
                   <label class="block text-slate-400 mb-1 font-semibold">我方攻守身分</label>
                   <select id="setup_game_role" class="w-full bg-slate-900 border border-slate-700 text-amber-300 rounded-lg px-2.5 py-1.5 font-bold focus:outline-none focus:border-amber-500">
-                    <option value="先攻" selected>先攻 (上半局我方打擊)</option>
-                    <option value="先守">先守 (下半局我方打擊)</option>
+                    <option value="先攻" selected>先攻 (第 1 局上半我方先打)</option>
+                    <option value="後攻">後攻 / 先守 (第 1 局上半我方先守，下半打擊)</option>
                   </select>
                 </div>
               </div>
@@ -3400,6 +3400,8 @@ window.toggleDiagnosticsCollapse = function() {
       }
 
 
+      // 將所有歷史賽事自動整合進總數據庫
+      syncAllGamesToTeamLogs();
       syncJerseyMaps();
       if (allLogs.length > 0 && !selectedPlayerName) {
         selectedPlayerName = allLogs[0].name;
@@ -5319,6 +5321,11 @@ window.toggleDiagnosticsCollapse = function() {
       'RF': { x: 0.78, y: 0.32, px: 310, py: 130, label: '右外野 (RF)' }
     };
 
+        // 判斷該半局是否為我方進攻 (先攻則上半我方打，後攻/先守則下半我方打)
+    function isInningOurBat(ourRole, topBottom) {
+      return (ourRole === '先攻') ? (topBottom === 'top') : (topBottom === 'bottom');
+    }
+
     let currentScorebookSubTab = 'live'; // 'live', 'review', 'spray'
     let currentFieldTargetPos = 'P';
     let currentFieldCoords = { x: 0.50, y: 0.65 };
@@ -5633,10 +5640,11 @@ window.toggleDiagnosticsCollapse = function() {
         tag,
         hasDh: isDhEnabled,
         dhSlot: isDhEnabled ? (customDhSlot || 4) : null,
-        ourRole: role,
+        ourRole: role, // '先攻' 或 '後攻'
         lineup: cleanLineup,
+        pitcherName: '盧宣嘉',
         currentInning: 1,
-        currentHalf: role === '先攻' ? 'top' : 'bottom',
+        currentHalf: 'top', // ★★★ 棒球/壘球鐵律：不論先攻或後攻，比賽絕對皆從第 1 局「上半」開始！
         currentOuts: 0,
         currentBases: { first: null, second: null, third: null },
         currentBatterIdx: 0,
@@ -5645,10 +5653,11 @@ window.toggleDiagnosticsCollapse = function() {
         innings: [
           {
             inningNum: 1,
-            topBottom: role === '先攻' ? 'top' : 'bottom',
+            topBottom: 'top',
             runs: 0,
             hits: 0,
-            plateAppearances: []
+            plateAppearances: [],
+            defensiveEvents: []
           }
         ]
       };
@@ -5672,9 +5681,8 @@ window.toggleDiagnosticsCollapse = function() {
       if (setupCard) setupCard.classList.add('hidden');
       if (activeContainer) activeContainer.classList.remove('hidden');
 
-      // 判定當前半局為我方進攻還是我方防守 (慢壘攻守分離)
-      const isOurBatting = (activeGame.ourRole === '先攻' && activeGame.currentHalf === 'top') ||
-                           (activeGame.ourRole === '先守' && activeGame.currentHalf === 'bottom');
+      // 判定當前半局為我方進攻還是我方防守 (慢壘攻守邏輯：先攻則上半打、下半守；後攻則上半守、下半打)
+      const isOurBatting = isInningOurBat(activeGame.ourRole, activeGame.currentHalf);
 
       // 更新頂部資訊橫幅
       const titleEl = document.getElementById('liveGameTeamsTitle');
@@ -5723,8 +5731,7 @@ window.toggleDiagnosticsCollapse = function() {
 
       if (!activeGame || !tbody) return;
 
-      const isOurBatting = (activeGame.ourRole === '先攻' && activeGame.currentHalf === 'top') ||
-                           (activeGame.ourRole === '先守' && activeGame.currentHalf === 'bottom');
+      const isOurBatting = isInningOurBat(activeGame.ourRole, activeGame.currentHalf);
 
       const curInningObj = activeGame.innings.find(inn => inn.inningNum === activeGame.currentInning && inn.topBottom === activeGame.currentHalf) || activeGame.innings[activeGame.innings.length - 1];
 
@@ -5748,7 +5755,7 @@ window.toggleDiagnosticsCollapse = function() {
       const oppInnRunsMap = {};
 
       activeGame.innings.forEach(inn => {
-        const isInnOurBat = (activeGame.ourRole === '先攻' && inn.topBottom === 'top') || (activeGame.ourRole === '先守' && inn.topBottom === 'bottom');
+        const isInnOurBat = isInningOurBat(activeGame.ourRole, inn.topBottom);
         if (isInnOurBat) {
           ourInnRunsMap[inn.inningNum] = (ourInnRunsMap[inn.inningNum] || 0) + (inn.runs || 0);
           ourInnHitsMap[inn.inningNum] = (ourInnHitsMap[inn.inningNum] || 0) + (inn.hits || 0);
@@ -6390,11 +6397,11 @@ window.toggleDiagnosticsCollapse = function() {
       showToast('✅ 當局場記已成功同步推播至 GitHub！');
     };
 
-    window.finishActiveGameAndSyncLogs = async function() {
+        window.finishActiveGameAndSyncLogs = async function() {
       if (!activeGame) return;
-      if (!confirm(`確認正式結束本場比賽（淡江航太 ${activeGame.finalScore.us} : ${activeGame.finalScore.opp} ${activeGame.opponent}）？
+      if (!confirm(`確認正式完賽結束本場比賽（淡江航太 ${activeGame.finalScore.us} : ${activeGame.finalScore.opp} ${activeGame.opponent}）？
 
-系統將自動統計所有球員的安打、全壘打、打數與保送，直接同步寫入全隊日誌資料庫，無需手動二次登打！`)) return;
+賽事紀錄將儲存至歷史賽事庫，系統將自動同步此場數據至全隊歷史數據與每位球員之個人累積成績！`)) return;
 
       activeGame.status = 'finished';
 
@@ -6407,15 +6414,20 @@ window.toggleDiagnosticsCollapse = function() {
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
 
       await commitGamesToGitHub(allGames, `賽事完賽: vs ${activeGame.opponent} (${activeGame.finalScore.us}-${activeGame.finalScore.opp})`);
-      const addedCount = syncGameToTeamLogs(activeGame);
 
+      // 全自動同步數據至個人成績與全隊歷史數據庫
+      syncAllGamesToTeamLogs();
+      await commitLogsToGitHub(allLogs, `自動同步完賽數據至歷史數據: vs ${activeGame.opponent}`);
+
+      const finishedGameId = activeGame.id;
       activeGame = null;
       localStorage.removeItem('rebas_active_game');
 
       renderLiveScorer();
-      switchScoreSubTab('scoreSubPanelReview');
+      selectedReviewGameId = finishedGameId;
+      switchScorebookSubTab('review');
       renderGameReview();
-      showToast(`🏆 比賽已完結！已將 ${addedCount} 位選手的實戰數據登入全隊日誌與個人三圍！`);
+      showToast(`🏆 比賽已完結！本場攻守數據已完全自動同步計入全隊與個人總成績！`);
     };
 
     window.discardActiveGame = function() {
@@ -6427,8 +6439,76 @@ window.toggleDiagnosticsCollapse = function() {
     };
 
     // ==========================================
-    // 賽事日誌自動整合與個人數據同步管線
+    // 歷史賽事全自動同步引擎 (所有歷史比賽即時無縫併入全隊數據與個人三圍)
     // ==========================================
+    window.syncAllGamesToTeamLogs = syncAllGamesToTeamLogs;
+    function syncAllGamesToTeamLogs() {
+      const targetGames = (typeof window !== 'undefined' && window.allGames && window.allGames.length > 0) ? window.allGames : allGames;
+      const targetLogs = (typeof window !== 'undefined' && window.allLogs) ? window.allLogs : allLogs;
+
+      // 1. 保留所有非場記賽事的純手動/基準日誌 (剔除舊有的場記自動日誌)
+      const nonGameLogs = targetLogs.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+
+      // 2. 遍歷 allGames 中所有的比賽紀錄，自動將每場比賽的個人攻守打擊數據生成為標準日誌
+      const generatedGameLogs = [];
+      (targetGames || []).forEach(game => {
+        const statsMap = {};
+        (game.lineup || []).forEach(name => {
+          statsMap[name] = {
+            name,
+            jersey: NAME_TO_JERSEY[name] ?? 0,
+            pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0
+          };
+        });
+
+        (game.innings || []).forEach(inn => {
+          (inn.plateAppearances || []).forEach(pa => {
+            const p = statsMap[pa.batterName];
+            if (p) {
+              p.pa++;
+              if (!['BB', 'SF'].includes(pa.result)) p.ab++;
+              if (pa.result === '1H') { p.h++; p.h1++; }
+              else if (pa.result === '2H') { p.h++; p.h2++; }
+              else if (pa.result === '3H') { p.h++; p.h3++; }
+              else if (pa.result === 'HR') { p.h++; p.hr++; }
+              else if (pa.result === 'BB') p.bb++;
+              else if (pa.result === 'SF') p.sf++;
+              else if (pa.result === 'K') p.k++;
+            }
+          });
+        });
+
+        Object.values(statsMap).forEach(p => {
+          if (p.pa > 0) {
+            generatedGameLogs.push({
+              id: `log_game_${game.id}_${p.jersey}`,
+              date: game.date,
+              tag: `場記賽事: ${game.tag || '聯賽'} vs ${game.opponent}`,
+              name: p.name,
+              jersey: p.jersey,
+              pa: p.pa,
+              ab: p.ab,
+              h: p.h,
+              h1: p.h1,
+              h2: p.h2,
+              h3: p.h3,
+              hr: p.hr,
+              bb: p.bb,
+              sf: p.sf,
+              k: p.k
+            });
+          }
+        });
+      });
+
+      // 3. 合併並更新全域 allLogs
+      allLogs = [...generatedGameLogs, ...nonGameLogs];
+      if (typeof window !== 'undefined') window.allLogs = allLogs;
+      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+      syncJerseyMaps();
+      return generatedGameLogs.length;
+    }
+
     window.syncGameToTeamLogs = syncGameToTeamLogs;
     function syncGameToTeamLogs(game) {
       if (!game) return 0;
@@ -6570,18 +6650,16 @@ window.toggleDiagnosticsCollapse = function() {
 
       allGames = allGames.filter(g => g.id !== selectedReviewGameId);
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-
-      // 移除對應日誌
-      allLogs = allLogs.filter(l => !l.id.startsWith(`log_game_${game.id}_`) && !l.id.startsWith(`log_auto_${game.id}_`));
-      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
-
       await commitGamesToGitHub(allGames, `刪除賽事: ${game.date} vs ${game.opponent}`);
-      await commitLogsToGitHub(allLogs, `移除賽事日誌: ${game.date} vs ${game.opponent}`);
+
+      // 自動同步更新全隊歷史數據
+      syncAllGamesToTeamLogs();
+      await commitLogsToGitHub(allLogs, `移除賽事並自動更新總數據: vs ${game.opponent}`);
 
       selectedReviewGameId = allGames.length > 0 ? allGames[0].id : null;
       renderAll();
       renderGameReview();
-      showToast('已刪除該場賽事與相關日誌');
+      showToast('已刪除該場賽事，個人成績與總數據已完全自動同步重算！');
     };
 
     window.renderSelectedGameReview = function(gameId) {
@@ -6598,27 +6676,19 @@ window.toggleDiagnosticsCollapse = function() {
 
       if (badge) {
         badge.innerHTML = `
-          <div class="flex items-center space-x-2">
-            <span class="px-2.5 py-0.5 rounded-full font-bold text-xs ${isWin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-1 rounded-full font-bold text-xs ${isWin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}">
               ${isWin ? 'VICTORY 勝利' : 'DEFEAT 落敗'} (${game.finalScore.us} - ${game.finalScore.opp})
             </span>
-            <button onclick="toggleEditCurrentReviewGame()" class="bg-amber-950/50 hover:bg-amber-900/70 border border-amber-600/70 text-amber-300 text-xs px-2.5 py-1 rounded-lg transition font-medium">
+            <span class="text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-800/50 flex items-center gap-1.5 font-bold shadow-sm">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              歷史數據自動同步中
+            </span>
+            <button onclick="toggleEditCurrentReviewGame()" class="bg-amber-950/60 hover:bg-amber-900/80 border border-amber-600/70 text-amber-300 text-xs px-3 py-1 rounded-lg transition font-medium shadow-sm">
               ${isEditingReviewGame ? '✕ 取消編輯' : '✏️ 編輯賽事紀錄'}
             </button>
-            ${!isLogged ? `
-              <button id="btnSyncGameLogs" onclick="syncReviewGameToTeamLogs()" class="bg-sky-600 hover:bg-sky-500 text-white text-xs px-3 py-1 rounded-lg transition font-bold shadow flex items-center gap-1.5">
-                <span>⚡</span><span>登入日誌庫</span>
-              </button>
-            ` : `
-              <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs px-2.5 py-1 rounded-lg font-mono font-bold flex items-center gap-1 shadow-sm">
-                <span>✓</span><span>已登入全隊日誌</span>
-              </span>
-              <button onclick="undoGameFromTeamLogs('${game.id}')" class="text-[11px] text-slate-400 hover:text-rose-400 underline font-mono transition" title="從全隊日誌移除此場比賽數據">
-                撤銷登入
-              </button>
-            `}
-            <button onclick="deleteReviewGame()" class="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-400 text-xs px-2 py-1 rounded-lg transition">
-              🗑️
+            <button onclick="deleteReviewGame()" class="bg-rose-950/50 hover:bg-rose-900/70 border border-rose-800/60 text-rose-300 text-xs px-2.5 py-1 rounded-lg transition shadow-sm">
+              🗑️ 刪除賽事
             </button>
           </div>
         `;
@@ -6637,7 +6707,7 @@ window.toggleDiagnosticsCollapse = function() {
       const oppInnRuns = {};
 
       game.innings.forEach(inn => {
-        const isInnOurBat = (game.ourRole === '先攻' && inn.topBottom === 'top') || (game.ourRole === '先守' && inn.topBottom === 'bottom');
+        const isInnOurBat = isInningOurBat(game.ourRole, inn.topBottom);
         if (isInnOurBat) {
           ourInnRuns[inn.inningNum] = (ourInnRuns[inn.inningNum] || 0) + (inn.runs || 0);
           ourInnHits[inn.inningNum] = (ourInnHits[inn.inningNum] || 0) + (inn.hits || 0);
@@ -6867,7 +6937,7 @@ window.toggleDiagnosticsCollapse = function() {
       const allPlayers = Object.keys(NAME_TO_JERSEY);
 
       const inningsHtml = (game.innings || []).map((inn, innIdx) => {
-        const isOurBat = (game.ourRole === '先攻' && inn.topBottom === 'top') || (game.ourRole === '先守' && inn.topBottom === 'bottom');
+        const isOurBat = isInningOurBat(game.ourRole, inn.topBottom);
         const plays = inn.plateAppearances || [];
 
         const playsRows = plays.map((p, playIdx) => `
@@ -7069,17 +7139,14 @@ window.toggleDiagnosticsCollapse = function() {
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
       await commitGamesToGitHub(allGames, `修改賽事紀錄: ${game.date} vs ${game.opponent}`);
 
-      // 若本場比賽原本已登入日誌庫，則自動更新日誌庫數據
-      let msg = '💾 賽事修改已儲存至歷史賽事庫！';
-      if (isGameAlreadyLogged(game.id)) {
-        const count = syncGameToTeamLogs(game);
-        msg = `💾 賽事修改已儲存！已自動同步更新全隊日誌庫中 ${count} 位球員之成績！`;
-      }
+      // ★★★ 編輯賽事復盤等同更新總數據中的數據，完全全自動同步
+      syncAllGamesToTeamLogs();
+      await commitLogsToGitHub(allLogs, `賽事修改全自動同步總數據: vs ${game.opponent}`);
 
       isEditingReviewGame = false;
       renderAll();
       renderGameReview();
-      showToast(msg);
+      showToast('💾 賽事修改已儲存！總數據與球員個人成績已完全自動同步更新！');
     };
 function renderSprayChartStudio() {
       const select = document.getElementById('sprayPlayerSelect');
