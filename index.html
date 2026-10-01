@@ -42,7 +42,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v2610.1240</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v2610.1300</span>
         </div>
 
         <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
@@ -792,44 +792,12 @@
     </div>
   </div>
 
-  <!-- 全量專有名詞圖書館彈窗 (保留浮動速查備援) -->
-  <div id="glossaryModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
-        <div class="flex items-center space-x-2 sm:space-x-3">
-          <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-1 rounded font-mono font-bold">GLOSSARY</span>
-          <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">淡江航太系壘 | 專有名詞圖書館速查</h3>
-        </div>
-        <button onclick="closeGlossaryModal()" class="text-slate-400 hover:text-white text-2xl font-bold leading-none">&times;</button>
-      </div>
-
-      <div class="p-4 sm:p-6 overflow-y-auto space-y-6 sm:space-y-8 text-xs text-slate-300 leading-relaxed">
-        <div class="bg-sky-950/20 border border-sky-800/40 rounded-xl p-4 space-y-2">
-          <span class="font-bold text-sky-300 block text-sm">慢壘特化核心：好球帶紀律指數 (SDI)</span>
-          <p><span class="font-semibold text-slate-200">公式：</span><span class="font-mono text-amber-300 font-bold">SDI = (BB - 1.5 × K) / PA</span></p>
-          <p class="text-slate-400">慢壘好球帶寬、球速慢，吞 K 懲罰 1.5 倍，打破「不保送就等於不會選球」的盲點。</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
-          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">wRC+</span>(wOBA / Team_wOBA) × 100，基準值 100</div>
-          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">wOBA</span>(0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA</div>
-          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">RC</span>(H + BB) × TB / (AB + BB)</div>
-          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">ISO</span>SLG - AVG = (2H + 2×3H + 3×HR) / AB</div>
-          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">BABIP</span>(H - HR) / (AB - K - HR + SF)</div>
-          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800"><span class="font-bold text-white block">Contact%</span>(AB - K) / AB</div>
-        </div>
-      </div>
-
-      <div class="p-3 sm:p-4 border-t border-slate-800 bg-slate-950 flex justify-end">
-        <button onclick="closeGlossaryModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-1.5 rounded-lg text-xs font-medium">關閉速查</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     const GITHUB_REPO = "scottpuppylu/baseball-stats";
     const GITHUB_BRANCH = "main";
     const DATA_FILE_PATH = "data/logs.json";
     const AVATARS_FILE_PATH = "data/avatars.json";
+    const TAGS_FILE_PATH = "data/tags.json";
 
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
 
@@ -887,8 +855,10 @@
     let allLogs = [];
     let currentFileSha = null;
     let currentAvatarsSha = null;
+    let currentTagsSha = null;
     let selectedPlayerName = "";
     let playerAvatars = JSON.parse(localStorage.getItem('rebas_player_avatars')) || {};
+    let playerTags = JSON.parse(localStorage.getItem('rebas_player_tags')) || {};
 
     let currentLogsPage = 1;
     const LOGS_PER_PAGE = 15;
@@ -1064,7 +1034,7 @@
       switchMainTab('tabGlossary');
     };
     window.closeGlossaryModal = function() {
-      document.getElementById('glossaryModal').classList.add('hidden');
+      switchMainTab('tabOverview');
     };
 
     window.toggleDiagnosticsCollapse = function() {
@@ -1183,12 +1153,137 @@
       }
     }
 
+    async function loadTagsFromGitHub() {
+      try {
+        const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        if (apiRes.ok) {
+          const data = await apiRes.json();
+          currentTagsSha = data.sha;
+          const decoded = base64ToUtf8(data.content);
+          const cloudTags = JSON.parse(decoded);
+          playerTags = { ...playerTags, ...cloudTags };
+          localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
+        } else if (apiRes.status === 404) {
+          currentTagsSha = null;
+        }
+      } catch (err) {
+        try {
+          const res = await fetch(`./${TAGS_FILE_PATH}?t=${Date.now()}`);
+          if (res.ok) {
+            const cloudTags = await res.json();
+            playerTags = { ...playerTags, ...cloudTags };
+            localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
+          }
+        } catch (e) {}
+      }
+    }
+
+    async function commitTagsToGitHub(updatedTags, commitMessage = "update: sync player tags via portal") {
+      const statusBadge = document.getElementById('syncStatusBadge');
+      statusBadge.textContent = '雲端：正在同步隊內標籤至 GitHub...';
+      statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+
+      try {
+        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
+        });
+        if (getShaRes.ok) {
+          const shaData = await getShaRes.json();
+          currentTagsSha = shaData.sha;
+        } else {
+          currentTagsSha = null;
+        }
+
+        const base64Content = utf8ToBase64(JSON.stringify(updatedTags, null, 2));
+
+        const putBody = {
+          message: commitMessage,
+          content: base64Content,
+          branch: GITHUB_BRANCH
+        };
+        if (currentTagsSha) putBody.sha = currentTagsSha;
+
+        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(putBody)
+        });
+
+        if (!putRes.ok) {
+          const errData = await putRes.json();
+          throw new Error(errData.message || 'GitHub API 標籤寫入拒絕');
+        }
+
+        const resData = await putRes.json();
+        currentTagsSha = resData.content.sha;
+        playerTags = updatedTags;
+        localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
+
+        statusBadge.textContent = `[連線正常] 標籤與資料庫：已即時同步`;
+        statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+
+        const agg = getAggregatedStats(getFilteredLogs());
+        renderPlayerProfile(agg);
+        return true;
+      } catch (err) {
+        statusBadge.textContent = `[寫入失敗] 標籤雲端同步失敗: ${err.message}`;
+        statusBadge.className = 'text-rose-400 font-mono text-[11px]';
+        alert(`標籤寫入 GitHub 失敗：${err.message}`);
+        return false;
+      }
+    }
+
+    window.addPlayerTag = async function(playerName) {
+      const currentList = playerTags[playerName] || [];
+      if (currentList.length >= 3) {
+        alert(`球員「${playerName}」的標籤配額已達 3 個上限！若要新增請先移除現有標籤。`);
+        return;
+      }
+      const newTag = prompt(`請輸入「${playerName}」的隊內綽號、娛樂稱號或備註 (限 8 字內，目前已用 ${currentList.length}/3)：`);
+      if (!newTag || !newTag.trim()) return;
+      const cleanTag = newTag.trim().slice(0, 8);
+      if (currentList.includes(cleanTag)) {
+        alert('已有相同的標籤存在！');
+        return;
+      }
+      playerTags[playerName] = [...currentList, cleanTag];
+      localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
+      const agg = getAggregatedStats(getFilteredLogs());
+      renderPlayerProfile(agg);
+      await commitTagsToGitHub(playerTags, `feat: add nickname tag "${cleanTag}" for ${playerName}`);
+    };
+
+    window.removePlayerTag = async function(playerName, tagIndex) {
+      const currentList = playerTags[playerName] || [];
+      const targetTag = currentList[tagIndex];
+      if (!confirm(`確認移除「${playerName}」的標籤「${targetTag}」？`)) return;
+      currentList.splice(tagIndex, 1);
+      if (currentList.length === 0) {
+        delete playerTags[playerName];
+      } else {
+        playerTags[playerName] = currentList;
+      }
+      localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
+      const agg = getAggregatedStats(getFilteredLogs());
+      renderPlayerProfile(agg);
+      await commitTagsToGitHub(playerTags, `delete: remove tag "${targetTag}" for ${playerName}`);
+    };
+
     async function loadLogsFromGitHub() {
       const statusBadge = document.getElementById('syncStatusBadge');
       statusBadge.textContent = '雲端資料庫：載入中...';
       statusBadge.className = 'text-amber-400 font-mono text-[11px]';
 
       await loadAvatarsFromGitHub();
+      await loadTagsFromGitHub();
 
       try {
         const apiRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
@@ -1774,6 +1869,9 @@
         </div>
       `;
 
+      const tagsA = (playerTags[pA.name] || []).map(t => `<span class="bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded-full font-medium">#${t}</span>`).join(' ');
+      const tagsB = (playerTags[pB.name] || []).map(t => `<span class="bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded-full font-medium">#${t}</span>`).join(' ');
+
       document.getElementById('compareCardA').innerHTML = `
         <div class="flex items-center space-x-3 sm:space-x-4">
           <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${pA.name}'; switchMainTab('tabProfile');" title="點擊檢視 ${pA.name} 檔案">
@@ -1784,6 +1882,7 @@
               <span class="text-lg sm:text-xl font-black text-sky-400 truncate">#${NAME_TO_JERSEY[pA.name] ?? ""} ${pA.name}</span>
               <span class="text-xs font-mono text-slate-400">PA: ${pA.pa}</span>
             </div>
+            ${tagsA ? `<div class="flex flex-wrap gap-1 mt-1">${tagsA}</div>` : ''}
             <p class="text-xs text-slate-300 font-mono mt-1 tabular-nums">三圍: ${pA.avg.toFixed(3)} / ${pA.obp.toFixed(3)} / ${pA.slg.toFixed(3)}</p>
             <p class="text-xs text-slate-400 font-mono mt-0.5 tabular-nums">OPS: ${pA.ops.toFixed(3)} | wRC+: ${pA.wrc_plus.toFixed(1)} | SDI: ${(pA.sdi >= 0 ? '+' : '') + pA.sdi.toFixed(3)}</p>
           </div>
@@ -1800,6 +1899,7 @@
               <span class="text-lg sm:text-xl font-black text-amber-400 truncate">#${NAME_TO_JERSEY[pB.name] ?? ""} ${pB.name}</span>
               <span class="text-xs font-mono text-slate-400">PA: ${pB.pa}</span>
             </div>
+            ${tagsB ? `<div class="flex flex-wrap gap-1 mt-1">${tagsB}</div>` : ''}
             <p class="text-xs text-slate-300 font-mono mt-1 tabular-nums">三圍: ${pB.avg.toFixed(3)} / ${pB.obp.toFixed(3)} / ${pB.slg.toFixed(3)}</p>
             <p class="text-xs text-slate-400 font-mono mt-0.5 tabular-nums">OPS: ${pB.ops.toFixed(3)} | wRC+: ${pB.wrc_plus.toFixed(1)} | SDI: ${(pB.sdi >= 0 ? '+' : '') + pB.sdi.toFixed(3)}</p>
           </div>
@@ -1959,6 +2059,8 @@
       const prControl = getPercentile(k_pct, 'k_pct', pList, true);
       const prWrc = getPercentile(p.wrc_plus, 'wrc_plus', pList);
 
+      const currentTags = playerTags[p.name] || [];
+
       document.getElementById('playerProfileCard').innerHTML = `
         <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5 sm:gap-6 border-b border-slate-800/80 pb-5 sm:pb-6">
           <div class="relative group cursor-pointer shrink-0" onclick="triggerAvatarUpload()" title="點擊自訂頭像（裁切完即時同步至雲端）">
@@ -1977,6 +2079,23 @@
               <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2.5 py-0.5 rounded-lg font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
               ${playerAvatars[p.name] ? `<button onclick="clearAvatar('${p.name}')" class="text-xs text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
             </div>
+
+            <!-- 隊內娛樂自定義標籤系統 (每人上限3個，零佔位，名字正下方排列) -->
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 mt-2">
+              ${currentTags.map((t, idx) => `
+                <span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[11px] px-2.5 py-0.5 rounded-full font-medium shadow-sm group">
+                  <span>#${t}</span>
+                  <button onclick="removePlayerTag('${p.name}', ${idx})" class="text-amber-400/60 hover:text-rose-400 font-bold ml-0.5 transition" title="移除標籤">&times;</button>
+                </span>
+              `).join('')}
+              ${currentTags.length < 3 ? `
+                <button onclick="addPlayerTag('${p.name}')" class="inline-flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-700/80 hover:border-amber-500/40 text-[11px] px-2.5 py-0.5 rounded-full font-medium transition shadow-sm">
+                  <span>+ 標籤</span>
+                  <span class="text-[9px] text-slate-500 font-mono">(${currentTags.length}/3)</span>
+                </button>
+              ` : ''}
+            </div>
+
             <p class="text-xs text-slate-400 mt-2 font-mono tabular-nums">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 高犧: ${p.sf} | 三振: ${p.k}</p>
             <div class="mt-3.5">
               <button onclick="triggerAvatarUpload()" class="inline-flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 px-3.5 py-1.5 rounded-xl transition font-medium shadow-sm hover:border-slate-600">
@@ -2699,7 +2818,7 @@
       selectedPlayerName = newEntry.name;
       currentLogsPage = 1;
 
-      const success = await commitLogsToGitHub(updated, `feat: add match record for #${jerseyNum} ${newEntry.name}`);
+      const success = await commitLogsToGitHub(updated, `feat: add match record for #${jerseyNum} ${newEntry.name} on ${newEntry.date}`);
       if (success) {
         document.getElementById('addLogForm').reset();
         const hint = document.getElementById('jerseyMatchHint');
