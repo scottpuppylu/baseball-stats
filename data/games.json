@@ -34,7 +34,7 @@
       "歷史鍾"
     ],
     "substitutions": [],
-    "pitcherName": "盧宣嘉",
+    "pitcherName": "歷史鍾",
     "currentInning": 4,
     "currentHalf": "top",
     "currentOuts": 3,
@@ -161,7 +161,7 @@
         "inningNum": 2,
         "topBottom": "top",
         "runs": 0,
-        "hits": 2,
+        "hits": 3,
         "plateAppearances": [
           {
             "playId": "play_1790925473550",
@@ -227,9 +227,9 @@
             "playId": "play_runner_1790925511179",
             "batterName": "歷史鍾",
             "slot": 11,
-            "result": "OUT",
+            "result": "1H",
             "trajectory": "none",
-            "location": "Bases",
+            "location": "P",
             "x": 0.5,
             "y": 0.7,
             "rbi": 0,
@@ -390,7 +390,7 @@
         "inningNum": 4,
         "topBottom": "top",
         "runs": 0,
-        "hits": 1,
+        "hits": 2,
         "plateAppearances": [
           {
             "playId": "play_1790925806370",
@@ -441,9 +441,9 @@
             "playId": "play_runner_1790925832713",
             "batterName": "歷史鍾",
             "slot": 11,
-            "result": "OUT",
+            "result": "1H",
             "trajectory": "none",
-            "location": "Bases",
+            "location": "P",
             "x": 0.5,
             "y": 0.7,
             "rbi": 0,
