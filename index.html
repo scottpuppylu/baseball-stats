@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1310</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1614</span>
         </div>
 
 
@@ -5924,80 +5924,110 @@ function renderPlayerProfile(agg) {
         `;
       }
 
-      // 2. 渲染下層全寬 5 大核心數據指標卡片 (徹底移除 truncate，杜絕文字遮蓋與換行擠壓)
+      // 2. 渲染下層全寬 5 大核心數據指標卡片 (微網格模組化自適應，徹底解決手機、橫向平板與電腦版文字溢出、字元擠壓與重疊問題)
       if (cardEl) {
         cardEl.innerHTML = `
-          <!-- 全寬 5 大核心賽伯計量指標卡片 -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-1">
-            <!-- 卡片 1: 打擊三圍 -->
-            <div class="bg-slate-950/90 p-4 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-1.5">
+          <!-- 全寬 5 大核心賽伯計量指標卡片 (手機 1 欄 / 小平板 2 欄 / 橫向平板 3 欄 / 電腦版 5 欄自適應) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+            <!-- 卡片 1: 打擊三圍 (微網格排版，徹底解決電腦版單行過長溢出問題) -->
+            <div class="bg-slate-950/90 p-3.5 sm:p-4 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-2 hover:border-slate-700 transition">
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 text-xs font-semibold">打擊三圍 (AVG/OBP/SLG)</span>
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="text-slate-400 text-xs font-semibold">打擊三圍 (Slash Line)</span>
+                <span class="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-800/50">AVG / OBP / SLG</span>
               </div>
-              <div>
-                <span class="font-mono text-emerald-400 font-black text-base sm:text-lg tracking-wider tabular-nums block whitespace-nowrap">
-                  ${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}
-                </span>
-                <span class="text-[10px] text-slate-500 font-mono block mt-1">打擊率 / 上壘率 / 長打率</span>
+              <div class="grid grid-cols-3 gap-1 bg-slate-900/80 p-2 rounded-xl border border-slate-800/80 text-center">
+                <div class="px-0.5">
+                  <span class="text-[10px] text-slate-400 block font-sans">打擊率</span>
+                  <span class="font-mono text-emerald-400 font-black text-xs sm:text-sm xl:text-base tabular-nums block">${p.avg.toFixed(3)}</span>
+                </div>
+                <div class="px-0.5 border-x border-slate-800">
+                  <span class="text-[10px] text-slate-400 block font-sans">上壘率</span>
+                  <span class="font-mono text-sky-400 font-black text-xs sm:text-sm xl:text-base tabular-nums block">${p.obp.toFixed(3)}</span>
+                </div>
+                <div class="px-0.5">
+                  <span class="text-[10px] text-slate-400 block font-sans">長打率</span>
+                  <span class="font-mono text-amber-400 font-black text-xs sm:text-sm xl:text-base tabular-nums block">${p.slg.toFixed(3)}</span>
+                </div>
+              </div>
+              <div class="text-[10px] text-slate-500 font-mono text-center flex justify-between px-1">
+                <span>純長打: <b class="text-slate-300 font-bold">${p.iso.toFixed(3)}</b></span>
+                <span>場內率: <b class="text-slate-300 font-bold">${p.babip.toFixed(3)}</b></span>
               </div>
             </div>
 
-            <!-- 卡片 2: 攻擊指數 -->
-            <div class="bg-slate-950/90 p-4 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-1.5">
+            <!-- 卡片 2: 攻擊指數 (OPS / OPS+) -->
+            <div class="bg-slate-950/90 p-3.5 sm:p-4 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-2 hover:border-slate-700 transition">
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 text-xs font-semibold">攻擊指數 (OPS / OPS+)</span>
-                <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                <span class="text-slate-400 text-xs font-semibold">攻擊指數 (Production)</span>
+                <span class="text-[10px] text-sky-400 font-mono font-bold bg-sky-950/80 px-1.5 py-0.5 rounded border border-sky-800/50">OPS / OPS+</span>
               </div>
-              <div>
-                <span class="font-mono text-sky-400 font-black text-base sm:text-lg tracking-wider tabular-nums block whitespace-nowrap">
-                  ${p.ops.toFixed(3)} / ${p.ops_plus.toFixed(1)}
-                </span>
-                <span class="text-[10px] text-slate-500 font-mono block mt-1">整體攻擊 / 標準化 (隊均 100)</span>
+              <div class="grid grid-cols-2 gap-1.5 bg-slate-900/80 p-2 rounded-xl border border-slate-800/80 text-center">
+                <div>
+                  <span class="text-[10px] text-slate-400 block font-sans">整體 OPS</span>
+                  <span class="font-mono text-sky-400 font-black text-xs sm:text-sm xl:text-base tabular-nums block">${p.ops.toFixed(3)}</span>
+                </div>
+                <div class="border-l border-slate-800">
+                  <span class="text-[10px] text-slate-400 block font-sans">標準化 OPS+</span>
+                  <span class="font-mono text-white font-black text-xs sm:text-sm xl:text-base tabular-nums block">${p.ops_plus.toFixed(1)}</span>
+                </div>
+              </div>
+              <div class="text-[10px] text-slate-500 font-mono text-center flex justify-between px-1">
+                <span>標準化指數</span>
+                <span class="${p.ops >= agg.teamOps ? 'text-emerald-400' : 'text-rose-400'}">隊均: ${agg.teamOps.toFixed(3)}</span>
               </div>
             </div>
 
-            <!-- 卡片 3: 得分創造 -->
-            <div class="bg-slate-950/90 p-4 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-1.5">
+            <!-- 卡片 3: 得分創造 (wRC+ / wOBA) -->
+            <div class="bg-slate-950/90 p-3.5 sm:p-4 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-2 hover:border-slate-700 transition">
               <div class="flex items-center justify-between">
-                <span class="text-slate-400 text-xs font-semibold">得分創造 (wRC+ / wOBA)</span>
-                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span class="text-slate-400 text-xs font-semibold">得分創造 (Value)</span>
+                <span class="text-[10px] text-amber-400 font-mono font-bold bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-800/50">wRC+ / wOBA</span>
               </div>
-              <div>
-                <span class="font-mono text-amber-400 font-black text-base sm:text-lg tracking-wider tabular-nums block whitespace-nowrap">
-                  ${p.wrc_plus.toFixed(1)} / ${p.woba.toFixed(3)}
-                </span>
-                <span class="text-[10px] text-slate-500 font-mono block mt-1">加權得分創造 / 加權上壘率</span>
+              <div class="grid grid-cols-2 gap-1.5 bg-slate-900/80 p-2 rounded-xl border border-slate-800/80 text-center">
+                <div>
+                  <span class="text-[10px] text-slate-400 block font-sans">加權創造 wRC+</span>
+                  <span class="font-mono text-amber-400 font-black text-xs sm:text-sm xl:text-base tabular-nums block">${p.wrc_plus.toFixed(1)}</span>
+                </div>
+                <div class="border-l border-slate-800">
+                  <span class="text-[10px] text-slate-400 block font-sans">加權上壘 wOBA</span>
+                  <span class="font-mono text-purple-300 font-black text-xs sm:text-sm xl:text-base tabular-nums block">${p.woba.toFixed(3)}</span>
+                </div>
+              </div>
+              <div class="text-[10px] text-slate-500 font-mono text-center flex justify-between px-1">
+                <span>得分期望貢獻</span>
+                <span class="${p.wrc_plus >= 100 ? 'text-amber-400 font-bold' : 'text-slate-400'}">${p.wrc_plus >= 100 ? '優於隊均' : '低於隊均'}</span>
               </div>
             </div>
 
-            <!-- 卡片 4: 慢壘好球帶紀律 2.0 (SDI) - 垂直分層杜絕遮蓋 -->
-            <div class="bg-slate-950/90 p-4 rounded-2xl border border-purple-900/50 shadow-md flex flex-col justify-between space-y-1.5">
+            <!-- 卡片 4: 慢壘好球帶紀律 2.0 (SDI) -->
+            <div class="bg-slate-950/90 p-3.5 sm:p-4 rounded-2xl border border-purple-900/50 shadow-md flex flex-col justify-between space-y-2 hover:border-purple-700/60 transition">
               <div class="flex items-center justify-between">
-                <span class="text-purple-300 text-xs font-semibold">慢壘好球帶紀律 2.0 (SDI)</span>
-                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                <span class="text-purple-300 text-xs font-semibold">好球帶紀律 2.0</span>
+                <span class="text-[10px] text-purple-400 font-mono font-bold bg-purple-950/80 px-1.5 py-0.5 rounded border border-purple-800/50">SDI 2.0</span>
               </div>
-              <div>
-                <span class="font-mono text-purple-400 font-black text-base sm:text-lg tracking-wider tabular-nums block">
-                  ${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}
-                </span>
-                <span class="text-[11px] text-slate-400 font-mono block mt-1 font-semibold">
-                  (界外K: <b class="text-amber-300">${p.k_foul ?? 0}</b> / 揮空K: <b class="text-rose-400">${p.k_swing ?? p.k}</b>)
-                </span>
+              <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800/80 text-center">
+                <span class="text-[10px] text-slate-400 block font-sans">慢壘淨紀律指標</span>
+                <span class="font-mono text-purple-400 font-black text-xs sm:text-sm xl:text-base tabular-nums block">${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}</span>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono px-1">
+                <span>界外K: <b class="text-amber-300 font-bold">${p.k_foul ?? 0}</b></span>
+                <span>揮空K: <b class="text-rose-400 font-bold">${p.k_swing ?? p.k}</b></span>
               </div>
             </div>
 
-            <!-- 卡片 5: 每27出局得分 RC/27 (全新加入) -->
-            <div class="bg-slate-950/90 p-4 rounded-2xl border border-amber-500/40 shadow-md flex flex-col justify-between space-y-1.5">
+            <!-- 卡片 5: 每27出局得分 RC/27 -->
+            <div class="bg-slate-950/90 p-3.5 sm:p-4 rounded-2xl border border-amber-500/40 shadow-md flex flex-col justify-between space-y-2 hover:border-amber-400/60 transition">
               <div class="flex items-center justify-between">
-                <span class="text-amber-300 text-xs font-semibold">每27出局預估 (RC/27)</span>
-                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span class="text-amber-300 text-xs font-semibold">每27出局得分</span>
+                <span class="text-[10px] text-amber-400 font-mono font-bold bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-800/50">RC/27</span>
               </div>
-              <div>
-                <span class="font-mono text-amber-300 font-black text-base sm:text-lg tracking-wider tabular-nums block">
-                  ${p.rc_27.toFixed(1)} 分
-                </span>
-                <span class="text-[10px] text-slate-500 font-mono block mt-1">累積預估創造得分 RC: ${p.rc.toFixed(1)}</span>
+              <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800/80 text-center">
+                <span class="text-[10px] text-slate-400 block font-sans">9局單兵產能預估</span>
+                <span class="font-mono text-amber-300 font-black text-xs sm:text-sm xl:text-base tabular-nums block">${p.rc_27.toFixed(1)} 分</span>
+              </div>
+              <div class="text-[10px] text-slate-500 font-mono text-center flex justify-between px-1">
+                <span>總創造 RC: <b class="text-slate-300 font-bold">${p.rc.toFixed(1)}</b></span>
+                <span>出局數: <b class="text-slate-300 font-bold">${p.outs || Math.max(1, p.ab - p.h + p.sf)}</b></span>
               </div>
             </div>
           </div>
@@ -6064,7 +6094,8 @@ function renderPlayerProfile(agg) {
           </div>
         `;
       }
-const radarCanvas = document.getElementById('radarChart'); if (!radarCanvas || !radarCanvas.getContext) return; const radarCtx = radarCanvas.getContext('2d');
+      
+      const radarCanvas = document.getElementById('radarChart'); if (!radarCanvas || !radarCanvas.getContext) return; const radarCtx = radarCanvas.getContext('2d');
       if (radarChartInst) radarChartInst.destroy();
       radarChartInst = new Chart(radarCtx, {
         type: 'radar',
@@ -10156,7 +10187,7 @@ function renderCustomChart(agg) {
           </div>
 
           <!-- 比賽基本資料編輯表單 (新增本場先發登板投手選取) -->
-          <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 bg-slate-900/40 p-3.5 rounded-xl border border-slate-800 text-xs">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 bg-slate-900/40 p-3.5 rounded-xl border border-slate-800 text-xs">
             <div>
               <label class="block text-slate-400 mb-1">對手隊伍：</label>
               <input type="text" id="editGameOpponent" value="${game.opponent}" class="w-full bg-slate-900 border border-slate-700 text-white rounded px-2.5 py-1.5 font-bold">
