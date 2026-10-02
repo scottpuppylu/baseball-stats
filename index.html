@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1300</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1310</span>
         </div>
 
 
@@ -7372,54 +7372,8 @@ function renderCustomChart(agg) {
     // ==========================================
     // 慢速壘球投手賽伯計量進階分析引擎 (Pitching Sabermetrics Engine)
     // ==========================================
-    // 114 學年度代表性慢壘投手基準歷史數據 (作為隊史常模基準)
-    const baselinePitchingStats = [
-      {
-        name: "盧宣嘉",
-        games: 5,
-        outs: 79, // 26.1 局
-        tbf: 158,
-        bb: 9,
-        k_swing: 5,
-        k_foul: 9,
-        go: 42,
-        fo: 20,
-        dp: 3,
-        runner_out: 2,
-        hits: 68,
-        runs: 38
-      },
-      {
-        name: "田耕宇",
-        games: 3,
-        outs: 36, // 12.0 局
-        tbf: 78,
-        bb: 6,
-        k_swing: 2,
-        k_foul: 3,
-        go: 16,
-        fo: 12,
-        dp: 1,
-        runner_out: 1,
-        hits: 34,
-        runs: 22
-      },
-      {
-        name: "陳威騏",
-        games: 2,
-        outs: 18, // 6.0 局
-        tbf: 41,
-        bb: 4,
-        k_swing: 1,
-        k_foul: 1,
-        go: 8,
-        fo: 5,
-        dp: 0,
-        runner_out: 0,
-        hits: 18,
-        runs: 14
-      }
-    ];
+    // ★★★ 依據使用者指示：徹底刪除任何模擬數據，完全 100% 依據真實場記賽事與防守記錄動態計算！
+    const baselinePitchingStats = [];
 
     window.getAggregatedPitcherStats = getAggregatedPitcherStats;
     function getAggregatedPitcherStats() {
@@ -7540,7 +7494,33 @@ function renderCustomChart(agg) {
     window.renderPitchingStudio = renderPitchingStudio;
     function renderPitchingStudio() {
       const pList = getAggregatedPitcherStats();
-      if (!pList || pList.length === 0) return;
+      const heroCardsContainer = document.getElementById('pitchingHeroCards');
+      const tbody = document.getElementById('pitchingTableBody');
+      const advCard = document.getElementById('pitchingTacticalAdvisoryCard');
+      const countEl = document.getElementById('pitcherSampleCount');
+      const goAoEl = document.getElementById('pitcherGoAoIndicator');
+
+      if (!pList || pList.length === 0) {
+        if (heroCardsContainer) {
+          heroCardsContainer.innerHTML = `
+            <div class="col-span-full p-8 text-center text-slate-500 font-mono bg-slate-950/60 rounded-2xl border border-slate-800 space-y-2">
+              <div class="text-base font-bold text-teal-400">尚無慢壘投手出賽紀錄</div>
+              <div class="text-xs text-slate-400">請在「實況即時記分」中開始比賽並記錄守備事件，或於「歷史賽事覆盤」中點擊編輯補登投手數據！</div>
+            </div>
+          `;
+        }
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="14" class="p-8 text-center text-slate-500 font-mono">尚無投手出賽紀錄</td></tr>';
+        }
+        if (advCard) {
+          advCard.innerHTML = '<div class="p-4 text-center text-slate-500 font-mono">尚無出賽數據產出球探戰術診斷</div>';
+        }
+        if (countEl) countEl.textContent = '總投球局數: 0 局';
+        if (goAoEl) goAoEl.innerHTML = '<span>尚無投球數據</span>';
+        if (pitcherOutProfileChartInst) { pitcherOutProfileChartInst.destroy(); pitcherOutProfileChartInst = null; }
+        if (pitcherRadarChartInst) { pitcherRadarChartInst.destroy(); pitcherRadarChartInst = null; }
+        return;
+      }
 
       // 檢查當前選取的投手是否存在
       let currentP = pList.find(p => p.name === selectedPitcherName);
@@ -7564,7 +7544,6 @@ function renderCustomChart(agg) {
       }
 
       // 2. 渲染頂部 4 大慢壘投手進階核心指標看板
-      const heroCardsContainer = document.getElementById('pitchingHeroCards');
       if (heroCardsContainer) {
         heroCardsContainer.innerHTML = `
           <!-- 卡片 1: 好球帶好投率 (ZCR) -->
@@ -7642,9 +7621,6 @@ function renderCustomChart(agg) {
       }
 
       // 3. 繪製出局型態分析圖 (Pitching Out Profile Chart)
-      const outCanvas = document.getElementById('pitcherOutProfileChart');
-      const countEl = document.getElementById('pitcherSampleCount');
-      const goAoEl = document.getElementById('pitcherGoAoIndicator');
       if (countEl) countEl.textContent = `面對 ${currentP.tbf} 打席 | 投球 ${currentP.ipDisplay} 局 (${currentP.outs} 出局)`;
       if (goAoEl) {
         const styleText = currentP.goAo > 1.5 ? '重度滾地球型 (內野封殺高、雙殺多)' : currentP.goAo > 0.9 ? '滾飛均衡型' : '高拋飛球型 (仰仗外野接殺)';
@@ -7654,6 +7630,7 @@ function renderCustomChart(agg) {
         `;
       }
 
+      const outCanvas = document.getElementById('pitcherOutProfileChart');
       if (outCanvas && outCanvas.getContext) {
         const ctx = outCanvas.getContext('2d');
         if (pitcherOutProfileChartInst) pitcherOutProfileChartInst.destroy();
@@ -7697,7 +7674,6 @@ function renderCustomChart(agg) {
         const ctx = radarCanvas.getContext('2d');
         if (pitcherRadarChartInst) pitcherRadarChartInst.destroy();
 
-        // 百分位計算
         const prZcr = getPercentile(currentP.zcr, 'zcr', pList);
         const prK = getPercentile(currentP.kPct, 'kPct', pList);
         const prFkr = getPercentile(currentP.fkr, 'fkr', pList);
@@ -7735,7 +7711,6 @@ function renderCustomChart(agg) {
       }
 
       // 5. 渲染全隊投手數據總表
-      const tbody = document.getElementById('pitchingTableBody');
       if (tbody) {
         tbody.innerHTML = pList.map(p => {
           const isSelected = p.name === selectedPitcherName;
@@ -7764,10 +7739,8 @@ function renderCustomChart(agg) {
       }
 
       // 6. 渲染慢壘投手戰術診斷與改善方針
-      const advCard = document.getElementById('pitchingTacticalAdvisoryCard');
       if (advCard) {
         const notes = [];
-        // 保送診斷
         if (currentP.zcr >= 0.93) {
           notes.push({
             type: 'success',
@@ -7782,7 +7755,6 @@ function renderCustomChart(agg) {
           });
         }
 
-        // 界外K誘陷戰術診斷
         if (currentP.fkr >= 0.50 && currentP.k_total >= 3) {
           notes.push({
             type: 'success',
@@ -7791,7 +7763,6 @@ function renderCustomChart(agg) {
           });
         }
 
-        // 出局型態風格戰術建議
         if (currentP.goAo >= 1.5) {
           notes.push({
             type: 'info',
@@ -10026,12 +9997,16 @@ function renderCustomChart(agg) {
 
     // 歷史賽事編輯面板
     function renderGameReviewEditor(game, container) {
-      const allPlayers = Object.keys(NAME_TO_JERSEY);
+      const { teamNames, guestNames } = getAllAvailablePlayerNames();
+      const allPlayers = [...teamNames, ...guestNames];
+      const defaultPitcher = game.pitcherName || '盧宣嘉';
 
       const inningsHtml = (game.innings || []).map((inn, innIdx) => {
         const isOurBat = isInningOurBat(game.ourRole, inn.topBottom);
         const plays = inn.plateAppearances || [];
+        const defEvents = inn.defensiveEvents || [];
 
+        // 進攻打席列
         const playsRows = plays.map((p, playIdx) => `
           <tr class="hover:bg-slate-900 transition">
             <td class="p-2 text-center text-slate-500">${playIdx + 1}</td>
@@ -10062,19 +10037,67 @@ function renderCustomChart(agg) {
               <input type="number" id="edit_play_r_${innIdx}_${playIdx}" value="${p.runsScored || 0}" min="0" max="4" class="w-12 bg-slate-900 border border-slate-700 text-center text-sky-400 font-bold rounded py-1 text-xs">
             </td>
             <td class="p-2 text-center">
-              <button onclick="deletePlayFromReviewInning('${game.id}', ${innIdx}, ${playIdx})" class="text-rose-400 hover:text-rose-300 text-xs transition">🗑️ 刪除</button>
+              <button type="button" onclick="deletePlayFromReviewInning('${game.id}', ${innIdx}, ${playIdx})" class="text-rose-400 hover:text-rose-300 text-xs transition">🗑️ 刪除</button>
             </td>
           </tr>
         `).join('');
 
+        // ★★★ 守備半局與投手投球事件列 ★★★
+        const defRows = defEvents.map((evt, defIdx) => {
+          const curPitcher = evt.pitcher || defaultPitcher;
+          return `
+            <tr class="hover:bg-slate-900 transition">
+              <td class="p-2 text-center text-slate-500">${defIdx + 1}</td>
+              <td class="p-2">
+                <select id="edit_def_pitcher_${innIdx}_${defIdx}" class="bg-slate-900 border border-teal-700 text-teal-300 font-bold text-xs rounded px-2 py-1">
+                  ${allPlayers.map(pl => `<option value="${pl}" ${pl === curPitcher ? 'selected' : ''}>#${NAME_TO_JERSEY[pl] ?? ''} ${pl}</option>`).join('')}
+                </select>
+              </td>
+              <td class="p-2 text-center">
+                <select id="edit_def_type_${innIdx}_${defIdx}" class="bg-slate-900 border border-slate-700 text-amber-300 font-bold text-xs rounded px-2 py-1">
+                  <option value="GO" ${evt.type === 'GO' ? 'selected' : ''}>🟢 滾地刺殺 (+1 Out)</option>
+                  <option value="FO" ${evt.type === 'FO' ? 'selected' : ''}>🔵 飛球接殺 (+1 Out)</option>
+                  <option value="K" ${evt.type === 'K' ? 'selected' : ''}>🔴 揮空三振 (+1 Out)</option>
+                  <option value="界外K" ${evt.type === '界外K' ? 'selected' : ''}>🛑 界外三振 (+1 Out)</option>
+                  <option value="DP" ${evt.type === 'DP' ? 'selected' : ''}>🟣 雙殺完成 (+2 Out)</option>
+                  <option value="RUNNER_OUT" ${evt.type === 'RUNNER_OUT' ? 'selected' : ''}>🟣 跑者出局 (+1 Out)</option>
+                  <option value="BB" ${evt.type === 'BB' ? 'selected' : ''}>🟡 四壞保送 (BB)</option>
+                  <option value="HIT" ${evt.type === 'HIT' ? 'selected' : ''}>🟠 被擊出安打 (Hit)</option>
+                  <option value="RUN" ${evt.type === 'RUN' ? 'selected' : ''}>💥 對方得分 (Run)</option>
+                </select>
+              </td>
+              <td class="p-2 text-center">
+                <input type="number" id="edit_def_outs_${innIdx}_${defIdx}" value="${evt.outsAdded ?? 1}" min="0" max="2" class="w-12 bg-slate-900 border border-slate-700 text-center text-emerald-400 font-bold rounded py-1 text-xs">
+              </td>
+              <td class="p-2 text-center">
+                <input type="number" id="edit_def_runs_${innIdx}_${defIdx}" value="${evt.runs ?? 0}" min="0" max="4" class="w-12 bg-slate-900 border border-slate-700 text-center text-rose-400 font-bold rounded py-1 text-xs">
+              </td>
+              <td class="p-2">
+                <input type="text" id="edit_def_desc_${innIdx}_${defIdx}" value="${evt.desc || ''}" placeholder="事件備註說明" class="w-full bg-slate-900 border border-slate-700 text-slate-300 rounded px-2 py-1 text-xs">
+              </td>
+              <td class="p-2 text-center">
+                <button type="button" onclick="deleteDefenseEventFromReviewInning('${game.id}', ${innIdx}, ${defIdx})" class="text-rose-400 hover:text-rose-300 text-xs transition">🗑️ 刪除</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
         return `
           <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
             <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
-              <span class="text-xs font-bold text-amber-300 font-mono">
-                第 ${inn.inningNum} 局 ${inn.topBottom === 'top' ? '上半' : '下半'} (${isOurBat ? '我方進攻' : '我方守備'}) - 得分：${inn.runs}
+              <span class="text-xs font-bold ${isOurBat ? 'text-amber-300' : 'text-teal-300'} font-mono flex items-center gap-1.5">
+                <span>${isOurBat ? '⚾' : '🛡️'}</span>
+                第 ${inn.inningNum} 局 ${inn.topBottom === 'top' ? '上半' : '下半'} (${isOurBat ? '我方進攻' : '我方守備'}) - ${isOurBat ? '我方得分' : '對手得分'}：${inn.runs || 0}
               </span>
-              ${isOurBat ? `<button onclick="addPlayToReviewInning('${game.id}', ${innIdx})" class="text-xs text-sky-400 hover:text-sky-300 bg-slate-800 px-2.5 py-1 rounded transition">+ 新增打席</button>` : ''}
+              ${isOurBat ? `
+                <button type="button" onclick="addPlayToReviewInning('${game.id}', ${innIdx})" class="text-xs text-sky-400 hover:text-sky-300 bg-slate-800 px-2.5 py-1 rounded transition border border-slate-700">+ 新增打席</button>
+              ` : `
+                <button type="button" onclick="addDefenseEventToReviewInning('${game.id}', ${innIdx})" class="text-xs text-teal-400 hover:text-teal-300 bg-teal-950/60 border border-teal-700/70 px-2.5 py-1 rounded transition font-bold flex items-center gap-1">
+                  <span>+ 新增投手/守備事件</span>
+                </button>
+              `}
             </div>
+
             ${isOurBat ? `
               <div class="overflow-x-auto rounded-lg border border-slate-800">
                 <table class="w-full text-left text-xs whitespace-nowrap font-mono">
@@ -10095,7 +10118,27 @@ function renderCustomChart(agg) {
                   </tbody>
                 </table>
               </div>
-            ` : `<p class="text-xs text-slate-500 font-mono">我方守備半局 (對手失分：${inn.runs})</p>`}
+            ` : `
+              <!-- 我方守備半局投手數據與事件編輯表 -->
+              <div class="overflow-x-auto rounded-lg border border-slate-800">
+                <table class="w-full text-left text-xs whitespace-nowrap font-mono">
+                  <thead class="bg-slate-950 text-slate-400">
+                    <tr>
+                      <th class="p-2 text-center w-10">序號</th>
+                      <th class="p-2 text-teal-300">登板投手</th>
+                      <th class="p-2 text-center">事件類別</th>
+                      <th class="p-2 text-center">增加出局</th>
+                      <th class="p-2 text-center">失分</th>
+                      <th class="p-2">實況描述</th>
+                      <th class="p-2 text-center">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-800">
+                    ${defRows || '<tr><td colspan="7" class="p-4 text-center text-slate-500">本半局尚無守備事件，請點擊右上角「+ 新增投手/守備事件」補登</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
+            `}
           </div>
         `;
       }).join('');
@@ -10105,15 +10148,15 @@ function renderCustomChart(agg) {
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
               <h3 class="text-sm sm:text-base font-black text-amber-300 flex items-center gap-2">
-                <span>✏️</span> 編輯歷史賽事資訊與打席明細
+                <span>✏️</span> 編輯歷史賽事資訊、打席與投手守備數據
               </h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">修改賽事比分或打席，儲存時將自動同步至 GitHub 並更新全隊賽事日誌</p>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">修改賽事比分、打席與投手守備事件，儲存時將自動同步至 GitHub 並即時重算打者與投手賽伯計量指標</p>
             </div>
-            <button onclick="toggleEditCurrentReviewGame()" class="text-slate-400 hover:text-white text-xs px-2.5 py-1 rounded border border-slate-700 bg-slate-900 transition">✕ 取消</button>
+            <button type="button" onclick="toggleEditCurrentReviewGame()" class="text-slate-400 hover:text-white text-xs px-2.5 py-1 rounded border border-slate-700 bg-slate-900 transition">✕ 取消</button>
           </div>
 
-          <!-- 比賽基本資料編輯表單 -->
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-slate-900/40 p-3.5 rounded-xl border border-slate-800 text-xs">
+          <!-- 比賽基本資料編輯表單 (新增本場先發登板投手選取) -->
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 bg-slate-900/40 p-3.5 rounded-xl border border-slate-800 text-xs">
             <div>
               <label class="block text-slate-400 mb-1">對手隊伍：</label>
               <input type="text" id="editGameOpponent" value="${game.opponent}" class="w-full bg-slate-900 border border-slate-700 text-white rounded px-2.5 py-1.5 font-bold">
@@ -10127,6 +10170,12 @@ function renderCustomChart(agg) {
               <input type="text" id="editGameTag" value="${game.tag || '聯賽'}" class="w-full bg-slate-900 border border-slate-700 text-white rounded px-2.5 py-1.5">
             </div>
             <div>
+              <label class="block text-teal-300 font-bold mb-1">先發登板投手：</label>
+              <select id="editGamePitcher" class="w-full bg-slate-900 border border-teal-700 text-teal-300 font-bold rounded px-2.5 py-1.5 font-mono">
+                ${allPlayers.map(pl => `<option value="${pl}" ${pl === (game.pitcherName || '盧宣嘉') ? 'selected' : ''}>#${NAME_TO_JERSEY[pl] ?? ''} ${pl}</option>`).join('')}
+              </select>
+            </div>
+            <div>
               <label class="block text-slate-400 mb-1">淡江得分：</label>
               <input type="number" id="editGameScoreUs" value="${game.finalScore.us}" min="0" class="w-full bg-slate-900 border border-slate-700 text-amber-400 font-bold rounded px-2.5 py-1.5 font-mono">
             </div>
@@ -10136,17 +10185,17 @@ function renderCustomChart(agg) {
             </div>
           </div>
 
-          <!-- 逐局打席編輯清單 -->
+          <!-- 逐局打席與守備投手事件編輯清單 -->
           <div class="space-y-4">
-            <h4 class="text-xs font-bold text-slate-200">逐局打席與事件調整：</h4>
+            <h4 class="text-xs font-bold text-slate-200">逐局攻守事件與投手數據調整：</h4>
             ${inningsHtml}
           </div>
 
           <!-- 儲存與送出按鈕 -->
           <div class="pt-3 border-t border-slate-800 flex items-center justify-end space-x-3">
-            <button onclick="toggleEditCurrentReviewGame()" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 text-xs font-medium hover:bg-slate-800 transition">取消返回</button>
-            <button onclick="saveEditedReviewGame('${game.id}')" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 text-xs font-black transition shadow-lg flex items-center gap-1.5">
-              <span>💾</span> 儲存修改並同步至 GitHub (自動更新全隊日誌)
+            <button type="button" onclick="toggleEditCurrentReviewGame()" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 text-xs font-medium hover:bg-slate-800 transition">取消返回</button>
+            <button type="button" onclick="saveEditedReviewGame('${game.id}')" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 text-xs font-black transition shadow-lg flex items-center gap-1.5">
+              <span>💾</span> 儲存修改並同步至 GitHub (自動更新全隊攻守與投手數據)
             </button>
           </div>
         </div>
@@ -10189,6 +10238,36 @@ function renderCustomChart(agg) {
       showToast('已移除該打席');
     };
 
+    window.addDefenseEventToReviewInning = function(gameId, innIdx) {
+      const game = allGames.find(g => g.id === gameId);
+      if (!game || !game.innings[innIdx]) return;
+
+      const inn = game.innings[innIdx];
+      inn.defensiveEvents = inn.defensiveEvents || [];
+      const defaultP = game.pitcherName || '盧宣嘉';
+      inn.defensiveEvents.push({
+        id: 'def_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        pitcher: defaultP,
+        type: 'GO',
+        runs: 0,
+        outsAdded: 1,
+        outsAtEnd: 1,
+        desc: '內野滾地刺殺 (+1 出局)'
+      });
+
+      renderSelectedGameReview(gameId);
+      showToast('已新增守備/投球事件，請調整投手與結果後儲存');
+    };
+
+    window.deleteDefenseEventFromReviewInning = function(gameId, innIdx, defIdx) {
+      const game = allGames.find(g => g.id === gameId);
+      if (!game || !game.innings[innIdx] || !game.innings[innIdx].defensiveEvents) return;
+
+      game.innings[innIdx].defensiveEvents.splice(defIdx, 1);
+      renderSelectedGameReview(gameId);
+      showToast('已移除該守備事件');
+    };
+
     window.saveEditedReviewGame = async function(gameId) {
       const game = allGames.find(g => g.id === gameId);
       if (!game) return;
@@ -10198,49 +10277,71 @@ function renderCustomChart(agg) {
       const tagInput = document.getElementById('editGameTag');
       const scoreUsInput = document.getElementById('editGameScoreUs');
       const scoreOppInput = document.getElementById('editGameScoreOpp');
+      const pitcherInput = document.getElementById('editGamePitcher');
 
       if (oppInput) game.opponent = oppInput.value.trim();
       if (dateInput) game.date = dateInput.value;
       if (tagInput) game.tag = tagInput.value.trim();
+      if (pitcherInput) game.pitcherName = pitcherInput.value;
       if (scoreUsInput) game.finalScore.us = parseInt(scoreUsInput.value, 10) || 0;
       if (scoreOppInput) game.finalScore.opp = parseInt(scoreOppInput.value, 10) || 0;
 
-      // 讀取每個打席的修改值
+      // 讀取每個打席與守備事件的修改值
       (game.innings || []).forEach((inn, innIdx) => {
-        (inn.plateAppearances || []).forEach((p, playIdx) => {
-          const bSel = document.getElementById(`edit_play_batter_${innIdx}_${playIdx}`);
-          const rSel = document.getElementById(`edit_play_res_${innIdx}_${playIdx}`);
-          const tSel = document.getElementById(`edit_play_traj_${innIdx}_${playIdx}`);
-          const lSel = document.getElementById(`edit_play_loc_${innIdx}_${playIdx}`);
-          const rbiInput = document.getElementById(`edit_play_rbi_${innIdx}_${playIdx}`);
-          const rInput = document.getElementById(`edit_play_r_${innIdx}_${playIdx}`);
+        const isOurBat = isInningOurBat(game.ourRole, inn.topBottom);
 
-          if (bSel) p.batterName = bSel.value;
-          if (rSel) p.result = rSel.value;
-          if (tSel) p.trajectory = tSel.value;
-          if (lSel) p.location = lSel.value;
-          if (rbiInput) p.rbi = parseInt(rbiInput.value, 10) || 0;
-          if (rInput) p.runsScored = parseInt(rInput.value, 10) || 0;
-        });
+        if (isOurBat) {
+          (inn.plateAppearances || []).forEach((p, playIdx) => {
+            const bSel = document.getElementById(`edit_play_batter_${innIdx}_${playIdx}`);
+            const rSel = document.getElementById(`edit_play_res_${innIdx}_${playIdx}`);
+            const tSel = document.getElementById(`edit_play_traj_${innIdx}_${playIdx}`);
+            const lSel = document.getElementById(`edit_play_loc_${innIdx}_${playIdx}`);
+            const rbiInput = document.getElementById(`edit_play_rbi_${innIdx}_${playIdx}`);
+            const rInput = document.getElementById(`edit_play_r_${innIdx}_${playIdx}`);
 
-        // 重算本局得分與安打
-        inn.runs = (inn.plateAppearances || []).reduce((acc, cur) => acc + (cur.runsScored || 0), 0);
-        inn.hits = (inn.plateAppearances || []).filter(cur => ['1H', '2H', '3H', 'HR'].includes(cur.result)).length;
+            if (bSel) p.batterName = bSel.value;
+            if (rSel) p.result = rSel.value;
+            if (tSel) p.trajectory = tSel.value;
+            if (lSel) p.location = lSel.value;
+            if (rbiInput) p.rbi = parseInt(rbiInput.value, 10) || 0;
+            if (rInput) p.runsScored = parseInt(rInput.value, 10) || 0;
+          });
+          inn.runs = (inn.plateAppearances || []).reduce((acc, cur) => acc + (cur.runsScored || 0), 0);
+          inn.hits = (inn.plateAppearances || []).filter(cur => ['1H', '2H', '3H', 'HR'].includes(cur.result)).length;
+        } else {
+          // ★★★ 讀取守備與投手投球事件修改 ★★★
+          (inn.defensiveEvents || []).forEach((evt, defIdx) => {
+            const pSel = document.getElementById(`edit_def_pitcher_${innIdx}_${defIdx}`);
+            const tSel = document.getElementById(`edit_def_type_${innIdx}_${defIdx}`);
+            const oInput = document.getElementById(`edit_def_outs_${innIdx}_${defIdx}`);
+            const rInput = document.getElementById(`edit_def_runs_${innIdx}_${defIdx}`);
+            const dInput = document.getElementById(`edit_def_desc_${innIdx}_${defIdx}`);
+
+            if (pSel) evt.pitcher = pSel.value;
+            if (tSel) evt.type = tSel.value;
+            if (oInput) evt.outsAdded = parseInt(oInput.value, 10) || 0;
+            if (rInput) evt.runs = parseInt(rInput.value, 10) || 0;
+            if (dInput) evt.desc = dInput.value.trim();
+          });
+          inn.runs = (inn.defensiveEvents || []).reduce((acc, cur) => acc + (cur.runs || 0), 0);
+          inn.hits = (inn.defensiveEvents || []).filter(cur => cur.type === 'HIT').length;
+        }
       });
 
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-      await commitGamesToGitHub(allGames, `修改賽事紀錄: ${game.date} vs ${game.opponent}`);
+      await commitGamesToGitHub(allGames, `修改賽事紀錄(含投手數據): ${game.date} vs ${game.opponent}`);
 
-      // 重新計算並自動綁定更新全隊日誌與個人三圍
+      // 重新計算並自動綁定更新全隊打擊與投手賽伯計量
       syncAllGamesToTeamLogs();
       await commitLogsToGitHub(allLogs, `連動更新賽事日誌: ${game.date} vs ${game.opponent}`);
 
       isEditingReviewGame = false;
       renderAll();
       renderGameReview();
-      showToast('💾 賽事修改已儲存！總數據與球員個人成績已完全自動同步更新！');
+      showToast('💾 賽事、打擊與投手數據修改已儲存！全系統已完全自動同步更新！');
     };
-function renderSprayChartStudio() {
+
+    function renderSprayChartStudio() {
       const select = document.getElementById('sprayPlayerSelect');
       const container = document.getElementById('sprayPointsContainer');
       const metricsContainer = document.getElementById('sprayMetricsContainer');
