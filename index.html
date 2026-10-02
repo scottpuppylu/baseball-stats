@@ -43,7 +43,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1632</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1642</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -1183,7 +1183,7 @@
                 </div>
                 <div>
                   <label class="block text-slate-400 mb-1 font-semibold">對手隊伍名稱 <span class="text-rose-400">*</span></label>
-                  <input type="text" id="setup_game_opponent" placeholder="例如: 機械系壘、化材系壘" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
+                  <input type="text" id="setup_game_opponent" placeholder="例如: 化材系壘、土木系壘" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
                   <label class="block text-slate-400 mb-1 font-semibold">賽事/盃賽標籤</label>
@@ -2401,18 +2401,49 @@
     const DEFENSE_FILE_PATH = "data/defense.json";
     const GAMES_FILE_PATH = "data/games.json";
     let currentGamesSha = null;
+    // 嚴格過濾模擬/測試賽事與日誌工具，確保絕對不污染使用者真實數據
+    function isSimulatedGame(g) {
+      if (!g) return true;
+      if (g.id === 'game_20260315_mech' || g.id === 'demo_game_1') return true;
+      if (g.isSimulated || g.simulated || g.isMock || g.isTest) return true;
+      const opp = (g.opponent || '').trim();
+      if (opp === '機械系壘' || opp === '友隊選手' || opp.includes('模擬') || opp.includes('測試') || opp.includes('Demo') || opp.includes('範例')) return true;
+      const tag = (g.tag || '').trim();
+      if (tag.includes('模擬') || tag.includes('測試') || tag.includes('Demo')) return true;
+      return false;
+    }
+
+    function isSimulatedLog(l) {
+      if (!l || !l.id) return true;
+      if (l.id.includes('test') || l.id.includes('mock') || l.id.includes('demo') || l.id.includes('sim')) return true;
+      const tag = (l.tag || '').trim();
+      if (tag.includes('模擬') || tag.includes('測試') || tag.includes('機械') || tag.includes('友隊選手') || tag.includes('Demo')) return true;
+      return false;
+    }
+
     // 歷史場記資料庫 (嚴格過濾模擬賽事，絕對不污染使用者真實數據)
     let allGames = window.allGames = (function() {
       try {
         const stored = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
-        const cleaned = stored.filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
+        const cleaned = stored.filter(g => !isSimulatedGame(g));
         localStorage.setItem('rebas_all_games', JSON.stringify(cleaned));
         return cleaned;
       } catch (e) {
         return [];
       }
     })();
-    let activeGame = window.activeGame = JSON.parse(localStorage.getItem('rebas_active_game')) || null;
+    let activeGame = window.activeGame = (function() {
+      try {
+        const act = JSON.parse(localStorage.getItem('rebas_active_game'));
+        if (!act || isSimulatedGame(act)) {
+          localStorage.removeItem('rebas_active_game');
+          return null;
+        }
+        return act;
+      } catch (e) {
+        return null;
+      }
+    })();
 
 
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
@@ -2497,8 +2528,8 @@
     let guestPlayers = window.guestPlayers = (function() {
       try {
         const stored = JSON.parse(localStorage.getItem('rebas_guest_players')) || [];
-        // 自動過濾掉舊版預置的假支援選手A與支援選手B
-        const cleaned = stored.filter(g => g.name !== '支援選手A' && g.name !== '支援選手B');
+        // 自動過濾掉舊版預置的假支援選手與任何測試/模擬支援選手
+        const cleaned = stored.filter(g => g && g.name && g.name !== '支援選手A' && g.name !== '支援選手B' && !g.name.includes('測試') && !g.name.includes('模擬') && !g.name.includes('範例'));
         localStorage.setItem('rebas_guest_players', JSON.stringify(cleaned));
         return cleaned;
       } catch (e) {
@@ -3175,7 +3206,7 @@
               : 'bg-slate-950/40 border-slate-800/80 opacity-40 hover:opacity-75'
           }">
             <div class="shrink-0 relative">
-              ${renderAvatarElement(name, 'w-8 h-8 text-xs ring-1 ' + (isPresent ? 'ring-sky-400' : 'ring-slate-700'))}
+              ${renderAvatarElement(name, 'w-10 h-10 text-sm ring-1 ' + (isPresent ? 'ring-sky-400' : 'ring-slate-700'))}
               <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold ${
                 isPresent ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
               }">
@@ -3681,7 +3712,7 @@
           <tr class="hover:bg-slate-800/60 transition ${item.posInfo.isDh ? 'bg-amber-950/15' : ''}">
             <td class="p-3 text-center font-mono font-black ${item.posInfo.isDh ? 'text-amber-400' : 'text-rose-400'} text-sm tabular-nums">${item.slot}</td>
             <td class="p-3 font-bold text-white flex items-center space-x-3">
-              ${renderAvatarElement(item.player.name, 'w-8 h-8 text-xs ring-1 ring-slate-700')}
+              ${renderAvatarElement(item.player.name, 'w-10 h-10 text-sm ring-1 ring-slate-700')}
               <div>
                 <span>#${NAME_TO_JERSEY[item.player.name] ?? ''} ${item.player.name}</span>
                 <span class="block text-[10px] text-slate-500 font-mono">歷史 PA: ${item.histPa}</span>
@@ -4071,7 +4102,7 @@
           <tr class="hover:bg-slate-800/60 transition ${posInfo.isDh ? 'bg-amber-950/15' : ''}">
             <td class="p-2.5 text-center font-bold ${posInfo.isDh ? 'text-amber-400' : 'text-rose-400'}">${slot}</td>
             <td class="p-2.5 font-bold text-white flex items-center space-x-2 font-sans">
-              ${renderAvatarElement(p.name, 'w-6 h-6 text-[10px] ring-1 ring-slate-700')}
+              ${renderAvatarElement(p.name, 'w-8 h-8 text-xs ring-1 ring-slate-700')}
               <span>#${NAME_TO_JERSEY[p.name] ?? ''} ${p.name}</span>
             </td>
             <td class="p-2.5 text-center font-sans text-xs">
@@ -4692,7 +4723,7 @@ window.toggleDiagnosticsCollapse = function() {
     }
 
 
-    function renderAvatarElement(name, sizeClass = 'w-9 h-9 text-xs') {
+    function renderAvatarElement(name, sizeClass = 'w-10 h-10 text-sm') {
       const avatarData = playerAvatars[name];
       if (avatarData) {
         return `<img src="${avatarData}" alt="${name}" class="${sizeClass} rounded-full object-cover border-2 border-sky-400/80 shadow-md shrink-0 transition duration-150">`;
@@ -4880,7 +4911,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       const outCanvas = document.createElement('canvas');
-      const outSize = 160;
+      const outSize = 320; // 升級為 320px 高解析度，確保手機與電腦大頭貼極度清晰！
       outCanvas.width = outSize;
       outCanvas.height = outSize;
       const outCtx = outCanvas.getContext('2d');
@@ -5059,6 +5090,7 @@ window.toggleDiagnosticsCollapse = function() {
       const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
       const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
       return targetLogs.filter(item => {
+        if (!item || !item.name || isSimulatedLog(item)) return false;
         if (s && item.date < s) return false;
         if (e && item.date > e) return false;
         return true;
@@ -5249,7 +5281,7 @@ window.toggleDiagnosticsCollapse = function() {
             <span class="text-xl sm:text-2xl font-black text-sky-400 my-0.5 block tracking-tight tabular-nums truncate">${c.val}</span>
             <span class="text-[9px] sm:text-[10px] text-slate-500 font-mono block truncate">${c.sub}</span>
           </div>
-          ${c.player ? `<div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${c.player}'; switchMainTab('tabProfile');" title="點擊檢視 ${c.player} 檔案">${renderAvatarElement(c.player, 'w-10 h-10 sm:w-[3.25rem] sm:h-[3.25rem] text-xs sm:text-sm ring-2 ring-sky-400/80 shadow-md hover:scale-105 transition')}</div>` : ''}
+          ${c.player ? `<div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${c.player}'; switchMainTab('tabProfile');" title="點擊檢視 ${c.player} 檔案">${renderAvatarElement(c.player, 'w-12 h-12 sm:w-16 sm:h-16 text-base sm:text-xl ring-2 ring-sky-400/80 shadow-md hover:scale-105 transition')}</div>` : ''}
         </div>
       `).join('');
     }
@@ -5307,7 +5339,7 @@ window.toggleDiagnosticsCollapse = function() {
         <div class="border ${podiumColors[idx].border} ${podiumColors[idx].bg} rounded-2xl p-3.5 sm:p-4 flex items-center space-x-3.5 shadow-xl">
           <div class="text-2xl sm:text-3xl font-black ${podiumColors[idx].text} w-5 sm:w-6 text-center tabular-nums">${idx + 1}</div>
           <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${p.name}'; switchMainTab('tabProfile');" title="點擊檢視 ${p.name} 檔案">
-            ${renderAvatarElement(p.name, 'w-14 h-14 sm:w-[4.25rem] sm:h-[4.25rem] text-xl sm:text-2xl ' + podiumColors[idx].ring)}
+            ${renderAvatarElement(p.name, 'w-16 h-16 sm:w-20 sm:h-20 text-2xl sm:text-3xl ' + podiumColors[idx].ring)}
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex justify-between items-center">
@@ -5342,7 +5374,7 @@ window.toggleDiagnosticsCollapse = function() {
         tr.innerHTML = `
           <td class="p-3 text-center tabular-nums">${rankBadge}</td>
           <td class="p-3 font-bold text-white flex items-center space-x-3">
-            ${renderAvatarElement(p.name, 'w-8 h-8 sm:w-9 sm:h-9 text-xs ring-1 ring-slate-700')}
+            ${renderAvatarElement(p.name, 'w-10 h-10 sm:w-11 sm:h-11 text-sm ring-1 ring-slate-700')}
             <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-xs mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
           <td class="p-3 text-center font-mono tabular-nums">${p.pa}</td>
@@ -5400,13 +5432,13 @@ window.toggleDiagnosticsCollapse = function() {
 
       document.getElementById('compareHeadA').innerHTML = `
         <div class="flex items-center justify-center gap-2">
-          ${renderAvatarElement(pA.name, 'w-6 h-6 sm:w-7 sm:h-7 text-xs ring-2 ring-sky-400')}
+          ${renderAvatarElement(pA.name, 'w-8 h-8 sm:w-9 sm:h-9 text-sm ring-2 ring-sky-400')}
           <span>#${NAME_TO_JERSEY[pA.name] ?? ''} ${pA.name}</span>
         </div>
       `;
       document.getElementById('compareHeadB').innerHTML = `
         <div class="flex items-center justify-center gap-2">
-          ${renderAvatarElement(pB.name, 'w-6 h-6 sm:w-7 sm:h-7 text-xs ring-2 ring-amber-400')}
+          ${renderAvatarElement(pB.name, 'w-8 h-8 sm:w-9 sm:h-9 text-sm ring-2 ring-amber-400')}
           <span>#${NAME_TO_JERSEY[pB.name] ?? ''} ${pB.name}</span>
         </div>
       `;
@@ -5419,7 +5451,7 @@ window.toggleDiagnosticsCollapse = function() {
       document.getElementById('compareCardA').innerHTML = `
         <div class="flex items-center space-x-3 sm:space-x-4">
           <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${pA.name}'; switchMainTab('tabProfile');" title="點擊檢視 ${pA.name} 檔案">
-            ${renderAvatarElement(pA.name, 'w-20 h-20 sm:w-24 sm:h-24 text-2xl sm:text-3xl ring-4 ring-sky-500/60 shadow-2xl')}
+            ${renderAvatarElement(pA.name, 'w-24 h-24 sm:w-28 sm:h-28 text-3xl sm:text-4xl ring-4 ring-sky-500/70 shadow-2xl')}
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex justify-between items-baseline">
@@ -5437,7 +5469,7 @@ window.toggleDiagnosticsCollapse = function() {
       document.getElementById('compareCardB').innerHTML = `
         <div class="flex items-center space-x-3 sm:space-x-4">
           <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${pB.name}'; switchMainTab('tabProfile');" title="點擊檢視 ${pB.name} 檔案">
-            ${renderAvatarElement(pB.name, 'w-20 h-20 sm:w-24 sm:h-24 text-2xl sm:text-3xl ring-4 ring-amber-500/60 shadow-2xl')}
+            ${renderAvatarElement(pB.name, 'w-24 h-24 sm:w-28 sm:h-28 text-3xl sm:text-4xl ring-4 ring-amber-500/70 shadow-2xl')}
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex justify-between items-baseline">
@@ -5867,13 +5899,13 @@ function renderPlayerProfile(agg) {
           <div class="space-y-4">
             <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5">
               <div class="relative group cursor-pointer shrink-0" onclick="triggerAvatarUpload()" title="點擊自訂頭像（裁切完即時同步至雲端）">
-                ${renderAvatarElement(p.name, 'w-24 h-24 sm:w-28 sm:h-28 text-3xl sm:text-4xl ring-4 ring-sky-500/70 shadow-[0_0_30px_rgba(56,189,248,0.25)] hover:scale-105 transition duration-200')}
+                ${renderAvatarElement(p.name, 'w-36 h-36 sm:w-32 sm:h-32 md:w-36 md:h-36 text-5xl sm:text-4xl md:text-5xl ring-4 ring-sky-500/70 shadow-[0_0_35px_rgba(56,189,248,0.35)] hover:scale-105 transition duration-200')}
                 <div class="absolute inset-0 bg-slate-950/85 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
-                  <span class="text-xs text-sky-300 font-bold">更換頭像</span>
-                  <span class="text-[10px] text-slate-300 mt-0.5">即時同步</span>
+                  <span class="text-sm text-sky-300 font-bold">更換頭像</span>
+                  <span class="text-xs text-slate-300 mt-0.5">即時同步</span>
                 </div>
-                <div class="absolute bottom-0 right-0 bg-sky-600 hover:bg-sky-500 text-white p-1.5 sm:p-2 rounded-full shadow-xl border-2 border-slate-950 flex items-center justify-center transition">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <div class="absolute bottom-0 right-0 bg-sky-600 hover:bg-sky-500 text-white p-2.5 sm:p-2 rounded-full shadow-xl border-2 border-slate-950 flex items-center justify-center transition">
+                  <svg class="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </div>
               </div>
               <div class="flex-1 min-w-0 space-y-2">
@@ -6383,7 +6415,7 @@ function renderPlayerProfile(agg) {
           <div>
             <div class="flex items-center space-x-3 border-b border-slate-800/80 pb-3">
               <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${p.name}'; renderPlayerProfile(getAnalysisAgg());" title="鎖定該球員檔案">
-                ${renderAvatarElement(p.name, 'w-12 h-12 sm:w-14 sm:h-14 text-lg sm:text-xl ring-2 ring-rose-500/50 shadow-md')}
+                ${renderAvatarElement(p.name, 'w-14 h-14 sm:w-16 sm:h-16 text-xl sm:text-2xl ring-2 ring-rose-500/50 shadow-md')}
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
@@ -7009,7 +7041,7 @@ function renderCustomChart(agg) {
 
         tr.innerHTML = `
           <td class="p-3 font-bold text-white flex items-center space-x-3">
-            ${renderAvatarElement(p.name, 'w-8 h-8 sm:w-9 sm:h-9 text-xs ring-2 ring-sky-500/40')}
+            ${renderAvatarElement(p.name, 'w-10 h-10 sm:w-11 sm:h-11 text-sm ring-2 ring-sky-500/40')}
             <span>${NAME_TO_JERSEY[p.name] !== undefined ? `<span class="text-slate-400 font-mono text-xs mr-1">#${NAME_TO_JERSEY[p.name]}</span>` : ''}${p.name}</span>
           </td>
           <td class="p-3 text-center font-mono text-slate-300 tabular-nums">${p.pa}</td>
@@ -7092,7 +7124,7 @@ function renderCustomChart(agg) {
           <td class="p-3 font-mono text-sky-400 tabular-nums">${l.date}</td>
           <td class="p-3">${displayTag}</td>
           <td class="p-3 font-bold text-white flex items-center space-x-3">
-            ${renderAvatarElement(l.name, 'w-8 h-8 text-xs ring-1 ring-slate-700')}
+            ${renderAvatarElement(l.name, 'w-10 h-10 text-sm ring-1 ring-slate-700')}
             <span>${NAME_TO_JERSEY[l.name] !== undefined ? `<span class="text-slate-400 font-mono text-xs mr-1">#${NAME_TO_JERSEY[l.name]}</span>` : ''}${l.name}</span>
           </td>
           <td class="p-3 text-center font-mono tabular-nums">${l.pa}</td>
@@ -7207,7 +7239,7 @@ function renderCustomChart(agg) {
       if (!hint) return;
       if (JERSEY_TO_NAME[num]) {
         const pName = JERSEY_TO_NAME[num];
-        hint.innerHTML = `<span class="inline-flex items-center gap-1.5">${renderAvatarElement(pName, 'w-5 h-5 text-[10px]')}<span>鎖定：#${num} ${pName}</span></span>`;
+        hint.innerHTML = `<span class="inline-flex items-center gap-1.5">${renderAvatarElement(pName, 'w-6 h-6 text-xs')}<span>鎖定：#${num} ${pName}</span></span>`;
         hint.className = 'block text-xs text-emerald-400 mt-1 min-h-[20px] font-medium';
       } else if (e.target.value.trim() !== '') {
         hint.textContent = '查無此背號，若為新隊員請先新增球員';
@@ -7364,7 +7396,7 @@ function renderCustomChart(agg) {
       }).join('');
       const badgeEl = document.getElementById('playerSelectAvatarBadge');
       if (badgeEl && selectedPlayerName) {
-        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-7 h-7 sm:w-8 sm:h-8 text-xs ring-2 ring-sky-400/80 shadow');
+        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-9 h-9 sm:w-10 sm:h-10 text-sm ring-2 ring-sky-400/80 shadow');
       }
     }
 
@@ -7568,7 +7600,7 @@ function renderCustomChart(agg) {
         `).join('');
       }
       if (badge && selectedPitcherName) {
-        badge.innerHTML = renderAvatarElement(selectedPitcherName, 'w-7 h-7 text-xs ring-2 ring-teal-400 shadow');
+        badge.innerHTML = renderAvatarElement(selectedPitcherName, 'w-9 h-9 sm:w-10 sm:h-10 text-sm ring-2 ring-teal-400 shadow');
       }
 
       // 2. 渲染頂部 4 大慢壘投手進階核心指標看板
@@ -7745,7 +7777,7 @@ function renderCustomChart(agg) {
           return `
             <tr class="hover:bg-slate-800/60 transition cursor-pointer ${isSelected ? 'bg-teal-950/20 border-l-4 border-teal-400' : ''}" onclick="selectPitcherRow('${p.name}')">
               <td class="p-3 font-bold text-white flex items-center space-x-2.5">
-                ${renderAvatarElement(p.name, 'w-7 h-7 text-[10px] ring-1 ring-teal-400/80')}
+                ${renderAvatarElement(p.name, 'w-9 h-9 text-xs ring-1 ring-teal-400/80')}
                 <span>#${NAME_TO_JERSEY[p.name] ?? ''} ${p.name}</span>
               </td>
               <td class="p-3 text-center">${p.games}</td>
@@ -7885,7 +7917,7 @@ function renderCustomChart(agg) {
       selectedPlayerName = e.target.value;
       const badgeEl = document.getElementById('playerSelectAvatarBadge');
       if (badgeEl) {
-        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-7 h-7 sm:w-8 sm:h-8 text-xs ring-2 ring-sky-400/80 shadow');
+        badgeEl.innerHTML = renderAvatarElement(selectedPlayerName, 'w-9 h-9 sm:w-10 sm:h-10 text-sm ring-2 ring-sky-400/80 shadow');
       }
       const anaAgg = getAnalysisAgg();
       renderPlayerProfile(anaAgg);
@@ -8003,14 +8035,14 @@ function renderCustomChart(agg) {
         const { content, sha } = await fetchGitHubContent(GAMES_FILE_PATH);
         currentGamesSha = sha;
         const rawGames = Array.isArray(content) ? content : [];
-        allGames = rawGames.filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
+        allGames = rawGames.filter(g => !isSimulatedGame(g));
         localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
         return true;
       } catch (err) {
         try {
           const content = await fetchLocalContent(GAMES_FILE_PATH);
           const rawGames = Array.isArray(content) ? content : [];
-          allGames = rawGames.filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
+          allGames = rawGames.filter(g => !isSimulatedGame(g));
           localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
         } catch (e) {}
         return false;
@@ -8464,7 +8496,7 @@ function renderCustomChart(agg) {
       card.innerHTML = `
         <div class="flex items-center space-x-3 sm:space-x-4">
           <div class="relative">
-            ${renderAvatarElement(batterName, 'w-12 h-12 text-sm')}
+            ${renderAvatarElement(batterName, 'w-16 h-16 sm:w-18 sm:h-18 text-2xl sm:text-3xl ring-2 ring-amber-400/80 shadow-md')}
             <span class="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 font-black font-mono text-[10px]">#${jersey}</span>
           </div>
           <div>
@@ -8503,7 +8535,7 @@ function renderCustomChart(agg) {
       const jersey = NAME_TO_JERSEY[pitcherName] ?? '--';
 
       if (pTitle) pTitle.textContent = `登板投手：#${jersey} ${pitcherName}`;
-      if (pAvatar) pAvatar.innerHTML = renderAvatarElement(pitcherName, 'w-10 h-10 text-xs');
+      if (pAvatar) pAvatar.innerHTML = renderAvatarElement(pitcherName, 'w-14 h-14 sm:w-16 sm:h-16 text-xl sm:text-2xl ring-2 ring-sky-400/80 shadow-md');
 
       if (pSelect) {
         const { teamNames, guestNames } = getAllAvailablePlayerNames();
@@ -9260,7 +9292,7 @@ function renderCustomChart(agg) {
             <td class="p-2.5 text-center text-slate-500">${i + 1}</td>
             <td class="p-2.5 text-center font-bold text-amber-400">第 ${p.slot} 棒</td>
             <td class="p-2.5 font-bold text-white flex items-center space-x-2">
-              ${renderAvatarElement(p.batterName, 'w-6 h-6 text-[10px]')}
+              ${renderAvatarElement(p.batterName, 'w-8 h-8 text-xs')}
               <span>#${NAME_TO_JERSEY[p.batterName] ?? ''} ${p.batterName}</span>
             </td>
             <td class="p-2.5 text-center">${resBadge}</td>
@@ -9394,12 +9426,12 @@ function renderCustomChart(agg) {
       const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
       const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
 
-      // 1. 保留手動登記與大專總結等非場記日誌
-      const manualLogs = targetLogs.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+      // 1. 保留手動登記與大專總結等非場記日誌，並徹底過濾任何模擬日誌
+      const manualLogs = targetLogs.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_') && !isSimulatedLog(l));
 
       // 2. 由每場歷史比賽動態生成標準賽事日誌 (含 Statcast 擊球型態、落點與 SDI 2.0 細分數據)
       const generatedGameLogs = [];
-      const cleanGames = (targetGames || []).filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
+      const cleanGames = (targetGames || []).filter(g => !isSimulatedGame(g));
 
       cleanGames.forEach(game => {
         const statsMap = {};
@@ -9817,7 +9849,7 @@ function renderCustomChart(agg) {
           <tr class="hover:bg-slate-800/50 transition ${b.isSub ? 'bg-purple-950/15' : ''}">
             <td class="p-2.5 text-center">${slotBadge}</td>
             <td class="p-2.5 font-bold text-white flex items-center space-x-2 ${b.isSub ? 'pl-5' : ''}">
-              ${renderAvatarElement(b.name, 'w-6 h-6 text-[10px]')}
+              ${renderAvatarElement(b.name, 'w-8 h-8 text-xs')}
               <span>#${p.jersey} ${b.name}</span>
               ${b.isSub ? '<span class="text-[10px] text-purple-400 font-normal font-mono">(第' + b.slot + '棒替補)</span>' : ''}
             </td>
@@ -10505,16 +10537,24 @@ function renderCustomChart(agg) {
       const cached = localStorage.getItem('rebas_logs');
       if (cached) {
         let parsed = JSON.parse(cached);
-        // 清理殘留的 log_game_ 與 log_auto_
-        allLogs = parsed.filter(l => !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+        // 清理殘留的 log_game_ 與 log_auto_ 以及任何模擬/測試日誌
+        allLogs = parsed.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_') && !isSimulatedLog(l));
+        localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
       }
     } catch(e) {}
     try {
       const cachedGames = localStorage.getItem('rebas_all_games');
       if (cachedGames) {
         let pGames = JSON.parse(cachedGames);
-        allGames = window.allGames = pGames.filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
+        allGames = window.allGames = pGames.filter(g => !isSimulatedGame(g));
         localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      }
+    } catch(e) {}
+    try {
+      const act = JSON.parse(localStorage.getItem('rebas_active_game'));
+      if (act && isSimulatedGame(act)) {
+        localStorage.removeItem('rebas_active_game');
+        activeGame = window.activeGame = null;
       }
     } catch(e) {}
 
