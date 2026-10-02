@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.0620</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1140</span>
         </div>
 
 
@@ -418,8 +418,15 @@
                   <option value="babip">場內安打率 (BABIP)</option>
                   <option value="seca">次級打擊率 (SecA)</option>
                 </optgroup>
+                <optgroup label="Statcast 擊球品質與預期期望">
+                  <option value="xba">預期打擊率 (xBA)</option>
+                  <option value="xwoba">預期加權上壘 (xwOBA)</option>
+                  <option value="ld_pct">平飛球率 (LD%)</option>
+                  <option value="pull_pct">拉打傾向 (Pull%)</option>
+                  <option value="oppo_pct">反向推打 (Oppo%)</option>
+                </optgroup>
                 <optgroup label="好球帶紀律與控制">
-                  <option value="sdi">慢壘好球帶紀律 (SDI)</option>
+                  <option value="sdi">慢壘好球帶紀律 2.0 (SDI)</option>
                   <option value="contact_pct">擊球掌握率 (Contact%)</option>
                   <option value="bb_pct">四壞率 (BB%)</option>
                   <option value="k_pct_asc">低三振率優先 (K% ↓)</option>
@@ -1420,11 +1427,20 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-slate-950 p-4 rounded-xl border border-sky-900/40 space-y-2 shadow-sm">
                   <div class="flex items-center justify-between">
-                    <span class="font-black text-amber-300 text-sm">慢壘好球帶紀律指數 (SDI)</span>
-                    <span class="font-mono text-[10px] text-sky-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Softball Discipline Index</span>
+                    <span class="font-black text-amber-300 text-sm">慢壘好球帶紀律指數 2.0 (SDI 2.0)</span>
+                    <span class="font-mono text-[10px] text-sky-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Softball Discipline Index 2.0</span>
                   </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-amber-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">SDI = (BB - 1.5 × K) / PA</span></p>
-                  <p><span class="text-slate-400">說明：</span>慢壘具備「好球帶寬、球速慢、開局多為1好1壞」之特性，強打者以積極進攻為主，四壞天然偏少；相反地，吞K代價極重，通常代表追打惡劣壞球。公式給予三振 1.5 倍懲罰權重，破除傳統「不保送就等於不會選球」的盲點，真實回饋積極攻擊且絕不吞 K 的強打者。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-amber-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">SDI 2.0 = (BB - 1.0×界外K - 2.0×揮空K) / PA</span></p>
+                  <p><span class="text-slate-400">說明：</span>慢壘革命性好球帶模型！過去一律以 1.5 倍懲罰所有三振，但慢壘實戰中，打者在兩好球後的『界外三振 (界外K)』多為保護好球帶或纏鬥出棒，其擊球品質與對球路之辨識遠高於遭到投手愚弄之『揮空/站立三振 (-2.0x)』。SDI 2.0 給予兩者精確權重分流，更真實回饋高纏鬥力與零揮空的頂尖打者！</p>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-indigo-900/40 space-y-2 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-indigo-300 text-sm">現代賽伯計量最強二棒理論 (The Modern Super-#2)</span>
+                    <span class="font-mono text-[10px] text-indigo-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Tom Tango 'The Book'</span>
+                  </div>
+                  <p><span class="text-slate-400">核心原則：</span>全隊最高綜合攻擊破壞力之 MVP 打者必須排在【第 2 棒】！</p>
+                  <p><span class="text-slate-400">說明：</span>現代棒球統計學權威 Tom Tango 與近年 MLB (Judge, Ohtani) 實證推翻了傳統『三棒最強、二棒助攻』的迷思。第 3 棒常在兩出局壘上無人時登場，得分效益低；而第 2 棒第一局 100% 登場打擊、得點圈機率高，且整場累積打席數僅次於第一棒！在慢速壘球單場僅打 2~3 輪的極端打席遞減環境下，將最強打者置於第 2 棒能保證整場產出最大化！</p>
                 </div>
                 <div class="bg-slate-950 p-4 rounded-xl border border-rose-900/40 space-y-2 shadow-sm">
                   <div class="flex items-center justify-between">
@@ -1523,6 +1539,24 @@
                   </div>
                   <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SecA = (TB - H + BB) / AB</span></p>
                   <p><span class="text-slate-400">意義：</span>評估打者「除了敲出一壘安打之外」藉由額外壘包推進（長打）與四壞選球所產生的獨立破壞產能，慢壘重砲指標。</p>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-emerald-900/40 space-y-1.5 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-emerald-300 text-sm">預期打擊率 (xBA) 與 運氣因子</span>
+                    <span class="font-mono text-[10px] text-emerald-400">Expected Batting Average</span>
+                  </div>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">xBA = Σ(擊球型態期望值) / AB | Luck = AVG - xBA</span></p>
+                  <p><span class="text-slate-400">意義：</span>MLB Statcast 旗艦指標。根據擊球型態 (平飛 LD=0.68, 滾地 GB=0.28, 高飛 FB=0.38, 沖天炮 PU=0.02) 賦予客觀物理期望值，評估打者擊球品質。若 AVG > xBA 代表運氣極佳；若 AVG < xBA 代表強勁擊球運氣差被沒收。</p>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-sky-900/40 space-y-1.5 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sky-300 text-sm">Statcast 擊球型態分佈 (LD% / GB% / FB% / PU%)</span>
+                    <span class="font-mono text-[10px] text-sky-400">Batted Ball Profile</span>
+                  </div>
+                  <p><span class="text-slate-400">定義：</span>場內擊球 (BIP) 中平飛 (LD)、滾地 (GB)、高飛 (FB) 與無效內野高飛 (PU) 的比例。</p>
+                  <p><span class="text-slate-400">意義：</span>平飛球 (LD%) 是慢壘得分的第一推動力；高飛球 (FB%) 是長打來源但過高容易被 4 位外野手接殺；內野高飛 (PU%) 則為幾乎 100% 出局之無效揮棒。</p>
                 </div>
               </div>
             </div>
@@ -2252,7 +2286,10 @@
       iso: { title: "純長打率 (ISO)", formula: "ISO = SLG - AVG", desc: "過濾一壘安打水分，純粹衡量擊出長打的淨破壞力。" },
       babip: { title: "場內安打率 (BABIP)", formula: "BABIP = (H - HR) / (AB - K - HR + SF)", desc: "擊球員將球擊入場內形成安打的機率。" },
       seca: { title: "次級打擊率 (SecA)", formula: "SecA = (TB - H + BB) / AB", desc: "純粹衡量打者透過額外長打與保送獲取壘包之產能。" },
-      sdi: { title: "慢壘好球帶紀律指數 (SDI)", formula: "SDI = (BB - 1.5 × K) / PA", desc: "慢壘保送稀少且吞 K 代價極高，以 1.5 倍懲罰三振，實質獎勵積極攻擊且零三振的強打者。" },
+      sdi: { title: "慢壘好球帶紀律指數 2.0 (SDI 2.0)", formula: "SDI 2.0 = (BB - 1.0×界外K - 2.0×揮空K) / PA", desc: "慢壘特化紀律模型：區分兩好球後的『界外纏鬥K (-1.0x)』與遭引誘之『揮空/站立三振 (-2.0x)』，更精準回饋選球耐心與擊球本領。" },
+      ld_pct: { title: "平飛球率 (LD%)", formula: "LD% = Line Drives / BIP", desc: "Statcast 高級擊球品質指標。平飛球是慢壘中安打期望值最高 (.700+) 的型態，反映最佳揮棒甜蜜點。" },
+      xba: { title: "預期打擊率 (xBA)", formula: "xBA = Σ(擊球型態期望值 + HR) / AB", desc: "排除運氣因素，根據擊球初速與飛行型態 (LD, GB, FB, PU) 推算之真實擊球品質期望打擊率。" },
+      xwoba: { title: "預期加權上壘率 (xwOBA)", formula: "xwOBA = 根據 Statcast 擊球型態推算之預期攻擊期望值", desc: "現代賽伯計量評估打者真實進攻破壞力的旗艦指標，完全過濾守備運氣。" },
       contact_pct: { title: "擊球掌握率 (Contact%)", formula: "Contact% = (AB - K) / AB", desc: "打者成功將球擊出未吞三振的機率。" },
       bb_pct: { title: "四壞保送率 (BB%)", formula: "BB% = BB / PA", desc: "平均每打席選到四壞保送的機率。" },
       k_pct_asc: { title: "三振率 (K%) [低至高排序]", formula: "K% = K / PA", desc: "平均每打席吞下三振出局的機率，以低三振率優先排序。" },
@@ -2880,19 +2917,18 @@
       let presentPool = players.filter(p => presentPlayersSet.has(p.name));
       if (presentPool.length === 0) return { items: [], hasDh: isDhEnabled, targetSize };
 
-      // 2. 歷史總 PA >= 15 優先順位分流
+      // 2. 歷史總 PA >= 15 優先順位分流 (兼顧大樣本與出席名單)
       let primaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) >= 15);
       let secondaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) < 15)
         .sort((a, b) => (historicalPaMap[b.name] ?? b.pa) - (historicalPaMap[a.name] ?? a.pa));
 
-      // 若達到歷史門檻人數不足目標人數，從出席的次要池中依歷史 PA 遞補至目標人數
       let activePool = [...primaryPool];
       if (activePool.length < targetSize) {
         const needed = Math.min(targetSize - activePool.length, secondaryPool.length);
         activePool = activePool.concat(secondaryPool.slice(0, needed));
       }
 
-      // 投手 P 必保機制：因為不論有無 DH 投手都要打，若目前池中無人具備投手 P 順位，調入出席名單中最高順位之投手
+      // 投手 P 必保機制：慢壘投手必須親自打擊，若目前池中無人具備投手 P 順位，調入出席名單中最高順位之投手
       const pitcherRanks = defenseRankings['P'] || DEFAULT_DEFENSE_RANKINGS['P'] || [];
       const hasPitcher = activePool.some(p => pitcherRanks.includes(p.name));
       if (!hasPitcher) {
@@ -2903,62 +2939,75 @@
         }
       }
 
-      const lineupSize = Math.min(targetSize, activePool.length);
       let pool = [...activePool];
 
-      // 3. 現代賽伯計量棒次排序
-      // (A) 第四棒 Clean-Up (終極長打砲手)
+      // ========================================================
+      // ★★★ 現代賽伯計量學 (Tom Tango《The Book》) 最強二棒排兵模型 ★★★
+      // 慢壘環境核心考量：單場 7 局 (限時 50 分鐘)，整隊通常僅輪 2 輪多至 3 輪打席！
+      // 前 4~5 棒保證獲得 3~4 次打擊機會，後段 (8~11棒) 每場僅打 1~2 次！
+      // 打席價值前傾效應極端劇烈，全隊最強火力必須最前置，絕不隱藏於後段！
+      // ========================================================
+
+      // (A) 【第一順位首選】：第 2 棒【全隊最強 MVP・進攻大核 (The Core MVP)】
+      // 現代賽伯計量首要鐵律：第二棒第一局 100% 登場打擊，前有一棒上壘者，打席數比三四棒更多！
+      // 必須將全隊綜合進攻破壞力最高 (wRC+ 最高、OPS 最高、wOBA 最頂尖) 之 MVP 打者置於第 2 棒！
       pool.sort((a, b) => {
-        const scoreA = (a.iso * 3.0) + (a.slg * 2.0) + (a.hr * 0.25) + ((a.wrc_plus || 100) / 100) * 1.0;
-        const scoreB = (b.iso * 3.0) + (b.slg * 2.0) + (b.hr * 0.25) + ((b.wrc_plus || 100) / 100) * 1.0;
+        const mvpA = ((a.wrc_plus || 100) * 0.45) + (a.ops * 38) + ((a.xwoba || a.woba) * 25) + (a.obp * 15) - (a.k_pct * 8);
+        const mvpB = ((b.wrc_plus || 100) * 0.45) + (b.ops * 38) + ((b.xwoba || b.woba) * 25) + (b.obp * 15) - (b.k_pct * 8);
+        return mvpB - mvpA;
+      });
+      const p2 = pool.shift(); // ★★★ 第 2 棒首選誕生！全隊最強棒！
+
+      // (B) 【第二順位選取】：第 4 棒【終極清道夫・長打重砲 (Clean-Up Slugger)】
+      // 統計上壘上累積跑者數量最多之棒次！全隊長打率 (SLG)、純長打率 (ISO) 與全壘打能力最強之清壘重砲！
+      pool.sort((a, b) => {
+        const scoreA = (a.iso * 3.5) + (a.slg * 2.5) + (a.hr * 0.3) + ((a.wrc_plus || 100) * 0.1);
+        const scoreB = (b.iso * 3.5) + (b.slg * 2.5) + (b.hr * 0.3) + ((b.wrc_plus || 100) * 0.1);
         return scoreB - scoreA;
       });
       const p4 = pool.shift();
 
-      // (B) 第二棒 Modern Super-#2 (現代進攻核心)
+      // (C) 【第三順位選取】：第 1 棒【開路先鋒・上壘機器 (Leadoff Table-Setter)】
+      // 任務純粹：絕不出局、極大化 OBP 與選球紀律 (SDI 2.0)，為最強第 2 棒與中心打線創造得分舞台！
       pool.sort((a, b) => {
-        const scoreA = (a.woba * 3.0) + (a.obp * 2.0) + (a.slg * 0.8) + (a.contact_pct * 1.5) - (a.k_pct * 2.0);
-        const scoreB = (b.woba * 3.0) + (b.obp * 2.0) + (b.slg * 0.8) + (b.contact_pct * 1.5) - (b.k_pct * 2.0);
-        return scoreB - scoreA;
-      });
-      const p2 = pool.shift();
-
-      // (C) 第一棒 Leadoff (上壘開路先鋒)
-      pool.sort((a, b) => {
-        const scoreA = (a.obp * 3.5) + (Math.max(0, a.sdi) * 1.2) + (a.contact_pct * 1.0) - (a.k_pct * 2.5);
-        const scoreB = (b.obp * 3.5) + (Math.max(0, b.sdi) * 1.2) + (b.contact_pct * 1.0) - (b.k_pct * 2.5);
+        const scoreA = (a.obp * 4.0) + (Math.max(0, a.sdi) * 1.5) + (a.contact_pct * 1.5) - (a.k_pct * 3.0);
+        const scoreB = (b.obp * 4.0) + (Math.max(0, b.sdi) * 1.5) + (b.contact_pct * 1.5) - (b.k_pct * 3.0);
         return scoreB - scoreA;
       });
       const p1 = pool.shift();
 
-      // (D) 第三棒 All-Around (全能打擊軸心)
+      // (D) 【第四順位選取】：第 3 棒【全能軸心・得點圈推進 (All-Around Anchor)】
+      // 現代賽伯計量證實第 3 棒常遇兩出局無人上壘，需具備高安打率 (AVG) 與擊球掌握度 (Contact%)，有效銜接與推進！
       pool.sort((a, b) => {
-        const scoreA = (a.avg * 2.5) + (a.ops * 1.8) + (a.woba * 1.5) + (a.contact_pct * 1.0);
-        const scoreB = (b.avg * 2.5) + (b.ops * 1.8) + (b.woba * 1.5) + (b.contact_pct * 1.0);
+        const scoreA = (a.avg * 3.0) + (a.ops * 1.8) + (a.contact_pct * 1.2);
+        const scoreB = (b.avg * 3.0) + (b.ops * 1.8) + (b.contact_pct * 1.2);
         return scoreB - scoreA;
       });
       const p3 = pool.shift();
 
-      // (E) 第五棒 Protection (長打護衛與殘壘清掃)
+      // (E) 【第五順位選取】：第 5 棒【長打保護傘・重砲護衛 (Protection Power)】
+      // 次佳長打能力者，保護第 4 棒迫使投手正面對決，並在得點圈持續清掃殘留壘包！
       pool.sort((a, b) => {
-        const scoreA = (a.slg * 2.2) + (a.iso * 2.0) + ((a.rc || 0) / Math.max(1, a.pa)) * 1.5 + ((a.wrc_plus || 100) / 100) * 1.0;
-        const scoreB = (b.slg * 2.2) + (b.iso * 2.0) + ((b.rc || 0) / Math.max(1, b.pa)) * 1.5 + ((b.wrc_plus || 100) / 100) * 1.0;
+        const scoreA = (a.slg * 2.5) + (a.iso * 2.0) + ((a.wrc_plus || 100) * 0.1);
+        const scoreB = (b.slg * 2.5) + (b.iso * 2.0) + ((b.wrc_plus || 100) * 0.1);
         return scoreB - scoreA;
       });
       const p5 = pool.shift();
 
-      // (F) 末棒 (第 10 棒或第 11 棒：第二開路伏兵)
+      // (F) 【末棒選取】：第 10 棒或第 11 棒【第二開路先鋒・輪轉伏兵 (Second Leadoff)】
+      // 慢壘僅輪 2~3 輪，後段輪回前段時，末棒若能上壘，能無縫串聯給 1 棒與【全隊最強第 2 棒】形成連鎖大局！
       let pLast = null;
       if (pool.length > 0) {
         pool.sort((a, b) => {
-          const scoreA = (a.obp * 3.0) + (a.contact_pct * 1.2) - (a.k_pct * 1.5);
-          const scoreB = (b.obp * 3.0) + (b.contact_pct * 1.2) - (b.k_pct * 1.5);
+          const scoreA = (a.obp * 3.5) + (a.contact_pct * 1.5) - (a.k_pct * 2.0);
+          const scoreB = (b.obp * 3.5) + (b.contact_pct * 1.5) - (b.k_pct * 2.0);
           return scoreB - scoreA;
         });
         pLast = pool.shift();
       }
 
-      // (G) 中段棒次排列
+      // (G) 【中段棒次排序 (6~8棒 或 6~9/10棒)】
+      // 依進攻產能 (wRC+) 與 Contact% 依序排列，避免出現連續高三振區間
       pool.sort((a, b) => {
         const ratingA = (a.wrc_plus * 0.6) + (a.ops * 40) + (a.contact_pct * 20);
         const ratingB = (b.wrc_plus * 0.6) + (b.ops * 40) + (b.contact_pct * 20);
@@ -2967,7 +3016,7 @@
 
       let rawBatters = [];
       if (isDhEnabled) {
-        // 11 棒打線: p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11(pLast)
+        // 11 棒打線: p1, p2(最強棒), p3, p4(重砲), p5, p6, p7, p8, p9, p10, p11(pLast)
         const p6 = pool.shift() || null;
         const p7 = pool.shift() || null;
         const p8 = pool.shift() || null;
@@ -2976,7 +3025,7 @@
         const p11 = pLast;
         rawBatters = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11].filter(Boolean);
       } else {
-        // 10 棒打線: p1, p2, p3, p4, p5, p6, p7, p8, p9, p10(pLast)
+        // 10 棒打線: p1, p2(最強棒), p3, p4(重砲), p5, p6, p7, p8, p9, p10(pLast)
         const p6 = pool.shift() || null;
         const p7 = pool.shift() || null;
         const p8 = pool.shift() || null;
@@ -2989,28 +3038,28 @@
       const assignedPositions = matchPositionsForLineup(rawBatters, isDhEnabled);
 
       const roles = isDhEnabled ? [
-        { num: 1, title: '開路先鋒 (Leadoff)', desc: '【現代賽伯計量】：極大化 OBP 與選球紀律 (SDI)，避免出局堆積首壘跑者' },
-        { num: 2, title: '現代核心 (Super-#2)', desc: '【全隊最具破壞力打者之一】：高 wOBA、高 OBP、絕不輕易吞 K，首局首波強攻' },
-        { num: 3, title: '全能軸心 (All-Around)', desc: '【擊球穿透力】：高安打率 (AVG) 與 OPS 兼具，製造得點圈首波致命威脅' },
-        { num: 4, title: '終極重砲 (Clean-Up)', desc: '【壘包清道夫】：全隊最高純長打率 (ISO) 與 SLG，得點圈致命一棒擊沉' },
+        { num: 1, title: '開路先鋒 (Leadoff)', desc: '【上壘機器】：高 OBP 與 SDI 2.0，首局首出局前不輕易出局，為最強二棒鋪路' },
+        { num: 2, title: '最強進攻大核 (The Core MVP)', desc: '【現代賽伯計量首要鐵律】：全隊綜合攻擊破壞力最高之 MVP！首局保證打擊、整場打席最多，最大化得分期望值！' },
+        { num: 3, title: '全能軸心 (All-Around)', desc: '【擊球穿透力】：高安打率 (AVG) 與推進力，在二棒強攻後持續施壓' },
+        { num: 4, title: '終極清道夫 (Clean-Up)', desc: '【長打重砲】：全隊最高純長打率 (ISO) 與 SLG，得點圈致命一棒清壘' },
         { num: 5, title: '火力護衛 (Protection)', desc: '【長打保護傘】：強大長打推進力迫使對手正面對決四棒，清掃殘留壘包' },
         { num: 6, title: '中段突穿 (Mid Punch)', desc: '【重啟第二波攻勢】：優異進攻產能 (wRC+)，擊破對方後段防線' },
         { num: 7, title: '戰術銜接 (Rally Anchor)', desc: '【打線流暢關鍵】：穩定擊球掌握度 (Contact%)，避免攻勢中段斷層' },
         { num: 8, title: '後段支撐 (Lower Core)', desc: '【穩健施壓】：具備纏鬥與消耗球數能力，延續局數出局數' },
         { num: 9, title: '伏兵前哨 (Pre-Turn)', desc: '【輪轉先驅】：極力避免出局，為打線輪回十棒與前段重砲鋪路' },
         { num: 10, title: '雙核伏兵 (Co-Turn)', desc: '【深層壘包堆積】：與十一棒形成後段雙伏兵，擴大前段重砲打點機會' },
-        { num: 11, title: '十一棒伏兵 (Second Leadoff)', desc: '【慢壘十一棒小核彈】：後段最高上壘率 (OBP)，為 1~3 棒超強打線提前堆疊壘包' }
+        { num: 11, title: '十一棒伏兵 (Second Leadoff)', desc: '【慢壘輪轉小核彈】：後段最高上壘率 (OBP)，慢壘2~3輪打席中，上壘即可無縫串聯 1 棒與【最強第 2 棒】！' }
       ] : [
-        { num: 1, title: '開路先鋒 (Leadoff)', desc: '【現代賽伯計量】：極大化 OBP 與選球紀律 (SDI)，避免出局堆積首壘跑者' },
-        { num: 2, title: '現代核心 (Super-#2)', desc: '【全隊最具破壞力打者之一】：高 wOBA、高 OBP、絕不輕易吞 K，首局首波強攻' },
-        { num: 3, title: '全能軸心 (All-Around)', desc: '【擊球穿透力】：高安打率 (AVG) 與 OPS 兼具，製造得點圈首波致命威脅' },
-        { num: 4, title: '終極重砲 (Clean-Up)', desc: '【壘包清道夫】：全隊最高純長打率 (ISO) 與 SLG，得點圈致命一棒擊沉' },
+        { num: 1, title: '開路先鋒 (Leadoff)', desc: '【上壘機器】：高 OBP 與 SDI 2.0，首局首出局前不輕易出局，為最強二棒鋪路' },
+        { num: 2, title: '最強進攻大核 (The Core MVP)', desc: '【現代賽伯計量首要鐵律】：全隊綜合攻擊破壞力最高之 MVP！首局保證打擊、整場打席最多，最大化得分期望值！' },
+        { num: 3, title: '全能軸心 (All-Around)', desc: '【擊球穿透力】：高安打率 (AVG) 與推進力，在二棒強攻後持續施壓' },
+        { num: 4, title: '終極清道夫 (Clean-Up)', desc: '【長打重砲】：全隊最高純長打率 (ISO) 與 SLG，得點圈致命一棒清壘' },
         { num: 5, title: '火力護衛 (Protection)', desc: '【長打保護傘】：強大長打推進力迫使對手正面對決四棒，清掃殘留壘包' },
         { num: 6, title: '中段突穿 (Mid Punch)', desc: '【重啟第二波攻勢】：優異進攻產能 (wRC+)，擊破對方後段防線' },
         { num: 7, title: '戰術銜接 (Rally Anchor)', desc: '【打線流暢關鍵】：穩定擊球掌握度 (Contact%)，避免攻勢中段斷層' },
         { num: 8, title: '後段支撐 (Lower Core)', desc: '【穩健施壓】：具備纏鬥與消耗球數能力，延續局數出局數' },
         { num: 9, title: '伏兵前哨 (Pre-Turn)', desc: '【輪轉先驅】：極力避免出局，為打線輪回十棒與前段重砲鋪路' },
-        { num: 10, title: '十棒伏兵 (Second Leadoff)', desc: '【慢壘十棒小核彈】：後段最高上壘率 (OBP)，為 1~3 棒超強打線提前堆疊壘包' }
+        { num: 10, title: '十棒伏兵 (Second Leadoff)', desc: '【慢壘輪轉小核彈】：後段最高上壘率 (OBP)，慢壘2~3輪打席中，上壘即可無縫串聯 1 棒與【最強第 2 棒】！' }
       ];
 
       const items = rawBatters.map((p, idx) => {
@@ -3038,7 +3087,6 @@
       };
     }
 
-    // 渲染棒次推薦與自訂分析主模組
     function renderLineupAnalysis(agg) {
       const pList = agg.players;
       if (!pList || pList.length === 0) return;
@@ -3585,11 +3633,19 @@
         });
       }
 
-      if (lineupPlayers[1].wrc_plus < 100 && lineupPlayers[1].obp < 0.480) {
+      // 現代賽伯計量最強二棒與慢壘 2~3 輪打席前傾檢驗
+      const topBatterInLineup = [...lineupPlayers].sort((a, b) => b.wrc_plus - a.wrc_plus)[0];
+      if (lineupPlayers[1].name === topBatterInLineup.name) {
+        notes.push({
+          type: 'success',
+          title: `【現代最強二棒完美配置】：${lineupPlayers[1].name} 扛大核`,
+          desc: `全隊綜合進攻破壞力最高之打者 ${lineupPlayers[1].name} (wRC+ ${lineupPlayers[1].wrc_plus.toFixed(1)} / OPS ${lineupPlayers[1].ops.toFixed(3)}) 置於第 2 棒，完全符合現代賽伯計量學與慢壘單場僅 2~3 輪打席之極端前傾優勢！`
+        });
+      } else if (lineupPlayers[1].wrc_plus < 105) {
         notes.push({
           type: 'warning',
-          title: '現代二棒火力不足 (Super-#2 缺口)',
-          desc: `現代賽伯計量二棒是首局前段最強攻擊點，第 2 棒 ${lineupPlayers[1].name} wRC+ (${lineupPlayers[1].wrc_plus.toFixed(1)}) 低於隊均，建議配置高 wOBA 強棒。`
+          title: `第二棒攻擊火力不足 (違背現代最強二棒原則)`,
+          desc: `第 2 棒 ${lineupPlayers[1].name} wRC+ (${lineupPlayers[1].wrc_plus.toFixed(1)}) 偏低。慢壘一場僅 2~3 輪打席，第二棒擁有全場最高得分期望值且第一局必登場，強烈建議將全隊最強進攻核心 (${topBatterInLineup.name}, wRC+ ${topBatterInLineup.wrc_plus.toFixed(1)}) 移至第 2 棒！`
         });
       }
 
@@ -4503,7 +4559,12 @@ window.toggleDiagnosticsCollapse = function() {
       const grouped = {};
       filteredLogs.forEach(l => {
         if (!grouped[l.name]) {
-          grouped[l.name] = { name: l.name, pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0 };
+          grouped[l.name] = {
+            name: l.name, pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0,
+            k_swing: 0, k_foul: 0,
+            bip: 0, ld: 0, gb: 0, fb: 0, pu: 0,
+            pull: 0, cent: 0, oppo: 0
+          };
         }
         grouped[l.name].pa += Number(l.pa) || 0;
         const h1 = Number(l.h1) || 0;
@@ -4512,7 +4573,6 @@ window.toggleDiagnosticsCollapse = function() {
         const hr = Number(l.hr) || 0;
         const hitSum = h1 + h2 + h3 + hr;
         const rawH = Number(l.h) || 0;
-
 
         if (hitSum > 0) {
           grouped[l.name].h1 += h1;
@@ -4525,15 +4585,23 @@ window.toggleDiagnosticsCollapse = function() {
           grouped[l.name].h += rawH;
         }
 
-
         grouped[l.name].bb += Number(l.bb) || 0;
         grouped[l.name].sf += Number(l.sf) || 0;
         grouped[l.name].k += Number(l.k) || 0;
+        grouped[l.name].k_swing += Number(l.k_swing) || (l.k_swing === undefined ? (Number(l.k) || 0) : 0);
+        grouped[l.name].k_foul += Number(l.k_foul) || 0;
 
+        grouped[l.name].bip += Number(l.bip) || 0;
+        grouped[l.name].ld += Number(l.ld) || 0;
+        grouped[l.name].gb += Number(l.gb) || 0;
+        grouped[l.name].fb += Number(l.fb) || 0;
+        grouped[l.name].pu += Number(l.pu) || 0;
+        grouped[l.name].pull += Number(l.pull) || 0;
+        grouped[l.name].cent += Number(l.cent) || 0;
+        grouped[l.name].oppo += Number(l.oppo) || 0;
 
         grouped[l.name].ab = Math.max(0, grouped[l.name].pa - grouped[l.name].bb - grouped[l.name].sf);
       });
-
 
       const list = Object.values(grouped);
       const teamAb = list.reduce((a, b) => a + b.ab, 0);
@@ -4544,14 +4612,10 @@ window.toggleDiagnosticsCollapse = function() {
       const teamHr = list.reduce((a, b) => a + b.hr, 0);
       const teamBb = list.reduce((a, b) => a + b.bb, 0);
       const teamSf = list.reduce((a, b) => a + b.sf, 0);
-
-
       const teamAvg = teamAb > 0 ? teamH / teamAb : 0;
       const teamObp = (teamAb + teamBb + teamSf) > 0 ? (teamH + teamBb) / (teamAb + teamBb + teamSf) : 0;
       const teamSlg = teamAb > 0 ? (teamH1 + 2*teamH2 + 3*teamH3 + 4*teamHr) / teamAb : 0;
       const teamOps = teamObp + teamSlg;
-
-
       const teamPa = list.reduce((a, b) => a + b.pa, 0);
       const teamBbVal = list.reduce((a, b) => a + b.bb, 0);
       const teamH1Val = list.reduce((a, b) => a + b.h1, 0);
@@ -4560,7 +4624,6 @@ window.toggleDiagnosticsCollapse = function() {
       const teamHrVal = list.reduce((a, b) => a + b.hr, 0);
       const teamWobaNum = 0.69 * teamBbVal + 0.89 * teamH1Val + 1.27 * teamH2Val + 1.62 * teamH3Val + 2.10 * teamHrVal;
       const teamWoba = teamPa > 0 ? teamWobaNum / teamPa : 0;
-
 
       list.forEach(p => {
         p.avg = p.ab > 0 ? p.h / p.ab : 0;
@@ -4572,8 +4635,15 @@ window.toggleDiagnosticsCollapse = function() {
         p.ops_plus = teamOps > 0 ? (p.ops / teamOps) * 100 : 100;
         p.woba = p.pa > 0 ? (0.69 * p.bb + 0.89 * p.h1 + 1.27 * p.h2 + 1.62 * p.h3 + 2.10 * p.hr) / p.pa : 0;
         p.wrc_plus = teamWoba > 0 ? (p.woba / teamWoba) * 100 : 100;
-        p.sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
 
+        // ★★★ SDI 2.0 (慢壘好球帶紀律指數 2.0)：
+        // 慢壘特化加權：揮空/站立三振代表盲目追打壞球或完全被騙，代價最重 (-2.0)；
+        // 兩好球界外三振 (界外K) 代表打者已做出確實擊球並纏鬥，代價減半 (-1.0)；四壞保送 (+1.0)
+        if (p.k_foul > 0 || p.k_swing > 0) {
+          p.sdi = p.pa > 0 ? (p.bb - 1.0 * p.k_foul - 2.0 * p.k_swing) / p.pa : 0;
+        } else {
+          p.sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
+        }
 
         const bipDenom = p.ab - p.k - p.hr + p.sf;
         p.babip = bipDenom > 0 ? (p.h - p.hr) / bipDenom : 0;
@@ -4583,8 +4653,31 @@ window.toggleDiagnosticsCollapse = function() {
         p.k_pct = p.pa > 0 ? p.k / p.pa : 0;
         p.contact_pct = p.ab > 0 ? (p.ab - p.k) / p.ab : 1.0;
         p.bb_k_ratio = p.k > 0 ? p.bb / p.k : p.bb;
-      });
 
+        // ★★★ Statcast 擊球型態與品質百分比
+        const validBip = p.bip > 0 ? p.bip : Math.max(1, bipDenom);
+        p.ld_pct = p.bip > 0 ? p.ld / p.bip : (p.h2 + p.h3) / validBip;
+        p.gb_pct = p.bip > 0 ? p.gb / p.bip : Math.max(0, (validBip - p.ld - p.fb - p.pu) / validBip);
+        p.fb_pct = p.bip > 0 ? p.fb / p.bip : (p.hr * 2) / validBip;
+        p.pu_pct = p.bip > 0 ? p.pu / p.bip : 0;
+
+        // ★★★ 廣角噴流方向指標
+        p.pull_pct = p.bip > 0 ? p.pull / p.bip : 0.40;
+        p.cent_pct = p.bip > 0 ? p.cent / p.bip : 0.35;
+        p.oppo_pct = p.bip > 0 ? p.oppo / p.bip : 0.25;
+
+        // ★★★ Statcast 預期期望打擊數據 (xBA, xSLG, xwOBA)
+        if (p.bip > 0 && p.ab > 0) {
+          p.xba = ((p.ld * 0.68) + (p.gb * 0.28) + (Math.max(0, p.fb - p.hr) * 0.38) + (p.pu * 0.02) + (p.hr * 1.0)) / p.ab;
+          p.xslg = ((p.ld * 0.95) + (p.gb * 0.30) + (Math.max(0, p.fb - p.hr) * 0.75) + (p.pu * 0.02) + (p.hr * 4.0)) / p.ab;
+          p.xwoba = p.pa > 0 ? (0.69 * p.bb + 0.89 * Math.max(0, p.xba * p.ab - (p.h2 + p.h3 + p.hr)) + 1.27 * p.h2 + 1.62 * p.h3 + 2.10 * p.hr) / p.pa : p.woba;
+        } else {
+          p.xba = p.avg;
+          p.xslg = p.slg;
+          p.xwoba = p.woba;
+        }
+        p.luck_factor = p.avg - p.xba; // 運氣因子 (大於0為好運安打，小於0為強勁擊球運氣差被沒收)
+      });
 
       return {
         players: list,
@@ -4594,7 +4687,6 @@ window.toggleDiagnosticsCollapse = function() {
         totalHr: teamHr
       };
     }
-
 
     function renderSummaryCards(agg) {
       const pList = agg.players;
@@ -5037,22 +5129,79 @@ window.toggleDiagnosticsCollapse = function() {
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-2.5 sm:gap-3 text-xs pt-1">
-          <div class="bg-slate-950 p-3 sm:p-3.5 rounded-xl border border-slate-800/80 shadow-sm">
-            <span class="text-slate-400 block text-[10px] font-medium">打擊三圍</span>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs pt-1">
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-sm">
+            <span class="text-slate-400 block text-[10px] font-medium">打擊三圍 (AVG/OBP/SLG)</span>
             <span class="font-mono text-emerald-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums truncate">${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}</span>
           </div>
-          <div class="bg-slate-950 p-3 sm:p-3.5 rounded-xl border border-slate-800/80 shadow-sm">
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-sm">
             <span class="text-slate-400 block text-[10px] font-medium">攻擊指數 (OPS / OPS+)</span>
             <span class="font-mono text-sky-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums truncate">${p.ops.toFixed(3)} / ${p.ops_plus.toFixed(1)}</span>
           </div>
-          <div class="bg-slate-950 p-3 sm:p-3.5 rounded-xl border border-slate-800/80 shadow-sm">
-            <span class="text-slate-400 block text-[10px] font-medium">得分創造 (wRC+)</span>
-            <span class="font-mono text-amber-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums">${p.wrc_plus.toFixed(1)}</span>
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-sm">
+            <span class="text-slate-400 block text-[10px] font-medium">得分創造 (wRC+ / wOBA)</span>
+            <span class="font-mono text-amber-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums">${p.wrc_plus.toFixed(1)} / ${p.woba.toFixed(3)}</span>
           </div>
-          <div class="bg-slate-950 p-3 sm:p-3.5 rounded-xl border border-slate-800/80 shadow-sm">
-            <span class="text-slate-400 block text-[10px] font-medium">選球紀律 (SDI) / BABIP</span>
-            <span class="font-mono text-purple-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums truncate">${p_sdi >= 0 ? '+' : ''}${p_sdi.toFixed(3)} / ${p.babip.toFixed(3)}</span>
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-sm">
+            <span class="text-slate-400 block text-[10px] font-medium">慢壘好球帶紀律 2.0 (SDI)</span>
+            <div class="flex items-baseline space-x-1.5">
+              <span class="font-mono text-purple-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums">${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}</span>
+              <span class="text-[9px] text-slate-500 font-mono">(界外K:${p.k_foul ?? 0} / 揮空K:${p.k_swing ?? p.k})</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ★★★ Statcast 現代擊球品質與落點深度解析面板 ★★★ -->
+        <div class="bg-slate-950/80 p-3.5 sm:p-4 rounded-xl border border-sky-900/40 space-y-3 mt-3">
+          <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+            <div class="flex items-center space-x-2">
+              <span class="bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[10px] px-2 py-0.5 rounded font-mono font-bold">STATCAST METRICS</span>
+              <h4 class="text-xs font-bold text-slate-200">Statcast 擊球型態與品質深度解析</h4>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">有效擊球樣本: ${p.bip || p.ab} 球</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+              <span class="text-[10px] text-slate-400 block font-sans">平飛球率 (LD%)</span>
+              <span class="text-emerald-400 font-black text-sm block">${(p.ld_pct * 100).toFixed(1)}%</span>
+              <span class="text-[9px] text-slate-500 font-sans">安打期望值最高型態</span>
+            </div>
+            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+              <span class="text-[10px] text-slate-400 block font-sans">滾地球率 (GB%)</span>
+              <span class="text-amber-400 font-black text-sm block">${(p.gb_pct * 100).toFixed(1)}%</span>
+              <span class="text-[9px] text-slate-500 font-sans">易受內野封殺</span>
+            </div>
+            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+              <span class="text-[10px] text-slate-400 block font-sans">高飛球率 (FB%)</span>
+              <span class="text-sky-400 font-black text-sm block">${(p.fb_pct * 100).toFixed(1)}%</span>
+              <span class="text-[9px] text-slate-500 font-sans">長打/全壘打來源</span>
+            </div>
+            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+              <span class="text-[10px] text-slate-400 block font-sans">內野無效球 (PU%)</span>
+              <span class="text-rose-400 font-black text-sm block">${(p.pu_pct * 100).toFixed(1)}%</span>
+              <span class="text-[9px] text-slate-500 font-sans">無效沖天炮出局</span>
+            </div>
+          </div>
+          <!-- 期望打擊數據 (Expected Stats) & 廣角噴流 -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-800/60 font-mono">
+            <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="text-[10px] text-slate-400 block font-sans">預期打擊數據 (Expected)</span>
+                <span class="text-slate-200">xBA: <b class="text-emerald-400">${p.xba.toFixed(3)}</b> | xSLG: <b class="text-sky-400">${p.xslg.toFixed(3)}</b></span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded border ${p.luck_factor >= 0.05 ? 'bg-amber-950/60 text-amber-300 border-amber-700/60' : p.luck_factor <= -0.05 ? 'bg-sky-950/60 text-sky-300 border-sky-700/60' : 'bg-slate-950 text-slate-400 border-slate-800'}">
+                ${p.luck_factor >= 0.05 ? '運氣極佳' : p.luck_factor <= -0.05 ? '強擊運氣差' : '擊球表現吻合'}
+              </span>
+            </div>
+            <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="text-[10px] text-slate-400 block font-sans">廣角噴流分佈 (Spray)</span>
+                <span class="text-slate-200">拉: <b class="text-amber-400">${(p.pull_pct * 100).toFixed(0)}%</b> | 中: <b class="text-sky-400">${(p.cent_pct * 100).toFixed(0)}%</b> | 推: <b class="text-emerald-400">${(p.oppo_pct * 100).toFixed(0)}%</b></span>
+              </div>
+              <span class="text-[10px] text-slate-400 font-sans">
+                ${p.pull_pct > 0.55 ? '強拉打型' : p.oppo_pct > 0.38 ? '反向推打型' : '全方位廣角'}
+              </span>
+            </div>
           </div>
         </div>
       `;
@@ -7505,7 +7654,7 @@ window.toggleDiagnosticsCollapse = function() {
     // ==========================================
     window.syncAllGamesToTeamLogs = syncAllGamesToTeamLogs;
     function syncAllGamesToTeamLogs() {
-      // 重新綁定日誌與比賽結果：由歷史場記庫 (allGames) 自動計算每位正式隊員的攻守數據，與手動日誌合併統一數據
+      // 重新綁定日誌與比賽結果：由歷史場記庫 (allGames) 自動計算每位正式隊員的攻守與 Statcast 進階擊球數據，與手動日誌合併統一數據
       const targetGames = (typeof window !== 'undefined' && Array.isArray(window.allGames)) ? window.allGames : (Array.isArray(allGames) ? allGames : []);
       const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
       const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
@@ -7513,7 +7662,7 @@ window.toggleDiagnosticsCollapse = function() {
       // 1. 保留手動登記與大專總結等非場記日誌
       const manualLogs = targetLogs.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
 
-      // 2. 由每場歷史比賽動態生成標準賽事日誌
+      // 2. 由每場歷史比賽動態生成標準賽事日誌 (含 Statcast 擊球型態、落點與 SDI 2.0 細分數據)
       const generatedGameLogs = [];
       const cleanGames = (targetGames || []).filter(g => g.id !== 'game_20260315_mech' && g.opponent !== '機械系壘');
 
@@ -7527,7 +7676,10 @@ window.toggleDiagnosticsCollapse = function() {
           statsMap[name] = {
             name,
             jersey: NAME_TO_JERSEY[name] ?? 0,
-            pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0
+            pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0,
+            k_swing: 0, k_foul: 0,
+            bip: 0, ld: 0, gb: 0, fb: 0, pu: 0,
+            pull: 0, cent: 0, oppo: 0
           };
         });
 
@@ -7547,7 +7699,23 @@ window.toggleDiagnosticsCollapse = function() {
               else if (pa.result === 'HR') { p.h++; p.hr++; }
               else if (pa.result === 'BB') p.bb++;
               else if (pa.result === 'SF') p.sf++;
-              else if (['K', 'K_FOUL', '界外K'].includes(pa.result)) p.k++;
+              else if (pa.result === '界外K') { p.k++; p.k_foul++; }
+              else if (['K', 'K_FOUL'].includes(pa.result)) { p.k++; p.k_swing++; }
+
+              // Statcast 擊球型態與落點統計
+              if (pa.trajectory && pa.trajectory !== 'none') {
+                p.bip++;
+                if (pa.trajectory === 'line') p.ld++;
+                else if (pa.trajectory === 'grounder') p.gb++;
+                else if (pa.trajectory === 'fly') p.fb++;
+                else if (pa.trajectory === 'popup') p.pu++;
+
+                if (pa.x !== undefined && pa.x !== null) {
+                  if (pa.x < 0.40) p.pull++;
+                  else if (pa.x <= 0.60) p.cent++;
+                  else p.oppo++;
+                }
+              }
             }
           });
         });
@@ -7570,7 +7738,17 @@ window.toggleDiagnosticsCollapse = function() {
               hr: p.hr,
               bb: p.bb,
               sf: p.sf,
-              k: p.k
+              k: p.k,
+              k_swing: p.k_swing,
+              k_foul: p.k_foul,
+              bip: p.bip,
+              ld: p.ld,
+              gb: p.gb,
+              fb: p.fb,
+              pu: p.pu,
+              pull: p.pull,
+              cent: p.cent,
+              oppo: p.oppo
             });
           }
         });
