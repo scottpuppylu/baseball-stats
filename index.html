@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1140</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1220</span>
         </div>
 
 
@@ -346,6 +346,122 @@
         </section>
 
 
+        <!-- ★★★ 球員個人專屬擊球落點噴流圖 (Player Spray Chart) ★★★ -->
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 backdrop-blur-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">INDIVIDUAL SPRAY CHART</span>
+                <h3 class="text-base sm:text-lg font-black text-amber-400 tracking-tight">個人球場擊球落點噴流圖與熱區分析</h3>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">展示當前選取球員在歷史場記中的所有球場擊球落點、飛行球型與方向指標</p>
+            </div>
+            <div class="flex items-center space-x-1" id="profileSprayFilterGroup">
+              <button onclick="setProfileSprayFilter('all')" id="prof_spray_all" class="text-xs px-2.5 py-1 rounded bg-amber-600 text-white font-bold transition shadow">全部擊球</button>
+              <button onclick="setProfileSprayFilter('hits')" id="prof_spray_hits" class="text-xs px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-700 transition">僅安打</button>
+              <button onclick="setProfileSprayFilter('extra')" id="prof_spray_extra" class="text-xs px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-700 transition">僅長打</button>
+              <button onclick="setProfileSprayFilter('outs')" id="prof_spray_outs" class="text-xs px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-700 transition">僅出局球</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- 左側：個人專屬球場 SVG (400x400) -->
+            <div class="lg:col-span-6 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-white flex items-center gap-1.5" id="profileSprayTitle">
+                  <span>🎯</span> 個人場上記錄落點
+                </span>
+                <div class="flex items-center space-x-2 text-[10px] font-mono text-slate-400">
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>1H</span>
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400"></span>2H</span>
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span>3H</span>
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span>HR</span>
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400"></span>出局</span>
+                </div>
+              </div>
+              <div class="relative w-full max-w-[380px] mx-auto aspect-square select-none">
+                <svg id="profileSprayChartSvg" viewBox="0 0 400 400" class="w-full h-full rounded-xl border border-slate-800/80 bg-[#0d1712]">
+                  <rect width="400" height="400" fill="#0d1712" />
+                  <path d="M 20 145 A 215 215 0 0 1 380 145 L 200 375 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />
+                  <line x1="200" y1="370" x2="16" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                  <line x1="200" y1="370" x2="384" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                  <path d="M 115 285 A 95 95 0 0 1 285 285 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                  <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
+                  <polygon points="200,370 280,285 200,200 120,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                  <!-- 守位標籤 -->
+                  <g class="text-[9px] font-mono font-bold select-none pointer-events-none fill-slate-400">
+                    <text x="200" y="390" text-anchor="middle">C</text>
+                    <text x="200" y="275" text-anchor="middle" fill="#f59e0b">P</text>
+                    <text x="295" y="285" text-anchor="start">1B</text>
+                    <text x="245" y="215" text-anchor="start">2B</text>
+                    <text x="105" y="285" text-anchor="end">3B</text>
+                    <text x="155" y="215" text-anchor="end">SS</text>
+                    <text x="85" y="165" text-anchor="middle" fill="#38bdf8">LF</text>
+                    <text x="155" y="115" text-anchor="middle" fill="#34d399">SF</text>
+                    <text x="245" y="115" text-anchor="middle" fill="#34d399">RC</text>
+                    <text x="315" y="165" text-anchor="middle" fill="#38bdf8">RF</text>
+                  </g>
+                  <!-- 動態個人噴流落點群 -->
+                  <g id="profileSprayPointsContainer"></g>
+                </svg>
+              </div>
+              <div id="profileSprayPointTooltip" class="min-h-[22px] text-center text-xs font-mono text-amber-300"></div>
+            </div>
+
+            <!-- 右側：個人噴流方向與球型指標卡 -->
+            <div class="lg:col-span-6 space-y-4" id="profileSprayMetricsCard"></div>
+          </div>
+        </section>
+
+        <!-- ★★★ Statcast 進階成績多維圖形儀表板 (Batted Ball & Expected Charts) ★★★ -->
+        <section class="bg-slate-900/80 border border-indigo-900/40 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 backdrop-blur-sm">
+          <div class="border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">STATCAST CHARTS MATRIX</span>
+              <h3 class="text-base sm:text-lg font-black text-indigo-300 tracking-tight">個人進階擊球型態與預期數據圖形儀表</h3>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">深度剖析揮棒擊球仰角品質 (LD/GB/FB/PU)、廣角推拉打極座標分佈、以及真實 vs 預期 (xStats) 運氣差額</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- 圖表 1: 擊球型態分佈 vs 隊均 (LD% / GB% / FB% / PU%) -->
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-200">擊球型態品質 (vs 全隊平均)</span>
+                <span class="text-[10px] text-emerald-400 font-mono">LD% 越佳</span>
+              </div>
+              <div class="h-56 relative w-full">
+                <canvas id="profileBattedBallChart"></canvas>
+              </div>
+              <span class="text-[10px] text-slate-500 font-mono text-center block">藍色: 個人 | 綠色虛線: 全隊常模</span>
+            </div>
+
+            <!-- 圖表 2: 廣角方向分佈極座標圖 (Pull% / Center% / Oppo%) -->
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-200">廣角打擊方向 (Spray Polar)</span>
+                <span class="text-[10px] text-amber-400 font-mono">三等分落點</span>
+              </div>
+              <div class="h-56 relative w-full">
+                <canvas id="profileSprayPolarChart"></canvas>
+              </div>
+              <span class="text-[10px] text-slate-500 font-mono text-center block">拉打 (左) / 中線 (中) / 推打 (右)</span>
+            </div>
+
+            <!-- 圖表 3: 真實三圍 vs Statcast 預期期望 (Actual vs. Expected) -->
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-200">真實 vs. 預期 (Actual vs. xStats)</span>
+                <span class="text-[10px] text-sky-400 font-mono">運氣因子</span>
+              </div>
+              <div class="h-56 relative w-full">
+                <canvas id="profileExpectedChart"></canvas>
+              </div>
+              <span class="text-[10px] text-slate-500 font-mono text-center block">實績與純擊球品質期望差距</span>
+            </div>
+          </div>
+        </section>
+
         <!-- 弱點診斷與改善方針 -->
         <section class="bg-slate-900/80 border border-rose-900/40 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 backdrop-blur-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
@@ -484,11 +600,22 @@
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col justify-between backdrop-blur-sm">
             <div>
-              <div class="flex justify-between items-center mb-1">
-                <h3 class="text-sm font-bold text-slate-200">打擊型態象限分析 (OBP vs. SLG)</h3>
-                <span class="text-[10px] sm:text-[11px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded-md font-mono">十字線：團隊平均</span>
+              <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                <div class="flex items-center space-x-2">
+                  <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded font-mono font-bold">QUADRANT MATRIX</span>
+                  <h3 class="text-sm font-bold text-slate-200">賽伯計量多維象限分析</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <select id="quadrantPresetSelect" onchange="renderQuadrantChart(getAnalysisAgg())" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2.5 py-1 text-emerald-300 font-medium focus:outline-none focus:border-emerald-500">
+                    <option value="obp_slg" selected>經典攻擊象限 (OBP vs. SLG)</option>
+                    <option value="ld_xba">Statcast 擊球品質象限 (LD% vs. xBA)</option>
+                    <option value="contact_sdi">紀律與好球帶控制 (Contact% vs. SDI 2.0)</option>
+                    <option value="wrc_iso">得分產能與長打破壞 (wRC+ vs. ISO)</option>
+                    <option value="babip_xba">運氣偏差檢驗象限 (BABIP vs. xBA)</option>
+                  </select>
+                </div>
               </div>
-              <p class="text-xs text-slate-400 mb-4">分析該區間內全隊打者的進攻型態與擊球品質落點</p>
+              <p class="text-xs text-slate-400 mb-3" id="quadrantDescText">十字虛線代表全隊平均基準線，點擊散佈圓點可直接切換至該球員深度檔案</p>
             </div>
             <div class="h-72 sm:h-80 relative w-full">
               <canvas id="quadrantChart"></canvas>
@@ -517,30 +644,55 @@
                 <div>
                   <label class="block text-[10px] text-slate-400 mb-0.5">X 軸變量</label>
                   <select id="customXVar" class="w-full bg-slate-950 border border-slate-700 text-xs rounded px-2 py-1">
-                    <option value="obp" selected>上壘率 (OBP)</option>
-                    <option value="avg">打擊率 (AVG)</option>
-                    <option value="slg">長打率 (SLG)</option>
-                    <option value="iso">純長打率 (ISO)</option>
-                    <option value="sdi">慢壘好球帶 (SDI)</option>
-                    <option value="babip">場內安打率 (BABIP)</option>
-                    <option value="pa">打席數 (PA)</option>
-                    <option value="contact_pct">掌握率 (Contact%)</option>
-                    <option value="bb_pct">保送率 (BB%)</option>
-                    <option value="k_pct">三振率 (K%)</option>
+                    <optgroup label="傳統三圍與累積">
+                      <option value="obp" selected>上壘率 (OBP)</option>
+                      <option value="avg">打擊率 (AVG)</option>
+                      <option value="slg">長打率 (SLG)</option>
+                      <option value="pa">打席數 (PA)</option>
+                      <option value="h">安打數 (H)</option>
+                    </optgroup>
+                    <optgroup label="Statcast 擊球型態與品質">
+                      <option value="ld_pct">平飛球率 (LD%)</option>
+                      <option value="gb_pct">滾地球率 (GB%)</option>
+                      <option value="fb_pct">高飛球率 (FB%)</option>
+                      <option value="pu_pct">內野無效球 (PU%)</option>
+                      <option value="pull_pct">拉打率 (Pull%)</option>
+                      <option value="oppo_pct">推打率 (Oppo%)</option>
+                      <option value="xba">預期打擊率 (xBA)</option>
+                      <option value="xslg">預期長打率 (xSLG)</option>
+                    </optgroup>
+                    <optgroup label="進階賽伯計量與紀律">
+                      <option value="sdi">慢壘紀律 2.0 (SDI)</option>
+                      <option value="iso">純長打率 (ISO)</option>
+                      <option value="babip">場內安打率 (BABIP)</option>
+                      <option value="contact_pct">擊球掌握率 (Contact%)</option>
+                      <option value="bb_pct">四壞保送率 (BB%)</option>
+                      <option value="k_pct">三振率 (K%)</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>
                   <label class="block text-[10px] text-slate-400 mb-0.5">Y 軸變量</label>
                   <select id="customYVar" class="w-full bg-slate-950 border border-slate-700 text-xs rounded px-2 py-1">
-                    <option value="wrc_plus" selected>加權得分創造 (wRC+)</option>
-                    <option value="ops">整體攻擊指數 (OPS)</option>
-                    <option value="slg">長打率 (SLG)</option>
-                    <option value="iso">純長打率 (ISO)</option>
-                    <option value="rc">預估創造得分 (RC)</option>
-                    <option value="woba">加權上壘率 (wOBA)</option>
-                    <option value="sdi">慢壘好球帶 (SDI)</option>
-                    <option value="avg">打擊率 (AVG)</option>
-                    <option value="hr">全壘打數 (HR)</option>
+                    <optgroup label="綜合進攻產能">
+                      <option value="wrc_plus" selected>加權得分創造 (wRC+)</option>
+                      <option value="ops">整體攻擊指數 (OPS)</option>
+                      <option value="woba">加權上壘率 (wOBA)</option>
+                      <option value="rc">預估創造得分 (RC)</option>
+                    </optgroup>
+                    <optgroup label="Statcast 預期期望數據">
+                      <option value="xba">預期打擊率 (xBA)</option>
+                      <option value="xslg">預期長打率 (xSLG)</option>
+                      <option value="xwoba">預期加權上壘 (xwOBA)</option>
+                      <option value="ld_pct">平飛球率 (LD%)</option>
+                    </optgroup>
+                    <optgroup label="打擊長打與紀律">
+                      <option value="slg">長打率 (SLG)</option>
+                      <option value="iso">純長打率 (ISO)</option>
+                      <option value="sdi">慢壘紀律 2.0 (SDI)</option>
+                      <option value="avg">打擊率 (AVG)</option>
+                      <option value="hr">全壘打數 (HR)</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>
@@ -551,6 +703,8 @@
                     <option value="rc">創造得分 (RC)</option>
                     <option value="h">安打數 (H)</option>
                     <option value="wrc_plus">wRC+</option>
+                    <option value="ld_pct">平飛球率 (LD%)</option>
+                    <option value="xba">預期打擊 (xBA)</option>
                   </select>
                 </div>
               </div>
@@ -2244,6 +2398,9 @@
 
     let radarChartInst = null;
     let donutChartInst = null;
+    let profileBattedBallChartInst = null;
+    let profileSprayPolarChartInst = null;
+    let profileExpectedChartInst = null;
     let quadrantChartInst = null;
     let customChartInst = null;
     let compareRadarChartInst = null;
@@ -5059,7 +5216,142 @@ window.toggleDiagnosticsCollapse = function() {
     }
 
 
-    function renderPlayerProfile(agg) {
+        let profileSprayFilter = 'all'; // 'all', 'hits', 'extra', 'outs'
+    window.setProfileSprayFilter = function(filter) {
+      profileSprayFilter = filter;
+      ['all', 'hits', 'extra', 'outs'].forEach(t => {
+        const btn = document.getElementById(`prof_spray_${t}`);
+        if (btn) {
+          btn.className = (t === filter)
+            ? 'text-xs px-2.5 py-1 rounded bg-amber-600 text-white font-bold transition shadow'
+            : 'text-xs px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-700 transition';
+        }
+      });
+      renderPlayerStudioSprayChart(selectedPlayerName);
+    };
+
+    window.renderPlayerStudioSprayChart = function(playerName) {
+      const container = document.getElementById('profileSprayPointsContainer');
+      const metricsCard = document.getElementById('profileSprayMetricsCard');
+      const tooltip = document.getElementById('profileSprayPointTooltip');
+      const titleEl = document.getElementById('profileSprayTitle');
+      if (!container || !metricsCard) return;
+
+      if (titleEl) {
+        titleEl.innerHTML = `<span>🎯</span> 【${playerName}】個人場上記錄落點噴流`;
+      }
+
+      const points = [];
+      (allGames || []).forEach(game => {
+        (game.innings || []).forEach(inn => {
+          (inn.plateAppearances || []).forEach(pa => {
+            if (pa.batterName !== playerName) return;
+            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || pa.result === 'RUNNER_OUT' || pa.isRunnerOut) return;
+
+            const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
+            const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
+            const isOut = !isHit && pa.result !== 'BB';
+
+            if (profileSprayFilter === 'hits' && !isHit) return;
+            if (profileSprayFilter === 'extra' && !isExtra) return;
+            if (profileSprayFilter === 'outs' && !isOut) return;
+
+            points.push({ ...pa, gameDate: game.date, opponent: game.opponent, inningNum: inn.inningNum });
+          });
+        });
+      });
+
+      if (points.length === 0) {
+        container.innerHTML = '';
+        metricsCard.innerHTML = `
+          <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 text-center space-y-2">
+            <span class="text-amber-400 font-bold block text-sm">此選手尚無符合篩選條件的場記擊球紀錄</span>
+            <p class="text-xs text-slate-500 font-mono">在「實況即時記分」完成比賽後，每顆落點將自動即時呈現在此！</p>
+          </div>
+        `;
+        if (tooltip) tooltip.textContent = '';
+        return;
+      }
+
+      container.innerHTML = points.map(p => {
+        const px = p.x * 400;
+        const py = p.y * 400;
+        let color = '#f43f5e';
+        let r = 5.5;
+        if (p.result === 'HR') { color = '#f59e0b'; r = 8.5; }
+        else if (p.result === '3H') { color = '#a855f7'; r = 7; }
+        else if (p.result === '2H') { color = '#38bdf8'; r = 6.5; }
+        else if (p.result === '1H') { color = '#22c55e'; r = 6; }
+
+        return `
+          <circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.9" class="hover:scale-150 transition cursor-pointer" onmouseenter="showProfileSprayTooltip('${p.batterName}', '${p.gameDate}', '${p.opponent}', '${p.inningNum}', '${p.result}', '${p.trajectory}', '${p.location}')">
+            <title>${p.batterName} | ${p.result} | ${p.trajectory} | ${p.location}</title>
+          </circle>
+        `;
+      }).join('');
+
+      let pullCount = 0, centerCount = 0, oppoCount = 0;
+      let gbCount = 0, fbCount = 0, ldCount = 0, puCount = 0;
+      points.forEach(p => {
+        if (p.x < 0.40) pullCount++;
+        else if (p.x <= 0.60) centerCount++;
+        else oppoCount++;
+
+        if (p.trajectory === 'grounder') gbCount++;
+        else if (p.trajectory === 'fly') fbCount++;
+        else if (p.trajectory === 'line') ldCount++;
+        else if (p.trajectory === 'popup') puCount++;
+      });
+
+      const total = points.length;
+      const pullPct = (pullCount / total * 100).toFixed(1);
+      const centPct = (centerCount / total * 100).toFixed(1);
+      const oppoPct = (oppoCount / total * 100).toFixed(1);
+      const goAo = fbCount > 0 ? (gbCount / fbCount).toFixed(2) : gbCount.toFixed(2);
+
+      metricsCard.innerHTML = `
+        <div class="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-amber-300 font-mono">噴流擊球型態與球探解讀</span>
+            <span class="text-[11px] font-mono text-slate-400">當前樣本: ${total} 球</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
+              <span class="text-slate-400 text-[10px] block">拉打率 (Pull%)</span>
+              <span class="text-amber-400 font-mono font-black text-lg block">${pullPct}%</span>
+              <span class="text-[9px] text-slate-500">左半邊 / 三游外野</span>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
+              <span class="text-slate-400 text-[10px] block">中線率 (Center%)</span>
+              <span class="text-sky-400 font-mono font-black text-lg block">${centPct}%</span>
+              <span class="text-[9px] text-slate-500">二游中路 / 自由外野</span>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
+              <span class="text-slate-400 text-[10px] block">推打率 (Oppo%)</span>
+              <span class="text-emerald-400 font-mono font-black text-lg block">${oppoPct}%</span>
+              <span class="text-[9px] text-slate-500">右半邊 / 一二壘右外</span>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
+              <span class="text-slate-400 text-[10px] block">滾飛比 (GO / AO)</span>
+              <span class="text-purple-400 font-mono font-black text-lg block">${goAo}</span>
+              <span class="text-[9px] text-slate-500">滾地 ${gbCount} vs 飛球 ${fbCount}</span>
+            </div>
+          </div>
+          <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-300 leading-relaxed">
+            <span class="font-bold text-amber-300">💡 慢壘球探實戰解析：</span>
+            ${Number(pullPct) > 55 ? '打者具備極高比例之強力拉打傾向，對手外野容易左移佈陣，得點圈有人時建議練習反方向推打。' : Number(oppoPct) > 38 ? '打者推打穿透力強，常擊向一二壘防線漏洞，屬全方位廣角型打者。' : '擊球落點分佈非常均衡，全場無明顯防守死角。'}
+          </div>
+        </div>
+      `;
+    };
+
+    window.showProfileSprayTooltip = function(name, date, opp, inn, res, traj, loc) {
+      const tooltip = document.getElementById('profileSprayPointTooltip');
+      if (tooltip) {
+        tooltip.innerHTML = `<span>#${NAME_TO_JERSEY[name] ?? ''} <b>${name}</b> | ${date} vs ${opp} (${inn}局) | <b class="text-white">${res}</b> | ${traj} | 落點: <b>${loc}</b></span>`;
+      }
+    };
+function renderPlayerProfile(agg) {
       const pList = agg.players;
       let p = pList.find(d => d.name === selectedPlayerName);
       if (!p && pList.length > 0) {
@@ -5257,6 +5549,134 @@ window.toggleDiagnosticsCollapse = function() {
           cutout: '65%'
         }
       });
+      // ★★★ 1. 擊球型態品質對比圖 (Batted Ball Profile vs Team Average) ★★★
+      const bbCanvas = document.getElementById('profileBattedBallChart');
+      if (bbCanvas && bbCanvas.getContext) {
+        const bbCtx = bbCanvas.getContext('2d');
+        if (profileBattedBallChartInst) profileBattedBallChartInst.destroy();
+        const teamBipTotal = agg.players.reduce((sum, pl) => sum + (pl.bip || 0), 0) || 1;
+        const teamLdRate = agg.players.reduce((sum, pl) => sum + (pl.ld || 0), 0) / teamBipTotal;
+        const teamGbRate = agg.players.reduce((sum, pl) => sum + (pl.gb || 0), 0) / teamBipTotal;
+        const teamFbRate = agg.players.reduce((sum, pl) => sum + (pl.fb || 0), 0) / teamBipTotal;
+        const teamPuRate = agg.players.reduce((sum, pl) => sum + (pl.pu || 0), 0) / teamBipTotal;
+
+        profileBattedBallChartInst = new Chart(bbCtx, {
+          type: 'bar',
+          data: {
+            labels: ['平飛 (LD%)', '滾地 (GB%)', '高飛 (FB%)', '沖天 (PU%)'],
+            datasets: [
+              {
+                label: `${p.name} 個人`,
+                data: [p.ld_pct * 100, p.gb_pct * 100, p.fb_pct * 100, p.pu_pct * 100],
+                backgroundColor: ['rgba(52, 211, 153, 0.7)', 'rgba(251, 191, 36, 0.7)', 'rgba(56, 189, 248, 0.7)', 'rgba(248, 113, 113, 0.7)'],
+                borderColor: ['#34d399', '#fbbf24', '#38bdf8', '#f87171'],
+                borderWidth: 1.5,
+                borderRadius: 4
+              },
+              {
+                type: 'line',
+                label: '全隊平均',
+                data: [teamLdRate * 100, teamGbRate * 100, teamFbRate * 100, teamPuRate * 100],
+                borderColor: '#a78bfa',
+                borderDash: [4, 4],
+                borderWidth: 2,
+                pointRadius: 4,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              x: { grid: { display: false } }
+            },
+            plugins: {
+              legend: { labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 } }
+            }
+          }
+        });
+      }
+
+      // ★★★ 2. 廣角方向分佈極座標圖 (Directional Spray Polar Chart) ★★★
+      const polarCanvas = document.getElementById('profileSprayPolarChart');
+      if (polarCanvas && polarCanvas.getContext) {
+        const polarCtx = polarCanvas.getContext('2d');
+        if (profileSprayPolarChartInst) profileSprayPolarChartInst.destroy();
+        profileSprayPolarChartInst = new Chart(polarCtx, {
+          type: 'polarArea',
+          data: {
+            labels: ['拉打 (Pull)', '中線 (Center)', '推打 (Oppo)'],
+            datasets: [{
+              data: [p.pull_pct * 100, p.cent_pct * 100, p.oppo_pct * 100],
+              backgroundColor: ['rgba(245, 158, 11, 0.65)', 'rgba(56, 189, 248, 0.65)', 'rgba(52, 211, 153, 0.65)'],
+              borderColor: ['#f59e0b', '#38bdf8', '#34d399'],
+              borderWidth: 1.5
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: {
+                ticks: { display: false },
+                grid: { color: 'rgba(255,255,255,0.08)' },
+                angleLines: { color: 'rgba(255,255,255,0.1)' }
+              }
+            },
+            plugins: {
+              legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 } }
+            }
+          }
+        });
+      }
+
+      // ★★★ 3. 真實成績 vs. 預期期望對比圖 (Actual vs. Expected xStats) ★★★
+      const expCanvas = document.getElementById('profileExpectedChart');
+      if (expCanvas && expCanvas.getContext) {
+        const expCtx = expCanvas.getContext('2d');
+        if (profileExpectedChartInst) profileExpectedChartInst.destroy();
+        profileExpectedChartInst = new Chart(expCtx, {
+          type: 'bar',
+          data: {
+            labels: ['打擊率 (BA)', '長打率 (SLG)', '加權上壘 (wOBA)'],
+            datasets: [
+              {
+                label: '實績 (Actual)',
+                data: [p.avg, p.slg, p.woba],
+                backgroundColor: 'rgba(56, 189, 248, 0.7)',
+                borderColor: '#38bdf8',
+                borderWidth: 1.5,
+                borderRadius: 4
+              },
+              {
+                label: 'Statcast預期 (xStats)',
+                data: [p.xba, p.xslg, p.xwoba],
+                backgroundColor: 'rgba(167, 139, 250, 0.7)',
+                borderColor: '#a78bfa',
+                borderWidth: 1.5,
+                borderRadius: 4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+              x: { grid: { display: false } }
+            },
+            plugins: {
+              legend: { labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 } }
+            }
+          }
+        });
+      }
+
+      // ★★★ 4. 渲染個人專屬球場落點噴流圖 (Interactive Spray Chart) ★★★
+      renderPlayerStudioSprayChart(p.name);
+    
     }
 
 
@@ -5429,35 +5849,97 @@ window.toggleDiagnosticsCollapse = function() {
 
     function renderQuadrantChart(agg) {
       const pList = agg.players;
-      const qCanvas = document.getElementById('quadrantChart'); if (!qCanvas || !qCanvas.getContext) return; const ctx = qCanvas.getContext('2d');
+      const qCanvas = document.getElementById('quadrantChart');
+      if (!qCanvas || !qCanvas.getContext) return;
+      const ctx = qCanvas.getContext('2d');
       if (quadrantChartInst) quadrantChartInst.destroy();
 
+      const preset = document.getElementById('quadrantPresetSelect')?.value || 'obp_slg';
+      const descEl = document.getElementById('quadrantDescText');
+
+      let xKey = 'obp', yKey = 'slg';
+      let xLabel = '上壘率 (OBP)', yLabel = '長打率 (SLG)';
+      let xAvg = agg.teamObp, yAvg = agg.teamSlg;
+      let quadrantDesc = '十字虛線代表團隊平均基準線，點擊散佈圓點可切換該球員深度檔案';
+
+      if (preset === 'ld_xba') {
+        xKey = 'ld_pct'; yKey = 'xba';
+        xLabel = '平飛球率 (LD%)'; yLabel = '預期打擊率 (xBA)';
+        const teamBipTotal = pList.reduce((s, p) => s + (p.bip || 0), 0) || 1;
+        xAvg = pList.reduce((s, p) => s + (p.ld || 0), 0) / teamBipTotal;
+        yAvg = agg.teamAvg;
+        quadrantDesc = 'Statcast 擊球品質象限：右上角為高品質平飛安打製造機，右上打者擊球初速與仰角最甜！';
+      } else if (preset === 'contact_sdi') {
+        xKey = 'contact_pct'; yKey = 'sdi';
+        xLabel = '擊球掌握率 (Contact%)'; yLabel = '好球帶紀律 2.0 (SDI)';
+        const totalAb = pList.reduce((s, p) => s + p.ab, 0) || 1;
+        const totalK = pList.reduce((s, p) => s + p.k, 0);
+        xAvg = Math.max(0, (totalAb - totalK) / totalAb);
+        yAvg = pList.reduce((s, p) => s + p.sdi, 0) / (pList.length || 1);
+        quadrantDesc = '紀律與掌握象限：右上角兼具頂級好球帶選球與高接觸率，慢壘極端抗三振打者！';
+      } else if (preset === 'wrc_iso') {
+        xKey = 'iso'; yKey = 'wrc_plus';
+        xLabel = '純長打率 (ISO)'; yLabel = '加權得分創造 (wRC+)';
+        xAvg = agg.teamSlg - agg.teamAvg;
+        yAvg = 100.0;
+        quadrantDesc = '綜合產能與長打象限：右上角為長打破壞力強且進攻產能卓越之核心清壘重砲！';
+      } else if (preset === 'babip_xba') {
+        xKey = 'xba'; yKey = 'babip';
+        xLabel = '預期打擊率 (xBA)'; yLabel = '場內安打率 (BABIP)';
+        xAvg = agg.teamAvg;
+        const bipDenom = pList.reduce((s, p) => s + (p.ab - p.k - p.hr + p.sf), 0) || 1;
+        const bipHits = pList.reduce((s, p) => s + (p.h - p.hr), 0);
+        yAvg = bipHits / bipDenom;
+        quadrantDesc = '運氣偏差檢驗象限：y > x 為高穿透運氣佳，x > y 為強勁擊球運氣差被沒收！';
+      }
+
+      if (descEl) descEl.textContent = quadrantDesc;
+
+      const formatVal = (v, k) => {
+        if (k.endsWith('_pct')) return (v * 100).toFixed(1) + '%';
+        if (['wrc_plus', 'ops_plus'].includes(k)) return Number(v).toFixed(1);
+        return Number(v).toFixed(3);
+      };
 
       quadrantChartInst = new Chart(ctx, {
         type: 'scatter',
         data: {
           datasets: [{
-            data: pList.map(d => ({ x: d.obp, y: d.slg, name: d.name })),
-            backgroundColor: '#38bdf8',
-            pointRadius: 6,
-            hoverRadius: 8
+            data: pList.map(d => ({ x: d[xKey], y: d[yKey], name: d.name, rawObj: d })),
+            backgroundColor: pList.map(d => (d[yKey] >= yAvg && d[xKey] >= xAvg) ? '#34d399' : '#38bdf8'),
+            pointRadius: 7,
+            hoverRadius: 10
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            tooltip: { callbacks: { label: c => `${c.raw.name}: (OBP: ${c.raw.x.toFixed(3)}, SLG: ${c.raw.y.toFixed(3)})` } },
+            tooltip: {
+              callbacks: {
+                label: c => `${c.raw.name}: (${xLabel}: ${formatVal(c.raw.x, xKey)}, ${yLabel}: ${formatVal(c.raw.y, yKey)})`
+              }
+            },
             legend: { display: false }
           },
           scales: {
             x: {
-              title: { display: true, text: `上壘率 (OBP) - 均值: ${agg.teamObp.toFixed(3)}`, color: '#64748b' },
+              title: { display: true, text: `${xLabel} - 均值: ${formatVal(xAvg, xKey)}`, color: '#64748b' },
               grid: { color: 'rgba(255,255,255,0.05)' }
             },
             y: {
-              title: { display: true, text: `長打率 (SLG) - 均值: ${agg.teamSlg.toFixed(3)}`, color: '#64748b' },
+              title: { display: true, text: `${yLabel} - 均值: ${formatVal(yAvg, yKey)}`, color: '#64748b' },
               grid: { color: 'rgba(255,255,255,0.05)' }
+            }
+          },
+          onClick: (evt, elements) => {
+            if (elements && elements.length > 0) {
+              const el = elements[0];
+              const pData = quadrantChartInst.data.datasets[el.datasetIndex].data[el.index];
+              if (pData && pData.name) {
+                selectedPlayerName = pData.name;
+                switchMainTab('tabProfile');
+              }
             }
           }
         },
@@ -5466,50 +5948,38 @@ window.toggleDiagnosticsCollapse = function() {
           afterDraw(chart) {
             const { ctx, chartArea, scales } = chart;
             if (!chartArea || !scales.x || !scales.y) return;
-            const xPixel = scales.x.getPixelForValue(agg.teamObp);
-            const yPixel = scales.y.getPixelForValue(agg.teamSlg);
-
-
+            const xPixel = scales.x.getPixelForValue(xAvg);
+            const yPixel = scales.y.getPixelForValue(yAvg);
             ctx.save();
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1.5;
             ctx.strokeStyle = '#34d399';
             ctx.setLineDash([4, 4]);
-
 
             if (xPixel >= chartArea.left && xPixel <= chartArea.right) {
               ctx.beginPath();
               ctx.moveTo(xPixel, chartArea.top);
               ctx.lineTo(xPixel, chartArea.bottom);
               ctx.stroke();
-
-
               ctx.fillStyle = '#34d399';
               ctx.font = 'bold 10px monospace';
               ctx.textAlign = 'center';
-              ctx.fillText(`OBP: ${agg.teamObp.toFixed(3)}`, xPixel, chartArea.top + 12);
+              ctx.fillText(`隊均: ${formatVal(xAvg, xKey)}`, xPixel, chartArea.top + 12);
             }
-
-
             if (yPixel >= chartArea.top && yPixel <= chartArea.bottom) {
               ctx.beginPath();
               ctx.moveTo(chartArea.left, yPixel);
               ctx.lineTo(chartArea.right, yPixel);
               ctx.stroke();
-
-
               ctx.fillStyle = '#34d399';
               ctx.font = 'bold 10px monospace';
               ctx.textAlign = 'left';
-              ctx.fillText(`SLG: ${agg.teamSlg.toFixed(3)}`, chartArea.left + 4, yPixel - 4);
+              ctx.fillText(`隊均: ${formatVal(yAvg, yKey)}`, chartArea.left + 4, yPixel - 4);
             }
-
-
             ctx.restore();
           }
         }]
       });
     }
-
 
     function renderCustomChart(agg) {
       const pList = agg.players;
