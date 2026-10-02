@@ -24,40 +24,42 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-[#070a12] text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white">
+<body class="bg-[#070a12] text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white overflow-x-hidden">
 
 
   <!-- Apple 風格頂部全域懸浮導覽列 -->
   <header class="sticky top-0 z-50 nav-blur bg-[#070a12]/90 border-b border-slate-800/80 transition-all duration-300">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-      <!-- 上層：品牌識別與系統連線狀態 -->
-      <div class="flex items-center justify-between min-h-[3.25rem] sm:min-h-[3.5rem] py-1.5 sm:py-0 border-b border-slate-800/40 gap-2">
-        <div class="flex items-center space-x-2 sm:space-x-3 shrink-0 min-w-0">
+      <!-- 上層：品牌識別與系統連線狀態 (手機版防止超出版面完美優化) -->
+      <div class="flex items-center justify-between min-h-[3rem] sm:min-h-[3.5rem] py-1 sm:py-0 border-b border-slate-800/40 gap-1.5 sm:gap-2">
+        <div class="flex items-center space-x-1.5 sm:space-x-3 shrink-0 min-w-0">
           <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold tracking-wider hidden sm:inline-flex items-center gap-1.5 shadow-sm shrink-0">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             CLOUD AUTO-SYNC
           </span>
-          <span class="sm:hidden flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 shrink-0" title="雲端自動同步中">
+          <button type="button" onclick="showCloudStatusToast()" class="sm:hidden flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 shrink-0" title="點擊檢視雲端同步狀態">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          </span>
-          <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
+          </button>
+          <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1614</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1632</span>
         </div>
 
-
-        <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-          <span id="syncStatusBadge" class="hidden sm:inline text-[10px] sm:text-[11px] text-emerald-400 font-mono">雲端資料庫：連線中...</span>
-          <button onclick="manualRefresh()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap">即時重整</button>
-          <button onclick="openDefenseModal()" class="bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-700/60 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap flex items-center gap-1">
-            <span>🛡️</span> 守位設定
+        <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
+          <span id="syncStatusBadge" class="hidden sm:inline text-[10px] sm:text-[11px] text-emerald-400 font-mono truncate max-w-[150px] lg:max-w-none">雲端資料庫：連線中...</span>
+          <button onclick="manualRefresh()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap" title="即時重新整理最新數據">
+            <span class="sm:hidden">🔄</span><span class="hidden sm:inline">即時重整</span>
           </button>
-          <button id="btnToggleChien" onclick="toggleChienFilter()" class="text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap flex items-center gap-1.5 shadow-sm"></button>
-          <button id="exportCsvBtn" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap">匯出 CSV</button>
+          <button onclick="openDefenseModal()" class="bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-700/60 text-[11px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap flex items-center gap-1" title="守備順位與適性設定">
+            <span>🛡️</span><span class="hidden sm:inline">守位設定</span><span class="sm:hidden">守位</span>
+          </button>
+          <button id="btnToggleChien" onclick="toggleChienFilter()" class="text-[11px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap flex items-center gap-1 shadow-sm"></button>
+          <button id="exportCsvBtn" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap" title="匯出全隊成績 CSV">
+            <span class="sm:hidden">📥</span><span class="hidden sm:inline">匯出 CSV</span>
+          </button>
         </div>
       </div>
-
 
       <!-- 下層：7 大核心功能分頁導覽與日期篩選 -->
       <div class="flex flex-col md:flex-row md:items-center justify-between py-2 gap-2">
@@ -2372,6 +2374,25 @@
 
 
   <script>
+    
+    // ★★★ 全域安全狀態標籤設定器：嚴格保證在手機版上永遠維持 hidden sm:inline，杜絕撐爆手機頂部欄位問題！
+    let lastCloudStatusText = "雲端資料庫：連線中...";
+    window.setStatusBadge = function(text, state = 'success') {
+      lastCloudStatusText = text;
+      const statusBadge = document.getElementById('syncStatusBadge');
+      if (!statusBadge) return;
+      statusBadge.textContent = text;
+      let colorClass = 'text-emerald-400';
+      if (state === 'pending') colorClass = 'text-amber-400 animate-pulse';
+      else if (state === 'warning') colorClass = 'text-amber-300';
+      else if (state === 'error') colorClass = 'text-rose-400';
+      statusBadge.className = `hidden sm:inline ${colorClass} font-mono text-[10px] sm:text-[11px] truncate max-w-[180px] lg:max-w-none`;
+    };
+
+    window.showCloudStatusToast = function() {
+      showToast(lastCloudStatusText || "雲端資料庫：已即時同步");
+    };
+
     const GITHUB_REPO = "scottpuppylu/baseball-stats";
     const GITHUB_BRANCH = "main";
     const DATA_FILE_PATH = "data/logs.json";
@@ -2983,9 +3004,7 @@
 
 
     async function commitDefenseToGitHub(updatedDefense, commitMessage = "update: sync defense position rankings via portal") {
-      const statusBadge = document.getElementById('syncStatusBadge');
-      statusBadge.textContent = '雲端：正在同步各守位排名至 GitHub...';
-      statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+      setStatusBadge('雲端：正在同步各守位排名...', 'pending');
 
 
       const modalStatus = document.getElementById('defenseModalSyncStatus');
@@ -3037,8 +3056,7 @@
         localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
 
 
-        statusBadge.textContent = `[連線正常] 守位排名與資料庫：已即時同步`;
-        statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+        setStatusBadge('[連線正常] 守位排名已同步', 'success');
         if (modalStatus) modalStatus.textContent = '雲端同步完成！';
 
 
@@ -3046,8 +3064,7 @@
         renderLineupAnalysis(agg);
         return true;
       } catch (err) {
-        statusBadge.textContent = `[寫入失敗] 守備排名同步失敗: ${err.message}`;
-        statusBadge.className = 'text-rose-400 font-mono text-[11px]';
+        setStatusBadge(`[寫入失敗] 守備排名同步失敗: ${err.message}`, 'error');
         if (modalStatus) modalStatus.textContent = `同步失敗: ${err.message}`;
         alert(`守備排名寫入 GitHub 失敗：${err.message}`);
         return false;
@@ -4373,9 +4390,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     async function commitAvatarsToGitHub(updatedAvatars, commitMessage = "update: sync player avatars via portal") {
-      const statusBadge = document.getElementById('syncStatusBadge');
-      statusBadge.textContent = '雲端：正在同步球員頭像至 GitHub...';
-      statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+      setStatusBadge('雲端：正在同步球員頭像...', 'pending');
 
 
       try {
@@ -4423,15 +4438,13 @@ window.toggleDiagnosticsCollapse = function() {
         localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
 
 
-        statusBadge.textContent = `[連線正常] 頭像與資料庫：已即時同步`;
-        statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+        setStatusBadge('[連線正常] 頭像已即時同步', 'success');
 
 
         renderAll();
         return true;
       } catch (err) {
-        statusBadge.textContent = `[寫入失敗] 頭像雲端同步失敗: ${err.message}`;
-        statusBadge.className = 'text-rose-400 font-mono text-[11px]';
+        setStatusBadge(`[寫入失敗] 頭像同步失敗: ${err.message}`, 'error');
         alert(`頭像寫入 GitHub 失敗：${err.message}`);
         return false;
       }
@@ -4457,9 +4470,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     async function commitTagsToGitHub(updatedTags, commitMessage = "update: sync player tags via portal") {
-      const statusBadge = document.getElementById('syncStatusBadge');
-      statusBadge.textContent = '雲端：正在同步隊內標籤至 GitHub...';
-      statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+      setStatusBadge('雲端：正在同步隊內標籤...', 'pending');
 
 
       try {
@@ -4507,16 +4518,14 @@ window.toggleDiagnosticsCollapse = function() {
         localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
 
 
-        statusBadge.textContent = `[連線正常] 標籤與資料庫：已即時同步`;
-        statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+        setStatusBadge('[連線正常] 標籤已即時同步', 'success');
 
 
         const agg = getAggregatedStats(getFilteredLogs());
         renderPlayerProfile(agg);
         return true;
       } catch (err) {
-        statusBadge.textContent = `[寫入失敗] 標籤雲端同步失敗: ${err.message}`;
-        statusBadge.className = 'text-rose-400 font-mono text-[11px]';
+        setStatusBadge(`[寫入失敗] 標籤同步失敗: ${err.message}`, 'error');
         alert(`標籤寫入 GitHub 失敗：${err.message}`);
         return false;
       }
@@ -4563,11 +4572,7 @@ window.toggleDiagnosticsCollapse = function() {
 
     window.loadLogsFromGitHub = loadLogsFromGitHub;
     async function loadLogsFromGitHub() {
-      const statusBadge = document.getElementById('syncStatusBadge');
-      if (statusBadge) {
-        statusBadge.textContent = '雲端資料庫：連線同步中...';
-        statusBadge.className = 'text-amber-400 font-mono text-[11px] animate-pulse';
-      }
+      setStatusBadge('雲端資料庫：連線同步中...', 'pending');
 
       let logsSuccess = false;
 
@@ -4612,14 +4617,10 @@ window.toggleDiagnosticsCollapse = function() {
       }
       updateDhRuleButtons();
 
-      if (statusBadge) {
-        if (logsSuccess) {
-          statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (${allLogs.length} 筆賽事)`;
-          statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
-        } else {
-          statusBadge.textContent = `[離線/快取] 雲端未連線，已載入本地最新數據 (${allLogs.length} 筆)`;
-          statusBadge.className = 'text-amber-300 font-mono text-[11px]';
-        }
+      if (logsSuccess) {
+        setStatusBadge(`[連線正常] 雲端已同步 (${allLogs.length} 筆)`, 'success');
+      } else {
+        setStatusBadge(`[離線/快取] 載入本地最新 (${allLogs.length} 筆)`, 'warning');
       }
 
       renderAll();
@@ -4632,9 +4633,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     async function commitLogsToGitHub(updatedLogs, commitMessage = "update: sync match logs via portal") {
-      const statusBadge = document.getElementById('syncStatusBadge');
-      statusBadge.textContent = '雲端資料庫：正在寫入 GitHub...';
-      statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+      setStatusBadge('雲端資料庫：正在寫入 GitHub...', 'pending');
 
 
       try {
@@ -4680,15 +4679,13 @@ window.toggleDiagnosticsCollapse = function() {
         syncJerseyMaps();
 
 
-        statusBadge.textContent = `[連線正常] 雲端資料庫：已即時同步 (Commit: ${currentFileSha.substring(0,7)})`;
-        statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+        setStatusBadge(`[連線正常] 雲端已即時同步 (${currentFileSha.substring(0,7)})`, 'success');
 
 
         renderAll();
         return true;
       } catch (err) {
-        statusBadge.textContent = `[寫入失敗] 雲端寫入失敗: ${err.message}`;
-        statusBadge.className = 'text-rose-400 font-mono text-[11px]';
+        setStatusBadge(`[寫入失敗] 雲端寫入失敗: ${err.message}`, 'error');
         alert(`寫入 GitHub 失敗：${err.message}`);
         return false;
       }
@@ -7390,12 +7387,12 @@ function renderCustomChart(agg) {
       const btn = document.getElementById('btnToggleChien');
       if (!btn) return;
       if (includeChien) {
-        btn.className = 'bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-600/70 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap flex items-center gap-1.5 shadow-sm';
-        btn.innerHTML = '<span>⚡</span><span>簡承均：納入常模</span>';
+        btn.className = 'bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-600/70 text-[11px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-medium whitespace-nowrap flex items-center gap-1 shadow-sm';
+        btn.innerHTML = '<span>⚡</span><span class="hidden sm:inline">簡承均：納入常模</span><span class="sm:hidden">簡承均</span>';
         btn.title = '目前：已納入簡承均數據。點擊切換為【排除超標數值】（僅對全隊戰況、個人檔案、排行榜、實驗室生效）';
       } else {
-        btn.className = 'bg-rose-950/70 hover:bg-rose-900/90 text-rose-300 border border-rose-600 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-bold whitespace-nowrap flex items-center gap-1.5 shadow-sm';
-        btn.innerHTML = '<span>🚫</span><span>簡承均：已排除</span>';
+        btn.className = 'bg-rose-950/70 hover:bg-rose-900/90 text-rose-300 border border-rose-600 text-[11px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition font-bold whitespace-nowrap flex items-center gap-1 shadow-sm';
+        btn.innerHTML = '<span>🚫</span><span class="hidden sm:inline">簡承均：已排除</span><span class="sm:hidden">排除簡</span>';
         btn.title = '目前：已排除簡承均數據。點擊切換為【重新納入】';
       }
     }
@@ -8021,9 +8018,7 @@ function renderCustomChart(agg) {
     }
 
     async function commitGamesToGitHub(updatedGames, commitMessage = "update: sync scorebook games via portal") {
-      const statusBadge = document.getElementById('syncStatusBadge');
-      statusBadge.textContent = '雲端資料庫：正在同步場記數據至 GitHub...';
-      statusBadge.className = 'text-amber-400 font-mono animate-pulse text-[11px]';
+      setStatusBadge('雲端資料庫：正在同步場記數據...', 'pending');
 
       const inningSyncBtn = document.getElementById('btnInningCloudSync');
       if (inningSyncBtn) {
@@ -8069,8 +8064,7 @@ function renderCustomChart(agg) {
         allGames = updatedGames;
         localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
 
-        statusBadge.textContent = `[連線正常] 場記資料庫：已即時同步 (Commit: ${currentGamesSha.substring(0, 7)})`;
-        statusBadge.className = 'text-emerald-400 font-mono text-[11px]';
+        setStatusBadge(`[連線正常] 場記已即時同步 (${currentGamesSha.substring(0, 7)})`, 'success');
 
         if (inningSyncBtn) {
           inningSyncBtn.innerHTML = '<span>✓</span> 本局雲端同步成功！';
@@ -8086,8 +8080,7 @@ function renderCustomChart(agg) {
 
         return true;
       } catch (err) {
-        statusBadge.textContent = `[寫入失敗] 場記同步失敗: ${err.message}`;
-        statusBadge.className = 'text-rose-400 font-mono text-[11px]';
+        setStatusBadge(`[寫入失敗] 場記同步失敗: ${err.message}`, 'error');
         if (inningSyncBtn) {
           inningSyncBtn.innerHTML = '<span>✕</span> 同步失敗重試';
           inningSyncBtn.disabled = false;
