@@ -43,7 +43,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1642</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1707</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -2401,49 +2401,22 @@
     const DEFENSE_FILE_PATH = "data/defense.json";
     const GAMES_FILE_PATH = "data/games.json";
     let currentGamesSha = null;
-    // 嚴格過濾模擬/測試賽事與日誌工具，確保絕對不污染使用者真實數據
+    // 僅精準排除歷史假數據 ID，絕不以對手名稱或標籤過濾任何手動聯賽數據
     function isSimulatedGame(g) {
       if (!g) return true;
-      if (g.id === 'game_20260315_mech' || g.id === 'demo_game_1') return true;
-      if (g.isSimulated || g.simulated || g.isMock || g.isTest) return true;
-      const opp = (g.opponent || '').trim();
-      if (opp === '機械系壘' || opp === '友隊選手' || opp.includes('模擬') || opp.includes('測試') || opp.includes('Demo') || opp.includes('範例')) return true;
-      const tag = (g.tag || '').trim();
-      if (tag.includes('模擬') || tag.includes('測試') || tag.includes('Demo')) return true;
-      return false;
+      return g.id === 'game_20260315_mech' || g.id === 'demo_game_1';
     }
 
-    function isSimulatedLog(l) {
-      if (!l || !l.id) return true;
-      if (l.id.includes('test') || l.id.includes('mock') || l.id.includes('demo') || l.id.includes('sim')) return true;
-      const tag = (l.tag || '').trim();
-      if (tag.includes('模擬') || tag.includes('測試') || tag.includes('機械') || tag.includes('友隊選手') || tag.includes('Demo')) return true;
-      return false;
-    }
-
-    // 歷史場記資料庫 (嚴格過濾模擬賽事，絕對不污染使用者真實數據)
+    // 歷史場記資料庫 (保留所有手動與真實賽事)
     let allGames = window.allGames = (function() {
       try {
         const stored = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
-        const cleaned = stored.filter(g => !isSimulatedGame(g));
-        localStorage.setItem('rebas_all_games', JSON.stringify(cleaned));
-        return cleaned;
+        return stored.filter(g => !isSimulatedGame(g));
       } catch (e) {
         return [];
       }
     })();
-    let activeGame = window.activeGame = (function() {
-      try {
-        const act = JSON.parse(localStorage.getItem('rebas_active_game'));
-        if (!act || isSimulatedGame(act)) {
-          localStorage.removeItem('rebas_active_game');
-          return null;
-        }
-        return act;
-      } catch (e) {
-        return null;
-      }
-    })();
+    let activeGame = window.activeGame = JSON.parse(localStorage.getItem('rebas_active_game')) || null;
 
 
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
@@ -5090,7 +5063,7 @@ window.toggleDiagnosticsCollapse = function() {
       const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
       const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
       return targetLogs.filter(item => {
-        if (!item || !item.name || isSimulatedLog(item)) return false;
+        if (!item || !item.name) return false;
         if (s && item.date < s) return false;
         if (e && item.date > e) return false;
         return true;
@@ -9426,8 +9399,8 @@ function renderCustomChart(agg) {
       const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
       const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
 
-      // 1. 保留手動登記與大專總結等非場記日誌，並徹底過濾任何模擬日誌
-      const manualLogs = targetLogs.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_') && !isSimulatedLog(l));
+      // 1. 完整保留手動登記與大專總結等非場記日誌
+      const manualLogs = targetLogs.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
 
       // 2. 由每場歷史比賽動態生成標準賽事日誌 (含 Statcast 擊球型態、落點與 SDI 2.0 細分數據)
       const generatedGameLogs = [];
@@ -10537,9 +10510,8 @@ function renderCustomChart(agg) {
       const cached = localStorage.getItem('rebas_logs');
       if (cached) {
         let parsed = JSON.parse(cached);
-        // 清理殘留的 log_game_ 與 log_auto_ 以及任何模擬/測試日誌
-        allLogs = parsed.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_') && !isSimulatedLog(l));
-        localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+        // 僅在記憶體中清理 log_game_ 與 log_auto_，讓下方 syncAllGamesToTeamLogs 重新從場記庫合成，絕不覆蓋或抹除手動登記日誌！
+        allLogs = parsed.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
       }
     } catch(e) {}
     try {
@@ -10547,14 +10519,6 @@ function renderCustomChart(agg) {
       if (cachedGames) {
         let pGames = JSON.parse(cachedGames);
         allGames = window.allGames = pGames.filter(g => !isSimulatedGame(g));
-        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-      }
-    } catch(e) {}
-    try {
-      const act = JSON.parse(localStorage.getItem('rebas_active_game'));
-      if (act && isSimulatedGame(act)) {
-        localStorage.removeItem('rebas_active_game');
-        activeGame = window.activeGame = null;
       }
     } catch(e) {}
 
