@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1240</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1250</span>
         </div>
 
 
@@ -329,21 +329,29 @@
           </div>
 
 
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-            <div class="md:col-span-5 space-y-4" id="playerProfileCard"></div>
-            <div class="md:col-span-4 h-72 sm:h-80 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-between">
-              <span class="text-xs text-slate-400 font-medium">全隊百分位 (PR 0–100) 五維能力雷達</span>
-              <div class="h-56 sm:h-64 w-full relative">
-                <canvas id="radarChart"></canvas>
+          <!-- 上層：球員個人身份與視覺化圖表 (五維能力雷達 + 區間長打分佈) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <!-- 左側：球員個人簡介卡片 (大頭貼、姓名、背號、標籤、傳統累計數據、更換頭像按鈕) -->
+            <div class="lg:col-span-5 bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-800/80 flex flex-col justify-between" id="playerProfileBio"></div>
+            <!-- 右側：五維雷達與長打分佈 (7 欄：4 欄雷達 + 3 欄長打) -->
+            <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-12 gap-4">
+              <div class="sm:col-span-7 h-72 sm:h-80 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-between">
+                <span class="text-xs text-slate-400 font-medium">全隊百分位 (PR 0–100) 五維能力雷達</span>
+                <div class="h-56 sm:h-64 w-full relative">
+                  <canvas id="radarChart"></canvas>
+                </div>
               </div>
-            </div>
-            <div class="md:col-span-3 h-72 sm:h-80 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-between">
-              <span class="text-xs text-slate-400 font-medium">區間長打分佈</span>
-              <div class="h-56 sm:h-64 w-full relative">
-                <canvas id="donutChart"></canvas>
+              <div class="sm:col-span-5 h-72 sm:h-80 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-between">
+                <span class="text-xs text-slate-400 font-medium">區間長打分佈</span>
+                <div class="h-56 sm:h-64 w-full relative">
+                  <canvas id="donutChart"></canvas>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- 下層：全寬 5 大核心數據指標卡片 (無 truncate，徹底解決字元截斷與UI遮蓋問題) -->
+          <div id="playerProfileCard" class="space-y-4"></div>
         </section>
 
 
@@ -5657,11 +5665,13 @@ function renderPlayerProfile(agg) {
         p = pList[0];
         selectedPlayerName = p.name;
       }
+      const bioEl = document.getElementById('playerProfileBio');
+      const cardEl = document.getElementById('playerProfileCard');
       if (!p) {
-        document.getElementById('playerProfileCard').innerHTML = '<span class="text-xs text-slate-500">該時間區間無紀錄</span>';
+        if (bioEl) bioEl.innerHTML = '<span class="text-xs text-slate-500">該時間區間無紀錄</span>';
+        if (cardEl) cardEl.innerHTML = '';
         return;
       }
-
 
       const p_sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
       const k_pct = p.pa > 0 ? p.k / p.pa : 0;
@@ -5671,134 +5681,209 @@ function renderPlayerProfile(agg) {
       const prControl = getPercentile(k_pct, 'k_pct', pList, true);
       const prWrc = getPercentile(p.wrc_plus, 'wrc_plus', pList);
 
-
       const currentTags = playerTags[p.name] || [];
 
-
-      document.getElementById('playerProfileCard').innerHTML = `
-        <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5 sm:gap-6 border-b border-slate-800/80 pb-5 sm:pb-6">
-          <div class="relative group cursor-pointer shrink-0" onclick="triggerAvatarUpload()" title="點擊自訂頭像（裁切完即時同步至雲端）">
-            ${renderAvatarElement(p.name, 'w-28 h-28 sm:w-32 sm:h-32 text-4xl sm:text-5xl ring-4 ring-sky-500/70 shadow-[0_0_35px_rgba(56,189,248,0.3)] hover:scale-105 transition duration-200')}
-            <div class="absolute inset-0 bg-slate-950/85 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
-              <span class="text-xs text-sky-300 font-bold">更換頭像</span>
-              <span class="text-[10px] text-slate-300 mt-0.5">即時同步</span>
+      // 1. 渲染左側個人簡介卡片 (Bio)
+      if (bioEl) {
+        bioEl.innerHTML = `
+          <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5">
+              <div class="relative group cursor-pointer shrink-0" onclick="triggerAvatarUpload()" title="點擊自訂頭像（裁切完即時同步至雲端）">
+                ${renderAvatarElement(p.name, 'w-24 h-24 sm:w-28 sm:h-28 text-3xl sm:text-4xl ring-4 ring-sky-500/70 shadow-[0_0_30px_rgba(56,189,248,0.25)] hover:scale-105 transition duration-200')}
+                <div class="absolute inset-0 bg-slate-950/85 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
+                  <span class="text-xs text-sky-300 font-bold">更換頭像</span>
+                  <span class="text-[10px] text-slate-300 mt-0.5">即時同步</span>
+                </div>
+                <div class="absolute bottom-0 right-0 bg-sky-600 hover:bg-sky-500 text-white p-1.5 sm:p-2 rounded-full shadow-xl border-2 border-slate-950 flex items-center justify-center transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0 space-y-2">
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">${p.name}</span>
+                  <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2.5 py-0.5 rounded-lg font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
+                  ${playerAvatars[p.name] ? `<button onclick="clearAvatar('${p.name}')" class="text-xs text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
+                </div>
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+                  ${currentTags.map((t, idx) => `
+                    <span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[11px] px-2.5 py-0.5 rounded-full font-medium shadow-sm group">
+                      <span>#${t}</span>
+                      <button onclick="removePlayerTag('${p.name}', ${idx})" class="text-amber-400/60 hover:text-rose-400 font-bold ml-0.5 transition" title="移除標籤">&times;</button>
+                    </span>
+                  `).join('')}
+                  ${currentTags.length < 3 ? `
+                    <button onclick="addPlayerTag('${p.name}')" class="inline-flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-700/80 hover:border-amber-500/40 text-[11px] px-2 py-0.5 rounded-full font-medium transition shadow-sm">
+                      <span>+ 標籤</span>
+                      <span class="text-[9px] text-slate-500 font-mono">(${currentTags.length}/3)</span>
+                    </button>
+                  ` : ''}
+                </div>
+                <div class="pt-1">
+                  <button onclick="triggerAvatarUpload()" class="inline-flex items-center gap-1.5 text-xs bg-slate-900 hover:bg-slate-800 text-sky-300 border border-slate-700/90 px-3 py-1.5 rounded-xl transition font-medium shadow-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>更換選手照片</span>
+                  </button>
+                </div>
+              </div>
             </div>
-            <div class="absolute bottom-0 right-0 bg-sky-600 hover:bg-sky-500 text-white p-2 sm:p-2.5 rounded-full shadow-2xl border-2 border-slate-950 flex items-center justify-center transition">
-              <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <!-- 傳統累計數據網格 -->
+            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 text-xs text-slate-300 font-mono leading-relaxed space-y-1">
+              <div class="flex items-center justify-between border-b border-slate-800/80 pb-1">
+                <span class="text-slate-400 text-[10px] font-sans">基礎打擊累積</span>
+                <span class="text-[10px] text-amber-400 font-bold">${p.pa} 打席 / ${p.ab} 打數</span>
+              </div>
+              <div class="grid grid-cols-4 gap-1 text-center pt-0.5">
+                <div><span class="text-slate-500 block text-[9px] font-sans">安打</span><b class="text-emerald-400 text-sm">${p.h}</b></div>
+                <div><span class="text-slate-500 block text-[9px] font-sans">全壘打</span><b class="text-amber-400 text-sm">${p.hr}</b></div>
+                <div><span class="text-slate-500 block text-[9px] font-sans">四壞</span><b class="text-sky-400 text-sm">${p.bb}</b></div>
+                <div><span class="text-slate-500 block text-[9px] font-sans">三振</span><b class="text-rose-400 text-sm">${p.k}</b></div>
+              </div>
             </div>
           </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">${p.name}</span>
-              <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2.5 py-0.5 rounded-lg font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
-              ${playerAvatars[p.name] ? `<button onclick="clearAvatar('${p.name}')" class="text-xs text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
-            </div>
+        `;
+      }
 
-
-            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 mt-2">
-              ${currentTags.map((t, idx) => `
-                <span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[11px] px-2.5 py-0.5 rounded-full font-medium shadow-sm group">
-                  <span>#${t}</span>
-                  <button onclick="removePlayerTag('${p.name}', ${idx})" class="text-amber-400/60 hover:text-rose-400 font-bold ml-0.5 transition" title="移除標籤">&times;</button>
+      // 2. 渲染下層全寬 5 大核心數據指標卡片 (徹底移除 truncate，杜絕文字遮蓋與換行擠壓)
+      if (cardEl) {
+        cardEl.innerHTML = `
+          <!-- 全寬 5 大核心賽伯計量指標卡片 -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-1">
+            <!-- 卡片 1: 打擊三圍 -->
+            <div class="bg-slate-950/90 p-4 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 text-xs font-semibold">打擊三圍 (AVG/OBP/SLG)</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              </div>
+              <div>
+                <span class="font-mono text-emerald-400 font-black text-base sm:text-lg tracking-wider tabular-nums block whitespace-nowrap">
+                  ${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}
                 </span>
-              `).join('')}
-              ${currentTags.length < 3 ? `
-                <button onclick="addPlayerTag('${p.name}')" class="inline-flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-700/80 hover:border-amber-500/40 text-[11px] px-2.5 py-0.5 rounded-full font-medium transition shadow-sm">
-                  <span>+ 標籤</span>
-                  <span class="text-[9px] text-slate-500 font-mono">(${currentTags.length}/3)</span>
-                </button>
-              ` : ''}
-            </div>
-
-
-            <p class="text-xs text-slate-400 mt-2 font-mono tabular-nums">打數: ${p.ab} | 安打: ${p.h} | 全壘打: ${p.hr} | 保送: ${p.bb} | 高犧: ${p.sf} | 三振: ${p.k}</p>
-            <div class="mt-3.5">
-              <button onclick="triggerAvatarUpload()" class="inline-flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 px-3.5 py-1.5 rounded-xl transition font-medium shadow-sm hover:border-slate-600">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <span>更換選手照片</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs pt-1">
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-sm">
-            <span class="text-slate-400 block text-[10px] font-medium">打擊三圍 (AVG/OBP/SLG)</span>
-            <span class="font-mono text-emerald-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums truncate">${p.avg.toFixed(3)} / ${p.obp.toFixed(3)} / ${p.slg.toFixed(3)}</span>
-          </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-sm">
-            <span class="text-slate-400 block text-[10px] font-medium">攻擊指數 (OPS / OPS+)</span>
-            <span class="font-mono text-sky-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums truncate">${p.ops.toFixed(3)} / ${p.ops_plus.toFixed(1)}</span>
-          </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-sm">
-            <span class="text-slate-400 block text-[10px] font-medium">得分創造 (wRC+ / wOBA)</span>
-            <span class="font-mono text-amber-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums">${p.wrc_plus.toFixed(1)} / ${p.woba.toFixed(3)}</span>
-          </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-sm">
-            <span class="text-slate-400 block text-[10px] font-medium">慢壘好球帶紀律 2.0 (SDI)</span>
-            <div class="flex items-baseline space-x-1.5">
-              <span class="font-mono text-purple-400 font-black text-xs sm:text-sm mt-0.5 block tracking-wide tabular-nums">${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}</span>
-              <span class="text-[9px] text-slate-500 font-mono">(界外K:${p.k_foul ?? 0} / 揮空K:${p.k_swing ?? p.k})</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- ★★★ Statcast 現代擊球品質與落點深度解析面板 ★★★ -->
-        <div class="bg-slate-950/80 p-3.5 sm:p-4 rounded-xl border border-sky-900/40 space-y-3 mt-3">
-          <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
-            <div class="flex items-center space-x-2">
-              <span class="bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[10px] px-2 py-0.5 rounded font-mono font-bold">STATCAST METRICS</span>
-              <h4 class="text-xs font-bold text-slate-200">Statcast 擊球型態與品質深度解析</h4>
-            </div>
-            <span class="text-[10px] font-mono text-slate-400">有效擊球樣本: ${p.bip || p.ab} 球</span>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-[10px] text-slate-400 block font-sans">平飛球率 (LD%)</span>
-              <span class="text-emerald-400 font-black text-sm block">${(p.ld_pct * 100).toFixed(1)}%</span>
-              <span class="text-[9px] text-slate-500 font-sans">安打期望值最高型態</span>
-            </div>
-            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-[10px] text-slate-400 block font-sans">滾地球率 (GB%)</span>
-              <span class="text-amber-400 font-black text-sm block">${(p.gb_pct * 100).toFixed(1)}%</span>
-              <span class="text-[9px] text-slate-500 font-sans">易受內野封殺</span>
-            </div>
-            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-[10px] text-slate-400 block font-sans">高飛球率 (FB%)</span>
-              <span class="text-sky-400 font-black text-sm block">${(p.fb_pct * 100).toFixed(1)}%</span>
-              <span class="text-[9px] text-slate-500 font-sans">長打/全壘打來源</span>
-            </div>
-            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-[10px] text-slate-400 block font-sans">內野無效球 (PU%)</span>
-              <span class="text-rose-400 font-black text-sm block">${(p.pu_pct * 100).toFixed(1)}%</span>
-              <span class="text-[9px] text-slate-500 font-sans">無效沖天炮出局</span>
-            </div>
-          </div>
-          <!-- 期望打擊數據 (Expected Stats) & 廣角噴流 -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-800/60 font-mono">
-            <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
-              <div>
-                <span class="text-[10px] text-slate-400 block font-sans">預期打擊數據 (Expected)</span>
-                <span class="text-slate-200">xBA: <b class="text-emerald-400">${p.xba.toFixed(3)}</b> | xSLG: <b class="text-sky-400">${p.xslg.toFixed(3)}</b></span>
+                <span class="text-[10px] text-slate-500 font-mono block mt-1">打擊率 / 上壘率 / 長打率</span>
               </div>
-              <span class="text-[10px] px-2 py-0.5 rounded border ${p.luck_factor >= 0.05 ? 'bg-amber-950/60 text-amber-300 border-amber-700/60' : p.luck_factor <= -0.05 ? 'bg-sky-950/60 text-sky-300 border-sky-700/60' : 'bg-slate-950 text-slate-400 border-slate-800'}">
-                ${p.luck_factor >= 0.05 ? '運氣極佳' : p.luck_factor <= -0.05 ? '強擊運氣差' : '擊球表現吻合'}
-              </span>
             </div>
-            <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
-              <div>
-                <span class="text-[10px] text-slate-400 block font-sans">廣角噴流分佈 (Spray)</span>
-                <span class="text-slate-200">拉: <b class="text-amber-400">${(p.pull_pct * 100).toFixed(0)}%</b> | 中: <b class="text-sky-400">${(p.cent_pct * 100).toFixed(0)}%</b> | 推: <b class="text-emerald-400">${(p.oppo_pct * 100).toFixed(0)}%</b></span>
+
+            <!-- 卡片 2: 攻擊指數 -->
+            <div class="bg-slate-950/90 p-4 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 text-xs font-semibold">攻擊指數 (OPS / OPS+)</span>
+                <span class="w-2 h-2 rounded-full bg-sky-400"></span>
               </div>
-              <span class="text-[10px] text-slate-400 font-sans">
-                ${p.pull_pct > 0.55 ? '強拉打型' : p.oppo_pct > 0.38 ? '反向推打型' : '全方位廣角'}
-              </span>
+              <div>
+                <span class="font-mono text-sky-400 font-black text-base sm:text-lg tracking-wider tabular-nums block whitespace-nowrap">
+                  ${p.ops.toFixed(3)} / ${p.ops_plus.toFixed(1)}
+                </span>
+                <span class="text-[10px] text-slate-500 font-mono block mt-1">整體攻擊 / 標準化 (隊均 100)</span>
+              </div>
+            </div>
+
+            <!-- 卡片 3: 得分創造 -->
+            <div class="bg-slate-950/90 p-4 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 text-xs font-semibold">得分創造 (wRC+ / wOBA)</span>
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              </div>
+              <div>
+                <span class="font-mono text-amber-400 font-black text-base sm:text-lg tracking-wider tabular-nums block whitespace-nowrap">
+                  ${p.wrc_plus.toFixed(1)} / ${p.woba.toFixed(3)}
+                </span>
+                <span class="text-[10px] text-slate-500 font-mono block mt-1">加權得分創造 / 加權上壘率</span>
+              </div>
+            </div>
+
+            <!-- 卡片 4: 慢壘好球帶紀律 2.0 (SDI) - 垂直分層杜絕遮蓋 -->
+            <div class="bg-slate-950/90 p-4 rounded-2xl border border-purple-900/50 shadow-md flex flex-col justify-between space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-purple-300 text-xs font-semibold">慢壘好球帶紀律 2.0 (SDI)</span>
+                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+              </div>
+              <div>
+                <span class="font-mono text-purple-400 font-black text-base sm:text-lg tracking-wider tabular-nums block">
+                  ${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}
+                </span>
+                <span class="text-[11px] text-slate-400 font-mono block mt-1 font-semibold">
+                  (界外K: <b class="text-amber-300">${p.k_foul ?? 0}</b> / 揮空K: <b class="text-rose-400">${p.k_swing ?? p.k}</b>)
+                </span>
+              </div>
+            </div>
+
+            <!-- 卡片 5: 每27出局得分 RC/27 (全新加入) -->
+            <div class="bg-slate-950/90 p-4 rounded-2xl border border-amber-500/40 shadow-md flex flex-col justify-between space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-amber-300 text-xs font-semibold">每27出局預估 (RC/27)</span>
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              </div>
+              <div>
+                <span class="font-mono text-amber-300 font-black text-base sm:text-lg tracking-wider tabular-nums block">
+                  ${p.rc_27.toFixed(1)} 分
+                </span>
+                <span class="text-[10px] text-slate-500 font-mono block mt-1">累積預估創造得分 RC: ${p.rc.toFixed(1)}</span>
+              </div>
             </div>
           </div>
-        </div>
-      `;
 
+          <!-- ★★★ Statcast 現代擊球品質與落點深度解析面板 (全寬延展) ★★★ -->
+          <div class="bg-slate-950/80 p-4 sm:p-5 rounded-2xl border border-sky-900/40 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+              <div class="flex items-center space-x-2">
+                <span class="bg-sky-500/20 text-sky-300 border border-sky-500/40 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">STATCAST METRICS</span>
+                <h4 class="text-sm sm:text-base font-bold text-white tracking-tight">Statcast 擊球型態與品質深度解析</h4>
+              </div>
+              <span class="text-xs font-mono text-slate-400">有效擊球樣本: <b class="text-sky-400">${p.bip || p.ab}</b> 球</span>
+            </div>
 
-      const radarCanvas = document.getElementById('radarChart'); if (!radarCanvas || !radarCanvas.getContext) return; const radarCtx = radarCanvas.getContext('2d');
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[11px] text-slate-400 block font-sans">平飛球率 (LD%)</span>
+                <span class="text-emerald-400 font-black text-base sm:text-lg block">${(p.ld_pct * 100).toFixed(1)}%</span>
+                <span class="text-[10px] text-slate-500 font-sans">安打期望值最高型態 (.680)</span>
+              </div>
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[11px] text-slate-400 block font-sans">滾地球率 (GB%)</span>
+                <span class="text-amber-400 font-black text-base sm:text-lg block">${(p.gb_pct * 100).toFixed(1)}%</span>
+                <span class="text-[10px] text-slate-500 font-sans">易受內野封殺出局 (.280)</span>
+              </div>
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[11px] text-slate-400 block font-sans">高飛球率 (FB%)</span>
+                <span class="text-sky-400 font-black text-base sm:text-lg block">${(p.fb_pct * 100).toFixed(1)}%</span>
+                <span class="text-[10px] text-slate-500 font-sans">長打/全壘打來源 (.380)</span>
+              </div>
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-1">
+                <span class="text-[11px] text-slate-400 block font-sans">內野無效球 (PU%) [低佳]</span>
+                <span class="text-rose-400 font-black text-base sm:text-lg block">${(p.pu_pct * 100).toFixed(1)}%</span>
+                <span class="text-[10px] text-slate-500 font-sans">幾乎必出局沖天炮 (.020)</span>
+              </div>
+            </div>
+
+            <!-- 期望打擊數據 (Expected Stats) & 廣角噴流 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 border-t border-slate-800/80 font-mono text-xs">
+              <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span class="text-[11px] text-slate-400 block font-sans font-semibold mb-0.5">預期打擊數據 (Expected Stats)</span>
+                  <span class="text-slate-200">
+                    xBA: <b class="text-emerald-400">${p.xba.toFixed(3)}</b> | xSLG: <b class="text-sky-400">${p.xslg.toFixed(3)}</b> | xwOBA: <b class="text-purple-300">${p.xwoba.toFixed(3)}</b>
+                  </span>
+                </div>
+                <span class="text-xs px-2.5 py-1 rounded-lg border font-sans font-bold self-start sm:self-auto ${p.luck_factor >= 0.05 ? 'bg-amber-950/60 text-amber-300 border-amber-700/60' : p.luck_factor <= -0.05 ? 'bg-sky-950/60 text-sky-300 border-sky-700/60' : 'bg-slate-950 text-slate-400 border-slate-800'}">
+                  ${p.luck_factor >= 0.05 ? '運氣極佳 (Luck+)' : p.luck_factor <= -0.05 ? '強擊運氣差 (Unlucky)' : '擊球表現吻合'}
+                </span>
+              </div>
+
+              <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span class="text-[11px] text-slate-400 block font-sans font-semibold mb-0.5">廣角打擊方向 (Spray Distribution)</span>
+                  <span class="text-slate-200">
+                    拉打: <b class="text-amber-400">${(p.pull_pct * 100).toFixed(0)}%</b> | 中線: <b class="text-sky-400">${(p.cent_pct * 100).toFixed(0)}%</b> | 推打: <b class="text-emerald-400">${(p.oppo_pct * 100).toFixed(0)}%</b>
+                  </span>
+                </div>
+                <span class="text-xs px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 font-sans font-bold self-start sm:self-auto">
+                  ${p.pull_pct > 0.55 ? '強力拉打型' : p.oppo_pct > 0.38 ? '反向推打型' : '全方位廣角型'}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+const radarCanvas = document.getElementById('radarChart'); if (!radarCanvas || !radarCanvas.getContext) return; const radarCtx = radarCanvas.getContext('2d');
       if (radarChartInst) radarChartInst.destroy();
       radarChartInst = new Chart(radarCtx, {
         type: 'radar',
