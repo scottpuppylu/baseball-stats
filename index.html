@@ -43,7 +43,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1707</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1755</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -2400,7 +2400,31 @@
     const TAGS_FILE_PATH = "data/tags.json";
     const DEFENSE_FILE_PATH = "data/defense.json";
     const GAMES_FILE_PATH = "data/games.json";
+    const GUESTS_FILE_PATH = "data/guests.json";
     let currentGamesSha = null;
+    let currentGuestsSha = null;
+
+    // ★★★ 嚴格判定是否為淡江航太系壘正式隊員 (名列 DEFAULT_JERSEY_MAP 或曾透過「+ 新增球隊球員」正式建檔 reg_ 者)
+    window.isOfficialTeamPlayer = isOfficialTeamPlayer;
+    function isOfficialTeamPlayer(name) {
+      if (!name) return false;
+      const clean = name.trim();
+      const officialNames = Object.values(DEFAULT_JERSEY_MAP);
+      if (officialNames.includes(clean)) return true;
+      const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
+      return rawLogs.some(l => l && l.name === clean && l.id && l.id.startsWith('reg_'));
+    }
+
+    // ★★★ 嚴格判定是否為非正式隊員 / 臨時球員 / 支援外援 (無論在手機或電腦上皆永久絕對一致)
+    window.isGuestPlayerName = isGuestPlayerName;
+    function isGuestPlayerName(name) {
+      if (!name) return false;
+      const clean = name.trim();
+      if (clean.includes('支援') || clean.includes('外援') || clean.includes('臨時') || clean.includes('友軍')) return true;
+      if ((guestPlayers || []).some(g => g && g.name === clean)) return true;
+      // 核心隔離鐵律：凡是不在 14 位正式隊員名冊且無 reg_ 建檔日誌者，一律判定為臨時支援球員！
+      return !isOfficialTeamPlayer(clean);
+    }
     // 僅精準排除歷史假數據 ID，絕不以對手名稱或標籤過濾任何手動聯賽數據
     function isSimulatedGame(g) {
       if (!g) return true;
@@ -2497,7 +2521,7 @@
     );
 
 
-    // 支援選手 / 非隊員名冊 (持久化於 localStorage)
+    // 支援選手 / 非隊員名冊 (持久化於 localStorage 並與 GitHub 雲端雙向同步)
     let guestPlayers = window.guestPlayers = (function() {
       try {
         const stored = JSON.parse(localStorage.getItem('rebas_guest_players')) || [];
@@ -2509,6 +2533,69 @@
         return [];
       }
     })();
+
+    async function loadGuestsFromGitHub() {
+      try {
+        const { content, sha } = await fetchGitHubContent(GUESTS_FILE_PATH);
+        currentGuestsSha = sha;
+        if (Array.isArray(content)) {
+          const merged = [...guestPlayers];
+          content.forEach(cg => {
+            if (cg && cg.name && !merged.some(m => m.name === cg.name)) {
+              merged.push(cg);
+            }
+          });
+          guestPlayers = window.guestPlayers = merged;
+          localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
+        }
+        return true;
+      } catch (err) {
+        try {
+          const content = await fetchLocalContent(GUESTS_FILE_PATH);
+          if (Array.isArray(content)) {
+            guestPlayers = window.guestPlayers = content;
+            localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
+          }
+        } catch (e) {}
+        return false;
+      }
+    }
+
+    async function commitGuestsToGitHub(updatedGuests, commitMessage = "update: sync guest players via portal") {
+      try {
+        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GUESTS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
+        });
+        if (getShaRes.ok) {
+          const shaData = await getShaRes.json();
+          currentGuestsSha = shaData.sha;
+        } else {
+          currentGuestsSha = null;
+        }
+        const base64Content = utf8ToBase64(JSON.stringify(updatedGuests, null, 2));
+        const putBody = {
+          message: commitMessage,
+          content: base64Content,
+          branch: GITHUB_BRANCH
+        };
+        if (currentGuestsSha) putBody.sha = currentGuestsSha;
+        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GUESTS_FILE_PATH}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(putBody)
+        });
+        if (putRes.ok) {
+          const resData = await putRes.json();
+          currentGuestsSha = resData.content.sha;
+        }
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
 
     // 高效網路請求工具：3.5 秒超時自動中斷，杜絕連線卡頓 2 分鐘
     window.fetchWithTimeout = fetchWithTimeout;
@@ -2569,6 +2656,7 @@
       }
       localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
       syncJerseyMaps();
+      commitGuestsToGitHub(guestPlayers, `feat: add guest player ${cleanName}`);
       return cleanName;
     };
 
@@ -2578,6 +2666,7 @@
       syncJerseyMaps();
       renderGuestModalUI();
       renderSetupLineupGrid();
+      commitGuestsToGitHub(guestPlayers, `delete: remove guest player ${name}`);
       showToast(`已自名單移除非隊員：${name}`);
     };
 
@@ -2714,17 +2803,22 @@
     function syncJerseyMaps() {
       JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
       allLogs.forEach(l => {
-        const isGuest = (guestPlayers || []).some(g => g.name === l.name) || (l.tag && l.tag.includes('支援'));
-        if (l.jersey && l.name && !isGuest) {
+        if (l.jersey && l.name && isOfficialTeamPlayer(l.name) && !isGuestPlayerName(l.name)) {
           JERSEY_TO_NAME[Number(l.jersey)] = l.name;
         }
       });
-      // 確保支援選手絕不列入正式隊員名冊 JERSEY_TO_NAME
+      // 確保支援與臨時選手絕不列入正式隊員背號名冊 JERSEY_TO_NAME
       (guestPlayers || []).forEach(g => {
-        if (g.name) {
+        if (g && g.name) {
           Object.keys(JERSEY_TO_NAME).forEach(k => {
             if (JERSEY_TO_NAME[k] === g.name) delete JERSEY_TO_NAME[k];
           });
+        }
+      });
+      // 額外確保：任何非正式隊員絕不留在 JERSEY_TO_NAME
+      Object.keys(JERSEY_TO_NAME).forEach(k => {
+        if (isGuestPlayerName(JERSEY_TO_NAME[k])) {
+          delete JERSEY_TO_NAME[k];
         }
       });
       NAME_TO_JERSEY = Object.fromEntries(
@@ -2732,7 +2826,7 @@
       );
       // NAME_TO_JERSEY 僅供查詢背號用，支援選手可以查找背號
       (guestPlayers || []).forEach(g => {
-        if (g.name) {
+        if (g && g.name) {
           NAME_TO_JERSEY[g.name] = g.jersey !== undefined ? Number(g.jersey) : 0;
         }
       });
@@ -3165,7 +3259,7 @@
       }
 
 
-      const allNames = Object.values(JERSEY_TO_NAME);
+      const allNames = Object.values(JERSEY_TO_NAME).filter(n => isOfficialTeamPlayer(n));
       container.innerHTML = allNames.map(name => {
         const isPresent = presentPlayersSet.has(name);
         const pa = historicalPaMap[name] || 0;
@@ -4580,12 +4674,13 @@ window.toggleDiagnosticsCollapse = function() {
 
       let logsSuccess = false;
 
-      // 5 大資料庫並行發送，最多只需 3.5 秒，徹底杜絕連線卡頓！
+      // 6 大資料庫並行發送 (含非隊員/支援名冊)，最多只需 3.5 秒，徹底杜絕連線卡頓！
       await Promise.allSettled([
         loadAvatarsFromGitHub(),
         loadTagsFromGitHub(),
         loadDefenseFromGitHub(),
         loadGamesFromGitHub(),
+        loadGuestsFromGitHub(),
         (async () => {
           try {
             const { content, sha } = await fetchGitHubContent(DATA_FILE_PATH);
@@ -5064,6 +5159,8 @@ window.toggleDiagnosticsCollapse = function() {
       const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
       return targetLogs.filter(item => {
         if (!item || !item.name) return false;
+        // 嚴格隔離：臨時球員/非隊員支援選手之日誌絕不計入全隊戰況、個人檔案、排行榜與賽伯計量常模
+        if (isGuestPlayerName(item.name)) return false;
         if (s && item.date < s) return false;
         if (e && item.date > e) return false;
         return true;
@@ -7363,7 +7460,8 @@ function renderCustomChart(agg) {
 
     function populatePlayerSelect(players) {
       const sel = document.getElementById('playerSelect');
-      sel.innerHTML = players.map(d => {
+      const officialPlayers = (players || []).filter(d => isOfficialTeamPlayer(d.name));
+      sel.innerHTML = officialPlayers.map(d => {
         const j = NAME_TO_JERSEY[d.name] !== undefined ? `#${NAME_TO_JERSEY[d.name]} ` : '';
         return `<option value="${d.name}" ${d.name === selectedPlayerName ? 'selected' : ''}>${j}${d.name}</option>`;
       }).join('');
@@ -7434,6 +7532,8 @@ function renderCustomChart(agg) {
           if (defEvents.length > 0) {
             defEvents.forEach(evt => {
               const pName = evt.pitcher || defaultP;
+              // 臨時球員/外援選手不進入全隊投手賽伯計量常模
+              if (isGuestPlayerName(pName)) return;
               if (!pMap[pName]) {
                 pMap[pName] = {
                   name: pName, games: 1, outs: 0, tbf: 0, bb: 0,
@@ -7848,6 +7948,10 @@ function renderCustomChart(agg) {
       // 2. 球員深度能力檔案 (使用 analysisAgg，若簡承均被排除且當前選取為他，自動退回可用第一位選手)
       if (!includeChien && selectedPlayerName === '簡承均' && analysisAgg.players.length > 0) {
         selectedPlayerName = analysisAgg.players[0].name;
+      }
+      if (isGuestPlayerName(selectedPlayerName) && analysisAgg.players.length > 0) {
+        const firstOfficial = analysisAgg.players.find(p => isOfficialTeamPlayer(p.name));
+        selectedPlayerName = firstOfficial ? firstOfficial.name : analysisAgg.players[0].name;
       }
       populatePlayerSelect(analysisAgg.players);
       renderPlayerProfile(analysisAgg);
@@ -9410,9 +9514,8 @@ function renderCustomChart(agg) {
         const statsMap = {};
         const allMatchBatters = getGameAllBatters(game);
         allMatchBatters.forEach(name => {
-          // 支援外援選手只保留在該場 Box Score 中，不進入球隊正式常規日誌
-          const isGuest = (guestPlayers || []).some(g => g.name === name) || name.includes('支援');
-          if (isGuest) return;
+          // 支援外援/臨時選手只保留在該場 Box Score 中，絕不進入球隊正式常規日誌與個人三圍
+          if (isGuestPlayerName(name)) return;
           statsMap[name] = {
             name,
             jersey: NAME_TO_JERSEY[name] ?? 0,
@@ -9507,8 +9610,8 @@ function renderCustomChart(agg) {
       const statsMap = {};
       const allMatchBatters = getGameAllBatters(game);
       allMatchBatters.forEach(name => {
-        const isGuest = (guestPlayers || []).some(g => g.name === name) || name.includes('支援');
-        if (isGuest) return;
+        // 支援外援/臨時選手只保留在該場 Box Score 中，絕不進入球隊正式常規日誌
+        if (isGuestPlayerName(name)) return;
         statsMap[name] = {
           name,
           jersey: NAME_TO_JERSEY[name] ?? 0,
