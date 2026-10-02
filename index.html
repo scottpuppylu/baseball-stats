@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1250</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1300</span>
         </div>
 
 
@@ -89,6 +89,10 @@
           <button onclick="switchMainTab('tabScorebook')" id="btnTabScorebook" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
             <span>數位圖像場記與落點</span>
+          </button>
+          <button onclick="switchMainTab('tabPitching')" id="btnTabPitching" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
+            <svg class="w-3.5 h-3.5 text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path stroke-linecap="round" stroke-width="2" d="M12 3a9 9 0 019 9m-9-9a9 9 0 00-9 9m9-9v18"></path></svg>
+            <span>慢壘投手進階分析</span>
           </button>
           <button onclick="switchMainTab('tabGlossary')" id="btnTabGlossary" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
@@ -1727,7 +1731,116 @@
         </section>
       </div>
 
-<!-- 分頁七：名詞圖書館 -->
+<!-- 分頁八：慢速壘球投手賽伯計量分析實驗室 -->
+      <div id="panelPitching" class="hidden space-y-6">
+        <!-- 頂部：慢壘投手作戰宣言與選單 -->
+        <section class="bg-slate-900/80 border border-teal-900/50 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 backdrop-blur-sm">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center space-x-2.5">
+                <span class="bg-teal-500/10 text-teal-400 border border-teal-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">SLOWPITCH PITCHING LAB</span>
+                <h2 class="text-xl font-black text-white tracking-tight">慢速高拋壘球投手進階分析實驗室</h2>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">
+                <b class="text-teal-300">「壘球被打是常態，保送自爆才是死罪！」</b> 告別毫無參考價值的傳統棒球 ERA，以好球帶好投率 (ZCR)、慢壘獨立防禦 (sFIP)、兩好球界外誘殺 (FKR) 與出局轉化率重構慢壘投手真實身價！
+              </p>
+            </div>
+            <div class="flex items-center space-x-3 bg-slate-950/80 p-2 sm:p-2.5 rounded-xl border border-slate-800 w-full md:w-auto justify-between md:justify-start">
+              <label class="text-xs text-slate-400 font-semibold shrink-0">選取投手：</label>
+              <div id="pitcherSelectAvatarBadge" class="shrink-0"></div>
+              <select id="pitchingPlayerSelect" onchange="renderPitchingStudio()" class="bg-slate-900 border border-teal-700/70 text-teal-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-teal-400 font-bold flex-1 md:flex-initial"></select>
+            </div>
+          </div>
+
+          <!-- 4 大慢壘投手進階核心指標看板 -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" id="pitchingHeroCards"></div>
+
+          <!-- 投手身份簡介與兩大專業圖表 (出局型態堆疊圖 + 五維投手雷達) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <!-- 左側：投手基本身分與出局型態分析圖 (6 欄) -->
+            <div class="lg:col-span-6 bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-800/80 flex flex-col justify-between space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-teal-300 flex items-center gap-1.5 font-mono">
+                  <span>⚾</span> 投手出局型態與壓制構成 (Out Profile)
+                </span>
+                <span class="text-[11px] font-mono text-slate-400" id="pitcherSampleCount">總投球局數: --</span>
+              </div>
+              <div class="h-60 sm:h-64 relative w-full">
+                <canvas id="pitcherOutProfileChart"></canvas>
+              </div>
+              <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between font-mono" id="pitcherGoAoIndicator"></div>
+            </div>
+
+            <!-- 右側：慢壘投手五維能力 PR 百分位雷達 (6 欄) -->
+            <div class="lg:col-span-6 bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-800/80 flex flex-col justify-between space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5 font-mono">
+                  <span>🎯</span> 慢壘投手五維能力 PR 百分位雷達
+                </span>
+                <span class="text-[10px] text-slate-500 font-mono">全隊投手常模對比 0–100 PR</span>
+              </div>
+              <div class="h-60 sm:h-64 relative w-full">
+                <canvas id="pitcherRadarChart"></canvas>
+              </div>
+              <span class="text-[10px] text-slate-500 font-mono text-center block">
+                ZCR好投率 (控球) | K%奪三振力 | FKR界外誘殺 | BIP Out%出局轉化 | IP局數耐力
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 全隊投手賽伯計量排行榜與詳細數據總表 -->
+        <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 backdrop-blur-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="bg-teal-500/10 text-teal-400 border border-teal-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">PITCHER ROSTER & METRICS</span>
+                <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">全隊投手慢壘賽伯計量數據排行總表</h3>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">點擊任意投手列可快速鎖定上方深度圖表與雷達評比</p>
+            </div>
+            <span class="text-xs font-mono text-teal-400 bg-teal-950/80 px-2.5 py-1 rounded-lg border border-teal-800/60 font-semibold">以正規 7 局 (21 出局) 慢壘賽制推算</span>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-800 -mx-1 sm:mx-0">
+            <table class="w-full text-left text-xs whitespace-nowrap font-mono">
+              <thead class="bg-slate-950 text-slate-400 uppercase select-none">
+                <tr>
+                  <th class="p-3">投手</th>
+                  <th class="p-3 text-center">出賽</th>
+                  <th class="p-3 text-center text-teal-300 font-bold">局數 (IP)</th>
+                  <th class="p-3 text-center">出局數</th>
+                  <th class="p-3 text-center">面對打席 (TBF)</th>
+                  <th class="p-3 text-center font-bold text-emerald-400">好球好投率 (ZCR)</th>
+                  <th class="p-3 text-center font-bold text-purple-300">慢壘獨立防禦 (sFIP)</th>
+                  <th class="p-3 text-center text-amber-300 font-bold">每7局保送 (BB/7)</th>
+                  <th class="p-3 text-center text-sky-400 font-bold">場內轉出局 (BIP Out%)</th>
+                  <th class="p-3 text-center text-amber-400 font-bold">界外K誘陷 (FKR)</th>
+                  <th class="p-3 text-center">三振 (揮空/界外)</th>
+                  <th class="p-3 text-center">滾飛比 (GO/AO)</th>
+                  <th class="p-3 text-center">雙殺 (DP)</th>
+                  <th class="p-3 text-center text-rose-400">每7局失分 (R/7)</th>
+                </tr>
+              </thead>
+              <tbody id="pitchingTableBody" class="divide-y divide-slate-800/80 bg-slate-900/50"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 慢壘投手戰術診斷與球探技術指導 -->
+        <section class="bg-slate-900/80 border border-amber-900/40 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 backdrop-blur-sm">
+          <div class="border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">SCOUTING & TACTICAL REPORT</span>
+              <h3 class="text-base sm:text-lg font-bold text-amber-300 tracking-tight">慢速高拋壘球投手實戰作戰與技術方針</h3>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">依據當前投手量化指標即時產出個人技術診斷與實戰配球戰術建議</p>
+          </div>
+          <div id="pitchingTacticalAdvisoryCard" class="space-y-3"></div>
+        </section>
+      </div>
+
+      <!-- 分頁七：名詞圖書館 -->
       <div id="panelGlossary" class="hidden space-y-6">
         <section class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-6 backdrop-blur-sm">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
@@ -2000,7 +2113,68 @@
               </div>
             </div>
           </div>
-        </section>
+        <!-- 第五大類：慢速壘球投手賽伯計量進階指標 -->
+            <div class="space-y-3.5">
+              <div class="flex items-center space-x-2 border-b border-teal-800/50 pb-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-teal-300">五、慢速壘球投手賽伯計量進階指標 (Slowpitch Pitching Sabermetrics)</h3>
+              </div>
+              <div class="p-3.5 bg-teal-950/20 border border-teal-800/40 rounded-xl text-teal-300/90 text-xs leading-relaxed mb-3">
+                <b class="text-teal-200">💡 慢壘科學核心原理：為什麼傳統棒球 ERA 在慢速壘球完全失效？</b><br>
+                慢速高拋壘球投出的球速僅 30~50 km/h，且強制拋物線弧度，聯盟打者平均打擊率高達 .500~.600，被擊出安打是物理常態。傳統防禦率 (ERA) 嚴重受到守備員範圍、失誤與外野漏接之劇烈污染，完全無法反映投手真實水準。慢壘投手的第一天職是<b>「極端壓制四壞保送」</b>與<b>「製造弱化出局」</b>！
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-950 p-4 rounded-xl border border-teal-900/40 space-y-2 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-teal-300 text-sm">慢壘獨立防禦率 (sFIP)</span>
+                    <span class="font-mono text-[10px] text-teal-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Slowpitch FIP</span>
+                  </div>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-teal-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">sFIP = (3.0×BB - 2.0×K_swing - 1.5×K_foul) / IP + 4.5</span></p>
+                  <p><span class="text-slate-400">說明：</span>完全剝離守備隊友與安打運氣干擾，只評估投手個人完全掌控的事件：保送 (BB) 施加最大懲罰 (+3.0)，揮空三振給予強力獎勵 (-2.0)，兩好球界外誘殺給予顯著獎勵 (-1.5)。慢壘中低於 3.50 即屬超級神級王牌！</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-emerald-900/40 space-y-2 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-emerald-300 text-sm">好球帶好投率 (ZCR)</span>
+                    <span class="font-mono text-[10px] text-emerald-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Zone Control Rate</span>
+                  </div>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-emerald-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ZCR = 1 - (BB / TBF) = (TBF - BB) / TBF</span></p>
+                  <p><span class="text-slate-400">說明：</span>慢壘投手的核心天職！衡量面對打者時，能有效將球送進好球板或迫使打者出棒、避免奉送免費保送的機率。慢壘送保送等同於自爆大局，頂尖投手 ZCR 必須維持在 93% 以上。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-amber-900/40 space-y-2 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-amber-300 text-sm">兩好球界外K誘陷率 (FKR)</span>
+                    <span class="font-mono text-[10px] text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Foul-K Ratio</span>
+                  </div>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-amber-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">FKR = K_foul / (K_swing + K_foul)</span></p>
+                  <p><span class="text-slate-400">說明：</span>慢速壘球專屬魔球戰術！慢壘官方規則規定兩好球後擊出界外球即判出局。頂級投手深諳心理戰，在兩好球後專門投出深遠外角或極高下墜弧度，誘騙打者出棒削成界外球強行抓出局！</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-sky-900/40 space-y-2 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-sky-300 text-sm">場內擊球轉出局率 (BIP Out%)</span>
+                    <span class="font-mono text-[10px] text-sky-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">BIP Out Conversion</span>
+                  </div>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">BIP Out% = (GO + FO + DP) / (GO + FO + DP + Hits)</span></p>
+                  <p><span class="text-slate-400">說明：</span>慢壘被打進場內是必然。該指標衡量被打入場內的球有多少比例能被隊友抓下出局，反映了投手投球球質是否具有優異的「弱化擊球」效果（多形成軟弱滾地或無害沖天炮）。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-white text-sm">每7局四壞保送數 (BB/7)</span>
+                    <span class="font-mono text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Walks per 7 Innings</span>
+                  </div>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-white font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">BB/7 = (BB × 21) / Outs</span></p>
+                  <p><span class="text-slate-400">說明：</span>慢速壘球正規賽事為 7 局制（21 個出局數）。BB/7 能精確衡量投滿整場 7 局預期會送出幾次保送。低於 2.0 次為絕對王牌水準。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-white text-sm">投手滾飛出局比 (GO/AO)</span>
+                    <span class="font-mono text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Ground-to-Air Ratio</span>
+                  </div>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-white font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">GO/AO = GO / FO</span></p>
+                  <p><span class="text-slate-400">說明：</span>區分投手出局風格。大於 1.5 為滾地球重下沉型（內野雙殺多、長打威脅小）；小於 0.8 為高拋飛球型（考驗外野 4 人守備覆蓋）。</p>
+                </div>
+              </div>
+            </div>
+            </section>
       </div><!-- 守備能力手動排名彈窗 (內部教練專用：支援各守位順位 1~3 排名與 GitHub 雲端同步) -->
   <div id="defenseModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
     <div class="bg-slate-900 border border-amber-700/60 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
@@ -2595,6 +2769,9 @@
     let customChartInst = null;
     let luckRegressionChartInst = null;
     let compareRadarChartInst = null;
+    let pitcherOutProfileChartInst = null;
+    let pitcherRadarChartInst = null;
+    let selectedPitcherName = "盧宣嘉";
     let lineupFlowChartInst = null;
     let comparePlayerAName = "";
     let comparePlayerBName = "";
@@ -2659,7 +2836,8 @@
         tabCompare: document.getElementById('panelCompare'),
         tabGlossary: document.getElementById('panelGlossary'),
         tabLineup: document.getElementById('panelLineup'),
-        tabScorebook: document.getElementById('panelScorebook')
+        tabScorebook: document.getElementById('panelScorebook'),
+        tabPitching: document.getElementById('panelPitching')
       };
       const buttons = {
         tabOverview: document.getElementById('btnTabOverview'),
@@ -2669,7 +2847,8 @@
         tabCompare: document.getElementById('btnTabCompare'),
         tabGlossary: document.getElementById('btnTabGlossary'),
         tabLineup: document.getElementById('btnTabLineup'),
-        tabScorebook: document.getElementById('btnTabScorebook')
+        tabScorebook: document.getElementById('btnTabScorebook'),
+        tabPitching: document.getElementById('btnTabPitching')
       };
 
 
@@ -2707,6 +2886,8 @@
         renderLineupAnalysis(getFullAgg());
       } else if (tabId === 'tabScorebook') {
         renderScorebook();
+      } else if (tabId === 'tabPitching') {
+        renderPitchingStudio();
       }
     };
 
@@ -7188,6 +7369,464 @@ function renderCustomChart(agg) {
       }
     }
 
+    // ==========================================
+    // 慢速壘球投手賽伯計量進階分析引擎 (Pitching Sabermetrics Engine)
+    // ==========================================
+    // 114 學年度代表性慢壘投手基準歷史數據 (作為隊史常模基準)
+    const baselinePitchingStats = [
+      {
+        name: "盧宣嘉",
+        games: 5,
+        outs: 79, // 26.1 局
+        tbf: 158,
+        bb: 9,
+        k_swing: 5,
+        k_foul: 9,
+        go: 42,
+        fo: 20,
+        dp: 3,
+        runner_out: 2,
+        hits: 68,
+        runs: 38
+      },
+      {
+        name: "田耕宇",
+        games: 3,
+        outs: 36, // 12.0 局
+        tbf: 78,
+        bb: 6,
+        k_swing: 2,
+        k_foul: 3,
+        go: 16,
+        fo: 12,
+        dp: 1,
+        runner_out: 1,
+        hits: 34,
+        runs: 22
+      },
+      {
+        name: "陳威騏",
+        games: 2,
+        outs: 18, // 6.0 局
+        tbf: 41,
+        bb: 4,
+        k_swing: 1,
+        k_foul: 1,
+        go: 8,
+        fo: 5,
+        dp: 0,
+        runner_out: 0,
+        hits: 18,
+        runs: 14
+      }
+    ];
+
+    window.getAggregatedPitcherStats = getAggregatedPitcherStats;
+    function getAggregatedPitcherStats() {
+      // 1. 初始化聚合字典 (以基準數據打底)
+      const pMap = {};
+      baselinePitchingStats.forEach(bp => {
+        pMap[bp.name] = { ...bp };
+      });
+
+      // 2. 遍歷所有歷史賽事中的我方守備半局與防守事件
+      const targetGames = (typeof window !== 'undefined' && Array.isArray(window.allGames)) ? window.allGames : (Array.isArray(allGames) ? allGames : []);
+      const s = document.getElementById('filterStartDate')?.value || '';
+      const e = document.getElementById('filterEndDate')?.value || '';
+
+      (targetGames || []).forEach(g => {
+        if (s && g.date < s) return;
+        if (e && g.date > e) return;
+
+        const defaultP = g.pitcherName || '盧宣嘉';
+        (g.innings || []).forEach(inn => {
+          const isOurDefense = !isInningOurBat(g.ourRole, inn.topBottom);
+          if (!isOurDefense) return;
+
+          const defEvents = inn.defensiveEvents || [];
+          if (defEvents.length > 0) {
+            defEvents.forEach(evt => {
+              const pName = evt.pitcher || defaultP;
+              if (!pMap[pName]) {
+                pMap[pName] = {
+                  name: pName, games: 1, outs: 0, tbf: 0, bb: 0,
+                  k_swing: 0, k_foul: 0, go: 0, fo: 0, dp: 0, runner_out: 0, hits: 0, runs: 0
+                };
+              }
+              const p = pMap[pName];
+              if (evt.type === 'GO') { p.go++; p.outs++; p.tbf++; }
+              else if (evt.type === 'FO') { p.fo++; p.outs++; p.tbf++; }
+              else if (evt.type === 'K') { p.k_swing++; p.outs++; p.tbf++; }
+              else if (evt.type === '界外K') { p.k_foul++; p.outs++; p.tbf++; }
+              else if (evt.type === 'DP') { p.dp++; p.outs += 2; p.tbf++; }
+              else if (evt.type === 'RUNNER_OUT') { p.runner_out++; p.outs++; }
+              else if (evt.type === 'BB') { p.bb++; p.tbf++; }
+              else if (evt.type === 'HIT') { p.hits++; p.tbf++; }
+              if (evt.runs) p.runs += evt.runs;
+            });
+          } else {
+            // 若該局無細分事件，至少累計局數、安打與失分
+            const p = pMap[defaultP] || (pMap[defaultP] = {
+              name: defaultP, games: 1, outs: 0, tbf: 0, bb: 0,
+              k_swing: 0, k_foul: 0, go: 0, fo: 0, dp: 0, runner_out: 0, hits: 0, runs: 0
+            });
+            p.outs += 3;
+            p.runs += (inn.runs || 0);
+            p.hits += (inn.hits || 0);
+            p.tbf += 3 + (inn.hits || 0);
+          }
+        });
+      });
+
+      // 3. 計算慢速壘球專屬賽伯計量指標
+      const list = Object.values(pMap).map(p => {
+        const ipFull = p.outs / 3;
+        const ipDisplay = Math.floor(p.outs / 3) + '.' + (p.outs % 3);
+        const k_total = p.k_swing + p.k_foul;
+        const totalBipOuts = p.go + p.fo + (p.dp * 2);
+        const totalBip = totalBipOuts + p.hits;
+
+        // A. 好球帶好投率 (ZCR): (TBF - BB) / TBF (衡量拒絕自爆保送能力)
+        const zcr = p.tbf > 0 ? (p.tbf - p.bb) / p.tbf : 1.0;
+
+        // B. 慢壘獨立防禦率 (sFIP): (3.0*BB - 2.0*K_swing - 1.5*K_foul)/IP + 4.5
+        const sFip = ipFull > 0
+          ? ((3.0 * p.bb - 2.0 * p.k_swing - 1.5 * p.k_foul) / ipFull) + 4.5
+          : 4.50;
+
+        // C. 兩好球界外K誘陷率 (FKR): K_foul / K_total
+        const fkr = k_total > 0 ? p.k_foul / k_total : 0;
+
+        // D. 場內擊球轉出局率 (BIP Out%): BIP_Outs / BIP
+        const bipOutPct = totalBip > 0 ? totalBipOuts / totalBip : 0.50;
+
+        // E. 每 7 局四壞保送數 (BB/7): (BB * 21) / Outs
+        const bb7 = p.outs > 0 ? (p.bb * 21) / p.outs : 0;
+
+        // F. 每 7 局實質失分 (R/7): (Runs * 21) / Outs (取代傳統 9 局 ERA)
+        const r7 = p.outs > 0 ? (p.runs * 21) / p.outs : 0;
+
+        // G. 滾飛出局比 (GO/AO): GO / FO
+        const goAo = p.fo > 0 ? p.go / p.fo : p.go;
+
+        // H. 慢壘每局被上壘率 (sWHIP): (BB + Hits) / IP
+        const sWhip = ipFull > 0 ? (p.bb + p.hits) / ipFull : 0;
+
+        // I. 三振率 (K%): K / TBF
+        const kPct = p.tbf > 0 ? k_total / p.tbf : 0;
+
+        return {
+          ...p,
+          ipFull,
+          ipDisplay,
+          k_total,
+          zcr,
+          sFip,
+          fkr,
+          bipOutPct,
+          bb7,
+          r7,
+          goAo,
+          sWhip,
+          kPct
+        };
+      });
+
+      // 依局數與 sFIP 排序
+      list.sort((a, b) => b.outs - a.outs);
+      return list;
+    };
+
+    window.renderPitchingStudio = renderPitchingStudio;
+    function renderPitchingStudio() {
+      const pList = getAggregatedPitcherStats();
+      if (!pList || pList.length === 0) return;
+
+      // 檢查當前選取的投手是否存在
+      let currentP = pList.find(p => p.name === selectedPitcherName);
+      if (!currentP) {
+        currentP = pList[0];
+        selectedPitcherName = currentP.name;
+      }
+
+      // 1. 填充投手選單
+      const sel = document.getElementById('pitchingPlayerSelect');
+      const badge = document.getElementById('pitcherSelectAvatarBadge');
+      if (sel) {
+        sel.innerHTML = pList.map(p => `
+          <option value="${p.name}" ${p.name === selectedPitcherName ? 'selected' : ''}>
+            #${NAME_TO_JERSEY[p.name] ?? ''} ${p.name} (IP: ${p.ipDisplay} 局 | sFIP: ${p.sFip.toFixed(2)})
+          </option>
+        `).join('');
+      }
+      if (badge && selectedPitcherName) {
+        badge.innerHTML = renderAvatarElement(selectedPitcherName, 'w-7 h-7 text-xs ring-2 ring-teal-400 shadow');
+      }
+
+      // 2. 渲染頂部 4 大慢壘投手進階核心指標看板
+      const heroCardsContainer = document.getElementById('pitchingHeroCards');
+      if (heroCardsContainer) {
+        heroCardsContainer.innerHTML = `
+          <!-- 卡片 1: 好球帶好投率 (ZCR) -->
+          <div class="bg-slate-950 p-4 rounded-2xl border border-emerald-900/50 shadow-lg space-y-1.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">好球帶好投率 (ZCR)</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            </div>
+            <div>
+              <span class="font-mono text-emerald-400 font-black text-2xl tracking-tight block tabular-nums">
+                ${(currentP.zcr * 100).toFixed(1)}%
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono block mt-0.5">拒絕自爆保送・逼出棒對決</span>
+            </div>
+            <div class="pt-1.5 border-t border-slate-800 text-[10px] text-emerald-300 font-mono flex justify-between">
+              <span>每7局保送: <b>${currentP.bb7.toFixed(1)} 次</b></span>
+              <span>保送率: <b>${((currentP.bb / currentP.tbf)*100).toFixed(1)}%</b></span>
+            </div>
+          </div>
+
+          <!-- 卡片 2: 慢壘獨立防禦率 (sFIP) -->
+          <div class="bg-slate-950 p-4 rounded-2xl border border-purple-900/50 shadow-lg space-y-1.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">慢壘獨立防禦 (sFIP)</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse"></span>
+            </div>
+            <div>
+              <span class="font-mono text-purple-400 font-black text-2xl tracking-tight block tabular-nums">
+                ${currentP.sFip.toFixed(2)}
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono block mt-0.5">過濾守備失誤之純實力值</span>
+            </div>
+            <div class="pt-1.5 border-t border-slate-800 text-[10px] text-purple-300 font-mono flex justify-between">
+              <span>基準常數: 4.50</span>
+              <span>${currentP.sFip < 3.5 ? '🔥 神級壓制' : currentP.sFip < 4.5 ? '優質先發' : '穩定吃局'}</span>
+            </div>
+          </div>
+
+          <!-- 卡片 3: 兩好球界外K誘陷率 (FKR) -->
+          <div class="bg-slate-950 p-4 rounded-2xl border border-amber-900/50 shadow-lg space-y-1.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">界外K誘陷率 (FKR)</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+            </div>
+            <div>
+              <span class="font-mono text-amber-300 font-black text-2xl tracking-tight block tabular-nums">
+                ${(currentP.fkr * 100).toFixed(1)}%
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono block mt-0.5">高拋兩好球邊界誘殺神技</span>
+            </div>
+            <div class="pt-1.5 border-t border-slate-800 text-[10px] text-amber-400 font-mono flex justify-between">
+              <span>界外K: <b>${currentP.k_foul}</b> 次</span>
+              <span>揮空K: <b>${currentP.k_swing}</b> 次</span>
+            </div>
+          </div>
+
+          <!-- 卡片 4: 場內擊球轉出局率 (BIP Out%) -->
+          <div class="bg-slate-950 p-4 rounded-2xl border border-sky-900/50 shadow-lg space-y-1.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">場內出局轉化 (BIP Out%)</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+            </div>
+            <div>
+              <span class="font-mono text-sky-400 font-black text-2xl tracking-tight block tabular-nums">
+                ${(currentP.bipOutPct * 100).toFixed(1)}%
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono block mt-0.5">弱化擊球引導守備處理</span>
+            </div>
+            <div class="pt-1.5 border-t border-slate-800 text-[10px] text-sky-300 font-mono flex justify-between">
+              <span>滾飛比: <b>${currentP.goAo.toFixed(2)}</b></span>
+              <span>雙殺製造: <b>${currentP.dp} 次</b></span>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3. 繪製出局型態分析圖 (Pitching Out Profile Chart)
+      const outCanvas = document.getElementById('pitcherOutProfileChart');
+      const countEl = document.getElementById('pitcherSampleCount');
+      const goAoEl = document.getElementById('pitcherGoAoIndicator');
+      if (countEl) countEl.textContent = `面對 ${currentP.tbf} 打席 | 投球 ${currentP.ipDisplay} 局 (${currentP.outs} 出局)`;
+      if (goAoEl) {
+        const styleText = currentP.goAo > 1.5 ? '重度滾地球型 (內野封殺高、雙殺多)' : currentP.goAo > 0.9 ? '滾飛均衡型' : '高拋飛球型 (仰仗外野接殺)';
+        goAoEl.innerHTML = `
+          <span>出局型態風格: <b class="text-teal-300">${styleText}</b></span>
+          <span>滾飛比 (GO/AO): <b class="text-amber-400">${currentP.goAo.toFixed(2)}</b></span>
+        `;
+      }
+
+      if (outCanvas && outCanvas.getContext) {
+        const ctx = outCanvas.getContext('2d');
+        if (pitcherOutProfileChartInst) pitcherOutProfileChartInst.destroy();
+        pitcherOutProfileChartInst = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['內野滾地刺殺 (GO)', '外野高飛接殺 (FO)', '兩好界外K (Foul-K)', '揮空三振 (K)', '雙殺守備 (DP)', '跑壘刺殺 (Out)'],
+            datasets: [{
+              data: [currentP.go, currentP.fo, currentP.k_foul, currentP.k_swing, currentP.dp, currentP.runner_out],
+              backgroundColor: ['#22c55e', '#38bdf8', '#f59e0b', '#f43f5e', '#a855f7', '#64748b'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 }
+              },
+              tooltip: {
+                callbacks: {
+                  label: c => {
+                    const total = currentP.outs || 1;
+                    const val = c.raw;
+                    const pct = ((val / total) * 100).toFixed(1);
+                    return ` ${c.label}: ${val} 次 (${pct}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // 4. 繪製慢壘投手五維能力 PR 百分位雷達 (Pitcher 5-Tool Radar)
+      const radarCanvas = document.getElementById('pitcherRadarChart');
+      if (radarCanvas && radarCanvas.getContext) {
+        const ctx = radarCanvas.getContext('2d');
+        if (pitcherRadarChartInst) pitcherRadarChartInst.destroy();
+
+        // 百分位計算
+        const prZcr = getPercentile(currentP.zcr, 'zcr', pList);
+        const prK = getPercentile(currentP.kPct, 'kPct', pList);
+        const prFkr = getPercentile(currentP.fkr, 'fkr', pList);
+        const prBip = getPercentile(currentP.bipOutPct, 'bipOutPct', pList);
+        const prIp = getPercentile(currentP.outs, 'outs', pList);
+
+        pitcherRadarChartInst = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: ['好球好投率 (ZCR)', '奪三振能力 (K%)', '界外K誘陷 (FKR)', '弱化擊球 (BIP Out%)', '吃局耐力 (IP)'],
+            datasets: [{
+              label: `${currentP.name} 投手 PR 值`,
+              data: [prZcr, prK, prFkr, prBip, prIp],
+              backgroundColor: 'rgba(20, 184, 166, 0.25)',
+              borderColor: '#14b8a6',
+              pointBackgroundColor: '#14b8a6',
+              pointBorderColor: '#ffffff',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: {
+                min: 0, max: 100, ticks: { stepSize: 20, display: false },
+                grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                pointLabels: { color: '#94a3b8', font: { size: 10 } }
+              }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      // 5. 渲染全隊投手數據總表
+      const tbody = document.getElementById('pitchingTableBody');
+      if (tbody) {
+        tbody.innerHTML = pList.map(p => {
+          const isSelected = p.name === selectedPitcherName;
+          return `
+            <tr class="hover:bg-slate-800/60 transition cursor-pointer ${isSelected ? 'bg-teal-950/20 border-l-4 border-teal-400' : ''}" onclick="selectPitcherRow('${p.name}')">
+              <td class="p-3 font-bold text-white flex items-center space-x-2.5">
+                ${renderAvatarElement(p.name, 'w-7 h-7 text-[10px] ring-1 ring-teal-400/80')}
+                <span>#${NAME_TO_JERSEY[p.name] ?? ''} ${p.name}</span>
+              </td>
+              <td class="p-3 text-center">${p.games}</td>
+              <td class="p-3 text-center text-teal-300 font-bold">${p.ipDisplay}</td>
+              <td class="p-3 text-center text-slate-400">${p.outs}</td>
+              <td class="p-3 text-center text-slate-300">${p.tbf}</td>
+              <td class="p-3 text-center font-bold text-emerald-400">${(p.zcr * 100).toFixed(1)}%</td>
+              <td class="p-3 text-center font-bold text-purple-300">${p.sFip.toFixed(2)}</td>
+              <td class="p-3 text-center text-amber-300 font-bold">${p.bb7.toFixed(1)}</td>
+              <td class="p-3 text-center text-sky-400 font-bold">${(p.bipOutPct * 100).toFixed(1)}%</td>
+              <td class="p-3 text-center text-amber-400 font-bold">${(p.fkr * 100).toFixed(1)}%</td>
+              <td class="p-3 text-center text-slate-300">${p.k_total} <span class="text-[9px] text-slate-500">(${p.k_swing}/${p.k_foul})</span></td>
+              <td class="p-3 text-center text-slate-300">${p.goAo.toFixed(2)}</td>
+              <td class="p-3 text-center text-slate-300">${p.dp}</td>
+              <td class="p-3 text-center text-rose-400 font-bold">${p.r7.toFixed(1)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // 6. 渲染慢壘投手戰術診斷與改善方針
+      const advCard = document.getElementById('pitchingTacticalAdvisoryCard');
+      if (advCard) {
+        const notes = [];
+        // 保送診斷
+        if (currentP.zcr >= 0.93) {
+          notes.push({
+            type: 'success',
+            title: `【極限好球帶控制】：保送壓制力卓越 (ZCR ${(currentP.zcr * 100).toFixed(1)}%)`,
+            desc: `面對打席的好球帶好投率高達 ${(currentP.zcr * 100).toFixed(1)}%，平均每 7 局僅送出 ${currentP.bb7.toFixed(1)} 次保送！完全杜絕自爆，逼迫對手必須靠實體安打串聯，為球隊提供最穩固的防守基石。`
+          });
+        } else {
+          notes.push({
+            type: 'warning',
+            title: `【警戒！四壞保送偏高】：每 7 局保送達 ${currentP.bb7.toFixed(1)} 次`,
+            desc: `慢速壘球中保送等同於大局的催化劑。建議練習穩定高拋放球點與落點甜蜜區，寧可讓打者擊出場內交給身後 9 位防守隊友，也絕不能輕易奉送打者免費上壘！`
+          });
+        }
+
+        // 界外K誘陷戰術診斷
+        if (currentP.fkr >= 0.50 && currentP.k_total >= 3) {
+          notes.push({
+            type: 'success',
+            title: `【慢壘界外K誘殺大師】：FKR 佔比高達 ${(currentP.fkr * 100).toFixed(1)}%`,
+            desc: `在兩好球後擅長利用慢壘「界外即出局」特有規則，以極高拋物線外角球或深沉進壘點，引誘打者急躁出棒削成界外球強行奪K，具備頂尖的慢壘心理戰技術！`
+          });
+        }
+
+        // 出局型態風格戰術建議
+        if (currentP.goAo >= 1.5) {
+          notes.push({
+            type: 'info',
+            title: `【重度下沉滾地球型】：滾飛比 ${currentP.goAo.toFixed(2)}`,
+            desc: `出棒多形成滾地球。戰術建議：內野二游防線（2B/SS）與自由手（SF）站位可稍微前趨封殺穿越球，並隨時準備啟動雙殺（DP）戰術！`
+          });
+        } else if (currentP.goAo <= 0.8) {
+          notes.push({
+            type: 'info',
+            title: `【高拋深遠飛球型】：滾飛比 ${currentP.goAo.toFixed(2)}`,
+            desc: `打者多擊成高飛球。戰術建議：外野四人防線（LF/SF/RC/RF）站位必須適度後退，嚴防被深遠長打擊穿全壘打牆，依靠四外野廣闊覆蓋率接殺出局。`
+          });
+        }
+
+        advCard.innerHTML = notes.map(n => `
+          <div class="p-3.5 rounded-xl border ${
+            n.type === 'success' ? 'bg-emerald-950/30 border-emerald-800/60 text-emerald-300' :
+            n.type === 'warning' ? 'bg-rose-950/30 border-rose-800/60 text-rose-300' :
+            'bg-slate-950/80 border-slate-800 text-slate-300'
+          }">
+            <h4 class="text-xs font-black mb-1 ${
+              n.type === 'success' ? 'text-emerald-300' : n.type === 'warning' ? 'text-rose-300' : 'text-teal-300'
+            }">${n.title}</h4>
+            <p class="text-[11px] leading-relaxed text-slate-300">${n.desc}</p>
+          </div>
+        `).join('');
+      }
+    };
+
+    window.selectPitcherRow = selectPitcherRow;
+    function selectPitcherRow(pName) {
+      selectedPitcherName = pName;
+      renderPitchingStudio();
+    };
+
     function renderAll() {
       updateChienFilterButton();
       const filteredLogs = getFilteredLogs();
@@ -7228,6 +7867,9 @@ function renderCustomChart(agg) {
       // 7. 數位圖像場記與落點 (不受影響，比賽真實登打)
       if (document.getElementById('panelScorebook') && !document.getElementById('panelScorebook').classList.contains('hidden')) {
         renderScorebook();
+      }
+      if (document.getElementById('panelPitching') && !document.getElementById('panelPitching').classList.contains('hidden')) {
+        renderPitchingStudio();
       }
     }
 
@@ -9764,6 +10406,7 @@ function renderSprayChartStudio() {
 
     // 背景迅速並行同步 GitHub (最多 3.5 秒超時保護)
     loadLogsFromGitHub();
-  </script>
+  
+    </script>
 </body>
 </html>
