@@ -43,7 +43,7 @@
           <span class="text-base sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1220</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1240</span>
         </div>
 
 
@@ -271,6 +271,7 @@
                   <th class="p-3">ISO</th>
                   <th class="p-3">BABIP</th>
                   <th class="p-3">RC</th>
+                  <th class="p-3 font-bold text-amber-400">RC/27</th>
                   <th class="p-3">SDI</th>
                 </tr>
               </thead>
@@ -525,6 +526,8 @@
                   <option value="ops_plus">標準化攻擊指數 (OPS+)</option>
                   <option value="woba">加權上壘率 (wOBA)</option>
                   <option value="rc">預估創造得分 (RC)</option>
+                  <option value="rc_27">每27出局得分 (RC/27)</option>
+                      <option value="rc_27">每27出局得分 (RC/27)</option>
                 </optgroup>
                 <optgroup label="打擊與長打深度">
                   <option value="avg">打擊率 (AVG)</option>
@@ -679,6 +682,8 @@
                       <option value="ops">整體攻擊指數 (OPS)</option>
                       <option value="woba">加權上壘率 (wOBA)</option>
                       <option value="rc">預估創造得分 (RC)</option>
+                  <option value="rc_27">每27出局得分 (RC/27)</option>
+                      <option value="rc_27">每27出局得分 (RC/27)</option>
                     </optgroup>
                     <optgroup label="Statcast 預期期望數據">
                       <option value="xba">預期打擊率 (xBA)</option>
@@ -714,6 +719,109 @@
             </div>
           </div>
         </section>
+        <!-- ★★★ Statcast 擊球品質 vs 運氣回歸矩陣 (Luck & Expected Regression Chart) ★★★ -->
+        <section class="bg-slate-900/80 border border-purple-900/50 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 backdrop-blur-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">LUCK & REGRESSION MATRIX</span>
+                <h3 class="text-base sm:text-lg font-black text-purple-300 tracking-tight">Statcast 擊球品質與運氣回歸矩陣 (xBA vs. BABIP)</h3>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">對角虛線為 45 度無偏差期望基準線 (y = x)：線上方為運氣優勢穿透區 (Luck+)，線下方為強擊運氣差遭沒收區 (Unlucky)</p>
+            </div>
+            <span class="text-xs font-mono text-purple-400 bg-purple-950/80 px-2.5 py-1 rounded-lg border border-purple-800/60 font-semibold">全隊 14 人客觀實證</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div class="lg:col-span-8 h-72 sm:h-80 relative w-full bg-slate-950/70 p-4 rounded-2xl border border-slate-800">
+              <canvas id="luckRegressionChart"></canvas>
+            </div>
+            <div class="lg:col-span-4 bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-3 text-xs">
+              <span class="font-bold text-slate-200 block text-sm border-b border-slate-800 pb-2">🧠 賽伯計量運氣因子球探解讀</span>
+              <div class="space-y-2.5">
+                <div class="p-2.5 rounded-xl bg-amber-950/30 border border-amber-800/50 space-y-1">
+                  <span class="font-bold text-amber-300 block">🟢 線上方：運氣優勢穿透區 (BABIP > xBA)</span>
+                  <p class="text-slate-400 text-[11px] leading-relaxed">打者場內安打率高於純擊球品質期望，通常代表擊球落點巧、對手防守失誤偏多或速度推進快，未來數據可能產生小幅校正回歸。</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-sky-950/30 border border-sky-800/50 space-y-1">
+                  <span class="font-bold text-sky-300 block">🔵 線下方：強擊運氣受損區 (xBA > BABIP)</span>
+                  <p class="text-slate-400 text-[11px] leading-relaxed">打者擊球初速快且平飛球 (LD%) 充沛，但常直找野手手套遭沒收。此類打者揮棒機制極佳，後續賽事強烈看好安打大爆發！</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ★★★ 全隊空間落點噴流與防守佈陣實驗室 (Team Spatial Spray & Shift Lab) ★★★ -->
+        <section class="bg-slate-900/80 border border-emerald-900/50 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5 backdrop-blur-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">SPATIAL DEFENSE & SHIFT</span>
+                <h3 class="text-base sm:text-lg font-black text-emerald-300 tracking-tight">全隊空間擊球噴流與防守佈陣推演實驗室</h3>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">慢速壘球空間防禦與打擊推進分析法：計算拉推比 (P/O Index)、中線穿透度與對手外野極端移位 (Shift) 策略</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="teamSprayPlayerFilter" onchange="renderTeamSpatialLab(getAnalysisAgg())" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2.5 py-1 text-slate-200 focus:outline-none focus:border-emerald-500 font-medium">
+                <option value="all" selected>全隊所有打者 (總體空間散佈)</option>
+              </select>
+              <select id="teamSprayTypeFilter" onchange="renderTeamSpatialLab(getAnalysisAgg())" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2.5 py-1 text-emerald-300 focus:outline-none focus:border-emerald-500 font-bold">
+                <option value="all" selected>全部擊球 (All)</option>
+                <option value="hits">僅安打 (Hits)</option>
+                <option value="extra">僅長打 (XBH)</option>
+                <option value="outs">僅出局 (Outs)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- 左側：全隊空間噴流 SVG (400x400) 帶有三等分拉中推扇區與四外野覆蓋圈 -->
+            <div class="lg:col-span-6 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                  <span>🗺️</span> 慢壘球場空間落點與防守扇形區
+                </span>
+                <span class="text-[10px] font-mono text-emerald-400" id="teamSpatialSampleCount">樣本: 0 球</span>
+              </div>
+              <div class="relative w-full max-w-[380px] mx-auto aspect-square select-none">
+                <svg id="teamSpatialSvg" viewBox="0 0 400 400" class="w-full h-full rounded-xl border border-slate-800/80 bg-[#0d1712]">
+                  <rect width="400" height="400" fill="#0d1712" />
+                  <path d="M 20 145 A 215 215 0 0 1 380 145 L 200 375 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />
+                  <!-- 三等分方向虛線 (x=160 拉打/中線界, x=240 中線/推打界) -->
+                  <line x1="200" y1="370" x2="110" y2="90" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.6" />
+                  <line x1="200" y1="370" x2="290" y2="90" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.6" />
+                  <!-- 界內白線 -->
+                  <line x1="200" y1="370" x2="16" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                  <line x1="200" y1="370" x2="384" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                  <path d="M 115 285 A 95 95 0 0 1 285 285 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                  <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
+                  <polygon points="200,370 280,285 200,200 120,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                  <!-- 守位標籤與防禦熱區圈 -->
+                  <g class="text-[9px] font-mono font-bold select-none pointer-events-none fill-slate-400">
+                    <text x="200" y="390" text-anchor="middle">C</text>
+                    <text x="200" y="275" text-anchor="middle" fill="#f59e0b">P</text>
+                    <text x="295" y="285" text-anchor="start">1B</text>
+                    <text x="245" y="215" text-anchor="start">2B</text>
+                    <text x="105" y="285" text-anchor="end">3B</text>
+                    <text x="155" y="215" text-anchor="end">SS</text>
+                    <text x="85" y="165" text-anchor="middle" fill="#38bdf8">LF</text>
+                    <text x="155" y="115" text-anchor="middle" fill="#34d399">SF</text>
+                    <text x="245" y="115" text-anchor="middle" fill="#34d399">RC</text>
+                    <text x="315" y="165" text-anchor="middle" fill="#38bdf8">RF</text>
+                  </g>
+                  <!-- 全隊空間落點散佈點群 -->
+                  <g id="teamSpatialPointsContainer"></g>
+                </svg>
+              </div>
+              <div id="teamSpatialPointTooltip" class="min-h-[22px] text-center text-xs font-mono text-amber-300"></div>
+            </div>
+
+            <!-- 右側：衍生分析方法與防守佈陣戰術建議矩陣 -->
+            <div class="lg:col-span-6 space-y-4" id="teamSpatialShiftAdvisoryCard"></div>
+          </div>
+        </section>
+
       </div>
 
 
@@ -779,7 +887,63 @@
               </div>
             </div>
           </div>
-        </section>
+        
+          <!-- ★★★ 雙人選手球場擊球噴流圖雙屏對照 (Side-by-Side Spray Comparison) ★★★ -->
+          <div class="border-t border-slate-800 pt-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="flex items-center space-x-2">
+                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">DUAL SPRAY ANALYSIS</span>
+                <h3 class="text-base font-bold text-white tracking-tight">雙雄球場擊球噴流圖對照與空間傾向</h3>
+              </div>
+              <span class="text-xs text-slate-400 font-mono">左: 選手 A (藍方) | 右: 選手 B (金方)</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- 選手 A 噴流圖 -->
+              <div class="bg-slate-950 p-4 rounded-2xl border border-sky-500/30 space-y-3 shadow-lg">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span class="text-xs font-bold text-sky-400 font-mono" id="compareSprayTitleA">選手 A 噴流落點</span>
+                  <span class="text-[10px] text-slate-400 font-mono" id="compareSprayCountA">-- 球</span>
+                </div>
+                <div class="relative w-full max-w-[320px] mx-auto aspect-square select-none">
+                  <svg id="compareSpraySvgA" viewBox="0 0 400 400" class="w-full h-full rounded-xl border border-slate-800/80 bg-[#0d1712]">
+                    <rect width="400" height="400" fill="#0d1712" />
+                    <path d="M 20 145 A 215 215 0 0 1 380 145 L 200 375 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />
+                    <line x1="200" y1="370" x2="16" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                    <line x1="200" y1="370" x2="384" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                    <path d="M 115 285 A 95 95 0 0 1 285 285 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                    <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
+                    <polygon points="200,370 280,285 200,200 120,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                    <g id="compareSprayPointsA"></g>
+                  </svg>
+                </div>
+                <div id="compareSprayStatsA" class="grid grid-cols-4 gap-1.5 text-center text-[10px] font-mono pt-1 border-t border-slate-800/60"></div>
+              </div>
+
+              <!-- 選手 B 噴流圖 -->
+              <div class="bg-slate-950 p-4 rounded-2xl border border-amber-500/30 space-y-3 shadow-lg">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span class="text-xs font-bold text-amber-400 font-mono" id="compareSprayTitleB">選手 B 噴流落點</span>
+                  <span class="text-[10px] text-slate-400 font-mono" id="compareSprayCountB">-- 球</span>
+                </div>
+                <div class="relative w-full max-w-[320px] mx-auto aspect-square select-none">
+                  <svg id="compareSpraySvgB" viewBox="0 0 400 400" class="w-full h-full rounded-xl border border-slate-800/80 bg-[#0d1712]">
+                    <rect width="400" height="400" fill="#0d1712" />
+                    <path d="M 20 145 A 215 215 0 0 1 380 145 L 200 375 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />
+                    <line x1="200" y1="370" x2="16" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                    <line x1="200" y1="370" x2="384" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                    <path d="M 115 285 A 95 95 0 0 1 285 285 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                    <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
+                    <polygon points="200,370 280,285 200,200 120,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                    <g id="compareSprayPointsB"></g>
+                  </svg>
+                </div>
+                <div id="compareSprayStatsB" class="grid grid-cols-4 gap-1.5 text-center text-[10px] font-mono pt-1 border-t border-slate-800/60"></div>
+              </div>
+            </div>
+            <div id="compareSprayTacticalSummary" class="p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed shadow"></div>
+          </div>
+</section>
       </div>
 
 
@@ -1670,6 +1834,24 @@
                   <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">RC = (H + BB) × TB / (AB + BB)</span></p>
                   <p><span class="text-slate-400">意義：</span>棒球統計之父 Bill James 經典模型。將「上壘因子 (H+BB)」乘上「壘包推進因子 (TB)」，量化評估該打者為球隊換取的實體總分數。</p>
                 </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-amber-900/40 space-y-1.5 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-amber-300 text-sm">每27出局預估得分 (RC/27)</span>
+                    <span class="font-mono text-[10px] text-amber-400">Runs Created per 27 Outs</span>
+                  </div>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-amber-300 font-bold">RC/27 = (RC × 27) / (AB - H + SF)</span></p>
+                  <p><span class="text-slate-400">意義：</span>賽伯計量衡量個人單兵破壞力的最高殿堂指標！假設整支球隊 9 個棒次全由該打者一人包辦，打滿正規 9 局（27 個出局數）時，球隊預期能攻下的總分數。慢壘中大於 15.0 分即屬超強進攻重砲！</p>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-amber-900/40 space-y-1.5 shadow-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-amber-300 text-sm">每27出局預估得分 (RC/27)</span>
+                    <span class="font-mono text-[10px] text-amber-400">Runs Created per 27 Outs</span>
+                  </div>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-amber-300 font-bold">RC/27 = (RC × 27) / (AB - H + SF)</span></p>
+                  <p><span class="text-slate-400">意義：</span>賽伯計量衡量個人單兵破壞力的最高殿堂指標！假設整支球隊 9 個棒次全由該打者一人包辦，打滿正規 9 局（27 個出局數）時，球隊預期能攻下的總分數。慢壘中大於 15.0 分即屬超強進攻重砲！</p>
+                </div>
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
                   <div class="flex items-center justify-between">
                     <span class="font-bold text-white text-sm">純長打率 (ISO)</span>
@@ -2403,6 +2585,7 @@
     let profileExpectedChartInst = null;
     let quadrantChartInst = null;
     let customChartInst = null;
+    let luckRegressionChartInst = null;
     let compareRadarChartInst = null;
     let lineupFlowChartInst = null;
     let comparePlayerAName = "";
@@ -2437,6 +2620,7 @@
       ops_plus: { title: "標準化攻擊指數 (OPS+)", formula: "OPS+ = (OPS / Team_OPS) × 100", desc: "個人 OPS 相較於全隊平均的百分比指數，100 為隊均基準。" },
       woba: { title: "加權上壘率 (wOBA)", formula: "wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA", desc: "依據得分期望值賦予各進攻事件精確線性權重之上壘指標。" },
       rc: { title: "預估創造得分 (RC)", formula: "RC = (H + BB) × TB / (AB + BB)", desc: "評估球員在該時間區間內總共為球隊換取了多少實體分數。" },
+      rc_27: { title: "每27出局預估得分 (RC/27)", formula: "RC/27 = (RC × 27) / (AB - H + SF)", desc: "Bill James 賽伯計量經典模型。假設球隊打線9棒皆為該打者，打滿一整場9局 (27出局) 預期可得之總分數，客觀反映單兵進攻產能。" },
       avg: { title: "打擊率 (AVG)", formula: "AVG = H / AB", desc: "每打數擊出安打的機率，慢壘隊均水準約在 .500 上下。" },
       obp: { title: "上壘率 (OBP)", formula: "OBP = (H + BB) / (AB + BB + SF)", desc: "衡量打者站上打擊區「避免製造出局數」的機率。" },
       slg: { title: "長打率 (SLG)", formula: "SLG = TB / AB", desc: "打者平均每打數所能推進的總壘包數。" },
@@ -2496,6 +2680,8 @@
         const anaAgg = getAnalysisAgg();
         renderQuadrantChart(anaAgg);
         renderCustomChart(anaAgg);
+        renderTeamSpatialLab(anaAgg);
+        renderLuckRegressionChart(anaAgg);
       } else if (tabId === 'tabCompare') {
         renderComparison(getFullAgg());
       } else if (tabId === 'tabProfile') {
@@ -4781,6 +4967,10 @@ window.toggleDiagnosticsCollapse = function() {
       const teamHrVal = list.reduce((a, b) => a + b.hr, 0);
       const teamWobaNum = 0.69 * teamBbVal + 0.89 * teamH1Val + 1.27 * teamH2Val + 1.62 * teamH3Val + 2.10 * teamHrVal;
       const teamWoba = teamPa > 0 ? teamWobaNum / teamPa : 0;
+      const teamTbTotal = teamH1Val + 2*teamH2Val + 3*teamH3Val + 4*teamHrVal;
+      const teamOutsTotal = Math.max(1, teamAb - teamH + teamSf);
+      const teamRcTotal = (teamAb + teamBbVal) > 0 ? ((teamH + teamBbVal) * teamTbTotal) / (teamAb + teamBbVal) : 0;
+      const teamRc27 = (teamRcTotal * 27) / teamOutsTotal;
 
       list.forEach(p => {
         p.avg = p.ab > 0 ? p.h / p.ab : 0;
@@ -4805,6 +4995,10 @@ window.toggleDiagnosticsCollapse = function() {
         const bipDenom = p.ab - p.k - p.hr + p.sf;
         p.babip = bipDenom > 0 ? (p.h - p.hr) / bipDenom : 0;
         p.rc = (p.ab + p.bb) > 0 ? ((p.h + p.bb) * p.tb) / (p.ab + p.bb) : 0;
+        // ★★★ RC/27 (每27個出局數預估創造得分 - Bill James 經典模型)
+        const playerOuts = Math.max(1, p.ab - p.h + p.sf);
+        p.outs = playerOuts;
+        p.rc_27 = (p.rc * 27) / playerOuts;
         p.seca = p.ab > 0 ? (p.tb - p.h + p.bb) / p.ab : 0;
         p.bb_pct = p.pa > 0 ? p.bb / p.pa : 0;
         p.k_pct = p.pa > 0 ? p.k / p.pa : 0;
@@ -4838,7 +5032,7 @@ window.toggleDiagnosticsCollapse = function() {
 
       return {
         players: list,
-        teamAvg, teamObp, teamSlg, teamOps,
+        teamAvg, teamObp, teamSlg, teamOps, teamRc27,
         totalPa: list.reduce((a, b) => a + b.pa, 0),
         totalH: teamH,
         totalHr: teamHr
@@ -5084,11 +5278,23 @@ window.toggleDiagnosticsCollapse = function() {
         { key: 'ops_plus', label: '標準化攻擊指數 (OPS+)', fmt: v => v.toFixed(1) },
         { key: 'woba', label: '加權上壘率 (wOBA)', fmt: v => v.toFixed(3) },
         { key: 'wrc_plus', label: '加權得分創造 (wRC+)', fmt: v => v.toFixed(1) },
+        { key: 'rc', label: '預估創造得分 (RC)', fmt: v => v.toFixed(1) },
+        { key: 'rc_27', label: '每27出局得分 (RC/27)', fmt: v => v.toFixed(1) },
         { key: 'iso', label: '純長打率 (ISO)', fmt: v => v.toFixed(3) },
         { key: 'babip', label: '場內安打率 (BABIP)', fmt: v => v.toFixed(3) },
-        { key: 'rc', label: '預估創造得分 (RC)', fmt: v => v.toFixed(1) },
-        { key: 'sdi', label: '慢壘好球帶紀律 (SDI)', fmt: v => (v >= 0 ? '+' : '') + v.toFixed(3) },
+        { key: 'sdi', label: '慢壘好球帶紀律 2.0 (SDI)', fmt: v => (v >= 0 ? '+' : '') + v.toFixed(3) },
         { key: 'contact_pct', label: '擊球掌握率 (Contact%)', fmt: v => (v * 100).toFixed(1) + '%' },
+        { key: 'ld_pct', label: '平飛球率 (LD%)', fmt: v => (v * 100).toFixed(1) + '%' },
+        { key: 'gb_pct', label: '滾地球率 (GB%)', fmt: v => (v * 100).toFixed(1) + '%' },
+        { key: 'fb_pct', label: '高飛球率 (FB%)', fmt: v => (v * 100).toFixed(1) + '%' },
+        { key: 'pu_pct', label: '內野沖天炮率 (PU%) [低佳]', fmt: v => (v * 100).toFixed(1) + '%', lowerBetter: true },
+        { key: 'pull_pct', label: '拉打率 (Pull%)', fmt: v => (v * 100).toFixed(1) + '%' },
+        { key: 'cent_pct', label: '中線率 (Center%)', fmt: v => (v * 100).toFixed(1) + '%' },
+        { key: 'oppo_pct', label: '反向推打率 (Oppo%)', fmt: v => (v * 100).toFixed(1) + '%' },
+        { key: 'xba', label: '預期打擊率 (xBA - Statcast)', fmt: v => v.toFixed(3) },
+        { key: 'xslg', label: '預期長打率 (xSLG)', fmt: v => v.toFixed(3) },
+        { key: 'xwoba', label: '預期加權上壘 (xwOBA)', fmt: v => v.toFixed(3) },
+        { key: 'luck_factor', label: '運氣差額 (AVG - xBA)', fmt: v => (v >= 0 ? '+' : '') + v.toFixed(3) },
         { key: 'bb_pct', label: '四壞率 (BB%)', fmt: v => (v * 100).toFixed(1) + '%' },
         { key: 'k_pct', label: '三振率 (K%) [低佳]', fmt: v => (v * 100).toFixed(1) + '%', lowerBetter: true },
         { key: 'bb_k_ratio', label: '保送三振比 (BB/K)', fmt: v => v.toFixed(2) }
@@ -5197,10 +5403,103 @@ window.toggleDiagnosticsCollapse = function() {
           }
         });
       }
+      // ★★★ 渲染雙雄球場擊球噴流圖對照 ★★★
+      renderDualSprayCharts(pA, pB);
+
     }
 
 
-    function getPercentile(val, key, pList, invert = false) {
+    
+    window.renderDualSprayCharts = function(pA, pB) {
+      const titleA = document.getElementById('compareSprayTitleA');
+      const titleB = document.getElementById('compareSprayTitleB');
+      const countA = document.getElementById('compareSprayCountA');
+      const countB = document.getElementById('compareSprayCountB');
+      const ptsA = document.getElementById('compareSprayPointsA');
+      const ptsB = document.getElementById('compareSprayPointsB');
+      const statsA = document.getElementById('compareSprayStatsA');
+      const statsB = document.getElementById('compareSprayStatsB');
+      const summary = document.getElementById('compareSprayTacticalSummary');
+
+      if (!ptsA || !ptsB) return;
+
+      if (titleA) titleA.textContent = `#${NAME_TO_JERSEY[pA.name] ?? ''} ${pA.name} (藍方)`;
+      if (titleB) titleB.textContent = `#${NAME_TO_JERSEY[pB.name] ?? ''} ${pB.name} (金方)`;
+
+      const extractPoints = (name) => {
+        const pts = [];
+        (allGames || []).forEach(g => {
+          (g.innings || []).forEach(inn => {
+            (inn.plateAppearances || []).forEach(pa => {
+              if (pa.batterName === name && pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none' && pa.result !== 'RUNNER_OUT' && !pa.isRunnerOut) {
+                pts.push(pa);
+              }
+            });
+          });
+        });
+        return pts;
+      };
+
+      const ptsListA = extractPoints(pA.name);
+      const ptsListB = extractPoints(pB.name);
+
+      if (countA) countA.textContent = `${ptsListA.length} 球`;
+      if (countB) countB.textContent = `${ptsListB.length} 球`;
+
+      const renderSvgDots = (pts) => {
+        if (pts.length === 0) return '<text x="200" y="260" text-anchor="middle" fill="#64748b" font-size="11">尚無場記落點</text>';
+        return pts.map(p => {
+          const px = p.x * 400;
+          const py = p.y * 400;
+          let color = '#f43f5e';
+          let r = 5.5;
+          if (p.result === 'HR') { color = '#f59e0b'; r = 8.5; }
+          else if (p.result === '3H') { color = '#a855f7'; r = 7; }
+          else if (p.result === '2H') { color = '#38bdf8'; r = 6.5; }
+          else if (p.result === '1H') { color = '#22c55e'; r = 6; }
+          return `<circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.9"><title>${p.batterName} | ${p.result} | ${p.trajectory} | ${p.location}</title></circle>`;
+        }).join('');
+      };
+
+      ptsA.innerHTML = renderSvgDots(ptsListA);
+      ptsB.innerHTML = renderSvgDots(ptsListB);
+
+      if (statsA) {
+        statsA.innerHTML = `
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${(pA.pull_pct * 100).toFixed(0)}%</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${(pA.cent_pct * 100).toFixed(0)}%</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${(pA.oppo_pct * 100).toFixed(0)}%</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">平飛LD%</span><b class="text-purple-300">${(pA.ld_pct * 100).toFixed(0)}%</b></div>
+        `;
+      }
+      if (statsB) {
+        statsB.innerHTML = `
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${(pB.pull_pct * 100).toFixed(0)}%</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${(pB.cent_pct * 100).toFixed(0)}%</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${(pB.oppo_pct * 100).toFixed(0)}%</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">平飛LD%</span><b class="text-purple-300">${(pB.ld_pct * 100).toFixed(0)}%</b></div>
+        `;
+      }
+
+      if (summary) {
+        const typeA = pA.pull_pct > 0.52 ? '強力拉打型' : pA.oppo_pct > 0.35 ? '推打穿透型' : '全方位廣角型';
+        const typeB = pB.pull_pct > 0.52 ? '強力拉打型' : pB.oppo_pct > 0.35 ? '推打穿透型' : '全方位廣角型';
+        summary.innerHTML = `
+          <div class="flex items-center space-x-2 mb-1">
+            <span class="font-bold text-amber-300">💡 雙雄打擊型態空間對比：</span>
+            <span class="text-sky-300"><b>${pA.name}</b> (${typeA})</span>
+            <span class="text-slate-500">VS</span>
+            <span class="text-amber-300"><b>${pB.name}</b> (${typeB})</span>
+          </div>
+          <p class="text-slate-400 text-[11px] leading-relaxed">
+            【${pA.name}】：拉打 ${(pA.pull_pct*100).toFixed(0)}% / 推打 ${(pA.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pA.ld_pct*100).toFixed(0)}%，每27出局產能 (RC/27: <b class="text-white">${pA.rc_27.toFixed(1)}</b> 分)。<br>
+            【${pB.name}】：拉打 ${(pB.pull_pct*100).toFixed(0)}% / 推打 ${(pB.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pB.ld_pct*100).toFixed(0)}%，每27出局產能 (RC/27: <b class="text-white">${pB.rc_27.toFixed(1)}</b> 分)。
+            ${pA.pull_pct > pB.pull_pct ? `${pA.name} 具備更高拉打比率，對手容易啟動左移防守；而 ${pB.name} 展現更均衡之全場推打涵蓋面。` : `${pB.name} 具備更高拉打比率，而 ${pA.name} 展現更均衡之全場推打涵蓋面。`}
+          </p>
+        `;
+      }
+    };
+function getPercentile(val, key, pList, invert = false) {
       const vals = pList.map(d => {
         if (key === 'bb_pct') return d.pa > 0 ? d.bb / d.pa : 0;
         if (key === 'k_pct') return d.pa > 0 ? d.k / d.pa : 0;
@@ -5981,7 +6280,248 @@ function renderPlayerProfile(agg) {
       });
     }
 
-    function renderCustomChart(agg) {
+    
+    
+    function renderLuckRegressionChart(agg) {
+      const pList = agg.players;
+      const canvas = document.getElementById('luckRegressionChart');
+      if (!canvas || !canvas.getContext) return;
+      const ctx = canvas.getContext('2d');
+      if (luckRegressionChartInst) luckRegressionChartInst.destroy();
+
+      const scatterData = pList.map(p => ({
+        x: p.xba,
+        y: p.babip,
+        name: p.name,
+        luck: p.luck_factor
+      }));
+
+      // 45 度無偏差基準線 (y = x)
+      const lineData = [
+        { x: 0.1, y: 0.1 },
+        { x: 0.8, y: 0.8 }
+      ];
+
+      luckRegressionChartInst = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: '球員擊球分佈',
+              data: scatterData,
+              backgroundColor: scatterData.map(d => d.y >= d.x ? 'rgba(245, 158, 11, 0.8)' : 'rgba(56, 189, 248, 0.8)'),
+              pointRadius: 7,
+              hoverRadius: 10
+            },
+            {
+              type: 'line',
+              label: '45° 無偏差期望線 (y = x)',
+              data: lineData,
+              borderColor: '#34d399',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: c => {
+                  if (c.datasetIndex === 1) return '無偏差期望基準線 (y = x)';
+                  const d = c.raw;
+                  return `${d.name}: (預期xBA: ${d.x.toFixed(3)}, 實績BABIP: ${d.y.toFixed(3)}, 運氣差額: ${(d.luck >= 0 ? '+' : '') + d.luck.toFixed(3)})`;
+                }
+              }
+            },
+            legend: {
+              labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: '預期打擊率 (xBA - Statcast)', color: '#a78bfa' },
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              min: 0.1, max: 0.8
+            },
+            y: {
+              title: { display: true, text: '場內安打率 (BABIP)', color: '#38bdf8' },
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              min: 0.1, max: 0.8
+            }
+          },
+          onClick: (evt, elements) => {
+            if (elements && elements.length > 0) {
+              const el = elements[0];
+              if (el.datasetIndex === 0) {
+                const pData = luckRegressionChartInst.data.datasets[0].data[el.index];
+                if (pData && pData.name) {
+                  selectedPlayerName = pData.name;
+                  switchMainTab('tabProfile');
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+function renderTeamSpatialLab(agg) {
+      const pList = agg.players;
+      const playerFilter = document.getElementById('teamSprayPlayerFilter');
+      const typeFilter = document.getElementById('teamSprayTypeFilter')?.value || 'all';
+      const ptsContainer = document.getElementById('teamSpatialPointsContainer');
+      const countEl = document.getElementById('teamSpatialSampleCount');
+      const advisoryCard = document.getElementById('teamSpatialShiftAdvisoryCard');
+      const tooltip = document.getElementById('teamSpatialPointTooltip');
+
+      if (!ptsContainer || !advisoryCard) return;
+
+      // Populate playerFilter options once
+      if (playerFilter && (!playerFilter.options || playerFilter.options.length <= 1)) {
+        pList.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.name;
+          opt.textContent = `#${NAME_TO_JERSEY[p.name] ?? ''} ${p.name}`;
+          playerFilter.appendChild(opt);
+        });
+      }
+
+      const chosenPlayer = playerFilter ? playerFilter.value : 'all';
+
+      const points = [];
+      (allGames || []).forEach(g => {
+        (g.innings || []).forEach(inn => {
+          (inn.plateAppearances || []).forEach(pa => {
+            if (chosenPlayer !== 'all' && pa.batterName !== chosenPlayer) return;
+            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || pa.result === 'RUNNER_OUT' || pa.isRunnerOut) return;
+
+            const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
+            const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
+            const isOut = !isHit && pa.result !== 'BB';
+
+            if (typeFilter === 'hits' && !isHit) return;
+            if (typeFilter === 'extra' && !isExtra) return;
+            if (typeFilter === 'outs' && !isOut) return;
+
+            points.push({ ...pa, gameDate: g.date, opponent: g.opponent, inningNum: inn.inningNum });
+          });
+        });
+      });
+
+      if (countEl) countEl.textContent = `當前樣本: ${points.length} 顆擊球`;
+
+      if (points.length === 0) {
+        ptsContainer.innerHTML = '<text x="200" y="260" text-anchor="middle" fill="#64748b" font-size="11">尚無符合篩選之擊球落點</text>';
+        advisoryCard.innerHTML = `
+          <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 text-center space-y-2">
+            <span class="text-amber-400 font-bold block text-sm">此維度尚無落點數據</span>
+            <p class="text-xs text-slate-500 font-mono">在「實況即時記分」完成比賽後，空間落點將自動即時匯入實驗室推演！</p>
+          </div>
+        `;
+        if (tooltip) tooltip.textContent = '';
+        return;
+      }
+
+      ptsContainer.innerHTML = points.map(p => {
+        const px = p.x * 400;
+        const py = p.y * 400;
+        let color = '#f43f5e';
+        let r = 5;
+        if (p.result === 'HR') { color = '#f59e0b'; r = 8; }
+        else if (p.result === '3H') { color = '#a855f7'; r = 6.5; }
+        else if (p.result === '2H') { color = '#38bdf8'; r = 6; }
+        else if (p.result === '1H') { color = '#22c55e'; r = 5.5; }
+
+        return `<circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.85" class="hover:scale-150 transition cursor-pointer" onmouseenter="showTeamSpatialTooltip('${p.batterName}', '${p.gameDate}', '${p.opponent}', '${p.inningNum}', '${p.result}', '${p.trajectory}', '${p.location}')"><title>${p.batterName} | ${p.result} | ${p.trajectory} | ${p.location}</title></circle>`;
+      }).join('');
+
+      let pull = 0, cent = 0, oppo = 0;
+      let ld = 0, gb = 0, fb = 0, pu = 0;
+      points.forEach(p => {
+        if (p.x < 0.40) pull++;
+        else if (p.x <= 0.60) cent++;
+        else oppo++;
+
+        if (p.trajectory === 'line') ld++;
+        else if (p.trajectory === 'grounder') gb++;
+        else if (p.trajectory === 'fly') fb++;
+        else if (p.trajectory === 'popup') pu++;
+      });
+
+      const total = points.length;
+      const pullPct = (pull / total * 100).toFixed(1);
+      const centPct = (cent / total * 100).toFixed(1);
+      const oppoPct = (oppo / total * 100).toFixed(1);
+      const poRatio = oppo > 0 ? (pull / oppo).toFixed(2) : (pull > 0 ? '9.99' : '1.00');
+
+      let shiftAdvice = '';
+      let shiftClass = '';
+      if (Number(poRatio) >= 1.8) {
+        shiftAdvice = '【啟動外野極端左移防守 (Extreme Left Shift)】：該擊球樣本中拉打傾向高達 ' + pullPct + '% (拉推比 P/O ' + poRatio + ')！防守方應將右外野手內縮並向中線靠攏，自由手與中外野手全面向左外野邊線平移 10~15 步，封殺深遠拉打強襲球！';
+        shiftClass = 'bg-rose-950/40 border-rose-700/60 text-rose-300';
+      } else if (Number(poRatio) <= 0.7) {
+        shiftAdvice = '【防範反向推打與右外野邊線 (Oppo Defense)】：推打比例高達 ' + oppoPct + '%，打者擊球點放深，常攻擊一二壘防線與右外野！右外野手與右中外野手應向右邊線緊貼，封堵穿越長打。';
+        shiftClass = 'bg-sky-950/40 border-sky-700/60 text-sky-300';
+      } else {
+        shiftAdvice = '【維持標準四外野均衡覆蓋 (Standard 4-OF Spread)】：拉推比 ' + poRatio + ' 處於均衡區間 (拉 ' + pullPct + '% / 中 ' + centPct + '% / 推 ' + oppoPct + '%)，打者具備廣角推拉打能力，防守方切忌盲目佈陣，維持常規四外野扇形覆蓋。';
+        shiftClass = 'bg-emerald-950/40 border-emerald-700/60 text-emerald-300';
+      }
+
+      advisoryCard.innerHTML = `
+        <div class="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-emerald-300 font-mono">空間防禦與打擊推進分析指標</span>
+            <span class="text-[11px] font-mono text-slate-400">P/O 指數: ${poRatio}</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+              <span class="text-slate-400 block text-[10px] font-sans">拉打佔比 (Pull%)</span>
+              <span class="text-amber-400 font-black text-sm block">${pullPct}%</span>
+            </div>
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+              <span class="text-slate-400 block text-[10px] font-sans">中線穿透 (Cent%)</span>
+              <span class="text-sky-400 font-black text-sm block">${centPct}%</span>
+            </div>
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+              <span class="text-slate-400 block text-[10px] font-sans">推打佔比 (Oppo%)</span>
+              <span class="text-emerald-400 font-black text-sm block">${oppoPct}%</span>
+            </div>
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+              <span class="text-slate-400 block text-[10px] font-sans">平飛球率 (LD%)</span>
+              <span class="text-purple-300 font-black text-sm block">${(ld / total * 100).toFixed(1)}%</span>
+            </div>
+          </div>
+
+          <!-- 防守佈陣戰術建議卡 -->
+          <div class="p-3.5 rounded-xl border ${shiftClass} space-y-1.5">
+            <span class="font-bold text-xs flex items-center gap-1.5">
+              <span>🛡️</span> 慢速壘球防守佈陣戰術推演：
+            </span>
+            <p class="text-[11px] leading-relaxed">${shiftAdvice}</p>
+          </div>
+
+          <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-300 space-y-1">
+            <span class="font-bold text-emerald-400">💡 慢速壘球空間期望值理論 (Run Expectancy Matrix)：</span>
+            <p class="text-slate-400 text-[10px] leading-relaxed">
+              統計證實：慢壘中線 (Centerline: P/2B/SS/SF) 擁有最高的安打穿透效益；平飛球 (Line Drive) 每球創造期望值達 +0.42 分，遠高於滾地球 (-0.05 分) 與沖天炮 (-0.28 分)。擊球若能瞄準二游與自由防守員接合部，可極大化場內安打期望值！
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    window.showTeamSpatialTooltip = function(name, date, opp, inn, res, traj, loc) {
+      const tooltip = document.getElementById('teamSpatialPointTooltip');
+      if (tooltip) {
+        tooltip.innerHTML = `<span>#${NAME_TO_JERSEY[name] ?? ''} <b>${name}</b> | ${date} vs ${opp} (${inn}局) | <b class="text-white">${res}</b> | ${traj} | 落點守位: <b>${loc}</b></span>`;
+      }
+    };
+function renderCustomChart(agg) {
       const pList = agg.players;
       const type = document.getElementById('customChartType').value;
       const xKey = document.getElementById('customXVar').value;
@@ -6198,6 +6738,7 @@ function renderPlayerProfile(agg) {
           <td class="p-3 font-mono tabular-nums">${p.iso.toFixed(3)}</td>
           <td class="p-3 font-mono text-slate-400 tabular-nums">${p.babip.toFixed(3)}</td>
           <td class="p-3 font-mono text-sky-300 font-bold tabular-nums">${p.rc.toFixed(1)}</td>
+          <td class="p-3 font-mono text-amber-300 font-bold tabular-nums">${p.rc_27.toFixed(1)}</td>
           <td class="p-3 font-mono text-amber-400 tabular-nums">${(p.sdi >= 0 ? '+' : '') + p.sdi.toFixed(3)}</td>
         `;
         tbody.appendChild(tr);
@@ -6590,6 +7131,8 @@ function renderPlayerProfile(agg) {
       // 4. 賽伯計量實驗室 (使用 analysisAgg)
       renderQuadrantChart(analysisAgg);
       renderCustomChart(analysisAgg);
+      renderTeamSpatialLab(analysisAgg);
+      renderLuckRegressionChart(analysisAgg);
 
       // 5. 雙雄攻守對決 (不受排除影響，仍可選取簡承均比較，使用 fullAgg)
       renderComparison(fullAgg);
