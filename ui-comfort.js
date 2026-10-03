@@ -6,19 +6,23 @@
   if (!navigation || !workspace) return;
   const toolbar = document.createElement('div');
   toolbar.className = 'ui-compact-toolbar';
-  toolbar.innerHTML = '<button type="button" id="uiDrawerToggle" aria-controls="mainNavigation" aria-expanded="false">☰ 分頁</button><span class="ui-current-page"></span><button type="button" id="uiCompactStatus">同步狀態</button><button type="button" id="uiToolsToggle" aria-expanded="false">工具 ⌄</button>';
-  navigation.before(toolbar);
-  const drawerToggle = document.getElementById('uiDrawerToggle');
-  const toolsToggle = document.getElementById('uiToolsToggle');
+  toolbar.innerHTML = '<button type="button" id="uiDrawerToggle" aria-controls="mainNavigation" aria-expanded="false">☰ 分頁</button><span class="ui-current-page"></span>';
   const headerTools = document.querySelector('#appHeader > div > div:first-child');
+  headerTools.firstElementChild.classList.add('ui-header-brand');
+  headerTools.prepend(toolbar);
+  const drawerToggle = document.getElementById('uiDrawerToggle');
   headerTools.id = 'uiHeaderTools';
-  toolsToggle.setAttribute('aria-controls', headerTools.id);
-  toolsToggle.addEventListener('click', () => {
-    const open = document.body.classList.toggle('ui-tools-open');
-    toolsToggle.setAttribute('aria-expanded', String(open));
-    toolsToggle.textContent = open ? '收起工具 ⌃' : '工具 ⌄';
+  const syncBadge = document.getElementById('syncStatusBadge');
+  syncBadge.setAttribute('role', 'button');
+  syncBadge.setAttribute('tabindex', '0');
+  syncBadge.setAttribute('title', '點擊檢視雲端同步狀態');
+  syncBadge.addEventListener('click', () => window.showCloudStatusToast());
+  syncBadge.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      window.showCloudStatusToast();
+    }
   });
-  document.getElementById('uiCompactStatus').addEventListener('click', () => window.showCloudStatusToast());
   const drawerClose = document.createElement('button');
   drawerClose.type = 'button';
   drawerClose.className = 'ui-drawer-close';

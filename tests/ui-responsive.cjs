@@ -72,7 +72,6 @@ const contexts = [];
       assert.equal(await page.locator('#uiMoreNavigation').getAttribute('aria-expanded'), 'false');
     }
     // Coach settings must fit and close without altering saved data.
-    if (await page.locator('#uiToolsToggle').isVisible() && !(await page.locator('#uiHeaderTools').isVisible())) await page.locator('#uiToolsToggle').click();
     await page.locator('button[onclick="openDefenseModal()"]').click();
     const bounds = await page.locator('#defenseModal > div').boundingBox();
     await page.screenshot({path: path.join(output, `${width}-${height}-Defense.png`)});

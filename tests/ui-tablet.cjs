@@ -22,7 +22,12 @@ fs.mkdirSync(output,{recursive:true});
         if(touch) {
           assert.ok(await drawer.isVisible());
           assert.equal(await page.locator('#mainNavigation').isVisible(),false,'drawer starts collapsed');
-          assert.equal(await page.locator('#uiHeaderTools').isVisible(),false,'brand and tools start collapsed');
+          assert.ok(await page.locator('#uiHeaderTools').isVisible(),'tools always visible');
+          assert.equal(await page.locator('#uiToolsToggle').count(),0,'no tools collapse control');
+          const toolBoxes=await Promise.all(['#uiDrawerToggle','#syncStatusBadge','button[onclick="manualRefresh()"]','button[onclick="openDefenseModal()"]','#btnToggleChien','#exportCsvBtn'].map(selector=>page.locator(selector).boundingBox()));
+          const centers=toolBoxes.map(box=>box.y+box.height/2);
+          assert.ok(Math.max(...centers)-Math.min(...centers)<3,'all header tools occupy one row');
+          for(const box of toolBoxes) assert.ok(box.x>=0 && box.x+box.width<=width,'each tool fits inside viewport');
           const header=await page.locator('#appHeader').boundingBox();
           const workspace=await page.locator('#appWorkspace').boundingBox();
           assert.ok(header.height<=140,`compact header height ${header.height}`);
@@ -38,12 +43,9 @@ fs.mkdirSync(output,{recursive:true});
           await page.locator('#btnTabLeaderboard').click();
           assert.equal(await page.locator('#mainNavigation').isVisible(),false,'selecting a page collapses drawer');
           assert.ok(await page.locator('#panelLeaderboard').isVisible());
-          await page.locator('#uiToolsToggle').click();
           assert.ok(await page.locator('#uiHeaderTools').isVisible());
           for(const selector of ['button[onclick="manualRefresh()"]','button[onclick="openDefenseModal()"]','#btnToggleChien','#exportCsvBtn']) assert.ok(await page.locator(selector).isVisible(),selector);
-          await page.locator('#uiToolsToggle').click();
-          assert.equal(await page.locator('#uiHeaderTools').isVisible(),false);
-          await page.locator('#uiCompactStatus').click();
+          await page.locator('#syncStatusBadge').click();
           assert.ok(await page.locator('#globalToastContainer').isVisible());
           await page.screenshot({path:path.join(output,`${width}-TabletCompact.png`)});
         } else {

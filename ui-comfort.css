@@ -105,12 +105,17 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
 @media (min-width: 768px) and (max-width: 1439px), (min-width: 768px) and (pointer: coarse) {
   body { padding-left: 0; }
   html { scroll-padding-top: 130px; }
-  #appHeader > div > div:first-child { display: none; }
-  body.ui-tools-open #appHeader > div > div:first-child { display: flex; }
+  #appHeader > div > div:first-child { display: flex; flex-wrap: nowrap; min-height: 52px; padding: 6px 0; gap: 8px; }
+  #appHeader .ui-header-brand { display: none; }
+  #appHeader > div > div:first-child > div:last-child { flex-wrap: nowrap; gap: 5px; overflow: visible; }
+  #appHeader > div > div:first-child > div:last-child > * { margin-left: 0; }
+  #appHeader > div > div:first-child > div:last-child > button { padding: 7px 8px; font-size: 12px; }
+  #syncStatusBadge { max-width: 110px; cursor: pointer; }
   #appHeader > div > div:nth-child(2) { gap: 8px; padding: 8px 0; }
-  #appHeader .ui-compact-toolbar { display: flex; align-items: center; gap: 8px; }
+  #appHeader .ui-compact-toolbar { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; flex-wrap: nowrap; }
   .ui-compact-toolbar button { min-height: 40px !important; padding: 7px 12px; border: 1px solid #31455f; border-radius: 10px; background: #152138; color: #d5e4f5; font-size: 13px; }
-  .ui-compact-toolbar .ui-current-page { flex: 1; font-size: 14px; font-weight: 700; color: #e2e8f0; }
+  .ui-compact-toolbar .ui-current-page { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 700; color: #e2e8f0; }
+  #uiDrawerToggle { flex-shrink: 0; white-space: nowrap; }
   #mainNavigation {
     display: none; position: fixed; left: 0; top: 0; bottom: 0; right: auto;
     width: min(280px, 80vw); max-width: 280px; height: 100dvh; max-height: 100dvh;
