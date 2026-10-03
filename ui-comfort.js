@@ -4,6 +4,26 @@
   const navigation = document.getElementById('mainNavigation');
   const workspace = document.getElementById('appWorkspace');
   if (!navigation || !workspace) return;
+  const toolbar = document.createElement('div');
+  toolbar.className = 'ui-compact-toolbar';
+  toolbar.innerHTML = '<button type="button" id="uiDrawerToggle" aria-controls="mainNavigation" aria-expanded="false">☰ 分頁</button><span class="ui-current-page"></span><button type="button" id="uiCompactStatus">同步狀態</button><button type="button" id="uiToolsToggle" aria-expanded="false">工具 ⌄</button>';
+  navigation.before(toolbar);
+  const drawerToggle = document.getElementById('uiDrawerToggle');
+  const toolsToggle = document.getElementById('uiToolsToggle');
+  const headerTools = document.querySelector('#appHeader > div > div:first-child');
+  headerTools.id = 'uiHeaderTools';
+  toolsToggle.setAttribute('aria-controls', headerTools.id);
+  toolsToggle.addEventListener('click', () => {
+    const open = document.body.classList.toggle('ui-tools-open');
+    toolsToggle.setAttribute('aria-expanded', String(open));
+    toolsToggle.textContent = open ? '收起工具 ⌃' : '工具 ⌄';
+  });
+  document.getElementById('uiCompactStatus').addEventListener('click', () => window.showCloudStatusToast());
+  const drawerClose = document.createElement('button');
+  drawerClose.type = 'button';
+  drawerClose.className = 'ui-drawer-close';
+  drawerClose.textContent = '✕ 收起分頁';
+  navigation.prepend(drawerClose);
   const dateControls = document.getElementById('filterStartDate').parentElement;
   dateControls.classList.add('ui-date-controls');
   dateControls.id = 'uiDateControls';
@@ -77,8 +97,15 @@
   function closeNavigation(restoreFocus = false) {
     document.body.classList.remove('ui-nav-open');
     more.setAttribute('aria-expanded', 'false');
-    if (restoreFocus) more.focus();
+    drawerToggle.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) (window.innerWidth < 768 ? more : drawerToggle).focus();
   }
+  drawerToggle.addEventListener('click', () => {
+    const open = document.body.classList.toggle('ui-nav-open');
+    drawerToggle.setAttribute('aria-expanded', String(open));
+    if (open) navigation.querySelector('.tab-active')?.focus();
+  });
+  drawerClose.addEventListener('click', () => closeNavigation(true));
   more.addEventListener('click', () => {
     const open = document.body.classList.toggle('ui-nav-open');
     more.setAttribute('aria-expanded', String(open));
@@ -94,7 +121,7 @@
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && document.body.classList.contains('ui-nav-open')) closeNavigation(true);
     if (event.key === 'Tab' && document.body.classList.contains('ui-nav-open')) {
-      const items = [...navigation.querySelectorAll('button'), more];
+      const items = [...navigation.querySelectorAll('button'), window.innerWidth < 768 ? more : drawerToggle].filter(button => button.getClientRects().length);
       const index = items.indexOf(document.activeElement);
       const next = (index + (event.shiftKey ? -1 : 1) + items.length) % items.length;
       event.preventDefault();
@@ -108,6 +135,7 @@
     if (lastPage && lastPage !== key) { window.scrollTo({top: 0, behavior: 'instant'}); detail?.remove(); }
     lastPage = key;
     const [title, description] = pages[key] || pages.Overview;
+    toolbar.querySelector('.ui-current-page').textContent = title;
     document.getElementById('uiPageTitle').textContent = title;
     document.getElementById('uiPageDescription').textContent = description;
     navigation.querySelectorAll('button').forEach(button => {

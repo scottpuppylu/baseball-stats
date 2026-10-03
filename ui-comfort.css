@@ -74,7 +74,7 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
   border-radius: 14px; box-shadow: 0 12px 40px #0008; font-size: 14px;
 }
 .ui-touch-detail button { position: absolute; right: 6px; top: 5px; width: 36px; height: 36px; font-size: 23px; }
-.ui-mobile-nav, .ui-nav-backdrop, .ui-date-toggle { display: none; }
+.ui-mobile-nav, .ui-nav-backdrop, .ui-date-toggle, .ui-compact-toolbar, .ui-drawer-close { display: none; }
 [id$="Modal"] { z-index: 90 !important; margin: 0 !important; }
 [id$="Modal"] > div { max-height: calc(100dvh - 32px); }
 [id$="Modal"] .overflow-y-auto { min-height: 0; overscroll-behavior: contain; }
@@ -100,6 +100,32 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
   #appWorkspace { padding: 24px; }
   #liveBattingSection > .grid { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
   #liveBattingSection > .grid > div { grid-column: span 6; padding: 12px; }
+}
+/* Include wide touch tablets, even when their viewport reaches desktop widths. */
+@media (min-width: 768px) and (max-width: 1439px), (min-width: 768px) and (pointer: coarse) {
+  body { padding-left: 0; }
+  html { scroll-padding-top: 130px; }
+  #appHeader > div > div:first-child { display: none; }
+  body.ui-tools-open #appHeader > div > div:first-child { display: flex; }
+  #appHeader > div > div:nth-child(2) { gap: 8px; padding: 8px 0; }
+  #appHeader .ui-compact-toolbar { display: flex; align-items: center; gap: 8px; }
+  .ui-compact-toolbar button { min-height: 40px !important; padding: 7px 12px; border: 1px solid #31455f; border-radius: 10px; background: #152138; color: #d5e4f5; font-size: 13px; }
+  .ui-compact-toolbar .ui-current-page { flex: 1; font-size: 14px; font-weight: 700; color: #e2e8f0; }
+  #mainNavigation {
+    display: none; position: fixed; left: 0; top: 0; bottom: 0; right: auto;
+    width: min(280px, 80vw); max-width: 280px; height: 100dvh; max-height: 100dvh;
+    border-radius: 0 18px 18px 0; border: 0; border-right: 1px solid #3a506c;
+    background: #0e1728; padding: 16px 12px; overflow-y: auto; z-index: 71;
+    flex-direction: column; align-items: stretch; gap: 7px;
+  }
+  body.ui-nav-open #mainNavigation { display: flex; }
+  #mainNavigation::before { content: '所有功能'; padding: 8px 12px; color: #e2e8f0; font-size: 18px; font-weight: 700; }
+  #mainNavigation::after { content: none; }
+  #mainNavigation > button { min-height: 46px; margin: 0; padding: 12px; font-size: 14px; gap: 10px; white-space: normal; text-align: left; justify-content: flex-start; }
+  #mainNavigation > button svg { width: 18px; height: 18px; }
+  #mainNavigation > .ui-drawer-close { display: flex; color: #a9c3da; border-color: #31455f; }
+  .ui-nav-backdrop { position: fixed; inset: 0; z-index: 49; background: #02061799; }
+  body.ui-nav-open .ui-nav-backdrop { display: block; }
 }
 @media (max-width: 767px) {
   html { scroll-padding-top: 160px; scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom)); }

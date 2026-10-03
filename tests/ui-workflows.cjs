@@ -15,6 +15,7 @@ async function click(page, selector) {
 }
 async function tab(page, name, mobile) {
   if (mobile) await click(page, '#uiMoreNavigation');
+  else if (await page.locator('#uiDrawerToggle').isVisible()) await click(page,'#uiDrawerToggle');
   await click(page, `#btnTab${name}`);
 }
 async function state(page) { return page.evaluate(() => JSON.parse(localStorage.getItem('rebas_active_game'))); }

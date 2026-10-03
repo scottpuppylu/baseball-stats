@@ -28,6 +28,7 @@ const contexts = [];
     await page.waitForFunction(() => document.getElementById('uiPageTitle') && document.getElementById('syncStatusBadge').textContent.includes('同步'));
     for (const name of pages) {
       if (width < 768) await page.locator('#uiMoreNavigation').click();
+      else if (await page.locator('#uiDrawerToggle').isVisible()) await page.locator('#uiDrawerToggle').click();
       await page.locator(`#btnTab${name}`).click();
       await page.waitForFunction(name => !document.getElementById(`panel${name}`).classList.contains('hidden') && document.querySelector(`#btnTab${name}[aria-current="page"]`), name);
       const measure = await page.evaluate(() => {
@@ -52,7 +53,7 @@ const contexts = [];
     assert.deepEqual(errors, [], `${width} runtime errors`);
     // Every original summary column remains reachable through "all".
     if (width < 768) await page.locator('.ui-mobile-nav [data-page="Overview"]').click();
-    else await page.locator('#btnTabOverview').click();
+    else { if (await page.locator('#uiDrawerToggle').isVisible()) await page.locator('#uiDrawerToggle').click(); await page.locator('#btnTabOverview').click(); }
     await page.locator('#uiSummaryColumns').selectOption('all');
     assert.equal(await page.locator('#viewSummary thead th:visible').count(), 23);
     if (width < 768) {
@@ -71,6 +72,7 @@ const contexts = [];
       assert.equal(await page.locator('#uiMoreNavigation').getAttribute('aria-expanded'), 'false');
     }
     // Coach settings must fit and close without altering saved data.
+    if (await page.locator('#uiToolsToggle').isVisible() && !(await page.locator('#uiHeaderTools').isVisible())) await page.locator('#uiToolsToggle').click();
     await page.locator('button[onclick="openDefenseModal()"]').click();
     const bounds = await page.locator('#defenseModal > div').boundingBox();
     await page.screenshot({path: path.join(output, `${width}-${height}-Defense.png`)});
