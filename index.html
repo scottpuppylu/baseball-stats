@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>淡江航太系壘 | 賽伯計量分析與 GitHub 雲端數據庫</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,12 +23,13 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
+  <link rel="stylesheet" href="ui-comfort.css">
 </head>
 <body class="bg-[#070a12] text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white overflow-x-hidden">
 
 
   <!-- Apple 風格頂部全域懸浮導覽列 -->
-  <header class="sticky top-0 z-50 nav-blur bg-[#070a12]/90 border-b border-slate-800/80 transition-all duration-300">
+  <header id="appHeader" class="sticky top-0 z-50 nav-blur bg-[#070a12]/90 border-b border-slate-800/80 transition-all duration-300">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
       <!-- 上層：品牌識別與系統連線狀態 (手機版防止超出版面完美優化) -->
       <div class="flex items-center justify-between min-h-[3rem] sm:min-h-[3.5rem] py-1 sm:py-0 border-b border-slate-800/40 gap-1.5 sm:gap-2">
@@ -63,7 +64,7 @@
 
       <!-- 下層：7 大核心功能分頁導覽與日期篩選 -->
       <div class="flex flex-col md:flex-row md:items-center justify-between py-2 gap-2">
-        <nav class="flex items-center space-x-1 overflow-x-auto no-scrollbar shrink-0 bg-slate-950/60 p-1 rounded-xl border border-slate-800/80 max-w-full">
+        <nav id="mainNavigation" aria-label="主要功能" class="flex items-center space-x-1 overflow-x-auto no-scrollbar shrink-0 bg-slate-950/60 p-1 rounded-xl border border-slate-800/80 max-w-full">
           <button onclick="switchMainTab('tabOverview')" id="btnTabOverview" class="tab-active text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <span>全隊戰況與日誌</span>
@@ -119,7 +120,7 @@
   </header>
 
 
-  <div class="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8 space-y-6">
+  <div id="appWorkspace" class="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8 space-y-6">
 
 
     <!-- 主體內容分頁群 -->
@@ -10667,5 +10668,6 @@ function renderCustomChart(agg) {
     loadLogsFromGitHub();
   
     </script>
+  <script src="ui-comfort.js"></script>
 </body>
 </html>
