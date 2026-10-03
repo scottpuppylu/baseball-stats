@@ -2587,12 +2587,16 @@
           },
           body: JSON.stringify(putBody)
         });
-        if (putRes.ok) {
-          const resData = await putRes.json();
-          currentGuestsSha = resData.content.sha;
+        if (!putRes.ok) {
+          const errData = await putRes.json();
+          throw new Error(errData.message || `GitHub API 支援名冊寫入拒絕 (HTTP ${putRes.status})`);
         }
+        const resData = await putRes.json();
+        currentGuestsSha = resData.content.sha;
+        setStatusBadge('[連線正常] 支援名冊已同步', 'success');
         return true;
       } catch (err) {
+        setStatusBadge(`[寫入失敗] 支援名冊同步失敗: ${err.message}`, 'error');
         return false;
       }
     }
@@ -2656,7 +2660,9 @@
       }
       localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
       syncJerseyMaps();
-      commitGuestsToGitHub(guestPlayers, `feat: add guest player ${cleanName}`);
+      commitGuestsToGitHub(guestPlayers, `feat: add guest player ${cleanName}`).then(success => {
+        showSyncResult(success, `支援選手 ${cleanName} 已同步至 GitHub`, '支援名冊同步失敗；已保留本機名單，請稍後重試。');
+      });
       return cleanName;
     };
 
@@ -2666,8 +2672,9 @@
       syncJerseyMaps();
       renderGuestModalUI();
       renderSetupLineupGrid();
-      commitGuestsToGitHub(guestPlayers, `delete: remove guest player ${name}`);
-      showToast(`已自名單移除非隊員：${name}`);
+      commitGuestsToGitHub(guestPlayers, `delete: remove guest player ${name}`).then(success => {
+        showSyncResult(success, `已自雲端名單移除非隊員：${name}`, '移除支援選手的雲端同步失敗；本機名單已更新，請稍後重試。');
+      });
     };
 
     window.openGuestModal = function() {
@@ -2697,7 +2704,7 @@
       if (tagInput) tagInput.value = '';
       renderGuestModalUI();
       renderSetupLineupGrid();
-      showToast(`已成功登記支援選手：#${jersey} ${name}！`);
+      showToast(`已在本機登記支援選手：#${jersey} ${name}，正在同步雲端。`);
     };
 
     function renderGuestModalUI() {
@@ -2864,6 +2871,16 @@
         toast.classList.add('translate-y-2', 'opacity-0');
         setTimeout(() => toast.remove(), 300);
       }, 3000);
+    }
+
+    function showSyncResult(success, successMessage, failureMessage = '雲端同步失敗；本機變更尚未完整同步，請稍後重試。') {
+      if (success) {
+        showToast(successMessage);
+      } else {
+        setStatusBadge('[寫入失敗] 雲端尚未完整同步，請重試', 'error');
+        showToast(failureMessage, 'error');
+      }
+      return success;
     }
 
     let currentFileSha = null;
@@ -7258,16 +7275,16 @@ function renderCustomChart(agg) {
         localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
 
         // 3. 雙向同步推播至 GitHub
-        await commitGamesToGitHub(allGames, `刪除賽事: ${gameDesc}`);
-        await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${gameDesc}`);
+        const gamesSynced = await commitGamesToGitHub(allGames, `刪除賽事: ${gameDesc}`);
+        const logsSynced = await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${gameDesc}`);
 
         renderAll();
-        showToast(`已徹底刪除【${gameDesc}】比賽紀錄與全隊對應日誌！`);
+        showSyncResult(gamesSynced && logsSynced, `已徹底刪除【${gameDesc}】比賽紀錄與全隊對應日誌！`);
       } else {
         if (!confirm(`確認自 GitHub 雲端資料庫永久刪除此筆日誌（#${targetLog.jersey} ${targetLog.name} - ${targetLog.date}）？`)) return;
         const updated = allLogs.filter(l => l.id !== id);
-        await commitLogsToGitHub(updated, `delete: remove manual log ${id}`);
-        showToast('已自雲端資料庫刪除該筆日誌');
+        const success = await commitLogsToGitHub(updated, `delete: remove manual log ${id}`);
+        showSyncResult(success, '已自雲端資料庫刪除該筆日誌', '雲端刪除失敗，該筆日誌尚未刪除，請重試。');
       }
     };
 
@@ -9428,8 +9445,8 @@ function renderCustomChart(agg) {
       }
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
 
-      await commitGamesToGitHub(allGames, `場記同步: 第${activeGame.currentInning}局 vs ${activeGame.opponent}`);
-      showToast('✅ 當局場記已成功同步推播至 GitHub！');
+      const success = await commitGamesToGitHub(allGames, `場記同步: 第${activeGame.currentInning}局 vs ${activeGame.opponent}`);
+      showSyncResult(success, '✅ 當局場記已成功同步推播至 GitHub！', '當局場記同步失敗；已保留本機紀錄，請再次點擊上傳。');
     };
 
         window.finishActiveGameAndSyncLogs = async function() {
@@ -9448,11 +9465,15 @@ function renderCustomChart(agg) {
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
 
       // 1. 同步賽事紀錄至 GitHub (data/games.json)
-      await commitGamesToGitHub(allGames, `賽事完賽: vs ${finishedGame.opponent} (${finishedGame.finalScore.us}-${finishedGame.finalScore.opp})`);
+      const gamesSynced = await commitGamesToGitHub(allGames, `賽事完賽: vs ${finishedGame.opponent} (${finishedGame.finalScore.us}-${finishedGame.finalScore.opp})`);
 
       // 2. 關鍵綁定：自動將比賽成績與全隊日誌綁定統一，並同步推播至 GitHub (data/logs.json)
       const syncedCount = syncAllGamesToTeamLogs();
-      await commitLogsToGitHub(allLogs, `自動綁定賽事日誌: vs ${finishedGame.opponent}`);
+      const logsSynced = await commitLogsToGitHub(allLogs, `自動綁定賽事日誌: vs ${finishedGame.opponent}`);
+      if (!gamesSynced || !logsSynced) {
+        showSyncResult(false, '', '完賽資料尚未完整同步；已保留本機比賽，請再次點擊完賽重試。');
+        return;
+      }
 
       const finishedGameId = finishedGame.id;
       activeGame = null;
@@ -9480,7 +9501,9 @@ function renderCustomChart(agg) {
         if (typeof window !== 'undefined') window.allGames = allGames;
         localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
         syncAllGamesToTeamLogs();
-        commitGamesToGitHub(allGames, "清除放棄賽事: " + discardedId);
+        commitGamesToGitHub(allGames, "清除放棄賽事: " + discardedId).then(success => {
+          showSyncResult(success, '已自雲端清除放棄賽事', '放棄賽事的雲端清除失敗；本機已移除，請稍後重試同步。');
+        });
       }
 
       // 重置開賽設定表單輸入框
@@ -9490,7 +9513,7 @@ function renderCustomChart(agg) {
       if (tagInput) tagInput.value = '';
 
       renderLiveScorer();
-      showToast('已放棄當前比賽並徹底清除紀錄');
+      showToast('已在本機放棄當前比賽');
     };
 
     // ==========================================
@@ -9606,7 +9629,7 @@ function renderCustomChart(agg) {
 
     window.syncGameToTeamLogs = syncGameToTeamLogs;
     async function syncGameToTeamLogs(game) {
-      if (!game) return 0;
+      if (!game) return { count: 0, success: false };
       const statsMap = {};
       const allMatchBatters = getGameAllBatters(game);
       allMatchBatters.forEach(name => {
@@ -9670,9 +9693,9 @@ function renderCustomChart(agg) {
       });
 
       localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
-      commitLogsToGitHub(allLogs, `登入場記至賽事日誌: ${game.date} vs ${game.opponent} (${addedCount}人)`);
+      const success = await commitLogsToGitHub(allLogs, `登入場記至賽事日誌: ${game.date} vs ${game.opponent} (${addedCount}人)`);
       renderAll();
-      return addedCount;
+      return { count: addedCount, success };
     }
 
     // ==========================================
@@ -9697,11 +9720,11 @@ function renderCustomChart(agg) {
       const prefix2 = `log_auto_${game.id}_`;
       allLogs = allLogs.filter(l => !l.id.startsWith(prefix1) && !l.id.startsWith(prefix2));
       localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
-      await commitLogsToGitHub(allLogs, `撤銷賽事日誌: ${game.date} vs ${game.opponent}`);
+      const success = await commitLogsToGitHub(allLogs, `撤銷賽事日誌: ${game.date} vs ${game.opponent}`);
 
       renderAll();
       renderSelectedGameReview(game.id);
-      showToast('已自全隊日誌庫撤銷本場比賽紀錄！');
+      showSyncResult(success, '已自全隊日誌庫撤銷本場比賽紀錄！');
     };
 
 
@@ -9736,13 +9759,13 @@ function renderCustomChart(agg) {
       renderSelectedGameReview(selectedReviewGameId);
     };
 
-    window.syncReviewGameToTeamLogs = function() {
+    window.syncReviewGameToTeamLogs = async function() {
       const game = allGames.find(g => g.id === selectedReviewGameId);
       if (!game) return;
-      const count = syncGameToTeamLogs(game);
+      const { count, success } = await syncGameToTeamLogs(game);
       renderAll();
       renderSelectedGameReview(game.id);
-      showToast(`⚡ 成功將本場比賽 ${count} 位球員的數據正式登入全隊日誌與個人三圍！`);
+      showSyncResult(success, `⚡ 成功將本場比賽 ${count} 位球員的數據正式登入全隊日誌與個人三圍！`);
     };
 
     window.deleteReviewGame = async function() {
@@ -9763,13 +9786,13 @@ function renderCustomChart(agg) {
       localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
 
       // 3. 同時推播更新 GitHub 兩大數據庫
-      await commitGamesToGitHub(allGames, `刪除賽事: ${game.date} vs ${game.opponent}`);
-      await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${game.date} vs ${game.opponent}`);
+      const gamesSynced = await commitGamesToGitHub(allGames, `刪除賽事: ${game.date} vs ${game.opponent}`);
+      const logsSynced = await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${game.date} vs ${game.opponent}`);
 
       selectedReviewGameId = allGames.length > 0 ? allGames[0].id : null;
       renderAll();
       renderGameReview();
-      showToast('已徹底刪除該場賽事與對應日誌，全隊與個人成績已同步重算！');
+      showSyncResult(gamesSynced && logsSynced, '已徹底刪除該場賽事與對應日誌，全隊與個人成績已同步重算！');
     };
 
     window.renderSelectedGameReview = function(gameId) {
@@ -10461,11 +10484,15 @@ function renderCustomChart(agg) {
       });
 
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-      await commitGamesToGitHub(allGames, `修改賽事紀錄(含投手數據): ${game.date} vs ${game.opponent}`);
+      const gamesSynced = await commitGamesToGitHub(allGames, `修改賽事紀錄(含投手數據): ${game.date} vs ${game.opponent}`);
 
       // 重新計算並自動綁定更新全隊打擊與投手賽伯計量
       syncAllGamesToTeamLogs();
-      await commitLogsToGitHub(allLogs, `連動更新賽事日誌: ${game.date} vs ${game.opponent}`);
+      const logsSynced = await commitLogsToGitHub(allLogs, `連動更新賽事日誌: ${game.date} vs ${game.opponent}`);
+      if (!gamesSynced || !logsSynced) {
+        showSyncResult(false, '', '修改資料尚未完整同步；已保留本機變更，請再次點擊儲存重試。');
+        return;
+      }
 
       isEditingReviewGame = false;
       renderAll();
