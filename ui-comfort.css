@@ -106,15 +106,21 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
   body { padding-left: 0; }
   html { scroll-padding-top: 130px; }
   #appHeader > div > div:first-child { display: flex; flex-wrap: nowrap; min-height: 52px; padding: 6px 0; gap: 8px; }
-  #appHeader .ui-header-brand { display: none; }
+  #appHeader .ui-header-brand { display: flex; min-width: 0; gap: 6px; flex: 1; }
+  #appHeader .ui-header-brand > * { margin-left: 0; }
+  #appHeader .ui-header-brand > span:first-child { display: none; }
+  #appHeader .ui-header-brand > span:nth-child(3) { font-size: 14px; }
+  #appHeader .ui-header-brand > span:nth-child(4) { display: none; }
+  #appHeader .ui-header-brand > span:nth-child(5) { display: inline; font-size: 10px; white-space: nowrap; }
+  #appHeader .ui-header-brand > span:last-child { font-size: 9px; padding: 2px 4px; }
   #appHeader > div > div:first-child > div:last-child { flex-wrap: nowrap; gap: 5px; overflow: visible; }
   #appHeader > div > div:first-child > div:last-child > * { margin-left: 0; }
   #appHeader > div > div:first-child > div:last-child > button { padding: 7px 8px; font-size: 12px; }
   #syncStatusBadge { max-width: 110px; cursor: pointer; }
   #appHeader > div > div:nth-child(2) { gap: 8px; padding: 8px 0; }
-  #appHeader .ui-compact-toolbar { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; flex-wrap: nowrap; }
+  #appHeader .ui-compact-toolbar { display: flex; align-items: center; min-width: 0; flex: 0 0 auto; flex-wrap: nowrap; }
   .ui-compact-toolbar button { min-height: 40px !important; padding: 7px 12px; border: 1px solid #31455f; border-radius: 10px; background: #152138; color: #d5e4f5; font-size: 13px; }
-  .ui-compact-toolbar .ui-current-page { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 700; color: #e2e8f0; }
+  .ui-compact-toolbar .ui-current-page { display: none; }
   #uiDrawerToggle { flex-shrink: 0; white-space: nowrap; }
   #mainNavigation {
     display: none; position: fixed; left: 0; top: 0; bottom: 0; right: auto;
@@ -131,6 +137,14 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
   #mainNavigation > .ui-drawer-close { display: flex; color: #a9c3da; border-color: #31455f; }
   .ui-nav-backdrop { position: fixed; inset: 0; z-index: 49; background: #02061799; }
   body.ui-nav-open .ui-nav-backdrop { display: block; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  #appHeader .ui-header-brand > button { display: flex; min-height: 26px; }
+  #syncStatusBadge { display: none; }
+  #appHeader button[onclick="manualRefresh()"] > .sm\:hidden,
+  #exportCsvBtn > .sm\:hidden { display: inline; }
+  #appHeader button[onclick="manualRefresh()"] > .sm\:inline,
+  #exportCsvBtn > .sm\:inline { display: none; }
 }
 @media (max-width: 767px) {
   html { scroll-padding-top: 160px; scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
