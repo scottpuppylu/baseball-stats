@@ -2,6 +2,11 @@
   {
     "id": "game_20260919_3276",
     "date": "2026-09-19",
+    "sprayChartArchive": {
+      "excluded": true,
+      "reason": "守位紀錄正確，實際落點座標為推估；保留原始資料，不納入擊球落點噴流圖。",
+      "archivedAt": "2026-10-07"
+    },
     "opponent": "友隊選手",
     "tag": "總統盃",
     "hasDh": false,
@@ -449,6 +454,11 @@
   {
     "id": "game_20260919_4002",
     "date": "2026-09-19",
+    "sprayChartArchive": {
+      "excluded": true,
+      "reason": "守位紀錄正確，實際落點座標為推估；保留原始資料，不納入擊球落點噴流圖。",
+      "archivedAt": "2026-10-07"
+    },
     "opponent": "友隊選手",
     "tag": "總統盃",
     "hasDh": false,
@@ -898,6 +908,11 @@
   {
     "id": "game_20260920_4922",
     "date": "2026-09-20",
+    "sprayChartArchive": {
+      "excluded": true,
+      "reason": "守位紀錄正確，實際落點座標為推估；保留原始資料，不納入擊球落點噴流圖。",
+      "archivedAt": "2026-10-07"
+    },
     "opponent": "友隊選手",
     "tag": "聯賽",
     "hasDh": true,
@@ -1456,6 +1471,11 @@
   {
     "id": "game_20260920_2378",
     "date": "2026-09-20",
+    "sprayChartArchive": {
+      "excluded": true,
+      "reason": "守位紀錄正確，實際落點座標為推估；保留原始資料，不納入擊球落點噴流圖。",
+      "archivedAt": "2026-10-07"
+    },
     "opponent": "友隊選手",
     "tag": "聯賽",
     "hasDh": true,

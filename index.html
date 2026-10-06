@@ -776,6 +776,7 @@
                 <h3 class="text-base sm:text-lg font-black text-emerald-300 tracking-tight">全隊空間擊球噴流與防守佈陣推演實驗室</h3>
               </div>
               <p class="text-xs text-slate-400 mt-1">慢速壘球空間防禦與打擊推進分析法：計算拉推比 (P/O Index)、中線穿透度與對手外野極端移位 (Shift) 策略</p>
+              <p class="text-xs text-amber-300 mt-1">2026/9/19、9/20 推估落點已封存，不納入噴流圖；原有守位與成績保留。</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
               <select id="teamSprayPlayerFilter" onchange="renderTeamSpatialLab(getAnalysisAgg())" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2.5 py-1 text-slate-200 focus:outline-none focus:border-emerald-500 font-medium">
@@ -1680,6 +1681,7 @@
 
           <!-- 子分頁 3: 打球落點噴流圖 (Spray Chart) -->
           <div id="scoreSubPanelSpray" class="hidden space-y-6">
+            <p class="text-xs text-amber-300">2026/9/19、9/20 推估落點已封存，不納入噴流圖；原有守位與成績保留。</p>
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
               <div class="flex flex-wrap items-center gap-3">
                 <div class="flex items-center space-x-2">
@@ -2433,6 +2435,11 @@
     }
 
     // 歷史場記資料庫 (保留所有手動與真實賽事)
+    // Archived estimated coordinates remain stored; fielding locations and stats stay intact.
+    function isSprayChartArchived(game) {
+      return game?.sprayChartArchive?.excluded === true;
+    }
+
     let allGames = window.allGames = (function() {
       try {
         const stored = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
@@ -5735,6 +5742,7 @@ window.toggleDiagnosticsCollapse = function() {
       const extractPoints = (name) => {
         const pts = [];
         (allGames || []).forEach(g => {
+          if (isSprayChartArchived(g)) return;
           (g.innings || []).forEach(inn => {
             (inn.plateAppearances || []).forEach(pa => {
               if (pa.batterName === name && pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none' && pa.result !== 'RUNNER_OUT' && !pa.isRunnerOut) {
@@ -5848,6 +5856,7 @@ function getPercentile(val, key, pList, invert = false) {
 
       const points = [];
       (allGames || []).forEach(game => {
+        if (isSprayChartArchived(game)) return;
         (game.innings || []).forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
             if (pa.batterName !== playerName) return;
@@ -6808,6 +6817,7 @@ function renderTeamSpatialLab(agg) {
 
       const points = [];
       (allGames || []).forEach(g => {
+        if (isSprayChartArchived(g)) return;
         (g.innings || []).forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
             if (chosenPlayer !== 'all' && pa.batterName !== chosenPlayer) return;
@@ -9994,7 +10004,7 @@ function renderCustomChart(agg) {
       const sprayPointsHtml = [];
       game.innings.forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
-          if (pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none') {
+          if (!isSprayChartArchived(game) && pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none') {
             const px = pa.x * 400;
             const py = pa.y * 400;
             let dotColor = '#f43f5e';
@@ -10119,7 +10129,7 @@ function renderCustomChart(agg) {
           <div class="lg:col-span-6 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
               <span class="text-xs font-bold text-slate-300 font-mono">🎯 本場全隊擊球落點噴流圖</span>
-              <span class="text-[11px] text-emerald-400 font-mono">共 ${sprayPointsHtml.length} 顆擊球</span>
+              <span class="text-[11px] text-emerald-400 font-mono">${isSprayChartArchived(game) ? '推估座標已封存，不納入噴流圖；守位與成績保留' : `共 ${sprayPointsHtml.length} 顆擊球`}</span>
             </div>
             <div class="relative w-full max-w-[340px] mx-auto aspect-square select-none">
               <svg viewBox="0 0 400 400" class="w-full h-full rounded-xl border border-slate-800 bg-[#0d1712]">
@@ -10522,6 +10532,7 @@ function renderCustomChart(agg) {
       // 提取符合條件的落點事件
       const points = [];
       allGames.forEach(game => {
+        if (isSprayChartArchived(game)) return;
         game.innings.forEach(inn => {
           inn.plateAppearances.forEach(pa => {
             if (selectedSprayPlayer !== 'all' && pa.batterName !== selectedSprayPlayer) return;
