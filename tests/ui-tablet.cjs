@@ -56,7 +56,7 @@ fs.mkdirSync(output,{recursive:true});
           assert.equal(await drawer.isVisible(),false,'desktop retains full sidebar');
           assert.ok(await page.locator('#mainNavigation').isVisible());
         }
-        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'page must not overflow');
         assert.deepEqual(errors,[]);
         assert.deepEqual(await page.evaluate(()=>window.__previewWrites),[]);
         results.push({width,height,touch,passed:true});

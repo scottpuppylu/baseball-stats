@@ -11,9 +11,11 @@ const {chromium}=require('playwright');
     const errors=[];
     page.on('pageerror',e=>errors.push(e.message));
     await page.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//,route=>route.abort());
-    await page.goto('http://127.0.0.1:54321');
+    await page.goto(process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321');
     await page.waitForFunction(()=>JSON.parse(localStorage.getItem('rebas_all_games')||'[]').filter(g=>g.sprayChartArchive?.excluded).length===4);
-    const result=await page.evaluate(()=>{
+    const result=await page.evaluate(async()=>{
+      // Other QA scripts add games to the shared in-memory preview; start from the committed file.
+      allGames=window.allGames=await (await fetch('/data/games.json',{cache:'no-store'})).json();
       const original=JSON.parse(JSON.stringify(allGames));
       const statsBefore=JSON.stringify(getAnalysisAgg());
       const name=original[0].innings.flatMap(i=>i.plateAppearances||[])[0].batterName;
@@ -75,7 +77,7 @@ const {chromium}=require('playwright');
     assert.deepEqual(result.writes,[]);
     assert.deepEqual(errors,[]);
     await page.evaluate(()=>{switchMainTab('tabAnalytics');renderTeamSpatialLab(getAnalysisAgg());});
-    const output=path.join(os.tmpdir(),'baseball-ui-qa');
+    const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa');
     fs.mkdirSync(output,{recursive:true});
     await page.screenshot({path:path.join(output,'spray-archived.png'),fullPage:true});
     fs.writeFileSync(path.join(output,'spray-archive-report.json'),JSON.stringify(result,null,2));

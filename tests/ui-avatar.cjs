@@ -29,7 +29,7 @@ fs.mkdirSync(output,{recursive:true});
           assert.ok(camera.x+camera.width<=width,'camera remains inside viewport');
           assert.equal(await portrait.locator(':scope > :nth-child(2)').isVisible(),false,'touch hover overlay must not obscure portrait');
         }
-        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width,'page must not overflow');
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'page must not overflow');
         await page.screenshot({path:path.join(output,`${width}-Avatar.png`)});
         const chooser=page.waitForEvent('filechooser');
         await portrait.locator(':scope > :last-child').click();

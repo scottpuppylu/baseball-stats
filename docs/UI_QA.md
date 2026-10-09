@@ -100,3 +100,10 @@ node tests/ui-workflows.cjs
 經使用者授權，補登日誌、註冊隊員、開賽表單的預設日期及 CSV 匯出檔名，由 `toISOString()`（UTC）改為 `getTaipeiDateString()`（`Asia/Taipei`）。原本台灣時間 00:00–07:59 會預設成前一天。已填入的日期不受影響，資料格式仍為 `YYYY-MM-DD`。
 
 完整性檢查將此函式及 5 處呼叫還原後，業務 script 仍符合原始雜湊。隔離預覽將時鐘固定於台灣 2026/10/10 01:30（UTC 10/9），三個表單與 CSV 檔名皆為 2026-10-10，且無寫入及執行錯誤。單元與完整性 37 項、場記流程 42 項、響應式 63 組、落點封存瀏覽器測試皆通過。
+
+## 2026/10/10 測試工具整理
+
+- `spray-archive-browser.cjs` 改從已提交的 `data/games.json` 取得賽事，不再受同一預覽伺服器中其他測試新增的模擬賽事影響，可在 `ui-workflows.cjs` 之後直接執行，無須重啟伺服器。它也改用 `UI_PREVIEW_URL` 與 `UI_QA_OUTPUT`，與其他測試一致。
+- `ui-responsive.cjs`、`ui-avatar.cjs`、`ui-tablet.cjs` 的整頁溢出檢查改為 `scrollWidth <= clientWidth`，Windows 傳統捲軸不再造成誤判；實際溢出仍會失敗。
+
+驗證：未隱藏捲軸的 Chromium、共用且不重啟的預覽伺服器、先執行場記流程後，五個瀏覽器測試全部通過，報告集中在同一個 `UI_QA_OUTPUT` 目錄。

@@ -43,10 +43,11 @@ const contexts = [];
           }
           return true;
         }).map(el => el.id || el.textContent.trim().slice(0,40));
-        return {width: innerWidth, scrollWidth: document.documentElement.scrollWidth, clipped};
+        // clientWidth excludes a classic (Windows) scrollbar, so compare against it rather than the viewport.
+        return {width: innerWidth, clientWidth: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth, clipped};
       });
       results.push({width,height,page:name,...measure});
-      assert.equal(measure.scrollWidth, width, `${width}: ${name} page overflow`);
+      assert.ok(measure.scrollWidth <= measure.clientWidth, `${width}: ${name} page overflow (${measure.scrollWidth} > ${measure.clientWidth})`);
       assert.deepEqual(measure.clipped, [], `${width}: ${name} clipped controls`);
       if (name === 'Overview' || (width === 390 && ['Profile','Lineup','Scorebook'].includes(name))) await page.screenshot({path: path.join(output, `${width}-${height}-${name}.png`)});
     }
