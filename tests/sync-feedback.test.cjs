@@ -110,6 +110,7 @@ for (const success of [false, true]) {
       getGameAllBatters: () => ['test_player'], isGuestPlayerName: () => false,
       NAME_TO_JERSEY: { test_player: 1 }, commitLogsToGitHub: async () => success,
     });
+    vm.runInContext(extract('function isRunnerOutPlay(', '\n    }'), ctx);
     vm.runInContext(extract('async function syncGameToTeamLogs(', '\n    }'), ctx);
     const result = await ctx.syncGameToTeamLogs({
       id: 'test_game', innings: [{ plateAppearances: [{ batterName: 'test_player', result: '1H' }] }],
@@ -118,3 +119,12 @@ for (const success of [false, true]) {
     assert.equal(result.success, success);
   });
 }
+
+test('runner outs, including the legacy OUT records, never count as the batter\'s plate appearance', () => {
+  const ctx = context({});
+  vm.runInContext(extract('function isRunnerOutPlay(', '\n    }'), ctx);
+  for (const pa of [{result: 'RUNNER_OUT'}, {result: 'OUT'}, {result: 'OUT', isRunnerOut: true}, {result: 'GO', isRunnerOut: true}]) assert.equal(ctx.isRunnerOutPlay(pa), true, JSON.stringify(pa));
+  for (const result of ['1H', '2H', '3H', 'HR', 'BB', 'SF', 'K', '界外K', 'GO', 'FO', 'LO', 'E', 'FC', 'DP']) assert.equal(ctx.isRunnerOutPlay({result}), false, result);
+  // The runner-out button now also stores the flag.
+  assert.match(source, /result: 'OUT',\n\s+isRunnerOut: true,/);
+});

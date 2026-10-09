@@ -2440,6 +2440,19 @@
       return game?.sprayChartArchive?.excluded === true;
     }
 
+    // A runner out keeps the batter at the plate, so it is never the batter's PA. The runner-out button
+    // stored these as result 'OUT' without the flag, which is the only place 'OUT' is written.
+    function isRunnerOutPlay(pa) {
+      return pa.result === 'RUNNER_OUT' || pa.result === 'OUT' || pa.isRunnerOut === true;
+    }
+
+    // Aggregate charts follow the header date range, like every other number on the page.
+    function isGameInDateRange(game) {
+      const start = document.getElementById('filterStartDate')?.value || '';
+      const end = document.getElementById('filterEndDate')?.value || '';
+      return (!start || game.date >= start) && (!end || game.date <= end);
+    }
+
     // Default dates follow Taiwan time; toISOString() is UTC and lags a day before 08:00.
     function getTaipeiDateString() {
       return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());
@@ -5761,9 +5774,10 @@ window.toggleDiagnosticsCollapse = function() {
         const pts = [];
         (allGames || []).forEach(g => {
           if (isSprayChartArchived(g)) return;
+          if (!isGameInDateRange(g)) return;
           (g.innings || []).forEach(inn => {
             (inn.plateAppearances || []).forEach(pa => {
-              if (pa.batterName === name && pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none' && pa.result !== 'RUNNER_OUT' && !pa.isRunnerOut) {
+              if (pa.batterName === name && pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none' && !isRunnerOutPlay(pa)) {
                 pts.push(pa);
               }
             });
@@ -5875,10 +5889,11 @@ function getPercentile(val, key, pList, invert = false) {
       const points = [];
       (allGames || []).forEach(game => {
         if (isSprayChartArchived(game)) return;
+        if (!isGameInDateRange(game)) return;
         (game.innings || []).forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
             if (pa.batterName !== playerName) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || pa.result === 'RUNNER_OUT' || pa.isRunnerOut) return;
+            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
@@ -6836,10 +6851,11 @@ function renderTeamSpatialLab(agg) {
       const points = [];
       (allGames || []).forEach(g => {
         if (isSprayChartArchived(g)) return;
+        if (!isGameInDateRange(g)) return;
         (g.innings || []).forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
             if (chosenPlayer !== 'all' && pa.batterName !== chosenPlayer) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || pa.result === 'RUNNER_OUT' || pa.isRunnerOut) return;
+            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
@@ -8600,7 +8616,7 @@ function renderCustomChart(agg) {
       activeGame.innings.forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
           // 慢壘規則嚴格防呆：跑者出局 (RUNNER_OUT) 屬於跑壘事件，打者打席未結束，絕不計入打者 PA 與 AB！
-          if (pa.result === 'RUNNER_OUT' || pa.isRunnerOut) return;
+          if (isRunnerOutPlay(pa)) return;
           if (pa.batterName === batterName) {
             matchPa++;
             if (!['BB', 'SF'].includes(pa.result)) matchAb++;
@@ -9223,6 +9239,7 @@ function renderCustomChart(agg) {
         batterName,
         slot: activeGame.currentBatterIdx + 1,
         result: 'OUT',
+        isRunnerOut: true,
         trajectory: 'none',
         location: 'Bases',
         x: 0.5,
@@ -9581,7 +9598,7 @@ function renderCustomChart(agg) {
         (game.innings || []).forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
             // 慢壘鐵律：跑壘者出局 (RUNNER_OUT) 屬於跑壘事件，正在打擊之打者打席未結束，絕不能計入該打者 PA 或 AB！
-            if (pa.result === 'RUNNER_OUT' || pa.isRunnerOut) {
+            if (isRunnerOutPlay(pa)) {
               return;
             }
             const p = statsMap[pa.batterName];
@@ -9674,7 +9691,7 @@ function renderCustomChart(agg) {
       (game.innings || []).forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
           // 慢壘規則嚴格防呆：跑者出局 (RUNNER_OUT) 屬於跑壘事件，打者打席未結束，絕不計入打者 PA 與 AB！
-          if (pa.result === 'RUNNER_OUT' || pa.isRunnerOut) {
+          if (isRunnerOutPlay(pa)) {
             return;
           }
           const p = statsMap[pa.batterName];
@@ -9912,7 +9929,7 @@ function renderCustomChart(agg) {
       (game.innings || []).forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
           // 慢壘規則嚴格防呆：跑者出局 (RUNNER_OUT) 屬於跑壘事件，正在打擊之打者打席未結束，絕不計入打者 PA 與 AB！
-          if (pa.result === 'RUNNER_OUT' || pa.isRunnerOut) {
+          if (isRunnerOutPlay(pa)) {
             return;
           }
           totalPAs++;
@@ -10551,10 +10568,11 @@ function renderCustomChart(agg) {
       const points = [];
       allGames.forEach(game => {
         if (isSprayChartArchived(game)) return;
+        if (!isGameInDateRange(game)) return;
         game.innings.forEach(inn => {
           inn.plateAppearances.forEach(pa => {
             if (selectedSprayPlayer !== 'all' && pa.batterName !== selectedSprayPlayer) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || pa.result === 'RUNNER_OUT' || pa.isRunnerOut) return;
+            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
@@ -10698,7 +10716,7 @@ function renderCustomChart(agg) {
   
     </script>
   <script src="ui-comfort.js?v=20261004-header-brand"></script>
-  <script src="team-insights.js?v=20261010-insights"></script>
+  <script src="team-insights.js?v=20261010-runner"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
   <script src="lineup-recommender.js?v=20261010-pa3"></script>
 </body>

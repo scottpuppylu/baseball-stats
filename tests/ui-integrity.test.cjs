@@ -26,7 +26,13 @@ test('business script outside the authorized spray archive, Taiwan date, live da
     .replace("      // The first render picked default attendance from cached data; redo it with cloud data unless edited.\n      if (!attendanceEdited) attendanceInitialized = false;\n", '')
     .replace("      initAttendance(Object.values(JERSEY_TO_NAME), historicalPaMap);\n      renderAttendanceGrid(historicalPaMap);", '      renderAttendanceGrid(historicalPaMap);')
     .replaceAll('MIN_ATTENDANCE_PA', '15')
-    .replaceAll('(歷史PA ≥ 14)', '(歷史PA ≥ 15)');
+    .replaceAll('(歷史PA ≥ 14)', '(歷史PA ≥ 15)')
+    // Runner outs ('OUT' from the runner-out button) are never the batter's PA; aggregate spray charts follow the date range.
+    .replace("    // A runner out keeps the batter at the plate, so it is never the batter's PA. The runner-out button\n    // stored these as result 'OUT' without the flag, which is the only place 'OUT' is written.\n    function isRunnerOutPlay(pa) {\n      return pa.result === 'RUNNER_OUT' || pa.result === 'OUT' || pa.isRunnerOut === true;\n    }\n\n    // Aggregate charts follow the header date range, like every other number on the page.\n    function isGameInDateRange(game) {\n      const start = document.getElementById('filterStartDate')?.value || '';\n      const end = document.getElementById('filterEndDate')?.value || '';\n      return (!start || game.date >= start) && (!end || game.date <= end);\n    }\n\n", '')
+    .replaceAll('!isRunnerOutPlay(pa)', "pa.result !== 'RUNNER_OUT' && !pa.isRunnerOut")
+    .replaceAll('isRunnerOutPlay(pa)', "pa.result === 'RUNNER_OUT' || pa.isRunnerOut")
+    .replace("        result: 'OUT',\n        isRunnerOut: true,\n", "        result: 'OUT',\n")
+    .replace(/^ +if \(!isGameInDateRange\((?:g|game)\)\) return;\n/gm, '');
   assert.equal(hash(script), '6fb7e6ffe46cd4c480889a2a0d88025f0f32810dd4226a31b5b5ad157f5832a8');
 });
 test('all original inline action handlers remain identical and in order', () => {

@@ -40,32 +40,15 @@
 
 ## 重現方式
 
-在專案目錄執行（Node.js 與 Playwright 可由目前 Codex runtime 提供）：
+需要 Node.js 與已安裝的 Google Chrome。第一次在專案目錄執行 `npm install`（只安裝測試用的 Playwright，不下載瀏覽器），之後：
 
 ```powershell
-node --test tests/sync-feedback.test.cjs tests/ui-integrity.test.cjs
-node tests/ui-preview-server.cjs
+npm test
 ```
 
-預覽伺服器預設 `http://127.0.0.1:54321`，只綁本機；測試頁會標示隔離模式，移除實際 credential，模擬雲端寫入到記憶體，重新啟動即重置。
+`tests/run-all.cjs` 先跑全部單元測試，再逐一執行每個瀏覽器測試；每個測試各自啟動全新的隔離預覽伺服器與 Chrome（隨機本機埠），結束即關閉，避免前一個測試的模擬寫入影響下一個。只跑單元測試可用 `npm run test:unit`。
 
-在另一個 PowerShell 開啟獨立瀏覽器並取得 CDP 位址：
-
-```powershell
-npx --yes agent-browser --session baseball-ui open about:blank
-npx --yes agent-browser --session baseball-ui get cdp-url
-```
-
-依工具回傳的實際位址設定 `UI_CDP_URL`，再執行：
-
-```powershell
-$env:NODE_PATH = 'C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules'
-$env:UI_CDP_URL = '工具回傳的 CDP 位址'
-node tests/ui-responsive.cjs
-node tests/ui-workflows.cjs
-```
-
-預設截圖及 JSON 報告在 `%TEMP%\baseball-ui-qa`；可用 `UI_QA_OUTPUT` 指定其他輸出目錄，`UI_PREVIEW_PORT`／`UI_PREVIEW_URL` 指定其他本機埠。
+隔離預覽只綁本機，移除實際 credential，雲端寫入改寫到記憶體，不會修改 data/*.json。截圖及 JSON 報告在 `%TEMP%\baseball-ui-qa`，可用 `UI_QA_OUTPUT` 指定其他目錄。單獨執行某個瀏覽器測試時，可手動執行 `node tests/ui-preview-server.cjs`，並以 `UI_PREVIEW_URL`／`UI_CDP_URL` 指定位址。
 
 ## 實測界線
 
@@ -165,3 +148,13 @@ node tests/ui-workflows.cjs
 - 同一次計算記錄比賽結束時全隊總打席的分布，直接算出每棒打到第 2、3、4 次的機率；推薦表與每棒長條圖顯示「打到第 3 次」機率，摘要顯示全隊每場打席與八成區間。
 
 `tests/lineup-model.test.cjs` 新增：軟性時限、配速變化下局數平滑（無平台與斷崖）、總打席分布總和為 1 且與各棒期望打席一致（兩種規則、先後攻、有無隨機性）、第 n 次打席機率隨棒次與 n 遞減；校準誤差上限收緊為 0.005 局。`tests/ui-lineup.cjs` 新增第 3 次打席機率的顯示與遞減檢查。乾淨資料下：推薦 10.44、舊版同陣容 10.27、The Book 10.39、隨機 10.15 分／場；第 1 棒打到第 3 次 88%，第 10 棒 25%。
+
+## 2026/10/10 跑者出局、落點日期篩選與 npm test
+
+經使用者授權：
+
+- 跑者出局：按鈕寫入的 `OUT` 原本沒有 `isRunnerOut` 標記，即時成績、日誌產生、覆盤成績表及賽後成績圖都把它算成打者的打席與打數（功能基準第 7 節第一項）。新增 `isRunnerOutPlay()`，`RUNNER_OUT`、`OUT` 或帶標記者一律不計打席；按鈕今後也寫入標記。既有資料不需修改：9/19 那筆廖仲毅的紀錄重新載入時即自動排除，其整季 PA 由 30 改為 29。雲端 logs.json 中的舊值會在下次寫入時更新，畫面數字以賽事重算為準。
+- 落點日期篩選：全隊空間分析、場記落點工作室、個人落點與雙人落點原本遍歷全部賽事；現在與其他數字一樣依頁首日期範圍篩選。單場覆盤落點不受影響。
+- `npm test`：見「重現方式」。完整性檢查還原上述授權差異後仍符合原始雜湊。
+
+測試：`tests/sync-feedback.test.cjs` 新增跑者出局判斷（含舊 `OUT` 紀錄）；`tests/ui-data-fixes.cjs` 驗證整季 PA 與覆盤成績表排除跑者出局，以及四個落點圖在日期範圍內外的點數。`npm test` 9/9 通過（單元 55 項＋8 個瀏覽器測試），未隱藏捲軸。

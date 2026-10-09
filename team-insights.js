@@ -178,7 +178,7 @@
     // Mirrors the review box score: runner outs never count as the batter's plate appearance.
     for (const inn of game.innings || []) {
       for (const pa of inn.plateAppearances || []) {
-        if (pa.result === 'RUNNER_OUT' || pa.isRunnerOut) continue;
+        if (isRunnerOutPlay(pa)) continue;
         if (!box.has(pa.batterName)) {
           box.set(pa.batterName, {pa: 0, ab: 0, h: 0, h2: 0, h3: 0, hr: 0, bb: 0, k: 0, rbi: 0});
           batters.push({slot: pa.slot || 99, name: pa.batterName, isSub: true});
