@@ -10,12 +10,15 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
 // Digests from 903cf977 before the UI edit: protect the entire business script
 // and every existing inline event handler, rather than sample calculations.
-test('business script outside the authorized spray archive change remains byte-identical to the approved baseline', () => {
+test('business script outside the authorized spray archive and Taiwan date changes remains byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1]
     .replace('    // Archived estimated coordinates remain stored; fielding locations and stats stay intact.\n    function isSprayChartArchived(game) {\n      return game?.sprayChartArchive?.excluded === true;\n    }\n\n', '')
     .replace(/^ +if \(isSprayChartArchived\((?:g|game)\)\) return;\n/gm, '')
     .replace('!isSprayChartArchived(game) && pa.x', 'pa.x')
-    .replace("${isSprayChartArchived(game) ? '推估座標已封存，不納入噴流圖；守位與成績保留' : `共 ${sprayPointsHtml.length} 顆擊球`}", '共 ${sprayPointsHtml.length} 顆擊球');
+    .replace("${isSprayChartArchived(game) ? '推估座標已封存，不納入噴流圖；守位與成績保留' : `共 ${sprayPointsHtml.length} 顆擊球`}", '共 ${sprayPointsHtml.length} 顆擊球')
+    .replace("    // Default dates follow Taiwan time; toISOString() is UTC and lags a day before 08:00.\n    function getTaipeiDateString() {\n      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());\n    }\n\n", '')
+    .replace('_${getTaipeiDateString()}.csv', '_${new Date().toISOString().slice(0,10)}.csv')
+    .replaceAll('getTaipeiDateString()', 'new Date().toISOString().slice(0, 10)');
   assert.equal(hash(script), '6fb7e6ffe46cd4c480889a2a0d88025f0f32810dd4226a31b5b5ad157f5832a8');
 });
 test('all original inline action handlers remain identical and in order', () => {

@@ -2440,6 +2440,11 @@
       return game?.sprayChartArchive?.excluded === true;
     }
 
+    // Default dates follow Taiwan time; toISOString() is UTC and lags a day before 08:00.
+    function getTaipeiDateString() {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());
+    }
+
     let allGames = window.allGames = (function() {
       try {
         const stored = JSON.parse(localStorage.getItem('rebas_all_games')) || [];
@@ -7302,7 +7307,7 @@ function renderCustomChart(agg) {
     document.getElementById('toggleAddLogBtn').addEventListener('click', () => {
       document.getElementById('addLogForm').classList.toggle('hidden');
       document.getElementById('addPlayerForm').classList.add('hidden');
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTaipeiDateString();
       if (!document.getElementById('new_date').value) document.getElementById('new_date').value = today;
     });
 
@@ -7321,7 +7326,7 @@ function renderCustomChart(agg) {
     document.getElementById('toggleAddPlayerBtn').addEventListener('click', () => {
       document.getElementById('addPlayerForm').classList.toggle('hidden');
       document.getElementById('addLogForm').classList.add('hidden');
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTaipeiDateString();
       if (!document.getElementById('reg_date').value) document.getElementById('reg_date').value = today;
     });
 
@@ -8082,7 +8087,7 @@ function renderCustomChart(agg) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `淡江航太系壘成績匯總_${new Date().toISOString().slice(0,10)}.csv`;
+      a.download = `淡江航太系壘成績匯總_${getTaipeiDateString()}.csv`;
       a.click();
     });
 
@@ -8272,7 +8277,7 @@ function renderCustomChart(agg) {
 
     // 初始化開賽表單打線
     function initNewGameSetup() {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTaipeiDateString();
       const dateEl = document.getElementById('setup_game_date');
       if (dateEl && !dateEl.value) dateEl.value = today;
 
@@ -8384,7 +8389,7 @@ function renderCustomChart(agg) {
     };
 
     window.startNewGameFromSetup = function() {
-      const date = document.getElementById('setup_game_date').value || new Date().toISOString().slice(0, 10);
+      const date = document.getElementById('setup_game_date').value || getTaipeiDateString();
       const opponent = document.getElementById('setup_game_opponent').value.trim() || '友隊選手';
       const tag = document.getElementById('setup_game_tag').value.trim() || '系壘例行賽';
       const role = document.getElementById('setup_game_role').value || '先攻';
