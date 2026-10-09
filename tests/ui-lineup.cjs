@@ -44,6 +44,7 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       if(pitching.ranks.some(n=>pitching.present.includes(n))) assert.ok(pitching.ranks.includes(pitching.pitcher),`P is ${pitching.pitcher}`);
       const rec=await page.evaluate(()=>{
         localStorage.removeItem('rebas_lineup_sim_settings');
+        localStorage.removeItem('rebas_lineup_locks');
         setDhRule(false);
         selectAllAttendance();
         switchMainTab('tabLineup');
@@ -87,6 +88,42 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       // Loading the recommendation into game setup uses the optimised order.
       const setup=await page.evaluate(()=>{loadLineupIntoGameSetup('recommended');return [...setupLineupList];});
       assert.deepEqual(setup,rec.names);
+      // Slot locks: the locked hitter stays put, the rest is re-optimised, and the cost is shown.
+      const lock=await page.evaluate(()=>{
+        clearLineupLocks();
+        const free=calculateRecommendedLineup(getFullAgg().players);
+        setLineupLock('簡承均',2);
+        const r=calculateRecommendedLineup(getFullAgg().players);
+        const out={freeRuns:free.model.runs,lockedRuns:r.model.runs,freeRunsAfter:r.model.freeRuns,second:r.items[1].player.name,role:r.items[1].role,
+          reason:r.items[1].reason,cost:document.getElementById('lineupLockCost')?.textContent||'',row:document.querySelectorAll('#recommendedLineupBody tr')[1].textContent,
+          select:document.querySelector('[data-lock-name="簡承均"]').value};
+        // Locking another hitter to the same slot replaces the first lock.
+        setLineupLock('盧宣嘉',2);
+        const replaced=calculateRecommendedLineup(getFullAgg().players);
+        out.replacedSecond=replaced.items[1].player.name;
+        out.stored=JSON.parse(localStorage.getItem('rebas_lineup_locks'));
+        // Locking a present bench player makes them start in that slot.
+        out.bench=[...presentPlayersSet].find(n=>getFullAgg().players.some(p=>p.name===n)&&!replaced.items.some(i=>i.player.name===n))||null;
+        if(out.bench){setLineupLock(out.bench,9);out.benchSlot9=calculateRecommendedLineup(getFullAgg().players).items[8].player.name;}
+        // A lock beyond the lineup length is reported, not applied.
+        setLineupLock('簡承均',11);
+        out.ignored=calculateRecommendedLineup(getFullAgg().players).model.ignoredLocks.join('|');
+        clearLineupLocks();
+        const cleared=calculateRecommendedLineup(getFullAgg().players);
+        out.clearedRuns=cleared.model.runs;out.clearedLocked=cleared.model.lockedSlots.length;out.costAfterClear=!!document.getElementById('lineupLockCost');
+        return out;
+      });
+      assert.equal(lock.second,'簡承均');
+      assert.equal(lock.select,'2');
+      assert.ok(lock.role.includes('🔒') && lock.row.includes('🔒') && lock.reason.includes('教練鎖定第 2 棒'));
+      assert.ok(Math.abs(lock.freeRunsAfter-lock.freeRuns)<1e-9 && lock.lockedRuns<=lock.freeRuns+1e-9);
+      assert.ok(lock.cost.includes('完全最佳化'));
+      assert.equal(lock.replacedSecond,'盧宣嘉');
+      assert.deepEqual(lock.stored,{'盧宣嘉':2});
+      if(lock.bench) assert.equal(lock.benchSlot9,lock.bench);
+      assert.ok(lock.ignored.includes('簡承均') && lock.ignored.includes('11'));
+      assert.ok(Math.abs(lock.clearedRuns-lock.freeRuns)<1e-9 && lock.clearedLocked===0 && !lock.costAfterClear);
+      report[`${width}-lock`]={freeRuns:lock.freeRuns,lockedRuns:lock.lockedRuns,cost:lock.freeRuns-lock.lockedRuns};
       // DH format: 11 hitters, one designated hitter.
       const dh=await page.evaluate(()=>{setDhRule(true);const r=calculateRecommendedLineup(getFullAgg().players);const out={n:r.items.length,dh:r.items.filter(i=>i.posInfo.isDh).length,rows:document.querySelectorAll('#recommendedLineupBody tr').length};setDhRule(false);return out;});
       assert.deepEqual(dh,{n:11,dh:1,rows:11});
@@ -99,6 +136,6 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       await page.close();
     }
     fs.writeFileSync(path.join(output,'lineup-report.json'),JSON.stringify(report,null,2));
-    console.log(JSON.stringify({passed:true,viewports:Object.keys(report).length,output}));
+    console.log(JSON.stringify({passed:true,viewports:Object.keys(report).filter(k=>!k.endsWith('-lock')).length,output}));
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

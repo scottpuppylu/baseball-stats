@@ -60,8 +60,8 @@ test('lineup model is pure and the recommender never writes game data or calls t
   new vm.Script(recommender);
   assert.doesNotMatch(recommender, /\b(?:fetch|XMLHttpRequest|GITHUB_TOKEN|commit\w*ToGitHub)\b/);
   assert.doesNotMatch(recommender, /\b(?:allLogs|allGames|activeGame|customLineup|presentPlayersSet)\s*=(?!=)/);
-  // Its only storage is its own simulation preference.
-  assert.deepEqual([...recommender.matchAll(/localStorage\.(\w+)\(([^,)]+)/g)].map(m => m[2]).filter(k => k !== 'SETTINGS_KEY'), []);
+  // Its only storage is its own preferences: simulation settings and slot locks.
+  assert.deepEqual([...recommender.matchAll(/localStorage\.(\w+)\(([^,)]+)/g)].map(m => m[2]).filter(k => !['SETTINGS_KEY', 'LOCKS_KEY'].includes(k)), []);
 });
 test('presentation script parses and does not directly access persistent data or network', () => {
   const script = fs.readFileSync(path.join(root, 'ui-comfort.js'), 'utf8');

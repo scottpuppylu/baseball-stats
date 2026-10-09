@@ -4,7 +4,8 @@
  * 2. A half-inning is an exact Markov chain over (outs, bases) that follows the actual batting order.
  * 3. The game is a chain of innings driven by the clock: every PA and half-inning change costs minutes,
  *    and no new inning starts once the time limit is reached (or the game stops at once, if chosen).
- * 4. The order is chosen by local search (pair swaps) over exact expected runs per game.
+ * 4. The order is chosen by local search (pair swaps) over exact expected runs per game;
+ *    slots a coach locks stay fixed and only the remaining slots are searched.
  */
 (function (root) {
   'use strict';
@@ -350,23 +351,36 @@
     };
   }
 
+  // Put locked hitters (Map: slot index -> model index) in their slots; others keep their relative order.
+  function applyLocks(order, locks) {
+    if (!locks || !locks.size) return order.slice();
+    const lockedHitters = new Set(locks.values());
+    const free = order.filter(i => !lockedHitters.has(i));
+    return order.map((_, slot) => (locks.has(slot) ? locks.get(slot) : free.shift()));
+  }
+
   // Pair-swap hill climbing from several starts; exact evaluation keeps results deterministic.
-  function optimizeOrder(models, cfg, extraStarts = []) {
+  // Locked slots never move; only unlocked slots are searched.
+  function optimizeOrder(models, cfg, extraStarts = [], locks = null) {
     const compiled = models.map(m => compileBatter(m, cfg.advance));
     const run = order => evaluateCompiled(order.map(i => compiled[i]), cfg).runs;
-    const starts = [bookOrder(models), models.map((m, i) => i).sort((a, b) => models[b].woba - models[a].woba || a - b), ...extraStarts];
+    const starts = [bookOrder(models), models.map((m, i) => i).sort((a, b) => models[b].woba - models[a].woba || a - b), ...extraStarts]
+      .filter(start => start.length === models.length)
+      .map(start => applyLocks(start, locks));
+    const movable = models.map((m, slot) => slot).filter(slot => !(locks && locks.has(slot)));
     let best = null, bestRuns = -Infinity, evaluations = 0;
     const seen = new Set();
     for (const start of starts) {
       const key = start.join(',');
-      if (seen.has(key) || start.length !== models.length) continue;
+      if (seen.has(key)) continue;
       seen.add(key);
       let order = start.slice(), value = run(order);
       evaluations++;
       for (let improved = true; improved;) {
         improved = false;
-        for (let i = 0; i < order.length - 1; i++) {
-          for (let j = i + 1; j < order.length; j++) {
+        for (let a = 0; a < movable.length - 1; a++) {
+          for (let b = a + 1; b < movable.length; b++) {
+            const i = movable[a], j = movable[b];
             [order[i], order[j]] = [order[j], order[i]];
             const v = run(order);
             evaluations++;
@@ -393,13 +407,15 @@
   }
 
   // Runs lost by the best single swap away from each slot: small values mean the slot is a near tie.
-  function slotSensitivity(models, order, cfg) {
+  // Locked slots are reported as locked and are never used as swap partners.
+  function slotSensitivity(models, order, cfg, locks = null) {
     const compiled = models.map(m => compileBatter(m, cfg.advance));
     const base = evaluateCompiled(order.map(i => compiled[i]), cfg).runs;
     return order.map((_, i) => {
+      if (locks && locks.has(i)) return {locked: true, loss: null, partnerSlot: 0};
       let minLoss = Infinity, partner = -1;
       for (let j = 0; j < order.length; j++) {
-        if (j === i) continue;
+        if (j === i || (locks && locks.has(j))) continue;
         const o = order.slice();
         [o[i], o[j]] = [o[j], o[i]];
         const loss = base - evaluateCompiled(o.map(x => compiled[x]), cfg).runs;
@@ -413,7 +429,7 @@
     EVENTS, PRIOR_PA, PRIOR_LIMITS, ADVANCE, DEFAULTS, MAX_PA_PER_INNING,
     teamRates, estimatePriorPa, batterModel, averageBatter, eventOutcomes, compileBatter, halfInning,
     makeConfig, calibrateMinutesPerPa, evaluateOrder, evaluateCompiled, bookOrder,
-    optimizeOrder, randomOrderMean, slotSensitivity
+    applyLocks, optimizeOrder, randomOrderMean, slotSensitivity
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LineupModel = api;

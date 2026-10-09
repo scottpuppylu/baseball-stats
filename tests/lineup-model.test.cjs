@@ -106,3 +106,23 @@ test('the optimiser matches an exhaustive search on six hitters and beats The Bo
   // The strong hitter never ends up at the bottom of the order.
   assert.ok(best.order.indexOf(0) < 4);
 });
+
+test('locked slots stay fixed, the rest is optimised exhaustively-correct, and locking never beats the free optimum', () => {
+  assert.deepEqual(M.applyLocks([0, 1, 2, 3, 4], new Map([[1, 4], [3, 0]])), [1, 4, 2, 0, 3]);
+  const six = [strong, weak, hitter('中1', 40, [0.1, 0.1, 0.3, 0.08, 0.02, 0.03]), hitter('中2', 40, [0.15, 0.05, 0.25, 0.06, 0.01, 0.06]),
+    hitter('中3', 40, [0.08, 0.12, 0.33, 0.1, 0.03, 0.01]), hitter('中4', 40, [0.12, 0.08, 0.28, 0.12, 0.02, 0.05])];
+  const models = six.map(p => M.batterModel(p, team));
+  const cfg = M.makeConfig({}, team, 6);
+  const free = M.optimizeOrder(models, cfg);
+  const locks = new Map([[1, 0], [5, 2]]); // strong hitter 2nd, 中1 last
+  const locked = M.optimizeOrder(models, cfg, [free.order], locks);
+  assert.equal(locked.order[1], 0);
+  assert.equal(locked.order[5], 2);
+  assert.ok(locked.runs <= free.runs + 1e-12);
+  const constrained = permutations([0, 1, 2, 3, 4, 5]).filter(o => o[1] === 0 && o[5] === 2);
+  const exhaustive = Math.max(...constrained.map(o => M.evaluateOrder(models, o, cfg).runs));
+  assert.ok(exhaustive - locked.runs < 1e-9, `locked search ${locked.runs} vs exhaustive ${exhaustive}`);
+  const sens = M.slotSensitivity(models, locked.order, cfg, locks);
+  assert.ok(sens[1].locked && sens[5].locked && !sens[0].locked);
+  assert.ok([0, 2, 3, 4].every(i => sens[i].partnerSlot !== 2 && sens[i].partnerSlot !== 6));
+});
