@@ -1010,7 +1010,7 @@
             <div class="flex flex-wrap items-center gap-2">
               <span id="attendanceCountBadge" class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg"></span>
               <button onclick="selectAllAttendance()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">全選出席</button>
-              <button onclick="selectPa15Attendance()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">PA≥15出席</button>
+              <button onclick="selectPa15Attendance()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">PA≥14出席</button>
               <button onclick="clearAttendance()" class="bg-slate-800 hover:bg-slate-700 text-rose-300 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">清空選取</button>
             </div>
           </div>
@@ -3227,12 +3227,15 @@
     // 今日出賽名單過濾 (出席/未到剔除狀態)
     let presentPlayersSet = new Set();
     let attendanceInitialized = false;
+    // Default attendance and lineup priority threshold; set once the coach changes attendance by hand.
+    const MIN_ATTENDANCE_PA = 14;
+    let attendanceEdited = false;
 
 
     function initAttendance(allNames, historicalPaMap) {
       if (!attendanceInitialized && allNames.length > 0) {
-        // 預設選取歷史總 PA >= 15 之選手；若人數小於 10 人則全選
-        const pa15 = allNames.filter(n => (historicalPaMap[n] || 0) >= 15);
+        // 預設選取歷史總 PA >= MIN_ATTENDANCE_PA 之選手；若人數小於 10 人則全選
+        const pa15 = allNames.filter(n => (historicalPaMap[n] || 0) >= MIN_ATTENDANCE_PA);
         if (pa15.length >= 10) {
           presentPlayersSet = new Set(pa15);
         } else {
@@ -3244,6 +3247,7 @@
 
 
     window.selectAllAttendance = function() {
+      attendanceEdited = true;
       const allNames = Object.values(JERSEY_TO_NAME);
       presentPlayersSet = new Set(allNames);
       renderAll();
@@ -3251,23 +3255,26 @@
 
 
     window.selectPa15Attendance = function() {
+      attendanceEdited = true;
       const historicalPaMap = {};
       allLogs.forEach(l => {
         historicalPaMap[l.name] = (historicalPaMap[l.name] || 0) + (Number(l.pa) || 0);
       });
       const allNames = Object.values(JERSEY_TO_NAME);
-      presentPlayersSet = new Set(allNames.filter(n => (historicalPaMap[n] || 0) >= 15));
+      presentPlayersSet = new Set(allNames.filter(n => (historicalPaMap[n] || 0) >= MIN_ATTENDANCE_PA));
       renderAll();
     };
 
 
     window.clearAttendance = function() {
+      attendanceEdited = true;
       presentPlayersSet = new Set();
       renderAll();
     };
 
 
     window.toggleAttendancePlayer = function(name) {
+      attendanceEdited = true;
       if (presentPlayersSet.has(name)) {
         presentPlayersSet.delete(name);
       } else {
@@ -3318,7 +3325,7 @@
                 <span class="font-bold text-xs truncate ${isPresent ? 'text-white' : 'text-slate-400 line-through'}">${name}</span>
                 <span class="text-[10px] font-mono text-slate-500">#${jersey}</span>
               </div>
-              <span class="block text-[9px] font-mono ${pa >= 15 ? 'text-amber-400' : 'text-slate-500'}">歷史PA: ${pa}</span>
+              <span class="block text-[9px] font-mono ${pa >= MIN_ATTENDANCE_PA ? 'text-amber-400' : 'text-slate-500'}">歷史PA: ${pa}</span>
             </div>
           </div>
         `;
@@ -3358,7 +3365,7 @@
           setupDhExpl.innerHTML = '<span class="text-emerald-400 font-bold">10 棒攻守合一</span>：全員防守，無純DH';
         }
         if (recTitleEl) recTitleEl.textContent = '賽伯計量最佳棒次推薦 (無 DH 制・10 棒全打全守)';
-        if (recSubtitleEl) recSubtitleEl.textContent = '融合慢壘得分期望值模型與各守位排名，推算 10 位攻守合一打者與守備位置 (歷史PA ≥ 15)';
+        if (recSubtitleEl) recSubtitleEl.textContent = '融合慢壘得分期望值模型與各守位排名，推算 10 位攻守合一打者與守備位置 (歷史PA ≥ 14)';
       } else {
         if (btnWithDh) btnWithDh.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white shadow transition';
         if (btnNoDh) btnNoDh.className = 'text-xs px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition';
@@ -3371,7 +3378,7 @@
           setupDhExpl.innerHTML = '<span class="text-amber-400 font-bold">11 棒特化打線</span>：10 守備員全打 + 1 純 DH';
         }
         if (recTitleEl) recTitleEl.textContent = '賽伯計量最佳棒次推薦 (有 DH 制・11 棒打線・投手含入打線)';
-        if (recSubtitleEl) recSubtitleEl.textContent = '10 位守備員 (含投手 P) 全員上場打擊 + 1 位純打擊 DH，共推算 11 位先發棒次與最佳守位配置 (歷史PA ≥ 15)';
+        if (recSubtitleEl) recSubtitleEl.textContent = '10 位守備員 (含投手 P) 全員上場打擊 + 1 位純打擊 DH，共推算 11 位先發棒次與最佳守位配置 (歷史PA ≥ 14)';
       }
 
       const ruleBadge = document.getElementById('liveGameRuleBadge');
@@ -3597,9 +3604,9 @@
       let presentPool = players.filter(p => presentPlayersSet.has(p.name));
       if (presentPool.length === 0) return { items: [], hasDh: isDhEnabled, targetSize };
 
-      // 2. 歷史總 PA >= 15 優先順位分流 (兼顧大樣本與出席名單)
-      let primaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) >= 15);
-      let secondaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) < 15)
+      // 2. 歷史總 PA >= MIN_ATTENDANCE_PA 優先順位分流 (兼顧大樣本與出席名單)
+      let primaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) >= MIN_ATTENDANCE_PA);
+      let secondaryPool = presentPool.filter(p => (historicalPaMap[p.name] ?? p.pa) < MIN_ATTENDANCE_PA)
         .sort((a, b) => (historicalPaMap[b.name] ?? b.pa) - (historicalPaMap[a.name] ?? a.pa));
 
       let activePool = [...primaryPool];
@@ -3775,6 +3782,7 @@
       allLogs.forEach(l => {
         historicalPaMap[l.name] = (historicalPaMap[l.name] || 0) + (Number(l.pa) || 0);
       });
+      initAttendance(Object.values(JERSEY_TO_NAME), historicalPaMap);
       renderAttendanceGrid(historicalPaMap);
 
       // 更新頂部 DH 賽制控制按鈕與說明
@@ -4743,6 +4751,8 @@ window.toggleDiagnosticsCollapse = function() {
 
       // 同步整合與更新
       syncAllGamesToTeamLogs();
+      // The first render picked default attendance from cached data; redo it with cloud data unless edited.
+      if (!attendanceEdited) attendanceInitialized = false;
       syncJerseyMaps();
       if (allLogs.length > 0 && !selectedPlayerName) {
         selectedPlayerName = allLogs[0].name;
@@ -10689,5 +10699,7 @@ function renderCustomChart(agg) {
     </script>
   <script src="ui-comfort.js?v=20261004-header-brand"></script>
   <script src="team-insights.js?v=20261010-insights"></script>
+  <script src="lineup-model.js?v=20261010-lineup"></script>
+  <script src="lineup-recommender.js?v=20261010-lineup"></script>
 </body>
 </html>
