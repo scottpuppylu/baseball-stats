@@ -183,6 +183,7 @@
       const pa = sim.detail.paBySlot[idx];
       const onBase = sim.detail.onBaseShare[idx];
       const sens = sim.sensitivity[idx];
+      const third = sim.detail.paAtLeast[idx][2];
       const posInfo = assigned[p.name] || {posKey: 'DH', label: 'DH/指定打擊', rankText: '純打擊', isDh: false};
       const own = Math.round((1 - m.shrink) * 100);
       let reason = sens.locked ? `教練鎖定第 ${idx + 1} 棒。` : '';
@@ -196,9 +197,9 @@
       else if (posInfo.posKey === 'P') reason += '投手兼任打擊。';
       return {
         slot: idx + 1, player: p, posInfo,
-        role: `${sens.locked ? '🔒 鎖定・' : ''}每場 ${pa.toFixed(1)} 打席・壘上有人 ${Math.round(onBase * 100)}%`,
+        role: `${sens.locked ? '🔒 鎖定・' : ''}每場 ${pa.toFixed(1)} 打席・打到第 3 次 ${Math.round(third * 100)}%・壘上有人 ${Math.round(onBase * 100)}%`,
         reason, histPa: historicalPaMap[p.name] || p.pa,
-        model: {pa, onBase, loss: sens.loss, partnerSlot: sens.partnerSlot, locked: !!sens.locked, obp: m.obp, slg: m.slg, own}
+        model: {pa, third, onBase, loss: sens.loss, partnerSlot: sens.partnerSlot, locked: !!sens.locked, obp: m.obp, slg: m.slg, own}
       };
     });
     lastResult = {items, sim, targetSize};
@@ -208,13 +209,14 @@
   window.calculateLegacyRecommendedLineup = legacyRecommend;
 
   // ---------- Summary under the recommended table ----------
-  function slotBars(paBySlot) {
-    const max = Math.max(...paBySlot, 1);
-    return `<div class="flex items-end gap-1 h-20" role="img" aria-label="每棒每場預期打席">${paBySlot.map((pa, i) => `
+  function slotBars(detail) {
+    const max = Math.max(...detail.paBySlot, 1);
+    return `<div class="flex items-end gap-1" role="img" aria-label="每棒每場預期打席與打到第 3 次的機率">${detail.paBySlot.map((pa, i) => `
       <div class="flex-1 flex flex-col items-center justify-end gap-1 min-w-0">
         <span class="text-[10px] font-mono text-slate-300">${pa.toFixed(1)}</span>
         <div class="w-full rounded-t bg-sky-500/70" style="height:${Math.max(4, (pa / max) * 48)}px"></div>
         <span class="text-[10px] font-mono text-slate-500">${i + 1}</span>
+        <span class="text-[10px] font-mono text-amber-300">${Math.round(detail.paAtLeast[i][2] * 100)}%</span>
       </div>`).join('')}</div>`;
   }
 
@@ -245,13 +247,13 @@
         <div class="bg-slate-950/80 border ${locked ? 'border-amber-700/60' : 'border-sky-800/60'} rounded-xl p-3 space-y-2">
           <div class="text-slate-400">${locked ? '鎖定後打線預期' : '推薦打線預期'}</div>
           <div class="text-2xl font-black ${locked ? 'text-amber-300' : 'text-sky-300'} font-mono">${sim.runs.toFixed(2)} <span class="text-sm text-slate-400 font-normal">分／場</span></div>
-          <div class="text-slate-400">約 ${sim.detail.innings.toFixed(1)} 個進攻局</div>
+          <div class="text-slate-400">約 ${sim.detail.innings.toFixed(1)} 個進攻局；全隊每場約 ${sim.detail.teamPa.mean.toFixed(0)} 打席（八成落在 ${sim.detail.teamPa.p10}–${sim.detail.teamPa.p90}）</div>
           ${locked ? `<div id="lineupLockCost" class="text-amber-200">完全最佳化（不鎖定）${sim.freeRuns.toFixed(2)} 分；${lockCost < 0.005 ? '鎖定後幾乎沒有損失' : `鎖定後每場少 ${lockCost.toFixed(2)} 分`}</div>` : ''}
           <ul class="space-y-1 pt-1 border-t border-slate-800">${compare}</ul>
         </div>
         <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2">
-          <div class="text-slate-400">每棒每場預期打席（計時賽越後段越少）</div>
-          ${slotBars(sim.detail.paBySlot)}
+          <div class="text-slate-400">每棒每場預期打席（藍）與<span class="text-amber-300">打到第 3 次的機率</span>（計時賽越後段越少）</div>
+          ${slotBars(sim.detail)}
         </div>
         <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2">
           <div class="text-slate-400">比賽設定</div>
@@ -273,7 +275,8 @@
         <summary class="cursor-pointer text-slate-300 font-bold">模型如何計算？</summary>
         <ul class="list-disc pl-5 mt-2 space-y-1">
           <li>逐打席精確計算每個半局（出局數 × 壘上狀態的馬可夫鏈），包含保送推進、安打帶跑、雙殺、高飛犧牲打；再依比賽時鐘串起整場：時間到 ${settings.rule === 'hardStop' ? '立即結束' : '後不開新局'}，最多 ${settings.maxInnings} 局。</li>
-          <li>比賽節奏：${sim.history.games >= 2 ? `依過去 ${sim.history.games} 場平均我方 ${sim.history.average.toFixed(1)} 個進攻局（90 分鐘賽制）校準，` : '歷史場次不足，採預設值，'}每打席約 ${sim.minutesPerPa.toFixed(1)} 分鐘，每半局換場 1 分鐘；對手半局假設與全隊平均打線同節奏。</li>
+          <li>比賽節奏：${sim.history.games >= 2 ? `依過去 ${sim.history.games} 場平均我方 ${sim.history.average.toFixed(1)} 個進攻局（90 分鐘賽制）校準，` : '歷史場次不足，採預設值，'}每打席平均約 ${sim.minutesPerPa.toFixed(1)} 分鐘，每半局換場 1 分鐘；對手半局假設與全隊平均打線同節奏。</li>
+          <li>時間的隨機性：每個打席耗時上下約 ${Math.round(sim.cfg.paTimeCv * 100)}%，對手每半局的打席數也有長有短，所以「還能不能開新局」是機率而非一刀切，避免模型為了剛好擠進一局而排出不合理的棒次。「打到第 3 次」由全隊總打席的分布直接算出。</li>
           <li>樣本校正（經驗貝氏）：每位打者的保送、三振、各類安打率依打席數向全隊平均回歸；權重由全隊實際天分分布估計${prior.estimated ? `（安打 ${Math.round(prior.s1)}、保送 ${Math.round(prior.bb)}、三振 ${Math.round(prior.k)} 打席）` : '（人數不足，採保守預設）'}，打席越多越依本人數據。</li>
           <li>搜尋：從 The Book 排法、能力排序與舊版規則出發，反覆嘗試任兩棒互換直到無法再提高預期得分（本次比較 ${sim.evaluations} 種排列）。有鎖定時，鎖定的棒次固定不動，只在其餘棒次間搜尋，並與完全最佳化比較。</li>
           <li>限制：棒次對得分的影響通常只有幾個百分點；「幾乎無差」的棒次可依教練判斷互換。跑壘推進率為慢壘一般假設，未計盜壘與提前結束規則。</li>

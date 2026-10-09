@@ -4,6 +4,9 @@
  * 2. A half-inning is an exact Markov chain over (outs, bases) that follows the actual batting order.
  * 3. The game is a chain of innings driven by the clock: every PA and half-inning change costs minutes,
  *    and no new inning starts once the time limit is reached (or the game stops at once, if chosen).
+ *    PA durations and the opponent's half-innings vary, so "is there time for another inning?" is a
+ *    probability rather than a hard cut-off. The same pass gives the distribution of total team PAs,
+ *    and from it each slot's chance of batting a 2nd, 3rd or 4th time.
  * 4. The order is chosen by local search (pair swaps) over exact expected runs per game;
  *    slots a coach locks stay fixed and only the remaining slots are searched.
  */
@@ -34,6 +37,9 @@
     maxInnings: 7,
     minutesPerPa: 1.8,
     changeoverMinutes: 1.0, // per half-inning
+    timeNoise: true, // false = every PA takes exactly minutesPerPa (hard cut-off)
+    paTimeCv: 0.30, // spread of one PA's duration (coefficient of variation)
+    changeoverCv: 0.20,
     role: '先攻'
   };
   const MAX_PA_PER_INNING = 30;
@@ -245,67 +251,110 @@
     return {alive, onBase, runs, end};
   }
 
-  // Expected PAs one opponent-like half-inning takes (opponent assumed to hit like the team average).
+  // PAs one opponent-like half-inning takes: mean and variance (opponent assumed to hit like the team average).
   function averageHalfInningPa(team, A, lineupSize) {
     const avg = compileBatter(averageBatter(team), A);
     const h = halfInning(Array.from({length: lineupSize}, () => avg), 0);
-    return h.alive.reduce((a, b) => a + b, 0);
+    let mean = 0, square = 0;
+    for (let m = 1; m < h.end.length; m++) { mean += m * h.end[m]; square += m * m * h.end[m]; }
+    return {mean, variance: Math.max(0, square - mean * mean)};
+  }
+
+  // Standard normal CDF (Abramowitz & Stegun 26.2.17, absolute error < 7.5e-8).
+  function normalCdf(x) {
+    const k = 1 / (1 + 0.2316419 * Math.abs(x));
+    const d = 0.3989422804014327 * Math.exp(-x * x / 2);
+    const tail = d * k * (0.319381530 + k * (-0.356563782 + k * (1.781477937 + k * (-1.821255978 + k * 1.330274429))));
+    return x >= 0 ? 1 - tail : tail;
+  }
+  // P(elapsed < limit) for elapsed ~ Normal(mean, variance); a hard cut-off when there is no timing noise.
+  function onTime(limit, mean, variance) {
+    if (!(variance > 0)) return mean < limit ? 1 : 0;
+    return normalCdf((limit - mean) / Math.sqrt(variance));
   }
 
   // Exact expected value of one batting order under the clock.
+  // State per inning start: n = our PAs so far, lead = next batter; q = probability of that PA path ignoring
+  // the clock, w = probability that the path also played every inning so far. Elapsed time only grows, so
+  // P(inning k is played | path) = P(elapsed at its start < limit), which needs only n; w - q * that is the
+  // chance the game ended just before inning k with n team PAs.
   function evaluateCompiled(compiled, cfg) {
     const L = compiled.length;
     const innings = [];
     for (let b = 0; b < L; b++) innings.push(halfInning(compiled, b));
-    const t = cfg.minutesPerPa, c = cfg.changeoverMinutes;
-    const oppHalf = cfg.oppHalfPa * t + c;
+    const t = cfg.minutesPerPa, c = cfg.changeoverMinutes, limit = cfg.timeLimit;
+    const noise = cfg.timeNoise !== false;
+    const vPa = noise ? (cfg.paTimeCv * t) ** 2 : 0;
+    const vChange = noise ? (cfg.changeoverCv * c) ** 2 : 0;
+    // One opponent half-inning plus its change-over: its PA count is random as well.
+    const oppMean = cfg.oppHalfPa * t + c;
+    const oppVar = noise ? cfg.oppHalfPa * vPa + (cfg.oppHalfPaVar || 0) * t * t + vChange : 0;
     const weFirst = cfg.role !== '後攻';
+    const hardStop = cfg.rule === 'hardStop';
     const NMAX = MAX_PA_PER_INNING * cfg.maxInnings + 1;
-    let state = new Map([[0, 1]]); // key = n * L + lead -> probability; n = our PAs so far
+    const finalPa = new Float64Array(NMAX + 1);
+    const psi = new Float64Array(MAX_PA_PER_INNING + 1);
+    let state = new Map([[0, [1, 1]]]);
     let expRuns = 0, expInnings = 0;
     const paBySlot = new Float64Array(L), onBaseBySlot = new Float64Array(L);
     for (let k = 1; k <= cfg.maxInnings && state.size; k++) {
       const nextState = new Map();
-      for (const [key, p] of state) {
+      for (const [key, [q, w]] of state) {
         const n = Math.floor(key / L), lead = key % L;
-        const inningStart = n * t + (k - 1) * (oppHalf + c);
-        if (k > 1 && inningStart >= cfg.timeLimit) continue; // time is up: no new inning
-        // Minutes available to our half under a hard stop.
-        let ourStart = inningStart + (weFirst ? 0 : oppHalf);
-        let cap = MAX_PA_PER_INNING;
-        if (cfg.rule === 'hardStop') {
-          if (ourStart >= cfg.timeLimit) continue;
-          cap = Math.min(MAX_PA_PER_INNING, Math.ceil((cfg.timeLimit - ourStart) / t));
-        }
-        expInnings += p;
+        const startMean = n * t + (k - 1) * (oppMean + c);
+        const startVar = n * vPa + (k - 1) * (oppVar + vChange);
+        const phi = k === 1 ? 1 : onTime(limit, startMean, startVar); // no new inning once time is up
+        finalPa[n] += Math.max(0, w - q * phi);
+        if (q * phi < 1e-13) continue;
         const h = innings[lead];
-        for (let j = 0; j < cap; j++) {
-          if (h.alive[j] === 0) break;
-          expRuns += p * h.runs[j];
-          paBySlot[(lead + j) % L] += p * h.alive[j];
-          onBaseBySlot[(lead + j) % L] += p * h.onBase[j];
+        // Under a hard stop each of our PAs must also start in time; our half follows the opponent's when we bat second.
+        const ourMean = startMean + (weFirst ? 0 : oppMean);
+        const ourVar = startVar + (weFirst ? 0 : oppVar);
+        psi.fill(0);
+        let previous = phi;
+        for (let j = 0; j < MAX_PA_PER_INNING && h.alive[j] > 0; j++) {
+          psi[j] = hardStop ? Math.min(previous, onTime(limit, ourMean + j * t, ourVar + j * vPa)) : phi;
+          const played = q * psi[j];
+          if (j === 0) expInnings += played;
+          expRuns += played * h.runs[j];
+          paBySlot[(lead + j) % L] += played * h.alive[j];
+          onBaseBySlot[(lead + j) % L] += played * h.onBase[j];
+          if (hardStop) finalPa[Math.min(n + j, NMAX)] += h.alive[j] * Math.max(0, q * (previous - psi[j])); // stopped before PA j
+          previous = psi[j];
         }
         for (let m = 1; m <= MAX_PA_PER_INNING; m++) {
-          let pm = h.end[m];
+          const pm = h.end[m];
           if (!pm) continue;
-          if (m > cap) continue; // the clock stopped the game mid-inning
           const n2 = Math.min(n + m, NMAX - 1);
           const k2 = n2 * L + (lead + m) % L;
-          nextState.set(k2, (nextState.get(k2) || 0) + p * pm);
+          const completed = q * pm * psi[m - 1]; // every PA of this half was played
+          const cur = nextState.get(k2);
+          if (cur) { cur[0] += q * pm; cur[1] += completed; } else nextState.set(k2, [q * pm, completed]);
         }
-        // Under a hard stop, an inning cut off by the clock ends the game (mass dropped from nextState).
       }
       state = nextState;
     }
+    for (const [key, [, w]] of state) finalPa[Math.floor(key / L)] += w; // played the maximum number of innings
+    // Tail of the team-PA distribution gives each slot's chance of an n-th plate appearance.
+    const tail = new Float64Array(NMAX + 2);
+    for (let n = NMAX; n >= 0; n--) tail[n] = tail[n + 1] + finalPa[n];
+    const teamPaMean = finalPa.reduce((s, p, n) => s + p * n, 0);
+    const quantile = target => { let acc = 0; for (let n = 0; n <= NMAX; n++) { acc += finalPa[n]; if (acc >= target - 1e-12) return n; } return NMAX; };
+    const paAtLeast = Array.from({length: L}, (_, slot) => [1, 2, 3, 4].map(times => tail[Math.min(NMAX + 1, slot + 1 + (times - 1) * L)]));
     const onBaseShare = Array.from(paBySlot, (pa, i) => (pa > 0 ? onBaseBySlot[i] / pa : 0));
-    return {runs: expRuns, innings: expInnings, paBySlot: Array.from(paBySlot), onBaseShare};
+    return {
+      runs: expRuns, innings: expInnings, paBySlot: Array.from(paBySlot), onBaseShare, paAtLeast,
+      teamPa: {mean: teamPaMean, p10: quantile(0.1), median: quantile(0.5), p90: quantile(0.9), total: tail[0], distribution: Array.from(finalPa)}
+    };
   }
 
   function makeConfig(settings, team, lineupSize) {
     const cfg = {...DEFAULTS, ...settings};
     const A = {...ADVANCE, ...(settings && settings.advance)};
     cfg.advance = A;
-    cfg.oppHalfPa = averageHalfInningPa(team, A, lineupSize);
+    const opp = averageHalfInningPa(team, A, lineupSize);
+    cfg.oppHalfPa = opp.mean;
+    cfg.oppHalfPaVar = opp.variance;
     return cfg;
   }
 

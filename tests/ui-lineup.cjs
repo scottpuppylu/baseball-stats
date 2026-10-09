@@ -50,7 +50,7 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
         switchMainTab('tabLineup');
         const r=calculateRecommendedLineup(getFullAgg().players);
         return {n:r.items.length,target:r.targetSize,names:r.items.map(i=>i.player.name),pitcher:r.items.some(i=>i.posInfo.posKey==='P'),
-          runs:r.model.runs,legacy:r.model.legacyRuns,book:r.model.bookRuns,random:r.model.randomRuns,innings:r.model.detail.innings,pa:r.model.detail.paBySlot,
+          runs:r.model.runs,legacy:r.model.legacyRuns,book:r.model.bookRuns,random:r.model.randomRuns,innings:r.model.detail.innings,pa:r.model.detail.paBySlot,third:r.model.detail.paAtLeast.map(x=>x[2]),
           rows:document.querySelectorAll('#recommendedLineupBody tr').length,summary:document.getElementById('lineupModelSummary').textContent,
           roles:r.items.map(i=>i.role),reasons:r.items.map(i=>i.reason)};
       });
@@ -63,6 +63,11 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       for(let i=1;i<rec.pa.length;i++) assert.ok(rec.pa[i]<=rec.pa[i-1]+1e-9,'plate appearances fall down the order');
       assert.ok(rec.summary.includes('分／場') && rec.summary.includes('模型如何計算'));
       assert.ok(rec.roles.every(r=>/每場 [\d.]+ 打席/.test(r)) && rec.reasons.every(r=>r.includes('校正後上壘率')));
+      // Chance of a third plate appearance: shown for every slot and falling down the order.
+      assert.ok(rec.roles.every(r=>/打到第 3 次 \d+%/.test(r)));
+      for(let i=1;i<rec.third.length;i++) assert.ok(rec.third[i]<=rec.third[i-1]+1e-9);
+      assert.ok(rec.third[0]>0.5 && rec.third[0]-rec.third[rec.third.length-1]>0.3);
+      assert.ok(rec.summary.includes('打到第 3 次的機率') && /全隊每場約 \d+ 打席/.test(rec.summary));
       // Changing the game length re-renders with fewer innings; the setting is stored only as a preference.
       const shorter=await page.evaluate(()=>{
         const input=document.getElementById('lineupSimTime');input.value='60';input.dispatchEvent(new Event('change'));

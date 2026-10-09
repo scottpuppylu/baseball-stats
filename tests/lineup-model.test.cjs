@@ -89,8 +89,8 @@ test('calibration reproduces the historical number of offensive innings', () => 
   const cfg = M.makeConfig({minutesPerPa: t}, team, 10);
   const avg = M.averageBatter(team);
   const innings = M.evaluateOrder(Array(10).fill(avg), Array.from({length: 10}, (_, i) => i), cfg).innings;
-  // Whole plate appearances make expected innings a step function of pace, so match within 0.05.
-  assert.ok(Math.abs(innings - 3.75) < 0.05, String(innings));
+  // Timing noise makes expected innings a smooth function of pace, so calibration hits the target closely.
+  assert.ok(Math.abs(innings - 3.75) < 0.005, String(innings));
 });
 
 test('the optimiser matches an exhaustive search on six hitters and beats The Book and random orders', () => {
@@ -125,4 +125,54 @@ test('locked slots stay fixed, the rest is optimised exhaustively-correct, and l
   const sens = M.slotSensitivity(models, locked.order, cfg, locks);
   assert.ok(sens[1].locked && sens[5].locked && !sens[0].locked);
   assert.ok([0, 2, 3, 4].every(i => sens[i].partnerSlot !== 2 && sens[i].partnerSlot !== 6));
+});
+
+test('timing noise turns the clock into a soft cut-off', () => {
+  const k = {name: 'K', probs: {bb: 0, k: 1, s1: 0, s2: 0, s3: 0, hr: 0, go: 0, fo: 0, po: 0}};
+  const lineup = Array(10).fill(k), order = lineup.map((m, i) => i);
+  // Every half-inning takes 3 PAs, so inning 4 would start at minute 24 against a 24.5-minute limit.
+  const base = {...M.DEFAULTS, minutesPerPa: 1, changeoverMinutes: 1, timeLimit: 24.5, advance: M.ADVANCE, oppHalfPa: 3, oppHalfPaVar: 0};
+  const hard = M.evaluateOrder(lineup, order, {...base, timeNoise: false});
+  const soft = M.evaluateOrder(lineup, order, base);
+  assert.ok(Math.abs(hard.innings - 4) < 1e-9);
+  assert.ok(soft.innings > 3.5 && soft.innings < 3.8, String(soft.innings));
+});
+
+test('expected innings fall smoothly with pace under timing noise, without the flat steps of a hard cut-off', () => {
+  const avg = M.averageBatter(team);
+  const models = Array(10).fill(avg), order = models.map((m, i) => i);
+  const curve = noise => Array.from({length: 101}, (_, i) => M.evaluateOrder(models, order, M.makeConfig({minutesPerPa: 1.5 + i * 0.01, timeNoise: noise}, team, 10)).innings);
+  const steps = values => values.slice(1).map((v, i) => values[i] - v);
+  const hard = steps(curve(false)), soft = steps(curve(true));
+  assert.ok(hard.some(d => Math.abs(d) < 1e-12), 'a hard cut-off leaves flat stretches');
+  assert.ok(soft.every(d => d > 0), 'with noise every slower pace loses some innings');
+  assert.ok(Math.max(...soft) < Math.max(...hard) / 2, 'and no single step is a cliff');
+});
+
+test('the team-PA distribution is proper and agrees with the expected PAs of every slot', () => {
+  const models = [strong, weak, strong, weak, strong, weak, strong, weak, strong, weak].map(p => M.batterModel(p, team));
+  const order = models.map((m, i) => i);
+  for (const rule of ['noNewInning', 'hardStop']) for (const role of ['先攻', '後攻']) for (const timeNoise of [true, false]) {
+    const r = M.evaluateOrder(models, order, M.makeConfig({minutesPerPa: 1.9, rule, role, timeNoise}, team, 10));
+    const label = `${rule}/${role}/${timeNoise}`;
+    assert.ok(Math.abs(r.teamPa.total - 1) < 1e-9, label);
+    assert.ok(Math.abs(r.teamPa.mean - r.paBySlot.reduce((a, b) => a + b, 0)) < 1e-8, label);
+    assert.ok(r.teamPa.p10 <= r.teamPa.median && r.teamPa.median <= r.teamPa.p90, label);
+    // Each slot's expected PAs equal the sum of its chances of a 1st, 2nd, 3rd ... plate appearance.
+    const tail = r.teamPa.distribution.map((_, n) => r.teamPa.distribution.slice(n).reduce((a, b) => a + b, 0));
+    r.paBySlot.forEach((pa, slot) => {
+      let expected = 0;
+      for (let times = 1; slot + 1 + (times - 1) * 10 < tail.length; times++) expected += tail[slot + 1 + (times - 1) * 10];
+      assert.ok(Math.abs(expected - pa) < 1e-8, `${label} slot ${slot + 1}`);
+    });
+  }
+});
+
+test('the chance of an n-th plate appearance falls down the order and with n', () => {
+  const avg = M.averageBatter(team);
+  const r = M.evaluateOrder(Array(10).fill(avg), Array.from({length: 10}, (_, i) => i), M.makeConfig({minutesPerPa: 1.9}, team, 10));
+  assert.ok(Math.abs(r.paAtLeast[0][0] - 1) < 1e-12, 'the leadoff hitter always bats');
+  for (let slot = 0; slot < 10; slot++) for (let n = 1; n < 4; n++) assert.ok(r.paAtLeast[slot][n] <= r.paAtLeast[slot][n - 1] + 1e-12);
+  for (let slot = 1; slot < 10; slot++) for (let n = 0; n < 4; n++) assert.ok(r.paAtLeast[slot][n] <= r.paAtLeast[slot - 1][n] + 1e-12);
+  assert.ok(r.paAtLeast[0][2] - r.paAtLeast[9][2] > 0.4, 'a third trip to the plate is far likelier at the top of a timed order');
 });
