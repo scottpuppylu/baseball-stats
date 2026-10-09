@@ -2856,6 +2856,9 @@
 
 
     let allLogs = window.allLogs = [];
+    // Several paths reassign only the local binding; keep window.allGames / window.allLogs live so stats never read a stale copy.
+    Object.defineProperty(window, 'allGames', { get: () => allGames, set: value => { allGames = value; }, configurable: true });
+    Object.defineProperty(window, 'allLogs', { get: () => allLogs, set: value => { allLogs = value; }, configurable: true });
 
     // 全域 Toast 輕量通知提示組件 (解決點擊無反應與回饋缺失問題)
     function showToast(msg, type = 'info') {
@@ -10685,5 +10688,6 @@ function renderCustomChart(agg) {
   
     </script>
   <script src="ui-comfort.js?v=20261004-header-brand"></script>
+  <script src="team-insights.js?v=20261010-insights"></script>
 </body>
 </html>

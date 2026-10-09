@@ -10,7 +10,7 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
 // Digests from 903cf977 before the UI edit: protect the entire business script
 // and every existing inline event handler, rather than sample calculations.
-test('business script outside the authorized spray archive and Taiwan date changes remains byte-identical to the approved baseline', () => {
+test('business script outside the authorized spray archive, Taiwan date and live data binding changes remains byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1]
     .replace('    // Archived estimated coordinates remain stored; fielding locations and stats stay intact.\n    function isSprayChartArchived(game) {\n      return game?.sprayChartArchive?.excluded === true;\n    }\n\n', '')
     .replace(/^ +if \(isSprayChartArchived\((?:g|game)\)\) return;\n/gm, '')
@@ -18,7 +18,8 @@ test('business script outside the authorized spray archive and Taiwan date chang
     .replace("${isSprayChartArchived(game) ? '推估座標已封存，不納入噴流圖；守位與成績保留' : `共 ${sprayPointsHtml.length} 顆擊球`}", '共 ${sprayPointsHtml.length} 顆擊球')
     .replace("    // Default dates follow Taiwan time; toISOString() is UTC and lags a day before 08:00.\n    function getTaipeiDateString() {\n      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());\n    }\n\n", '')
     .replace('_${getTaipeiDateString()}.csv', '_${new Date().toISOString().slice(0,10)}.csv')
-    .replaceAll('getTaipeiDateString()', 'new Date().toISOString().slice(0, 10)');
+    .replaceAll('getTaipeiDateString()', 'new Date().toISOString().slice(0, 10)')
+    .replace("    // Several paths reassign only the local binding; keep window.allGames / window.allLogs live so stats never read a stale copy.\n    Object.defineProperty(window, 'allGames', { get: () => allGames, set: value => { allGames = value; }, configurable: true });\n    Object.defineProperty(window, 'allLogs', { get: () => allLogs, set: value => { allLogs = value; }, configurable: true });\n", '');
   assert.equal(hash(script), '6fb7e6ffe46cd4c480889a2a0d88025f0f32810dd4226a31b5b5ad157f5832a8');
 });
 test('all original inline action handlers remain identical and in order', () => {
@@ -37,6 +38,12 @@ test('all 282 original static and template DOM identifiers remain intact', () =>
   const ids = [...html.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]).filter(id=>!added.has(id));
   assert.equal(ids.length,282);
   assert.equal(hash(ids.join('\n')), 'e255c808cc91b83a7b850fe954e4fd5c7073db4286b42db1699d70c4b1da237d');
+});
+test('insight script parses, only reads data, and never writes or calls the network', () => {
+  const script = fs.readFileSync(path.join(root, 'team-insights.js'), 'utf8');
+  new vm.Script(script);
+  assert.doesNotMatch(script, /\b(?:fetch|localStorage|XMLHttpRequest|GITHUB_TOKEN|commit\w*ToGitHub)\b/);
+  assert.doesNotMatch(script, /\b(?:allLogs|allGames|activeGame)\s*=(?!=)/);
 });
 test('presentation script parses and does not directly access persistent data or network', () => {
   const script = fs.readFileSync(path.join(root, 'ui-comfort.js'), 'utf8');
