@@ -54,11 +54,11 @@
   dateControls.addEventListener('click', () => queueMicrotask(updateDateLabel));
   updateDateLabel();
   const pages = {
-    Overview: ['全隊總覽', '掌握全隊表現、查看日誌與補登成績。'],
-    Profile: ['球員檔案', '從個人指標、擊球分布與診斷了解球員。'],
-    Leaderboard: ['數據排行榜', '選擇指標與打席門檻，比較隊內表現。'],
-    Analytics: ['數據分析', '透過象限、自訂圖表與落點探索球隊數據。'],
-    Compare: ['雙人比較', '並列比較完整指標、能力與擊球方向。'],
+    Overview: ['全隊總覽', '全隊成績、比賽日誌與補登成績。'],
+    Profile: ['球員檔案', '個人指標、逐場成績、擊球分布與診斷。'],
+    Leaderboard: ['排行榜', '選擇指標與打席門檻，比較隊內表現。'],
+    Analytics: ['數據分析', '象限圖、自訂圖表、全隊逐場近況與擊球落點。'],
+    Compare: ['雙人比較', '兩位球員並列比較指標、逐場近況與擊球方向。'],
     Lineup: ['打線安排', '確認出席與守位，推薦或自訂完整打線。'],
     Scorebook: ['比賽場記', '即時記分、換人換投、賽事覆盤與落點分析。'],
     Pitching: ['投手分析', '查看投球事件、出局結構與隊內投手指標。'],
@@ -71,7 +71,7 @@
   const bottom = document.createElement('nav');
   bottom.className = 'ui-mobile-nav';
   bottom.setAttribute('aria-label', '手機常用功能');
-  const shortcuts = { Overview: '總覽', Profile: '球員', Lineup: '排棒', Scorebook: '場記' };
+  const shortcuts = { Overview: '總覽', Profile: '球員', Lineup: '打線', Scorebook: '場記' };
   for (const [key, label] of Object.entries(shortcuts)) {
     const button = document.createElement('button');
     button.type = 'button';

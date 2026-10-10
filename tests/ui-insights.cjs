@@ -122,6 +122,59 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       assert.ok(h2h.same,'same player twice asks for two players');
       assert.ok(!h2h.overflow,'compare page must not overflow');
       await page.screenshot({path:path.join(output,`${width}-CompareGameLog.png`)});
+      // Team game log and player form board on the analytics page.
+      const team=await page.evaluate(()=>{
+        switchMainTab('tabAnalytics');
+        renderAll();
+        const section=document.getElementById('insightTeamGameLogSection');
+        const agg=getAnalysisAgg();
+        const names=new Set(agg.players.map(p=>p.name));
+        const summary=t=>/總數據|彙總|總計/.test(String(t||''));
+        const logs=getFilteredLogs().filter(l=>names.has(l.name)&&!summary(l.tag));
+        const t=logs.reduce((s,l)=>{for(const k of ['pa','ab','h','h2','h3','hr','bb','sf'])s[k]+=Number(l[k])||0;return s;},{pa:0,ab:0,h:0,h2:0,h3:0,hr:0,bb:0,sf:0});
+        const tb=t.h+t.h2+2*t.h3+3*t.hr;
+        const ops=(t.h+t.bb)/(t.ab+t.bb+t.sf)+tb/t.ab;
+        const cells=[...section.querySelectorAll('[data-team-log] tbody tr')].map(tr=>tr.querySelectorAll('td')[5].textContent.split('-').map(Number));
+        const games=teamInsights.teamGames(names);
+        const scored=games.filter(g=>g.game&&g.game.finalScore&&(g.game.finalScore.us||0)+(g.game.finalScore.opp||0)>0);
+        const wins=scored.filter(g=>g.game.finalScore.us>g.game.finalScore.opp).length;
+        const board=[...section.querySelectorAll('[data-form-board] tbody tr')].map(tr=>tr.querySelector('[data-insight-player]').dataset.insightPlayer);
+        const expectedBoard=agg.players.filter(p=>teamInsights.playerGames(p.name).some(g=>!g.summary)).length;
+        const order=teamInsights.formBoard(agg);
+        const sorted=order.every((p,i)=>i===0||order[i-1].comparable>p.comparable||(order[i-1].comparable===p.comparable&&order[i-1].diff>=p.diff));
+        return {rows:cells.length,keys:new Set(logs.filter(l=>Number(l.pa)>0).map(l=>l.gameId||(String(l.id).match(/^log_(?:game|auto)_(.+)_[^_]+$/)||[])[1]||`${l.date}|${l.tag||''}`)).size,
+          h:cells.reduce((s,c)=>s+c[0],0),ab:cells.reduce((s,c)=>s+c[1],0),t,
+          seasonOps:section.querySelector('[data-team-season]').textContent.includes(`OPS ${ops.toFixed(3).replace(/^0\./,'.')}`),
+          record:scored.length?section.querySelector('[data-team-season]').textContent.includes(`${wins} 勝`):!section.querySelector('[data-team-season]').textContent.includes('戰績'),
+          noFakeTies:![...section.querySelectorAll('[data-team-log] tbody tr')].some(tr=>tr.textContent.includes('0:0')),
+          board:board.length,expectedBoard,sorted,first:board[0],
+          after:section.previousElementSibling===document.querySelector('#panelAnalytics > section'),
+          overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};
+      });
+      assert.equal(team.rows,team.keys,'one team row per single game');
+      assert.deepEqual([team.h,team.ab],[team.t.h,team.t.ab],'team H-AB rows add up to the period totals');
+      assert.ok(team.seasonOps,'team period OPS matches an independent calculation');
+      assert.ok(team.record,'record shown only from recorded scores');
+      assert.ok(team.noFakeTies,'unrecorded 0:0 finals are not shown as ties');
+      assert.equal(team.board,team.expectedBoard,'form board lists every player with a single game');
+      assert.ok(team.sorted,'form board sorted: comparable first, biggest rise first');
+      assert.ok(team.after,'section sits right after the quadrant and custom charts');
+      assert.ok(!team.overflow,'analytics page must not overflow');
+      await page.locator('#insightTeamGameLogSection').scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(output,`${width}-AnalyticsGameLog.png`)});
+      // A name opens that player's profile and game log.
+      await page.locator(`#insightTeamGameLogSection [data-insight-player="${team.first}"]`).click();
+      assert.ok(await page.locator('#panelProfile').isVisible(),'name opens the profile');
+      assert.match(await page.locator('#insightGameLogSection h3').textContent(),new RegExp(team.first));
+      // The "exclude 簡承均" setting applies here like the rest of the analytics page.
+      const excluded=await page.evaluate(()=>{
+        if(includeChien) toggleChienFilter();
+        switchMainTab('tabAnalytics');renderAll();
+        const names=[...document.querySelectorAll('#insightTeamGameLogSection [data-insight-player]')].map(b=>b.dataset.insightPlayer);
+        toggleChienFilter();renderAll();
+        return {without:!names.includes('簡承均'),back:[...document.querySelectorAll('#insightTeamGameLogSection [data-insight-player]')].some(b=>b.dataset.insightPlayer==='簡承均')};
+      });
+      assert.deepEqual(excluded,{without:true,back:true},'form board follows the 簡承均 setting');
       await page.evaluate(()=>{switchMainTab('tabScorebook');switchScorebookSubTab('review');renderSelectedGameReview('game_20260920_4922');});
       await page.locator('[data-insight-image]').click();
       await page.waitForSelector('#insightImageModal img');

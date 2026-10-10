@@ -294,6 +294,175 @@
       <p class="text-[11px] text-slate-500">依目前日期範圍；與個人頁「逐場成績與近況」同一套分場與算法。▲ 為同場單場 OPS 較高者；「近況較熱」為近 ${RECENT_GAMES} 場 OPS 相差 .050 以上的一方。年度彙總不列入近況、走勢與同場比較。</p>`;
   }
 
+  // ---------- 2c. Team game log and player form board (analytics page) ----------
+  // One combined batting line for a set of logs (team totals), with the site's own formulas.
+  const teamStats = logs => statsFor(logs.map(l => ({...l, name: '__team__'})));
+
+  function teamGames(names) {
+    const groups = new Map();
+    for (const log of getFilteredLogs()) {
+      if (!names.has(log.name) || isSummaryTag(log.tag)) continue;
+      const key = gameIdOf(log) || `${log.date}|${log.tag || ''}`;
+      if (!groups.has(key)) groups.set(key, {key, date: log.date, tag: log.tag, logs: []});
+      groups.get(key).logs.push(log);
+    }
+    const games = [...groups.values()]
+      .filter(g => g.logs.some(l => Number(l.pa) > 0))
+      .sort((a, b) => (a.date === b.date ? a.key.localeCompare(b.key) : a.date < b.date ? -1 : 1));
+    const running = [];
+    return games.map(game => {
+      running.push(...game.logs);
+      const scored = (typeof allGames !== 'undefined' ? allGames : []).find(g => g.id === game.key);
+      return {...game, game: scored || null, stats: teamStats(game.logs), toDate: teamStats(running)};
+    });
+  }
+
+  // Per-game team OPS bars with the cumulative OPS line on top.
+  function teamTrendSvg(games) {
+    if (games.length < 2) return '';
+    const max = Math.max(1, ...games.map(g => Math.max(g.stats.ops, g.toDate.ops)));
+    const W = 300, H = 80, step = W / games.length, bar = Math.max(4, step * 0.6);
+    const y = v => (H - 4 - (v / max) * (H - 10)).toFixed(1);
+    const cx = i => (i * step + step / 2).toFixed(1);
+    return `<svg viewBox="0 0 ${W} ${H}" class="w-full h-24" role="img" aria-label="全隊單場與累計 OPS">
+      ${games.map((g, i) => `<rect x="${(i * step + (step - bar) / 2).toFixed(1)}" y="${y(g.stats.ops)}" width="${bar.toFixed(1)}" height="${(H - 4 - y(g.stats.ops)).toFixed(1)}" rx="2" fill="#334155"><title>${esc(g.date)} 單場 OPS ${rate(g.stats.ops)}</title></rect>`).join('')}
+      <polyline points="${games.map((g, i) => `${cx(i)},${y(g.toDate.ops)}`).join(' ')}" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${games.map((g, i) => `<circle cx="${cx(i)}" cy="${y(g.toDate.ops)}" r="2.5" fill="#34d399"/>`).join('')}
+    </svg>`;
+  }
+
+  // Players' last five games against their own period, hottest first.
+  function formBoard(agg) {
+    return agg.players.map(p => {
+      const games = playerGames(p.name);
+      const f = games.length ? form(games) : null;
+      if (!f || !f.recent) return null;
+      return {name: p.name, games: f.played.length, recentCount: f.recentCount, recent: f.recent, season: f.season,
+        diff: f.recent.ops - f.season.ops, comparable: f.played.length > RECENT_GAMES};
+    }).filter(Boolean).sort((a, b) => (b.comparable - a.comparable) || (b.diff - a.diff) || (b.recent.ops - a.recent.ops));
+  }
+
+  function renderTeamGameLog(agg) {
+    const panel = document.getElementById('panelAnalytics');
+    if (!panel) return;
+    let section = document.getElementById('insightTeamGameLogSection');
+    if (!section) {
+      section = document.createElement('section');
+      section.id = 'insightTeamGameLogSection';
+      section.className = 'bg-slate-900/80 border border-emerald-900/50 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 backdrop-blur-sm';
+      const first = panel.querySelector(':scope > section');
+      if (first) first.after(section); else panel.appendChild(section);
+      // Names open the player's profile; delegated so no inline handlers are added.
+      section.addEventListener('click', event => {
+        const target = event.target.closest('[data-insight-player]');
+        if (!target) return;
+        selectedPlayerName = target.dataset.insightPlayer;
+        switchMainTab('tabProfile');
+      });
+    }
+    const head = `<div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
+        <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">TEAM GAME LOG</span>
+        <h3 class="text-base sm:text-lg font-black text-emerald-300 tracking-tight">逐場成績與近況</h3>
+        <span class="text-xs text-slate-400">全隊與每位球員近 ${RECENT_GAMES} 場走勢</span>
+      </div>`;
+    const games = teamGames(new Set(agg.players.map(p => p.name)));
+    if (!games.length) {
+      section.innerHTML = `${head}<p class="text-xs text-slate-500">此日期範圍內沒有逐場紀錄。</p>`;
+      return;
+    }
+    const season = games[games.length - 1].toDate;
+    const recentGames = games.slice(-RECENT_GAMES);
+    const recent = teamStats(recentGames.flatMap(g => g.logs));
+    const diff = recent.ops - season.ops;
+    const trend = games.length <= RECENT_GAMES ? '<span class="text-slate-400">場數不足以比較近況</span>'
+      : Math.abs(diff) < 0.05 ? '<span class="text-slate-300">與本期相近</span>'
+        : diff > 0 ? `<span class="text-emerald-400">▲ 近況較佳（OPS +${rate(diff)}）</span>`
+          : `<span class="text-rose-400">▼ 近況下滑（OPS −${rate(-diff)}）</span>`;
+    // A 0:0 final means no score was kept for that game (not a real softball result).
+    const hasScore = g => !!(g.game && g.game.finalScore && ((g.game.finalScore.us || 0) + (g.game.finalScore.opp || 0) > 0));
+    const scored = games.filter(hasScore);
+    const record = scored.reduce((r, g) => {
+      const s = g.game.finalScore;
+      if (s.us > s.opp) r.w++; else if (s.us < s.opp) r.l++; else r.t++;
+      r.rs += s.us || 0; r.ra += s.opp || 0;
+      return r;
+    }, {w: 0, l: 0, t: 0, rs: 0, ra: 0});
+    const result = g => {
+      if (!hasScore(g)) return '<span class="text-slate-600">—</span>';
+      const s = g.game.finalScore;
+      const [label, cls] = s.us > s.opp ? ['勝', 'text-emerald-300'] : s.us < s.opp ? ['敗', 'text-rose-300'] : ['和', 'text-amber-300'];
+      return `<span class="${cls} font-bold">${label}</span> <span class="font-mono">${s.us}:${s.opp}</span>`;
+    };
+    const rows = games.slice().reverse().map(g => `
+      <tr class="hover:bg-slate-800/50">
+        <td class="p-2 font-mono whitespace-nowrap">${esc(g.date)}</td>
+        <td class="p-2 text-slate-300 whitespace-nowrap">${esc(gameLabel(g.tag))}</td>
+        <td class="p-2 text-center whitespace-nowrap">${result(g)}</td>
+        <td class="p-2 text-center font-mono">${new Set(g.logs.filter(l => Number(l.pa) > 0).map(l => l.name)).size}</td>
+        <td class="p-2 text-center font-mono">${g.stats.pa}</td>
+        <td class="p-2 text-center font-mono font-bold text-white">${g.stats.h}-${g.stats.ab}</td>
+        <td class="p-2 text-center font-mono text-amber-300">${g.stats.h2 + g.stats.h3 + g.stats.hr}</td>
+        <td class="p-2 text-center font-mono">${g.stats.bb}</td>
+        <td class="p-2 text-center font-mono text-rose-300">${g.stats.k}</td>
+        <td class="p-2 text-center font-mono">${line(g.stats)}</td>
+        <td class="p-2 text-center font-mono text-sky-300">${rate(g.stats.ops)}</td>
+        <td class="p-2 text-center font-mono text-emerald-300">${rate(g.toDate.ops)}</td>
+      </tr>`).join('');
+    const board = formBoard(agg);
+    const boardRows = board.map(p => {
+      const tag = !p.comparable ? '<span class="text-slate-500">場數不足</span>'
+        : p.diff >= 0.05 ? `<span class="text-emerald-300 font-bold">▲ 手感火熱</span>`
+          : p.diff <= -0.05 ? `<span class="text-rose-300 font-bold">▼ 手感下滑</span>` : '<span class="text-slate-300">持平</span>';
+      return `<tr class="hover:bg-slate-800/50" data-form-row>
+        <td class="p-2 whitespace-nowrap"><button type="button" data-insight-player="${esc(p.name)}" class="font-bold text-sky-300 hover:text-sky-200 underline-offset-2 hover:underline">${esc(p.name)}</button>${p.recent.pa < 10 ? ' <span class="text-[10px] text-amber-300/80">小樣本</span>' : ''}</td>
+        <td class="p-2 text-center font-mono">${p.recentCount}／${p.games}</td>
+        <td class="p-2 text-center font-mono">${p.recent.pa}</td>
+        <td class="p-2 text-center font-mono">${line(p.recent)}</td>
+        <td class="p-2 text-center font-mono text-white font-bold">${rate(p.recent.ops)}</td>
+        <td class="p-2 text-center font-mono text-slate-400">${rate(p.season.ops)}</td>
+        <td class="p-2 text-center font-mono ${p.comparable ? (p.diff >= 0 ? 'text-emerald-300' : 'text-rose-300') : 'text-slate-500'}">${p.comparable ? `${p.diff >= 0 ? '+' : '−'}${rate(Math.abs(p.diff))}` : '—'}</td>
+        <td class="p-2 text-center whitespace-nowrap">${tag}</td>
+      </tr>`;
+    }).join('');
+    section.innerHTML = `${head}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3" data-team-recent>
+          <div class="text-[11px] text-slate-400">全隊近 ${recentGames.length} 場（${recent.pa} 打席）AVG / OBP / SLG</div>
+          <div class="font-mono font-black text-white text-lg">${line(recent)}</div>
+          <div class="text-xs mt-1">OPS ${rate(recent.ops)}　${trend}</div>
+        </div>
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3" data-team-season>
+          <div class="text-[11px] text-slate-400">全隊本期 ${games.length} 場（${season.pa} 打席）AVG / OBP / SLG</div>
+          <div class="font-mono font-black text-slate-200 text-lg">${line(season)}</div>
+          <div class="text-xs mt-1 text-slate-400">OPS ${rate(season.ops)}${scored.length ? `　場記戰績 ${record.w} 勝 ${record.l} 敗${record.t ? ` ${record.t} 和` : ''}・得失分 ${record.rs}:${record.ra}` : ''}</div>
+        </div>
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3">
+          <div class="text-[11px] text-slate-400 flex flex-wrap gap-x-3">由舊到新 <span class="text-slate-300">▮ 單場 OPS</span><span class="text-emerald-300">● 累計 OPS</span></div>
+          ${teamTrendSvg(games) || '<div class="text-xs text-slate-500 mt-2">至少兩場才有走勢</div>'}
+        </div>
+      </div>
+      <div class="overflow-x-auto rounded-xl border border-slate-800" tabindex="0">
+        <table class="w-full text-xs text-slate-200 min-w-[860px]" data-team-log>
+          <thead class="bg-slate-950 text-slate-400">
+            <tr><th class="p-2 text-left">日期</th><th class="p-2 text-left">賽事</th><th class="p-2">比分</th><th class="p-2">上場</th><th class="p-2">打席</th><th class="p-2">安打-打數</th><th class="p-2">長打</th><th class="p-2">保送</th><th class="p-2">三振</th><th class="p-2">AVG / OBP / SLG</th><th class="p-2">單場 OPS</th><th class="p-2">累計 OPS</th></tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/80">${rows}</tbody>
+        </table>
+      </div>
+      <div class="space-y-2">
+        <h4 class="text-sm font-bold text-slate-200">球員近況榜 <span class="text-xs text-slate-400 font-normal">近 ${RECENT_GAMES} 場 OPS 對比本期，點姓名看個人逐場成績</span></h4>
+        <div class="overflow-x-auto rounded-xl border border-slate-800" tabindex="0">
+          <table class="w-full text-xs text-slate-200 min-w-[680px]" data-form-board>
+            <thead class="bg-slate-950 text-slate-400">
+              <tr><th class="p-2 text-left">球員</th><th class="p-2">近況場數／本期</th><th class="p-2">近況打席</th><th class="p-2">近況 AVG / OBP / SLG</th><th class="p-2">近況 OPS</th><th class="p-2">本期 OPS</th><th class="p-2">差距</th><th class="p-2">狀態</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/80">${boardRows}</tbody>
+          </table>
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-500">依目前日期範圍與「納入常模」設定，與個人頁「逐場成績與近況」同一套分場與算法；年度彙總不列入逐場與近況，但會算進球員的「本期 OPS」。比分只有記了最終比分的場記賽事才有（0:0 視為未記比分）。本期不足 ${RECENT_GAMES + 1} 場時，近況等於全部單場，不判斷升降；近況打席未滿 10 標示小樣本。</p>`;
+  }
+
   // ---------- 3. Post-game image ----------
   function gameSummary(game) {
     const ourRuns = {}, ourHits = {}, oppRuns = {};
@@ -520,6 +689,7 @@
     renderCompareGameLog(agg);
   });
   after('renderSelectedGameReview', addImageButton);
+  after('renderLuckRegressionChart', renderTeamGameLog);
 
   // The first render happened before this file loaded.
   try {
@@ -527,8 +697,9 @@
     renderGameLog(selectedPlayerName);
     renderCompareNote(getFullAgg());
     renderCompareGameLog(getFullAgg());
+    renderTeamGameLog(getAnalysisAgg());
     if (selectedReviewGameId) addImageButton(selectedReviewGameId);
   } catch (error) { console.error('[team-insights] init', error); }
 
-  window.teamInsights = {SAMPLE_PA, RECENT_GAMES, playerGames, form, gameSummary, drawGameImage, openImageModal};
+  window.teamInsights = {SAMPLE_PA, RECENT_GAMES, playerGames, form, teamGames, formBoard, gameSummary, drawGameImage, openImageModal};
 })();

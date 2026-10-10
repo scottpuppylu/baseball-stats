@@ -44,7 +44,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261010.0500</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261010.0524</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -67,39 +67,39 @@
         <nav id="mainNavigation" aria-label="主要功能" class="flex items-center space-x-1 overflow-x-auto no-scrollbar shrink-0 bg-slate-950/60 p-1 rounded-xl border border-slate-800/80 max-w-full">
           <button onclick="switchMainTab('tabOverview')" id="btnTabOverview" class="tab-active text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            <span>全隊戰況與日誌</span>
+            <span>全隊總覽</span>
           </button>
           <button onclick="switchMainTab('tabProfile')" id="btnTabProfile" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-            <span>球員深度檔案與診斷</span>
+            <span>球員檔案</span>
           </button>
           <button onclick="switchMainTab('tabLeaderboard')" id="btnTabLeaderboard" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-            <span>數據排行榜</span>
+            <span>排行榜</span>
           </button>
           <button onclick="switchMainTab('tabAnalytics')" id="btnTabAnalytics" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path></svg>
-            <span>賽伯計量實驗室</span>
+            <span>數據分析</span>
           </button>
           <button onclick="switchMainTab('tabCompare')" id="btnTabCompare" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-pink-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-            <span>雙雄攻守對決</span>
+            <span>雙人比較</span>
           </button>
           <button onclick="switchMainTab('tabLineup')" id="btnTabLineup" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-            <span>棒次分析與推薦</span>
+            <span>打線安排</span>
           </button>
           <button onclick="switchMainTab('tabScorebook')" id="btnTabScorebook" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            <span>數位圖像場記與落點</span>
+            <span>比賽場記</span>
           </button>
           <button onclick="switchMainTab('tabPitching')" id="btnTabPitching" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path stroke-linecap="round" stroke-width="2" d="M12 3a9 9 0 019 9m-9-9a9 9 0 00-9 9m9-9v18"></path></svg>
-            <span>慢壘投手進階分析</span>
+            <span>投手分析</span>
           </button>
           <button onclick="switchMainTab('tabGlossary')" id="btnTabGlossary" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0">
             <svg class="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-            <span>名詞圖書館</span>
+            <span>指標說明</span>
           </button>
         </nav>
 
@@ -10776,8 +10776,8 @@ function renderCustomChart(agg) {
     loadLogsFromGitHub();
   
     </script>
-  <script src="ui-comfort.js?v=20261004-header-brand"></script>
-  <script src="team-insights.js?v=20261010-h2h"></script>
+  <script src="ui-comfort.js?v=20261010-names"></script>
+  <script src="team-insights.js?v=20261010-teamlog"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
   <script src="lineup-recommender.js?v=20261010-fixes"></script>
 </body>

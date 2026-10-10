@@ -30,6 +30,19 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
     await page.goto(url);
     await page.waitForFunction(()=>allLogs.some(l=>String(l.id).startsWith('log_game_')));
 
+    // Every sidebar label is the same plain name as the page title it opens.
+    const names=[];
+    for (const key of ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary']) {
+      const label=(await page.locator(`#btnTab${key} span`).textContent()).trim();
+      await page.evaluate(k=>switchMainTab(`tab${k}`),key);
+      // The heading follows the tab asynchronously; wait briefly, then compare whatever it shows.
+      await page.waitForFunction(l=>document.getElementById('uiPageTitle').textContent.trim()===l,label,{timeout:2000}).catch(()=>{});
+      names.push([label,(await page.locator('#uiPageTitle').textContent()).trim()]);
+    }
+    for (const [label,title] of names) assert.equal(label,title,`sidebar "${label}" matches page title "${title}"`);
+    assert.ok(names.every(([label])=>label.length<=5),'tab names stay short');
+    await page.evaluate(()=>switchMainTab('tabOverview'));
+
     // Expected stats come from the tracked sample only, so they sit near the tracked AVG instead of far below it.
     const stats=await page.evaluate(()=>{
       document.getElementById('filterStartDate').value='';document.getElementById('filterEndDate').value='';renderAll();
