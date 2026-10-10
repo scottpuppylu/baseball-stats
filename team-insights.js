@@ -7,6 +7,10 @@
   const RECENT_GAMES = 5;
   const TEAM_NAME = '淡江航太系壘';
   const FONT = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+  // Team badge for the post-game image; loaded once, and the image is drawn without it if it fails.
+  const LOGO = typeof Image === 'function' ? new Image() : null;
+  const logoReady = LOGO ? new Promise(resolve => { LOGO.onload = LOGO.onerror = resolve; LOGO.src = 'assets/logo-256.webp'; }) : Promise.resolve();
+  const logoLoaded = () => !!(LOGO && LOGO.complete && LOGO.naturalWidth > 0);
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[ch]));
   const rate = value => (Number.isFinite(value) ? value : 0).toFixed(3).replace(/^0\./, '.');
@@ -723,7 +727,9 @@
     c.fillStyle = '#38bdf8';
     c.fillRect(0, 0, W, 10);
 
-    text(TEAM_NAME, pad, 86, 30, '#7dd3fc');
+    const logoSize = 112;
+    if (logoLoaded()) c.drawImage(LOGO, pad, 26, logoSize, logoSize);
+    text(TEAM_NAME, logoLoaded() ? pad + logoSize + 18 : pad, 86, 30, '#7dd3fc');
     text(`${game.date}　${game.tag || ''}`, W - pad, 86, 26, '#94a3b8', 'right', 500);
     text(TEAM_NAME.replace('系壘', ''), pad, 200, 44, '#f8fafc');
     text(String(score.us), W / 2 - 70, 210, 96, '#f8fafc', 'right', 900);
@@ -793,7 +799,9 @@
     if (event.key === 'Escape') closeImageModal();
   }
 
-  function openImageModal(gameId) {
+  async function openImageModal(gameId) {
+    // Wait briefly for the badge so the first image already carries it.
+    await Promise.race([logoReady, new Promise(resolve => setTimeout(resolve, 1500))]);
     const game = allGames.find(g => g.id === gameId);
     if (!game) return;
     closeImageModal();

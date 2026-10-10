@@ -64,7 +64,7 @@ http.createServer(async (req, res) => {
     if (filename.endsWith('index.html')) {
       content = Buffer.from(content.toString().replace(/const GITHUB_TOKEN =[^\r\n]+/, "const GITHUB_TOKEN = 'isolated-preview';").replace('<head>', '<head>' + injection));
     }
-    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg'};
+    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp'};
     res.writeHead(200, {'Content-Type': mime[path.extname(filename)] || 'application/octet-stream', 'Cache-Control': 'no-store'});
     res.end(content);
   } catch { res.writeHead(500).end('Preview error'); }

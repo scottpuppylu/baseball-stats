@@ -30,6 +30,18 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
     await page.goto(url);
     await page.waitForFunction(()=>allLogs.some(l=>String(l.id).startsWith('log_game_')));
 
+    // Team logo: tab icon, home-screen icon, header and sidebar all load the badge.
+    const logo=await page.evaluate(async()=>{
+      const img=document.querySelector('.ui-team-logo');
+      await img.decode().catch(()=>{});
+      const ok=async href=>{const r=await fetch(href);return r.ok&&/^image\//.test(r.headers.get('content-type')||'');};
+      return {header:img.naturalWidth>0&&img.getBoundingClientRect().width>0,
+        icon:await ok(document.querySelector('link[rel="icon"]').href),touch:await ok(document.querySelector('link[rel="apple-touch-icon"]').href),
+        sidebar:getComputedStyle(document.getElementById('mainNavigation'),'::before').backgroundImage.includes('logo-256.webp'),
+        sidebarFile:await ok('assets/logo-128.webp'),imageFile:await ok('assets/logo-256.webp')};
+    });
+    assert.deepEqual(logo,{header:true,icon:true,touch:true,sidebar:true,sidebarFile:true,imageFile:true},'team logo assets load everywhere');
+
     // Every sidebar label is the same plain name as the page title it opens.
     const names=[];
     for (const key of ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary']) {

@@ -90,7 +90,7 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
     padding: 32px 12px; flex-direction: column; align-items: stretch;
     background: #0e1728; overflow-y: auto; gap: 7px;
   }
-  #mainNavigation::before { content: '淡江航太系壘'; color: #e2e8f0; font-size: 18px; font-weight: 750; padding: 0 12px 27px; }
+  #mainNavigation::before { content: '淡江航太系壘'; color: #e2e8f0; font-size: 18px; font-weight: 750; padding: 124px 12px 24px; text-align: center; background: url('assets/logo-256.webp') no-repeat center 0 / 112px 112px; }
   #mainNavigation::after { content: '球隊數據中心'; margin-top: auto; padding: 24px 12px 0; color: #7e94af; font-size: 12px; }
   #mainNavigation > button { min-height: 46px; justify-content: flex-start; font-size: 13px; gap: 10px; padding: 12px; white-space: normal; text-align: left; }
   #mainNavigation > button svg { width: 18px; height: 18px; }
@@ -109,9 +109,9 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
   #appHeader .ui-header-brand { display: flex; min-width: 0; gap: 6px; flex: 1; }
   #appHeader .ui-header-brand > * { margin-left: 0; }
   #appHeader .ui-header-brand > span:first-child { display: none; }
-  #appHeader .ui-header-brand > span:nth-child(3) { font-size: 14px; }
-  #appHeader .ui-header-brand > span:nth-child(4) { display: none; }
-  #appHeader .ui-header-brand > span:nth-child(5) { display: inline; font-size: 10px; white-space: nowrap; }
+  #appHeader .ui-header-brand > .ui-team-logo + span { font-size: 14px; }
+  #appHeader .ui-header-brand > .ui-team-logo + span + span { display: none; }
+  #appHeader .ui-header-brand > .ui-team-logo + span + span + span { display: inline; font-size: 10px; white-space: nowrap; }
   #appHeader .ui-header-brand > span:last-child { font-size: 9px; padding: 2px 4px; }
   #appHeader > div > div:first-child > div:last-child { flex-wrap: nowrap; gap: 5px; overflow: visible; }
   #appHeader > div > div:first-child > div:last-child > * { margin-left: 0; }

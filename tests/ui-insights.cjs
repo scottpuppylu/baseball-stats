@@ -306,6 +306,13 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       await page.waitForSelector('#insightImageModal img');
       const image=await page.evaluate(()=>{const img=document.querySelector('#insightImageModal img');return {w:img.naturalWidth,h:img.naturalHeight};});
       assert.equal(image.w,1080);
+      // The team badge is drawn in the top-left corner (not the plain background colour).
+      const badge=await page.evaluate(()=>{
+        const canvas=teamInsights.drawGameImage(allGames.find(g=>g.id==='game_20260920_4922'));
+        const [r,g,b]=canvas.getContext('2d').getImageData(56+38,34+38,1,1).data;
+        return {r,g,b};
+      });
+      assert.ok(!(badge.r===11&&badge.g===17&&badge.b===32),`badge pixels drawn (${JSON.stringify(badge)})`);
       assert.ok(image.h>1000);
       const summary=await page.evaluate(()=>{const s=teamInsights.gameSummary(allGames.find(g=>g.id==='game_20260920_4922'));return {pa:s.rows.reduce((a,r)=>a+r.pa,0),h:s.rows.reduce((a,r)=>a+r.h,0)};});
       const review=await page.evaluate(()=>{const cells=[...document.querySelectorAll('#gameReviewDetailContainer tr')].find(tr=>tr.textContent.includes('合計')).querySelectorAll('td');return {pa:Number(cells[2].textContent),h:Number(cells[4].textContent)};});
