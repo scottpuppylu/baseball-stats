@@ -4,7 +4,7 @@
   "description": "淡江航太系壘數據網站：測試工具（網站本身不需建置）",
   "scripts": {
     "test": "node tests/run-all.cjs",
-    "test:unit": "node --test tests/sync-feedback.test.cjs tests/ui-integrity.test.cjs tests/spray-archive.test.cjs tests/lineup-model.test.cjs"
+    "test:unit": "node --test tests/sync-feedback.test.cjs tests/ui-integrity.test.cjs tests/spray-archive.test.cjs tests/lineup-model.test.cjs tests/player-diagnostics.test.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

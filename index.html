@@ -44,7 +44,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261010.1349</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261010.1415</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -486,7 +486,7 @@
                 <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">SCOUTING & TACTICAL ADVISORY</span>
                 <h3 class="text-base font-bold text-rose-300">球員打擊弱點診斷與技術改善方針 (即時動態分析)</h3>
               </div>
-              <p class="text-xs text-slate-400 mt-1">基於三振率（K%）、好球帶紀律（SDI）、純長打威力（ISO）、場內安打穿透力（BABIP）與掌握度（Contact%）即時評估</p>
+              <p class="text-xs text-slate-400 mt-1">與全隊同期比較並依樣本量修正，交叉比對三振、保送、長打、擊球型態（含本隊各型態安打率）、方向與預期打擊率，找出原因並排出改善優先順序</p>
             </div>
             <button id="toggleDiagCollapseBtn" onclick="toggleDiagnosticsCollapse()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 font-medium transition self-start md:self-auto">
               <span id="diagToggleText">收合診斷面板</span>
@@ -501,13 +501,15 @@
                 <label class="text-xs text-slate-400 font-medium shrink-0">診斷檢視模式：</label>
                 <select id="diagFilterMode" onchange="renderDiagnostics(getAnalysisAgg())" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-rose-500 font-medium w-full sm:w-auto">
                   <option value="single" selected>目前選取球員專屬診斷報告</option>
-                  <option value="all">全隊隊員總體診斷矩陣</option>
-                  <option value="urgent">優先急迫改善名單 (好球帶追打/高三振率)</option>
-                  <option value="power">長打推進缺口名單 (純一壘安打短程型)</option>
-                  <option value="contact">擊球掌握度需提升名單 (低Contact%)</option>
+                  <option value="all">全隊隊員（依改善急迫程度排序）</option>
+                  <option value="urgent">優先改善名單（中度以上弱點）</option>
+                  <option value="contact">三振偏多名單</option>
+                  <option value="trajectory">擊球型態待修正名單（高飛／滾地偏多）</option>
+                  <option value="power">長打不足名單</option>
+                  <option value="luck">運氣偏差名單（結果與擊球品質不符）</option>
                 </select>
               </div>
-              <span class="text-[10px] sm:text-[11px] text-slate-500 font-mono">慢壘實戰特化診斷矩陣 2.0</span>
+              <span class="text-[10px] sm:text-[11px] text-slate-500 font-mono">慢壘診斷 3.0・隊內相對＋樣本修正</span>
             </div>
 
 
@@ -10850,5 +10852,6 @@ function renderCustomChart(agg) {
   <script src="team-insights.js?v=20261010-records"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
   <script src="lineup-recommender.js?v=20261010-fixes"></script>
+  <script src="player-diagnostics.js?v=20261010-diag3"></script>
 </body>
 </html>

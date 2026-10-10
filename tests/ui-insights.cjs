@@ -154,6 +154,52 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
         assert.ok(r.highs,`${r.name}: single-game highs card`);
       }
       assert.ok(recs.some(r=>r.hrMarks>0),'fixture has at least one game home run milestone');
+      // Batting diagnostics 3.0: every mode renders from the same analysis, cards carry evidence and a plan.
+      const diag=await page.evaluate(()=>{
+        switchMainTab('tabProfile');
+        const agg=getAnalysisAgg();
+        const {results}=PlayerDiagnostics.analyze(agg,getBattedBallRates());
+        const select=document.getElementById('diagFilterMode');
+        const modes={};
+        for(const o of select.options){
+          select.value=o.value;select.dispatchEvent(new Event('change'));
+          const cards=[...document.querySelectorAll('#diagnosticsCardsContainer [data-diag-card]')];
+          modes[o.value]={names:cards.map(c=>c.dataset.diagCard),
+            plans:cards.every(c=>c.querySelectorAll('[data-diag-plan]').length>=1),
+            bars:cards.every(c=>c.querySelectorAll('[data-diag-scores] > div').length===5)};
+        }
+        const expect=key=>results.filter({all:()=>true,urgent:r=>r.issues.some(x=>x.severity>=2),contact:r=>r.groups.includes('contact'),
+          trajectory:r=>r.groups.includes('trajectory'),power:r=>r.groups.includes('power'),luck:r=>r.luck}[key]).map(r=>r.name).sort();
+        const sevSorted=modes.all.names.map(n=>results.find(r=>r.name===n).severity).every((v,i,a)=>i===0||a[i-1]>=v);
+        select.value='all';select.dispatchEvent(new Event('change'));
+        const strengthShown=results.filter(r=>r.strengths.length).every(r=>document.querySelector(`[data-diag-card="${CSS.escape(r.name)}"] [data-diag-strength]`));
+        const issueShown=results.every(r=>document.querySelectorAll(`[data-diag-card="${CSS.escape(r.name)}"] [data-diag-issue]`).length===r.issues.length);
+        const text=document.getElementById('diagnosticsCardsContainer').textContent;
+        select.value='single';select.dispatchEvent(new Event('change'));
+        return {modes,expect:Object.fromEntries(['all','urgent','contact','trajectory','power','luck'].map(k=>[k,expect(k)])),sevSorted,strengthShown,issueShown,
+          noPitchClaims:!/追打|壞球|球路/.test(text),guide:!!document.querySelector('#diagnosticsGuide [data-diag-guide]'),
+          single:modes.single.names,selected:selectedPlayerName,players:agg.players.filter(p=>p.pa>0).length};
+      });
+      assert.deepEqual(diag.single,[diag.selected],'single mode shows the selected player');
+      assert.equal(diag.modes.all.names.length,diag.players,'all mode lists every player with a plate appearance');
+      for(const [k,names] of Object.entries(diag.expect)) assert.deepEqual([...diag.modes[k].names].sort(),names,`${k} mode lists the matching players`);
+      assert.ok(Object.values(diag.modes).every(m=>m.plans&&m.bars),'every card has a plan and five percentile bars');
+      assert.ok(diag.sevSorted,'all mode is ordered by urgency');
+      assert.ok(diag.strengthShown,'strengths are shown (they were computed but never rendered before)');
+      assert.ok(diag.issueShown,'every issue is shown with its evidence');
+      assert.ok(diag.noPitchClaims,'no claims about pitch locations the scorebook does not record');
+      assert.ok(diag.guide,'reading guide present');
+      // The avatar opens that player's profile and the panel follows.
+      const other=diag.modes.all.names.find(n=>n!==diag.selected);
+      await page.evaluate(()=>{const s=document.getElementById('diagFilterMode');s.value='all';s.dispatchEvent(new Event('change'));});
+      await page.locator(`#diagnosticsCardsContainer [data-diag-player="${other}"]`).click();
+      assert.equal(await page.evaluate(()=>selectedPlayerName),other);
+      await page.evaluate(()=>{const s=document.getElementById('diagFilterMode');s.value='single';s.dispatchEvent(new Event('change'));});
+      assert.deepEqual(await page.locator('#diagnosticsCardsContainer [data-diag-card]').evaluateAll(c=>c.map(x=>x.dataset.diagCard)),[other]);
+      await page.locator('#diagnosticsCardsContainer').scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(output,`${width}-Diagnostics.png`)});
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'diagnostics must not overflow');
+
       // The post-game image lists the milestones reached in that game.
       const imageRecords=await page.evaluate(()=>allGames.map(g=>{
         const rows=teamInsights.gameSummary(g).rows;
