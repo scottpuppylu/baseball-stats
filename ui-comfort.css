@@ -130,7 +130,7 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
     flex-direction: column; align-items: stretch; gap: 7px;
   }
   body.ui-nav-open #mainNavigation { display: flex; }
-  #mainNavigation::before { content: '所有功能'; padding: 8px 12px; color: #e2e8f0; font-size: 18px; font-weight: 700; }
+  #mainNavigation::before { content: '所有功能'; padding: 8px 12px 8px 60px; color: #e2e8f0; font-size: 18px; font-weight: 700; text-align: left; display: flex; align-items: center; min-height: 56px; background: url('assets/logo-128.webp') no-repeat 12px center / 40px 40px; }
   #mainNavigation::after { content: none; }
   #mainNavigation > button { min-height: 46px; margin: 0; padding: 12px; font-size: 14px; gap: 10px; white-space: normal; text-align: left; justify-content: flex-start; }
   #mainNavigation > button svg { width: 18px; height: 18px; }

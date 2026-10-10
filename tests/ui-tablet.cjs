@@ -38,6 +38,12 @@ fs.mkdirSync(output,{recursive:true});
           assert.ok(workspace.x<40,'collapsed drawer must release content width');
           await drawer.click();
           for(const name of ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary']) assert.ok(await page.locator(`#btnTab${name}`).isVisible());
+          // Drawer title: small badge beside 所有功能, never the desktop sidebar's large centred badge (it was clipped).
+          const title=await page.evaluate(()=>{const s=getComputedStyle(document.getElementById('mainNavigation'),'::before');return {content:s.content,bg:s.backgroundImage,size:s.backgroundSize,height:parseFloat(s.height)};});
+          assert.equal(title.content,'"所有功能"');
+          assert.match(title.bg,/logo-128\.webp/);
+          assert.equal(title.size,'40px 40px');
+          assert.ok(title.height>=40,`drawer title fits the badge (${title.height})`);
           await page.keyboard.press('Tab');
           assert.ok(await page.evaluate(()=>Boolean(document.activeElement.closest('#mainNavigation')) || document.activeElement.id==='uiDrawerToggle'));
           await page.keyboard.press('Escape');
@@ -55,6 +61,8 @@ fs.mkdirSync(output,{recursive:true});
         } else {
           assert.equal(await drawer.isVisible(),false,'desktop retains full sidebar');
           assert.ok(await page.locator('#mainNavigation').isVisible());
+          const title=await page.evaluate(()=>{const s=getComputedStyle(document.getElementById('mainNavigation'),'::before');return {content:s.content,size:s.backgroundSize};});
+          assert.deepEqual(title,{content:'"淡江航太系壘"',size:'112px 112px'},'desktop sidebar shows the large badge');
         }
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'page must not overflow');
         assert.deepEqual(errors,[]);
