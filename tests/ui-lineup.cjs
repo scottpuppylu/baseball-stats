@@ -129,6 +129,27 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       assert.ok(lock.ignored.includes('簡承均') && lock.ignored.includes('11'));
       assert.ok(Math.abs(lock.clearedRuns-lock.freeRuns)<1e-9 && lock.clearedLocked===0 && !lock.costAfterClear);
       report[`${width}-lock`]={freeRuns:lock.freeRuns,lockedRuns:lock.lockedRuns,cost:lock.freeRuns-lock.lockedRuns};
+      // Bench attendance changes refresh the lock controls without changing the starting lineup or score.
+      const benchAttendance=await page.evaluate(()=>{
+        const saved=new Set(presentPlayersSet);selectAllAttendance();
+        const before=calculateRecommendedLineup(getFullAgg().players);
+        const names=before.items.map(i=>i.player.name);
+        const bench=before.model.present.find(n=>!names.includes(n));
+        const listed=()=>!!document.querySelector(`[data-lock-name="${CSS.escape(bench)}"]`);
+        const initial=listed();toggleAttendancePlayer(bench);
+        const removed=calculateRecommendedLineup(getFullAgg().players);
+        const afterRemove=listed();toggleAttendancePlayer(bench);
+        const added=calculateRecommendedLineup(getFullAgg().players);
+        const afterAdd=listed();
+        for(const name of [...presentPlayersSet])if(!saved.has(name))toggleAttendancePlayer(name);
+        return {bench,initial,afterRemove,afterAdd,names,removed:removed.items.map(i=>i.player.name),added:added.items.map(i=>i.player.name),runs:[before.model.runs,removed.model.runs,added.model.runs]};
+      });
+      assert.ok(benchAttendance.bench&&benchAttendance.initial,'present bench player has a lock control');
+      assert.equal(benchAttendance.afterRemove,false,'absent bench player disappears');
+      assert.equal(benchAttendance.afterAdd,true,'returning bench player reappears');
+      assert.deepEqual(benchAttendance.removed,benchAttendance.names);
+      assert.deepEqual(benchAttendance.added,benchAttendance.names);
+      assert.ok(benchAttendance.runs.every(v=>Math.abs(v-benchAttendance.runs[0])<1e-9),'recommendation score unchanged');
       // DH format: 11 hitters, one designated hitter.
       const dh=await page.evaluate(()=>{setDhRule(true);const r=calculateRecommendedLineup(getFullAgg().players);const out={n:r.items.length,dh:r.items.filter(i=>i.posInfo.isDh).length,rows:document.querySelectorAll('#recommendedLineupBody tr').length};setDhRule(false);return out;});
       assert.deepEqual(dh,{n:11,dh:1,rows:11});

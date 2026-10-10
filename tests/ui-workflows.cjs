@@ -92,8 +92,20 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     assert.equal(game.currentOuts,3);
     assert.equal(game.finalScore.opp,1);
     await page.screenshot({path:path.join(output,`${width}-LiveDefense.png`)});
+    // Failed finish must remain retryable after leaving and returning to the live scorer.
+    await page.evaluate(() => { window.__previewFailWrites = true; });
+    await click(page,'button[onclick="finishActiveGameAndSyncLogs()"]');
+    await page.waitForFunction(() => document.querySelector('#globalToastContainer')?.textContent.includes('尚未完整同步'));
+    await tab(page,'Overview',mobile);
+    await tab(page,'Scorebook',mobile);
+    await click(page,'#btnScoreSubLive');
+    assert.equal((await state(page)).status,'in_progress');
+    assert.ok(await page.locator('#activeGameContainer').isVisible(),'live scorer remains reachable after failed finish');
+    assert.ok(await page.locator('button[onclick="finishActiveGameAndSyncLogs()"]').isVisible(),'finish retry still visible');
+    await page.evaluate(() => { window.__previewFailWrites = false; });
     await click(page,'button[onclick="finishActiveGameAndSyncLogs()"]');
     await page.waitForFunction(() => localStorage.getItem('rebas_active_game') === null);
+    assert.equal(await page.evaluate(id=>allGames.filter(g=>g.id===id).length,gameId),1,'retry does not duplicate the game');
     await page.locator('#reviewGameSelect').selectOption(gameId);
     await click(page,'button[onclick="toggleEditCurrentReviewGame()"]');
     await page.locator('#editGameOpponent').fill(`覆盤修改-${width}`);

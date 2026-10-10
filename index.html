@@ -48,7 +48,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261011.0024</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261011.0452</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -330,7 +330,7 @@
                 <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">PLAYER STUDIO</span>
                 <h2 class="text-xl font-black text-white tracking-tight">球員個人深度能力檔案</h2>
               </div>
-              <p class="text-xs text-slate-400 mt-1">慢壘五維能力雷達圖採用特化 SDI 指標：結合四壞保送與 1.5 倍三振懲罰評估好球帶控制力</p>
+              <p class="text-xs text-slate-400 mt-1">慢壘五維能力雷達圖採用 SDI 2.0：保送 +1、界外三振 −1、揮空／站立三振 −2，與全站紀律指標一致</p>
             </div>
             <div class="flex items-center space-x-3 bg-slate-950/80 p-2 sm:p-2.5 rounded-xl border border-slate-800 w-full md:w-auto justify-between md:justify-start">
               <label class="text-xs text-slate-400 font-semibold shrink-0">切換選手：</label>
@@ -1752,7 +1752,7 @@
             <div class="flex items-center space-x-3 bg-slate-950/80 p-2 sm:p-2.5 rounded-xl border border-slate-800 w-full md:w-auto justify-between md:justify-start">
               <label class="text-xs text-slate-400 font-semibold shrink-0">選取投手：</label>
               <div id="pitcherSelectAvatarBadge" class="shrink-0"></div>
-              <select id="pitchingPlayerSelect" onchange="renderPitchingStudio()" class="bg-slate-900 border border-teal-700/70 text-teal-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-teal-400 font-bold flex-1 md:flex-initial"></select>
+              <select id="pitchingPlayerSelect" onchange="selectPitcherRow(this.value)" class="bg-slate-900 border border-teal-700/70 text-teal-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-teal-400 font-bold flex-1 md:flex-initial"></select>
             </div>
           </div>
 
@@ -2572,26 +2572,34 @@
       }
     })();
 
-    async function loadGuestsFromGitHub() {
+    async function loadDatabaseSource(filePath, storageKey, apply, setSha) {
       try {
-        const { content, sha } = await fetchGitHubContent(GUESTS_FILE_PATH);
-        currentGuestsSha = sha;
-        if (Array.isArray(content)) {
-          // The cloud roster wins, so a guest removed on another device stays removed here.
-          guestPlayers = window.guestPlayers = content.filter(g => g && g.name);
-          localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
-        }
-        return true;
+        const { content, sha } = await fetchGitHubContent(filePath);
+        apply(content, 'cloud');
+        setSha(sha);
+        localStorage.setItem(storageKey, JSON.stringify(content));
+        return 'cloud';
       } catch (err) {
         try {
-          const content = await fetchLocalContent(GUESTS_FILE_PATH);
-          if (Array.isArray(content)) {
-            guestPlayers = window.guestPlayers = content;
-            localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
+          const content = await fetchLocalContent(filePath);
+          apply(content, 'static');
+          localStorage.setItem(storageKey, JSON.stringify(content));
+          return 'static';
+        } catch (staticErr) {
+          const cached = readStoredJson(storageKey, null);
+          if (cached !== null) {
+            try { apply(cached, 'cache'); return 'cache'; } catch (cacheErr) { /* invalid cache */ }
           }
-        } catch (e) {}
-        return false;
+          return 'failed';
+        }
       }
+    }
+
+    async function loadGuestsFromGitHub() {
+      return loadDatabaseSource(GUESTS_FILE_PATH, 'rebas_guest_players', (content, source) => {
+        if (!Array.isArray(content)) throw new Error('Invalid guest roster');
+        guestPlayers = window.guestPlayers = content.filter(g => g && g.name);
+      }, sha => { currentGuestsSha = sha; });
     }
 
     async function commitGuestsToGitHub(updatedGuests, commitMessage = "update: sync guest players via portal") {
@@ -3145,20 +3153,10 @@
 
 
     async function loadDefenseFromGitHub() {
-      try {
-        const { content, sha } = await fetchGitHubContent(DEFENSE_FILE_PATH);
-        currentDefenseSha = sha;
+      return loadDatabaseSource(DEFENSE_FILE_PATH, 'rebas_defense_rankings', (content, source) => {
+        if (!content || typeof content !== 'object' || Array.isArray(content)) throw new Error('Invalid defense rankings');
         defenseRankings = { ...DEFAULT_DEFENSE_RANKINGS, ...content };
-        localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
-        return true;
-      } catch (err) {
-        try {
-          const content = await fetchLocalContent(DEFENSE_FILE_PATH);
-          defenseRankings = { ...DEFAULT_DEFENSE_RANKINGS, ...content };
-          localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
-        } catch (e) {}
-        return false;
-      }
+      }, sha => { currentDefenseSha = sha; });
     }
 
 
@@ -3804,7 +3802,17 @@
 
     function renderLineupAnalysis(agg) {
       const pList = agg.players;
-      if (!pList || pList.length === 0) return;
+      if (!pList || pList.length === 0) {
+        for (const id of ['recommendedLineupBody', 'customLineupTableBody', 'customLineupPickersContainer', 'recDedicatedFielderInfo', 'customDedicatedFielderInfo', 'customDhControlBar', 'lineupDiagnosticFeedback', 'attendanceGrid']) {
+          const el = document.getElementById(id); if (el) el.innerHTML = '';
+        }
+        const message = '此日期範圍內沒有打擊紀錄';
+        document.getElementById('recDedicatedFielderInfo').textContent = message;
+        document.getElementById('lineupEvalMetrics').textContent = message;
+        document.getElementById('attendanceCountBadge').textContent = '本期無資料';
+        if (lineupFlowChartInst) { lineupFlowChartInst.destroy(); lineupFlowChartInst = null; }
+        return;
+      }
 
       const historicalPaMap = {};
       allLogs.forEach(l => {
@@ -4476,21 +4484,10 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     async function loadAvatarsFromGitHub() {
-      try {
-        const { content, sha } = await fetchGitHubContent(AVATARS_FILE_PATH);
-        currentAvatarsSha = sha;
-        // The cloud copy wins, so an avatar cleared on another device stays cleared here.
-        playerAvatars = (content && typeof content === 'object' && !Array.isArray(content)) ? content : {};
-        localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
-        return true;
-      } catch (err) {
-        try {
-          const content = await fetchLocalContent(AVATARS_FILE_PATH);
-          playerAvatars = { ...playerAvatars, ...content };
-          localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
-        } catch (e) {}
-        return false;
-      }
+      return loadDatabaseSource(AVATARS_FILE_PATH, 'rebas_player_avatars', (content, source) => {
+        if (!content || typeof content !== 'object' || Array.isArray(content)) throw new Error('Invalid avatars');
+        playerAvatars = source === 'cloud' ? content : { ...playerAvatars, ...content };
+      }, sha => { currentAvatarsSha = sha; });
     }
 
 
@@ -4557,21 +4554,10 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     async function loadTagsFromGitHub() {
-      try {
-        const { content, sha } = await fetchGitHubContent(TAGS_FILE_PATH);
-        currentTagsSha = sha;
-        // The cloud copy wins, so a tag removed on another device stays removed here.
-        playerTags = (content && typeof content === 'object' && !Array.isArray(content)) ? content : {};
-        localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
-        return true;
-      } catch (err) {
-        try {
-          const content = await fetchLocalContent(TAGS_FILE_PATH);
-          playerTags = { ...playerTags, ...content };
-          localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
-        } catch (e) {}
-        return false;
-      }
+      return loadDatabaseSource(TAGS_FILE_PATH, 'rebas_player_tags', (content, source) => {
+        if (!content || typeof content !== 'object' || Array.isArray(content)) throw new Error('Invalid tags');
+        playerTags = source === 'cloud' ? content : { ...playerTags, ...content };
+      }, sha => { currentTagsSha = sha; });
     }
 
 
@@ -4679,62 +4665,32 @@ window.toggleDiagnosticsCollapse = function() {
     window.loadLogsFromGitHub = loadLogsFromGitHub;
     async function loadLogsFromGitHub() {
       setStatusBadge('雲端資料庫：連線同步中...', 'pending');
-
-      let logsSuccess = false;
-
-      // 6 大資料庫並行發送 (含非隊員/支援名冊)，最多只需 3.5 秒，徹底杜絕連線卡頓！
-      await Promise.allSettled([
-        loadAvatarsFromGitHub(),
-        loadTagsFromGitHub(),
-        loadDefenseFromGitHub(),
-        loadGamesFromGitHub(),
-        loadGuestsFromGitHub(),
-        (async () => {
-          try {
-            const { content, sha } = await fetchGitHubContent(DATA_FILE_PATH);
-            allLogs = window.allLogs = content;
-            currentFileSha = sha;
-            logsSuccess = true;
-            localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
-          } catch (err) {
-            try {
-              const content = await fetchLocalContent(DATA_FILE_PATH);
-              allLogs = window.allLogs = content;
-              logsSuccess = false;
-              localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
-            } catch (staticErr) {
-              const cached = localStorage.getItem('rebas_logs');
-              if (cached) {
-                try { allLogs = window.allLogs = JSON.parse(cached); } catch(e) {}
-              }
-              if (!allLogs || allLogs.length === 0) {
-                allLogs = window.allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
-              }
-              logsSuccess = false;
-            }
-          }
-        })()
+      const names = ['頭像', '標籤', '守位', '賽事', '支援名冊', '日誌'];
+      const results = await Promise.allSettled([
+        loadAvatarsFromGitHub(), loadTagsFromGitHub(), loadDefenseFromGitHub(),
+        loadGamesFromGitHub(), loadGuestsFromGitHub(),
+        loadDatabaseSource(DATA_FILE_PATH, 'rebas_logs', content => {
+          if (!Array.isArray(content)) throw new Error('Invalid logs');
+          allLogs = window.allLogs = content;
+        }, sha => { currentFileSha = sha; })
       ]);
-
-      // 同步整合與更新
+      const sources = results.map(r => r.status === 'fulfilled' ? r.value : 'failed');
+      if (sources[5] === 'failed' && (!allLogs || !allLogs.length)) {
+        allLogs = window.allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
+      }
       syncAllGamesToTeamLogs();
-      // The first render picked default attendance from cached data; redo it with cloud data unless edited.
       if (!attendanceEdited) attendanceInitialized = false;
       syncJerseyMaps();
-      if (allLogs.length > 0 && !selectedPlayerName) {
-        selectedPlayerName = allLogs[0].name;
-      }
+      if (allLogs.length > 0 && !selectedPlayerName) selectedPlayerName = allLogs[0].name;
       updateDhRuleButtons();
-
-      if (logsSuccess) {
+      const fallback = sources.flatMap((source, i) => source === 'cloud' ? [] : [`${names[i]}：${source === 'failed' ? '載入失敗，保留本機／預設資料' : source === 'cache' ? '使用本機快取' : '使用網站備援資料'}`]);
+      if (!fallback.length) {
         setStatusBadge(`[連線正常] 雲端已同步 (${allLogs.length} 筆)`, 'success');
       } else {
-        setStatusBadge(`[離線/快取] 載入本地最新 (${allLogs.length} 筆)`, 'warning');
+        setStatusBadge(`[部分同步／備援] 部分資料未取得最新雲端版本：${fallback.join('；')} (${allLogs.length} 筆)`, 'warning');
       }
-
       renderAll();
     }
-
 
     window.manualRefresh = function() {
       loadLogsFromGitHub();
@@ -5345,11 +5301,7 @@ window.toggleDiagnosticsCollapse = function() {
         // ★★★ SDI 2.0 (慢壘好球帶紀律指數 2.0)：
         // 慢壘特化加權：揮空/站立三振代表盲目追打壞球或完全被騙，代價最重 (-2.0)；
         // 兩好球界外三振 (界外K) 代表打者已做出確實擊球並纏鬥，代價減半 (-1.0)；四壞保送 (+1.0)
-        if (p.k_foul > 0 || p.k_swing > 0) {
-          p.sdi = p.pa > 0 ? (p.bb - 1.0 * p.k_foul - 2.0 * p.k_swing) / p.pa : 0;
-        } else {
-          p.sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
-        }
+        p.sdi = p.pa > 0 ? (p.bb - p.k_foul - 2.0 * p.k_swing) / p.pa : 0;
 
         const bipDenom = p.ab - p.k - p.hr + p.sf;
         p.babip = bipDenom > 0 ? (p.h - p.hr) / bipDenom : 0;
@@ -5550,7 +5502,12 @@ window.toggleDiagnosticsCollapse = function() {
     function populateCompareSelect(players) {
       const selA = document.getElementById('comparePlayerA');
       const selB = document.getElementById('comparePlayerB');
-      if (!selA || !selB || players.length === 0) return;
+      if (!selA || !selB) return;
+      selA.disabled = selB.disabled = players.length === 0;
+      if (!players.length) {
+        selA.innerHTML = selB.innerHTML = '<option value="">此日期範圍內沒有打擊紀錄</option>';
+        return;
+      }
 
 
       if (!comparePlayerAName || !players.find(p => p.name === comparePlayerAName)) {
@@ -5574,7 +5531,20 @@ window.toggleDiagnosticsCollapse = function() {
 
     function renderComparison(agg) {
       const pList = agg.players;
-      if (pList.length === 0) return;
+      if (pList.length === 0) {
+        populateCompareSelect([]);
+        for (const id of ['compareCardA', 'compareCardB', 'compareTableBody', 'compareSprayPointsA', 'compareSprayPointsB', 'compareSprayStatsA', 'compareSprayStatsB', 'compareSprayTacticalSummary']) {
+          const el = document.getElementById(id); if (el) el.innerHTML = '';
+        }
+        document.getElementById('compareCardA').textContent = '此日期範圍內沒有打擊紀錄';
+        document.getElementById('compareHeadA').textContent = '選手 A';
+        document.getElementById('compareHeadB').textContent = '選手 B';
+        document.getElementById('compareSprayTitleA').textContent = '選手 A 噴流落點';
+        document.getElementById('compareSprayTitleB').textContent = '選手 B 噴流落點';
+        document.getElementById('compareSprayCountA').textContent = document.getElementById('compareSprayCountB').textContent = '0 球';
+        if (compareRadarChartInst) { compareRadarChartInst.destroy(); compareRadarChartInst = null; }
+        return;
+      }
 
 
       populateCompareSelect(pList);
@@ -6064,16 +6034,24 @@ function renderPlayerProfile(agg) {
       const bioEl = document.getElementById('playerProfileBio');
       const cardEl = document.getElementById('playerProfileCard');
       if (!p) {
-        if (bioEl) bioEl.innerHTML = '<span class="text-xs text-slate-500">該時間區間無紀錄</span>';
+        if (bioEl) bioEl.textContent = '此日期範圍內沒有打擊紀錄';
         if (cardEl) cardEl.innerHTML = '';
+        for (const id of ['playerSelectAvatarBadge', 'profileSprayPointsContainer', 'profileSprayMetricsCard']) {
+          const el = document.getElementById(id); if (el) el.innerHTML = '';
+        }
+        document.getElementById('profileSprayTitle').textContent = '此日期範圍內沒有擊球紀錄';
+        if (radarChartInst) { radarChartInst.destroy(); radarChartInst = null; }
+        if (donutChartInst) { donutChartInst.destroy(); donutChartInst = null; }
+        if (profileBattedBallChartInst) { profileBattedBallChartInst.destroy(); profileBattedBallChartInst = null; }
+        if (profileSprayPolarChartInst) { profileSprayPolarChartInst.destroy(); profileSprayPolarChartInst = null; }
+        if (profileExpectedChartInst) { profileExpectedChartInst.destroy(); profileExpectedChartInst = null; }
         return;
       }
 
-      const p_sdi = p.pa > 0 ? (p.bb - 1.5 * p.k) / p.pa : 0;
       const k_pct = p.pa > 0 ? p.k / p.pa : 0;
       const prContact = getPercentile(p.avg, 'avg', pList);
       const prPower = getPercentile(p.iso, 'iso', pList);
-      const prDiscipline = getPercentile(p_sdi, 'sdi', pList);
+      const prDiscipline = getPercentile(p.sdi, 'sdi', pList);
       const prControl = getPercentile(k_pct, 'k_pct', pList, true);
       const prWrc = getPercentile(p.wrc_plus, 'wrc_plus', pList);
 
@@ -6821,11 +6799,11 @@ function renderPlayerProfile(agg) {
         luck: p.luck_factor
       }));
 
-      // 45 度無偏差基準線 (y = x)
-      const lineData = [
-        { x: 0.1, y: 0.1 },
-        { x: 0.8, y: 0.8 }
-      ];
+      const values = scatterData.flatMap(d => [d.x, d.y]).filter(Number.isFinite);
+      const dataMin = Math.min(0, ...values);
+      const axisMin = dataMin < 0 ? Math.floor((dataMin - 0.025) / 0.05) * 0.05 : 0;
+      const axisMax = values.length ? Math.max(0.05, Math.ceil((Math.max(...values) + 0.025) / 0.05) * 0.05) : 1;
+      const lineData = [{ x: axisMin, y: axisMin }, { x: axisMax, y: axisMax }];
 
       luckRegressionChartInst = new Chart(ctx, {
         type: 'scatter',
@@ -6871,12 +6849,12 @@ function renderPlayerProfile(agg) {
             x: {
               title: { display: true, text: '預期打擊率 (xBA - Statcast)', color: '#a78bfa' },
               grid: { color: 'rgba(255,255,255,0.05)' },
-              min: 0.1, max: 0.8
+              min: axisMin, max: axisMax
             },
             y: {
               title: { display: true, text: '實際打擊率 (同一場記樣本)', color: '#38bdf8' },
               grid: { color: 'rgba(255,255,255,0.05)' },
-              min: 0.1, max: 0.8
+              min: axisMin, max: axisMax
             }
           },
           onClick: (evt, elements) => {
@@ -8245,22 +8223,10 @@ function renderCustomChart(agg) {
     const baselineSampleGames = [];
 
     async function loadGamesFromGitHub() {
-      try {
-        const { content, sha } = await fetchGitHubContent(GAMES_FILE_PATH);
-        currentGamesSha = sha;
-        const rawGames = Array.isArray(content) ? content : [];
-        allGames = rawGames.filter(g => !isSimulatedGame(g));
-        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-        return true;
-      } catch (err) {
-        try {
-          const content = await fetchLocalContent(GAMES_FILE_PATH);
-          const rawGames = Array.isArray(content) ? content : [];
-          allGames = rawGames.filter(g => !isSimulatedGame(g));
-          localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
-        } catch (e) {}
-        return false;
-      }
+      return loadDatabaseSource(GAMES_FILE_PATH, 'rebas_all_games', (content, source) => {
+        if (!Array.isArray(content)) throw new Error('Invalid games');
+        allGames = content.filter(g => !isSimulatedGame(g));
+      }, sha => { currentGamesSha = sha; });
     }
 
     async function commitGamesToGitHub(updatedGames, commitMessage = "update: sync scorebook games via portal") {
@@ -9619,6 +9585,8 @@ function renderCustomChart(agg) {
       const syncedCount = syncAllGamesToTeamLogs();
       const logsSynced = await commitLogsToGitHub(allLogs, `自動綁定賽事日誌: vs ${finishedGame.opponent}`);
       if (!gamesSynced || !logsSynced) {
+        activeGame.status = 'in_progress';
+        localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
         showSyncResult(false, '', '完賽資料尚未完整同步；已保留本機比賽，請再次點擊完賽重試。');
         return;
       }
@@ -9668,131 +9636,27 @@ function renderCustomChart(agg) {
     // 歷史賽事全自動同步引擎 (所有歷史比賽即時無縫併入全隊數據與個人三圍)
     // ==========================================
     window.syncAllGamesToTeamLogs = syncAllGamesToTeamLogs;
-    function syncAllGamesToTeamLogs() {
-      // 重新綁定日誌與比賽結果：由歷史場記庫 (allGames) 自動計算每位正式隊員的攻守與 Statcast 進階擊球數據，與手動日誌合併統一數據
-      const targetGames = (typeof window !== 'undefined' && Array.isArray(window.allGames)) ? window.allGames : (Array.isArray(allGames) ? allGames : []);
-      const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
-      const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
-
-      // 1. 完整保留手動登記與大專總結等非場記日誌
-      const manualLogs = targetLogs.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
-
-      // 2. 由每場歷史比賽動態生成標準賽事日誌 (含 Statcast 擊球型態、落點與 SDI 2.0 細分數據)
-      const generatedGameLogs = [];
-      const cleanGames = (targetGames || []).filter(g => !isSimulatedGame(g));
-
-      cleanGames.forEach(game => {
-        const statsMap = {};
-        const allMatchBatters = getGameAllBatters(game);
-        allMatchBatters.forEach(name => {
-          // 支援外援/臨時選手只保留在該場 Box Score 中，絕不進入球隊正式常規日誌與個人三圍
-          if (isGuestPlayerName(name)) return;
-          statsMap[name] = {
-            name,
-            jersey: NAME_TO_JERSEY[name] ?? 0,
-            pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0,
-            k_swing: 0, k_foul: 0,
-            bip: 0, ld: 0, gb: 0, fb: 0, pu: 0,
-            pull: 0, cent: 0, oppo: 0
-          };
-        });
-
-        (game.innings || []).forEach(inn => {
-          (inn.plateAppearances || []).forEach(pa => {
-            // 慢壘鐵律：跑壘者出局 (RUNNER_OUT) 屬於跑壘事件，正在打擊之打者打席未結束，絕不能計入該打者 PA 或 AB！
-            if (isRunnerOutPlay(pa)) {
-              return;
-            }
-            const p = statsMap[pa.batterName];
-            if (p) {
-              p.pa++;
-              if (!['BB', 'SF'].includes(pa.result)) p.ab++;
-              if (pa.result === '1H') { p.h++; p.h1++; }
-              else if (pa.result === '2H') { p.h++; p.h2++; }
-              else if (pa.result === '3H') { p.h++; p.h3++; }
-              else if (pa.result === 'HR') { p.h++; p.hr++; }
-              else if (pa.result === 'BB') p.bb++;
-              else if (pa.result === 'SF') p.sf++;
-              else if (pa.result === '界外K') { p.k++; p.k_foul++; }
-              else if (['K', 'K_FOUL'].includes(pa.result)) { p.k++; p.k_swing++; }
-
-              // Statcast 擊球型態與落點統計
-              if (pa.trajectory && pa.trajectory !== 'none') {
-                p.bip++;
-                if (pa.trajectory === 'line') p.ld++;
-                else if (pa.trajectory === 'grounder') p.gb++;
-                else if (pa.trajectory === 'fly') p.fb++;
-                else if (pa.trajectory === 'popup') p.pu++;
-
-                if (pa.x !== undefined && pa.x !== null) {
-                  if (pa.x < 0.40) p.pull++;
-                  else if (pa.x <= 0.60) p.cent++;
-                  else p.oppo++;
-                }
-              }
-            }
-          });
-        });
-
-        Object.values(statsMap).forEach(p => {
-          if (p.pa > 0) {
-            generatedGameLogs.push({
-              id: `log_game_${game.id}_${p.jersey}`,
-              gameId: game.id,
-              date: game.date,
-              tag: `場記賽事: ${game.tag || '聯賽'} vs ${game.opponent}`,
-              name: p.name,
-              jersey: p.jersey,
-              pa: p.pa,
-              ab: p.ab,
-              h: p.h,
-              h1: p.h1,
-              h2: p.h2,
-              h3: p.h3,
-              hr: p.hr,
-              bb: p.bb,
-              sf: p.sf,
-              k: p.k,
-              k_swing: p.k_swing,
-              k_foul: p.k_foul,
-              bip: p.bip,
-              ld: p.ld,
-              gb: p.gb,
-              fb: p.fb,
-              pu: p.pu,
-              pull: p.pull,
-              cent: p.cent,
-              oppo: p.oppo
-            });
-          }
-        });
-      });
-
-      // 3. 完整綁定合併：以比賽日誌在前、手動日誌在後合成統一數據源
-      allLogs = window.allLogs = [...generatedGameLogs, ...manualLogs];
-      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
-      syncJerseyMaps();
-      return generatedGameLogs.length;
-    }
-
-    window.syncGameToTeamLogs = syncGameToTeamLogs;
-    async function syncGameToTeamLogs(game) {
-      if (!game) return { count: 0, success: false };
+    function buildGameLogs(game) {
+      if (!game || game.excludedFromLogs || isSimulatedGame(game)) return [];
+      const logs = [];
       const statsMap = {};
       const allMatchBatters = getGameAllBatters(game);
       allMatchBatters.forEach(name => {
-        // 支援外援/臨時選手只保留在該場 Box Score 中，絕不進入球隊正式常規日誌
+        // 支援外援/臨時選手只保留在該場 Box Score 中，絕不進入球隊正式常規日誌與個人三圍
         if (isGuestPlayerName(name)) return;
         statsMap[name] = {
           name,
           jersey: NAME_TO_JERSEY[name] ?? 0,
-          pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0
+          pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0,
+          k_swing: 0, k_foul: 0,
+          bip: 0, ld: 0, gb: 0, fb: 0, pu: 0,
+          pull: 0, cent: 0, oppo: 0
         };
       });
 
       (game.innings || []).forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
-          // 慢壘規則嚴格防呆：跑者出局 (RUNNER_OUT) 屬於跑壘事件，打者打席未結束，絕不計入打者 PA 與 AB！
+          // 慢壘鐵律：跑壘者出局 (RUNNER_OUT) 屬於跑壘事件，正在打擊之打者打席未結束，絕不能計入該打者 PA 或 AB！
           if (isRunnerOutPlay(pa)) {
             return;
           }
@@ -9806,20 +9670,32 @@ function renderCustomChart(agg) {
             else if (pa.result === 'HR') { p.h++; p.hr++; }
             else if (pa.result === 'BB') p.bb++;
             else if (pa.result === 'SF') p.sf++;
-            else if (pa.result === 'K') p.k++;
+            else if (['界外K', 'K_FOUL'].includes(pa.result)) { p.k++; p.k_foul++; }
+            else if (pa.result === 'K') { p.k++; p.k_swing++; }
+
+            // Statcast 擊球型態與落點統計
+            if (pa.trajectory && pa.trajectory !== 'none') {
+              p.bip++;
+              if (pa.trajectory === 'line') p.ld++;
+              else if (pa.trajectory === 'grounder') p.gb++;
+              else if (pa.trajectory === 'fly') p.fb++;
+              else if (pa.trajectory === 'popup') p.pu++;
+
+              if (pa.x !== undefined && pa.x !== null) {
+                if (pa.x < 0.40) p.pull++;
+                else if (pa.x <= 0.60) p.cent++;
+                else p.oppo++;
+              }
+            }
           }
         });
       });
 
-      const logPrefix = `log_game_${game.id}_`;
-      const oldAutoPrefix = `log_auto_${game.id}_`;
-      allLogs = allLogs.filter(l => !l.id.startsWith(logPrefix) && !l.id.startsWith(oldAutoPrefix));
-
-      let addedCount = 0;
       Object.values(statsMap).forEach(p => {
         if (p.pa > 0) {
-          const logEntry = {
-            id: `${logPrefix}${p.jersey}`,
+          logs.push({
+            id: `log_game_${game.id}_${p.jersey}`,
+            gameId: game.id,
             date: game.date,
             tag: `場記賽事: ${game.tag || '聯賽'} vs ${game.opponent}`,
             name: p.name,
@@ -9833,27 +9709,64 @@ function renderCustomChart(agg) {
             hr: p.hr,
             bb: p.bb,
             sf: p.sf,
-            k: p.k
-          };
-          allLogs.unshift(logEntry);
-          addedCount++;
+            k: p.k,
+            k_swing: p.k_swing,
+            k_foul: p.k_foul,
+            bip: p.bip,
+            ld: p.ld,
+            gb: p.gb,
+            fb: p.fb,
+            pu: p.pu,
+            pull: p.pull,
+            cent: p.cent,
+            oppo: p.oppo
+          });
         }
       });
+      return logs;
+    }
 
+    function syncAllGamesToTeamLogs() {
+      // 重新綁定日誌與比賽結果：由歷史場記庫 (allGames) 自動計算每位正式隊員的攻守與 Statcast 進階擊球數據，與手動日誌合併統一數據
+      const targetGames = (typeof window !== 'undefined' && Array.isArray(window.allGames)) ? window.allGames : (Array.isArray(allGames) ? allGames : []);
+      const rawLogs = (typeof window !== 'undefined' && Array.isArray(window.allLogs)) ? window.allLogs : (Array.isArray(allLogs) ? allLogs : []);
+      const targetLogs = Array.isArray(rawLogs) ? rawLogs : [];
+
+      // 1. 完整保留手動登記與大專總結等非場記日誌
+      const manualLogs = targetLogs.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+
+      // Both rebuild and single-game login use the same complete calculation.
+      const generatedGameLogs = targetGames.flatMap(buildGameLogs);
+
+      // 3. 完整綁定合併：以比賽日誌在前、手動日誌在後合成統一數據源
+      allLogs = window.allLogs = [...generatedGameLogs, ...manualLogs];
       localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
-      const success = await commitLogsToGitHub(allLogs, `登入場記至賽事日誌: ${game.date} vs ${game.opponent} (${addedCount}人)`);
+      syncJerseyMaps();
+      return generatedGameLogs.length;
+    }
+
+    window.syncGameToTeamLogs = syncGameToTeamLogs;
+    async function syncGameToTeamLogs(game) {
+      if (!game) return { count: 0, success: false };
+      const logPrefix = `log_game_${game.id}_`;
+      const oldAutoPrefix = `log_auto_${game.id}_`;
+      const logs = buildGameLogs(game);
+      allLogs = window.allLogs = [...logs, ...allLogs.filter(l => !l.id.startsWith(logPrefix) && !l.id.startsWith(oldAutoPrefix))];
+      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+      const success = await commitLogsToGitHub(allLogs, `登入場記至賽事日誌: ${game.date} vs ${game.opponent} (${logs.length}人)`);
       renderAll();
-      return { count: addedCount, success };
+      return { count: logs.length, success };
     }
 
     // ==========================================
     // 歷史賽事覆盤與賽伯診斷 (Game Review)
     // ==========================================
+    const pendingLogins = new Set();
     let isEditingReviewGame = false;
     // 檢核該場比賽是否已經登入全隊日誌庫
     window.isGameAlreadyLogged = isGameAlreadyLogged;
     function isGameAlreadyLogged(gameId) {
-      if (!gameId) return false;
+      if (!gameId || allGames.some(g => g.id === gameId && g.excludedFromLogs)) return false;
       const prefix1 = `log_game_${gameId}_`;
       const prefix2 = `log_auto_${gameId}_`;
       return allLogs.some(l => l.id.startsWith(prefix1) || l.id.startsWith(prefix2));
@@ -9864,6 +9777,9 @@ function renderCustomChart(agg) {
       if (!game) return;
       if (!confirm(`確定要將本場比賽（${game.date} vs ${game.opponent}）自全隊日誌庫中撤銷移除？\n移除後全隊戰況與球員個人累計三圍將扣除此場成績。`)) return;
 
+      game.excludedFromLogs = true;
+      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      const gamesSynced = await commitGamesToGitHub(allGames, `撤銷賽事統計: ${game.date} vs ${game.opponent}`);
       const prefix1 = `log_game_${game.id}_`;
       const prefix2 = `log_auto_${game.id}_`;
       allLogs = allLogs.filter(l => !l.id.startsWith(prefix1) && !l.id.startsWith(prefix2));
@@ -9872,7 +9788,7 @@ function renderCustomChart(agg) {
 
       renderAll();
       renderSelectedGameReview(game.id);
-      showSyncResult(success, '已自全隊日誌庫撤銷本場比賽紀錄！');
+      showSyncResult(gamesSynced && success, '已自全隊日誌庫撤銷本場比賽紀錄！', '撤銷尚未完整同步；已保留本機撤銷狀態，請點擊「重新同步撤銷」重試。');
     };
 
 
@@ -9891,7 +9807,7 @@ function renderCustomChart(agg) {
 
       select.innerHTML = allGames.map(g => `
         <option value="${g.id}" ${g.id === selectedReviewGameId ? 'selected' : ''}>
-          ${g.date} vs ${g.opponent} (${g.finalScore ? g.finalScore.us + ':' + g.finalScore.opp : '進行中'}) [${g.tag || '聯賽'}]
+          ${g.date} vs ${g.opponent} (${g.finalScore ? (g.finalScore.us || g.finalScore.opp ? g.finalScore.us + ':' + g.finalScore.opp : '比分未記錄') : '進行中'}) [${g.tag || '聯賽'}]
         </option>
       `).join('');
 
@@ -9932,10 +9848,15 @@ function renderCustomChart(agg) {
     window.syncReviewGameToTeamLogs = async function() {
       const game = allGames.find(g => g.id === selectedReviewGameId);
       if (!game) return;
+      pendingLogins.add(game.id);
+      delete game.excludedFromLogs;
+      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      const gamesSynced = await commitGamesToGitHub(allGames, `重新納入賽事統計: ${game.date} vs ${game.opponent}`);
       const { count, success } = await syncGameToTeamLogs(game);
+      if (gamesSynced && success) pendingLogins.delete(game.id);
       renderAll();
       renderSelectedGameReview(game.id);
-      showSyncResult(success, `⚡ 成功將本場比賽 ${count} 位球員的數據正式登入全隊日誌與個人三圍！`);
+      showSyncResult(gamesSynced && success, `⚡ 成功將本場比賽 ${count} 位球員的數據正式登入全隊日誌與個人三圍！`, '登入尚未完整同步；已保留本機資料，請點擊「登入賽事日誌」重試。');
     };
 
     window.deleteReviewGame = async function() {
@@ -9975,15 +9896,20 @@ function renderCustomChart(agg) {
       if (!game || !container) return;
       game.finalScore = game.finalScore || { us: 0, opp: 0 };
 
-      const isWin = (game.finalScore.us > game.finalScore.opp);
-      const isLogged = isGameAlreadyLogged(game.id);
+      const isWin = game.finalScore.us > game.finalScore.opp;
+      const isLoss = game.finalScore.us < game.finalScore.opp;
+      const scoreRecorded = game.finalScore.us > 0 || game.finalScore.opp > 0;
+      const resultLabel = !scoreRecorded ? '比分未記錄' : isWin ? 'VICTORY 勝利' : isLoss ? 'DEFEAT 落敗' : 'TIE 平手';
+      const resultStyle = isWin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : isLoss ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'bg-slate-800 text-slate-300 border border-slate-600';
+      const isLogged = !pendingLogins.has(game.id) && isGameAlreadyLogged(game.id);
 
       if (badge) {
         badge.innerHTML = `
           <div class="flex flex-wrap items-center gap-2">
-            <span class="px-2.5 py-1 rounded-full font-bold text-xs ${isWin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}">
-              ${isWin ? 'VICTORY 勝利' : 'DEFEAT 落敗'} (${game.finalScore.us} - ${game.finalScore.opp})
+            <span class="px-2.5 py-1 rounded-full font-bold text-xs ${resultStyle}">
+              ${resultLabel}${scoreRecorded ? ` (${game.finalScore.us} - ${game.finalScore.opp})` : ''}
             </span>
+            ${game.excludedFromLogs ? `<button onclick="undoGameFromTeamLogs('${game.id}')" class="text-xs px-3 py-1 rounded-lg border border-slate-700 text-slate-400" title="重新上傳此場撤銷狀態">重新同步撤銷</button>` : ''}
             ${isLogged ? `
               <button onclick="undoGameFromTeamLogs('${game.id}')" class="text-xs bg-emerald-950/60 hover:bg-rose-950 text-emerald-300 hover:text-rose-300 px-3 py-1 rounded-lg border border-emerald-700/60 hover:border-rose-700 transition font-mono font-bold flex items-center gap-1 shadow-sm" title="點擊自全隊日誌中撤銷本場成績">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -10847,10 +10773,10 @@ function renderCustomChart(agg) {
     loadLogsFromGitHub();
   
     </script>
-  <script src="ui-comfort.js?v=20261010-norbi"></script>
-  <script src="team-insights.js?v=20261010-image2"></script>
+  <script src="ui-comfort.js?v=20261011-auditfixes"></script>
+  <script src="team-insights.js?v=20261011-auditfixes"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
-  <script src="lineup-recommender.js?v=20261010-fixes"></script>
+  <script src="lineup-recommender.js?v=20261011-auditfixes"></script>
   <script src="player-diagnostics.js?v=20261010-diag3"></script>
   <script src="team-records.js?v=20261011-ui4"></script>
 </body>

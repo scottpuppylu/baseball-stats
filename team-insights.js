@@ -236,7 +236,8 @@
 
   function renderCompareNote(agg) {
     const head = document.querySelector('#panelCompare > section > div');
-    if (!head || !agg.players.length) return;
+    if (!head) return;
+    if (!agg.players.length) { document.getElementById('insightCompareSampleNote')?.remove(); return; }
     let note = document.getElementById('insightCompareSampleNote');
     if (!note) {
       note = document.createElement('div');
@@ -303,7 +304,8 @@
 
   function renderCompareGameLog(agg) {
     const panel = document.getElementById('panelCompare');
-    if (!panel || !agg.players.length) return;
+    if (!panel) return;
+    if (!agg.players.length) { document.getElementById('insightCompareGameLogSection')?.remove(); return; }
     let section = document.getElementById('insightCompareGameLogSection');
     if (!section) {
       section = document.createElement('section');

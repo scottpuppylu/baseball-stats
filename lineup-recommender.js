@@ -135,7 +135,7 @@
     const settings = loadSettings();
     const history = historicalInnings();
     const lockInfo = resolveLocks(locks, chosen, present, targetSize);
-    const key = JSON.stringify([targetSize, settings, history, chosen.map(p => p.name), [...lockInfo.map], lockInfo.ignored,
+    const key = JSON.stringify([targetSize, settings, history, present.map(p => p.name).sort(), chosen.map(p => p.name), [...lockInfo.map], lockInfo.ignored,
       players.map(p => [p.name, p.pa, p.bb, p.k, p.h1, p.h2, p.h3, p.hr, p.gb, p.fb, p.ld, p.pu])]);
     let sim = cache.get(key);
     if (!sim) {
@@ -376,7 +376,10 @@
       return result;
     };
   };
-  after('renderLineupAnalysis', () => renderSummary());
+  after('renderLineupAnalysis', agg => {
+    if (!agg.players.length) { lastResult = null; document.getElementById('customLineupModelCard')?.remove(); }
+    renderSummary();
+  });
   after('evaluateCustomLineup', renderCustomCard);
 
   // The first render ran with the original algorithm before this file loaded.

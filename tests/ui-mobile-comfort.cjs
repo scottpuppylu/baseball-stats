@@ -132,6 +132,17 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
       await page.screenshot({path:path.join(output,`${width}-MobileJump.png`)});
       await page.locator('.ui-back-top').click();
       await page.waitForFunction(()=>window.scrollY===0,null,{timeout:5000});
+      // Career records replace their sections; jump targets must be the new DOM nodes after each redraw.
+      await page.evaluate(()=>{switchMainTab('tabRecords');window.scrollTo(0,0);});
+      await page.waitForTimeout(250);
+      await page.evaluate(()=>teamRecords.renderRecordsPage());
+      await page.waitForTimeout(250);
+      await page.locator('.ui-section-bar button',{hasText:'趣味紀錄'}).click();
+      await page.waitForFunction(()=>{
+        const target=document.getElementById('recordsFun'),bar=document.querySelector('.ui-section-bar');
+        return window.scrollY>0&&Math.abs(target.getBoundingClientRect().top-bar.getBoundingClientRect().bottom-12)<4;
+      },null,{timeout:5000});
+      assert.ok(await page.evaluate(()=>window.scrollY>100),'records jump reaches the section, not the top');
       // Wide summary table: the name column stays put while the rest scrolls sideways.
       await page.evaluate(()=>switchMainTab('tabOverview'));
       await page.selectOption('#uiSummaryColumns','all');

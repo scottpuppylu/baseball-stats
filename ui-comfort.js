@@ -287,7 +287,8 @@
     // A page that is one long section (the glossary) jumps between its own sub-headings instead.
     if (items.length < 2 && found.length === 1) items = [...found[0].querySelectorAll('h3')].filter(visible).map(h => ({section: h, label: sectionLabel(h)})).filter(item => item.label);
     const key = items.map(item => item.label).join('|');
-    if (sectionBar.dataset.key === key) return;
+    if (sectionBar.dataset.key === key && sectionTargets.length === items.length &&
+        sectionTargets.every((section, index) => section.isConnected && section === items[index].section)) return;
     sectionBar.dataset.key = key;
     sectionTargets = items.map(item => item.section);
     sectionBar.hidden = items.length < 2;
@@ -299,7 +300,9 @@
       chip.dataset.index = index;
       chip.addEventListener('click', () => {
         // Land just below the sticky chip row.
-        const top = item.section.getBoundingClientRect().top + window.scrollY - (sectionBar.offsetHeight + 12);
+        const target = sectionTargets[index];
+        if (!target?.isConnected) return;
+        const top = target.getBoundingClientRect().top + window.scrollY - (sectionBar.offsetHeight + 12);
         window.scrollTo({top, behavior: 'smooth'});
       });
       sectionBar.append(chip);

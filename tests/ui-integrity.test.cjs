@@ -8,14 +8,14 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\n/g, '\n');
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
-// Baseline v2 (2026/10/10): the business script, inline handlers and DOM identifiers after the authorized
-// 1-15 fix set (see docs/UI_QA.md). The v1 baseline from 903cf977 and its authorized-diff chain are in git history.
+// Baseline v3 (2026/10/11): the business script, inline handlers and DOM identifiers after the authorized
+// 11 audit fixes (see docs/UI_QA.md). The v1 baseline from 903cf977 and its authorized-diff chain are in git history.
 // Any further change to these must be authorized and the digests updated together with the QA document.
 const BASELINE = {
-  script: '8ad648ad6800039126c0dc30de1f97cbfa7045df444446f050cb26d09617308b',
-  handlers: 'fd15b9c7acc8502bc8e68493b2e9beb6aa64972911a9a6e4d4e5be66f4875291',
-  idCount: 276,
-  ids: '4f99927a9810284481320e0caa44f463b5701ea968699aafef142e49064dab18'
+  "script": "5fd6698f179714d56781bc41fc2b4707e232037fe5364cbfc6535d7068553272",
+  "handlers": "4221134ad1e54b24bb35d1bc5e095d119899ede09bc25c28aa30e2bb09d84d0d",
+  "idCount": 276,
+  "ids": "4f99927a9810284481320e0caa44f463b5701ea968699aafef142e49064dab18"
 };
 test('business script is byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
