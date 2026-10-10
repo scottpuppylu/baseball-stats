@@ -8,11 +8,11 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\n/g, '\n');
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
-// Baseline v3 (2026/10/11): the business script, inline handlers and DOM identifiers after the authorized
-// 11 audit fixes (see docs/UI_QA.md). The v1 baseline from 903cf977 and its authorized-diff chain are in git history.
-// Any further change to these must be authorized and the digests updated together with the QA document.
+// Baseline v4 (2026/10/11): authorized audit #1-15 fixes for sync ordering, jerseys, validation,
+// score diagnostics, chart values and empty pitching state. All original controls and assertions remain.
+// The v1-v3 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 const BASELINE = {
-  "script": "5fd6698f179714d56781bc41fc2b4707e232037fe5364cbfc6535d7068553272",
+  "script": "9d141e60536e43655109f8a3e8a2556c77a4fa16e1ea171ec6f73c13fc44ab7b",
   "handlers": "4221134ad1e54b24bb35d1bc5e095d119899ede09bc25c28aa30e2bb09d84d0d",
   "idCount": 276,
   "ids": "4f99927a9810284481320e0caa44f463b5701ea968699aafef142e49064dab18"

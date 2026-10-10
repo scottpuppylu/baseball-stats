@@ -230,15 +230,16 @@ for(const gamesSynced of [false,true]) for(const logsSynced of [false,true]) {
       commitGamesToGitHub:async()=>{uploads.push('games');return gamesSynced;},
       commitLogsToGitHub:async()=>{uploads.push('logs');return logsSynced;}});
     install(ctx,'undoGameFromTeamLogs');await ctx.window.undoGameFromTeamLogs('test_game');
-    assert.equal(ctx.allGames[0].excludedFromLogs,true);
-    assert.equal(saved.rebas_all_games[0].excludedFromLogs,true);
-    assert.equal(ctx.allLogs.some(l=>l.id.startsWith('log_game_')),false);
-    assert.deepEqual(uploads,['games','logs']);
+    // Audit #1: a failed games upload rolls back the flag and never touches the logs.
+    assert.equal(!!ctx.allGames[0].excludedFromLogs,gamesSynced);
+    assert.equal(!!saved.rebas_all_games[0].excludedFromLogs,gamesSynced);
+    assert.equal(ctx.allLogs.some(l=>l.id.startsWith('log_game_')),!gamesSynced);
+    assert.deepEqual(uploads,gamesSynced?['games','logs']:['games']);
     assert.equal(ctx.messages.at(-1).type==='error',!(gamesSynced&&logsSynced));
     ctx.syncGameToTeamLogs=async()=>({count:3,success:logsSynced});
     install(ctx,'syncReviewGameToTeamLogs');await ctx.window.syncReviewGameToTeamLogs();
     assert.equal('excludedFromLogs' in ctx.allGames[0],false);
-    assert.equal(ctx.pendingLogins.has('test_game'),!(gamesSynced&&logsSynced),'partial login keeps retry state');
+    assert.equal(ctx.pendingLogins.has('test_game'),gamesSynced&&!logsSynced,'only a successful games upload can leave a partial login');
     assert.equal(ctx.messages.at(-1).type==='error',!(gamesSynced&&logsSynced));
   });
 }

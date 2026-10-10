@@ -28,7 +28,7 @@
   // Scorebook logs carry their game id (field or id prefix), so two games on one day stay apart.
   const gameIdOf = log => log.gameId || (String(log.id || '').match(/^log_(?:game|auto)_(.+)_[^_]+$/) || [])[1] || '';
   // Manual season totals such as "114年度總數據" are not single games.
-  const isSummaryTag = tag => /總數據|彙總|總計/.test(String(tag || ''));
+  const isSummaryTag = tag => /總數據|彙總|總計|總結/.test(String(tag || ''));
 
   function playerGames(name, logs = getFilteredLogs()) {
     const groups = new Map();
@@ -480,7 +480,7 @@
         : diff > 0 ? `<span class="text-emerald-400">▲ 近況較佳（OPS +${rate(diff)}）</span>`
           : `<span class="text-rose-400">▼ 近況下滑（OPS −${rate(-diff)}）</span>`;
     // A 0:0 final means no score was kept for that game (not a real softball result).
-    const hasScore = g => !!(g.game && g.game.finalScore && ((g.game.finalScore.us || 0) + (g.game.finalScore.opp || 0) > 0));
+    const hasScore = g => isGameScoreRecorded(g.game);
     const scored = games.filter(hasScore);
     const record = scored.reduce((r, g) => {
       const s = g.game.finalScore;
@@ -762,7 +762,7 @@
     const s = gameSummary(game);
     const score = game.finalScore || {us: 0, opp: 0};
     // A 0:0 final means the score was not kept (as in the stats pages): show hits instead of a fake tie.
-    const scored = (score.us || 0) + (score.opp || 0) > 0;
+    const scored = isGameScoreRecorded(game);
     const result = !scored ? null : score.us > score.opp ? ['勝', IMG.green] : score.us < score.opp ? ['敗', IMG.red] : ['和', IMG.amber];
     const W = 1080, P = 48, rowH = 50;
     const mvp = gameMvp(game, s.rows);

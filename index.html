@@ -48,7 +48,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261011.0452</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261011.0605</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -2435,6 +2435,7 @@
     function isGuestPlayerName(name) {
       if (!name) return false;
       const clean = name.trim();
+      if (isOfficialTeamPlayer(clean)) return false;
       if (clean.includes('支援') || clean.includes('外援') || clean.includes('臨時') || clean.includes('友軍')) return true;
       if ((guestPlayers || []).some(g => g && g.name === clean)) return true;
       // 核心隔離鐵律：凡是不在 14 位正式隊員名冊且無 reg_ 建檔日誌者，一律判定為臨時支援球員！
@@ -2445,6 +2446,12 @@
       if (!g) return true;
       return g.id === 'game_20260315_mech' || g.id === 'demo_game_1';
     }
+
+    // 本隊以 0:0 表示比分尚未記錄；覆盤、紀錄與賽後圖共用同一判斷。
+    function isGameScoreRecorded(game) {
+      return Number(game?.finalScore?.us) > 0 || Number(game?.finalScore?.opp) > 0;
+    }
+    window.isGameScoreRecorded = isGameScoreRecorded;
 
     // 歷史場記資料庫 (保留所有手動與真實賽事)
     // Archived estimated coordinates remain stored; fielding locations and stats stay intact.
@@ -2572,7 +2579,7 @@
       }
     })();
 
-    async function loadDatabaseSource(filePath, storageKey, apply, setSha) {
+    async function loadDatabaseSource(filePath, storageKey, apply, setSha, optional = false) {
       try {
         const { content, sha } = await fetchGitHubContent(filePath);
         apply(content, 'cloud');
@@ -2580,6 +2587,12 @@
         localStorage.setItem(storageKey, JSON.stringify(content));
         return 'cloud';
       } catch (err) {
+        if (optional && err.status === 404) {
+          const cached = readStoredJson(storageKey, []);
+          apply(Array.isArray(cached) ? cached : [], 'missing');
+          setSha(null);
+          return 'missing';
+        }
         try {
           const content = await fetchLocalContent(filePath);
           apply(content, 'static');
@@ -2599,7 +2612,7 @@
       return loadDatabaseSource(GUESTS_FILE_PATH, 'rebas_guest_players', (content, source) => {
         if (!Array.isArray(content)) throw new Error('Invalid guest roster');
         guestPlayers = window.guestPlayers = content.filter(g => g && g.name);
-      }, sha => { currentGuestsSha = sha; });
+      }, sha => { currentGuestsSha = sha; }, true);
     }
 
     async function commitGuestsToGitHub(updatedGuests, commitMessage = "update: sync guest players via portal") {
@@ -2662,7 +2675,11 @@
       const headers = { 'Accept': 'application/vnd.github.v3+json' };
       if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
       const res = await fetchWithTimeout(url, { headers }, timeoutMs);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const err = new Error(`HTTP ${res.status}`);
+        err.status = res.status;
+        throw err;
+      }
       const data = await res.json();
       let text;
       if (data.encoding === 'base64' && data.content) {
@@ -2687,11 +2704,11 @@
     function getAllAvailablePlayerNames() {
       const teamNames = Object.values(DEFAULT_JERSEY_MAP);
       allLogs.forEach(l => {
-        if (l.name && !teamNames.includes(l.name) && !(guestPlayers || []).some(g => g.name === l.name)) {
+        if (l.name && !teamNames.includes(l.name) && (isOfficialTeamPlayer(l.name) || !(guestPlayers || []).some(g => g.name === l.name))) {
           teamNames.push(l.name);
         }
       });
-      const guestNames = (guestPlayers || []).map(g => g.name);
+      const guestNames = (guestPlayers || []).filter(g => !isOfficialTeamPlayer(g.name)).map(g => g.name);
       return { teamNames: [...new Set(teamNames)], guestNames: [...new Set(guestNames)] };
     }
 
@@ -2699,6 +2716,10 @@
     window.addGuestPlayer = function(name, jersey = 0, tag = '友軍支援') {
       if (!name || !name.trim()) return null;
       const cleanName = name.trim();
+      if (isOfficialTeamPlayer(cleanName)) {
+        alert(`「${cleanName}」是正式隊員，不能登記為支援選手`);
+        return null;
+      }
       const cleanJersey = parseInt(jersey, 10) || 0;
       const existing = guestPlayers.find(g => g.name === cleanName);
       if (existing) {
@@ -2747,7 +2768,7 @@
         alert('請輸入支援選手姓名！');
         return;
       }
-      addGuestPlayer(name, jersey, tag);
+      if (!addGuestPlayer(name, jersey, tag)) return;
       if (nameInput) nameInput.value = '';
       if (jerseyInput) jerseyInput.value = '';
       if (tagInput) tagInput.value = '';
@@ -2835,7 +2856,7 @@
         const cleanName = name.trim();
         const jerseyStr = prompt(`請輸入 ${cleanName} 的背號（選填，預設 0）：`, '0');
         const jerseyNum = parseInt(jerseyStr, 10) || 0;
-        addGuestPlayer(cleanName, jerseyNum, '友軍支援');
+        if (!addGuestPlayer(cleanName, jerseyNum, '友軍支援')) return;
         chosenPlayer = cleanName;
       }
       const idx = activeGame.currentBatterIdx;
@@ -2859,13 +2880,13 @@
     function syncJerseyMaps() {
       JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
       allLogs.forEach(l => {
-        if (l.jersey && l.name && isOfficialTeamPlayer(l.name) && !isGuestPlayerName(l.name)) {
+        if (l.jersey !== null && l.jersey !== undefined && l.jersey !== '' && Number.isFinite(Number(l.jersey)) && Number(l.jersey) >= 0 && l.name && isOfficialTeamPlayer(l.name)) {
           JERSEY_TO_NAME[Number(l.jersey)] = l.name;
         }
       });
       // 確保支援與臨時選手絕不列入正式隊員背號名冊 JERSEY_TO_NAME
       (guestPlayers || []).forEach(g => {
-        if (g && g.name) {
+        if (g && g.name && !isOfficialTeamPlayer(g.name)) {
           Object.keys(JERSEY_TO_NAME).forEach(k => {
             if (JERSEY_TO_NAME[k] === g.name) delete JERSEY_TO_NAME[k];
           });
@@ -2882,7 +2903,7 @@
       );
       // NAME_TO_JERSEY 僅供查詢背號用，支援選手可以查找背號
       (guestPlayers || []).forEach(g => {
-        if (g && g.name) {
+        if (g && g.name && !isOfficialTeamPlayer(g.name)) {
           NAME_TO_JERSEY[g.name] = g.jersey !== undefined ? Number(g.jersey) : 0;
         }
       });
@@ -4678,12 +4699,13 @@ window.toggleDiagnosticsCollapse = function() {
       if (sources[5] === 'failed' && (!allLogs || !allLogs.length)) {
         allLogs = window.allLogs = JSON.parse(JSON.stringify(baseline2025Logs));
       }
+      syncJerseyMaps();
       syncAllGamesToTeamLogs();
       if (!attendanceEdited) attendanceInitialized = false;
       syncJerseyMaps();
       if (allLogs.length > 0 && !selectedPlayerName) selectedPlayerName = allLogs[0].name;
       updateDhRuleButtons();
-      const fallback = sources.flatMap((source, i) => source === 'cloud' ? [] : [`${names[i]}：${source === 'failed' ? '載入失敗，保留本機／預設資料' : source === 'cache' ? '使用本機快取' : '使用網站備援資料'}`]);
+      const fallback = sources.flatMap((source, i) => source === 'cloud' || source === 'missing' ? [] : [`${names[i]}：${source === 'failed' ? '載入失敗，保留本機／預設資料' : source === 'cache' ? '使用本機快取' : '使用網站備援資料'}`]);
       if (!fallback.length) {
         setStatusBadge(`[連線正常] 雲端已同步 (${allLogs.length} 筆)`, 'success');
       } else {
@@ -7033,7 +7055,16 @@ function renderCustomChart(agg) {
       const zKey = document.getElementById('customZVar').value;
       // Batted-ball variables exist only for players with scorebook batted-ball types.
       const BATTED_BALL_KEYS = ['ld_pct', 'gb_pct', 'fb_pct', 'pu_pct', 'pull_pct', 'oppo_pct', 'xba', 'xslg', 'xwoba'];
-      const pList = [xKey, yKey, zKey].some(k => BATTED_BALL_KEYS.includes(k)) ? agg.players.filter(p => p.tracked) : agg.players;
+      const zSelect = document.getElementById('customZVar');
+      zSelect.disabled = type !== 'bubble';
+      zSelect.title = type === 'bubble' ? '氣泡大小' : '僅氣泡圖使用';
+      const zLabel = document.querySelector('label[for="customZVar"]') || zSelect.previousElementSibling;
+      if (zLabel) {
+        if (!zLabel.dataset.originalText) zLabel.dataset.originalText = zLabel.textContent;
+        zLabel.textContent = type === 'bubble' ? zLabel.dataset.originalText : `${zLabel.dataset.originalText}（僅氣泡圖使用）`;
+      }
+      const axisKeys = type === 'bubble' ? [xKey, yKey, zKey] : [xKey, yKey];
+      const pList = axisKeys.some(k => BATTED_BALL_KEYS.includes(k)) ? agg.players.filter(p => p.tracked) : agg.players;
       const cCanvas = document.getElementById('customChart'); if (!cCanvas || !cCanvas.getContext) return; const ctx = cCanvas.getContext('2d');
 
 
@@ -7067,9 +7098,10 @@ function renderCustomChart(agg) {
 
 
       if (type === 'bubble') {
-        const zVals = pList.map(d => Number(d[zKey]) || 1);
-        const minZ = Math.min(...zVals);
-        const maxZ = Math.max(...zVals);
+        const zValue = d => d[zKey] !== null && d[zKey] !== undefined && Number.isFinite(Number(d[zKey])) ? Number(d[zKey]) : null;
+        const zVals = pList.map(zValue).filter(z => z !== null);
+        const minZ = zVals.length ? Math.min(...zVals) : 0;
+        const maxZ = zVals.length ? Math.max(...zVals) : 0;
 
 
         customChartInst = new Chart(ctx, {
@@ -7078,8 +7110,8 @@ function renderCustomChart(agg) {
             datasets: [{
               label: '全隊球員分佈',
               data: pList.map(d => {
-                const z = Number(d[zKey]) || 1;
-                const r = maxZ === minZ ? 10 : 5 + ((z - minZ) / (maxZ - minZ)) * 22;
+                const z = zValue(d);
+                const r = z === null || maxZ === minZ ? 5 : 5 + ((z - minZ) / (maxZ - minZ)) * 22;
                 return { x: d[xKey], y: d[yKey], r: Math.max(4, r), name: d.name, rawZ: z };
               }),
               backgroundColor: 'rgba(167, 139, 250, 0.45)',
@@ -7093,7 +7125,7 @@ function renderCustomChart(agg) {
             plugins: {
               tooltip: {
                 callbacks: {
-                  label: c => `${c.raw.name}: (${xKey}: ${Number(c.raw.x).toFixed(3)}, ${yKey}: ${Number(c.raw.y).toFixed(3)}, ${zKey}: ${c.raw.rawZ})`
+                  label: c => `${c.raw.name}: (${xKey}: ${Number(c.raw.x).toFixed(3)}, ${yKey}: ${Number(c.raw.y).toFixed(3)}, ${zKey}: ${c.raw.rawZ ?? '--'})`
                 }
               },
               legend: { display: false }
@@ -7479,19 +7511,25 @@ function renderCustomChart(agg) {
         alert('請選取打席數 (PA)！');
         return;
       }
-      const pa = Number(paVal) || 0;
+      const pa = Number(paVal);
       const tag = document.getElementById('new_tag').value.trim() || '聯賽';
-      const bb = Number(document.getElementById('new_bb').value) || 0;
-      const sf = Number(document.getElementById('new_sf').value) || 0;
+      const bb = Number(document.getElementById('new_bb').value);
+      const sf = Number(document.getElementById('new_sf').value);
       const ab = Math.max(0, pa - bb - sf);
 
 
-      const h1 = Number(document.getElementById('new_h1').value) || 0;
-      const h2 = Number(document.getElementById('new_h2').value) || 0;
-      const h3 = Number(document.getElementById('new_h3').value) || 0;
-      const hr = Number(document.getElementById('new_hr').value) || 0;
+      const h1 = Number(document.getElementById('new_h1').value);
+      const h2 = Number(document.getElementById('new_h2').value);
+      const h3 = Number(document.getElementById('new_h3').value);
+      const hr = Number(document.getElementById('new_hr').value);
       const h = h1 + h2 + h3 + hr;
-      const k = Number(document.getElementById('new_k').value) || 0;
+      const k = Number(document.getElementById('new_k').value);
+      let inputError = '';
+      if (![pa, bb, sf, h1, h2, h3, hr, k].every(n => Number.isInteger(n) && n >= 0)) inputError = '所有數據必須是大於或等於 0 的整數。';
+      else if (bb + sf > pa) inputError = '保送與犧牲飛的合計不能超過打席。';
+      else if (h > ab) inputError = '安打合計不能超過打數。';
+      else if (k > ab - h) inputError = '三振不能超過打數扣除安打的次數。';
+      if (inputError) { alert(inputError); return; }
 
 
       const newEntry = {
@@ -7546,8 +7584,6 @@ function renderCustomChart(agg) {
       }
 
 
-      JERSEY_TO_NAME[num] = name;
-      NAME_TO_JERSEY[name] = num;
 
 
       const regLog = {
@@ -7562,6 +7598,7 @@ function renderCustomChart(agg) {
 
 
       const success = await commitLogsToGitHub(updated, `feat: register player #${num} ${name}`);
+      syncJerseyMaps();
       if (success) {
         document.getElementById('addPlayerForm').reset();
         document.getElementById('addPlayerForm').classList.add('hidden');
@@ -7651,12 +7688,15 @@ function renderCustomChart(agg) {
               }
               const p = pMap[pName];
               p.gameIds.add(g.id); // appearances = distinct games pitched
-              if (evt.type === 'GO') { p.go++; p.outs++; p.tbf++; }
-              else if (evt.type === 'FO') { p.fo++; p.outs++; p.tbf++; }
-              else if (evt.type === 'K') { p.k_swing++; p.outs++; p.tbf++; }
-              else if (evt.type === '界外K') { p.k_foul++; p.outs++; p.tbf++; }
-              else if (evt.type === 'DP') { p.dp++; p.outs += 2; p.tbf++; }
-              else if (evt.type === 'RUNNER_OUT') { p.runner_out++; p.outs++; }
+              const defaultOuts = evt.type === 'DP' ? 2 : ['GO', 'FO', 'K', '界外K', 'RUNNER_OUT'].includes(evt.type) ? 1 : 0;
+              const recordedOuts = evt.outsAdded;
+              p.outs += recordedOuts !== null && recordedOuts !== undefined && recordedOuts !== '' && Number.isFinite(Number(recordedOuts)) && Number(recordedOuts) >= 0 && Number(recordedOuts) <= 3 ? Number(recordedOuts) : defaultOuts;
+              if (evt.type === 'GO') { p.go++; p.tbf++; }
+              else if (evt.type === 'FO') { p.fo++; p.tbf++; }
+              else if (evt.type === 'K') { p.k_swing++; p.tbf++; }
+              else if (evt.type === '界外K') { p.k_foul++; p.tbf++; }
+              else if (evt.type === 'DP') { p.dp++; p.tbf++; }
+              else if (evt.type === 'RUNNER_OUT') { p.runner_out++; }
               else if (evt.type === 'BB') { p.bb++; p.tbf++; }
               else if (evt.type === 'HIT') { p.hits++; p.tbf++; }
               if (evt.runs) p.runs += evt.runs;
@@ -7765,6 +7805,10 @@ function renderCustomChart(agg) {
         }
         if (countEl) countEl.textContent = '總投球局數: 0 局';
         if (goAoEl) goAoEl.innerHTML = '<span>尚無投球數據</span>';
+        const emptySelect = document.getElementById('pitchingPlayerSelect');
+        if (emptySelect) emptySelect.innerHTML = '<option value="" disabled selected>此區間無投手紀錄</option>';
+        const emptyBadge = document.getElementById('pitcherSelectAvatarBadge');
+        if (emptyBadge) emptyBadge.innerHTML = '';
         if (pitcherOutProfileChartInst) { pitcherOutProfileChartInst.destroy(); pitcherOutProfileChartInst = null; }
         if (pitcherRadarChartInst) { pitcherRadarChartInst.destroy(); pitcherRadarChartInst = null; }
         return;
@@ -8448,7 +8492,7 @@ function renderCustomChart(agg) {
         const cleanName = guestName.trim();
         const jerseyStr = prompt(`請輸入 ${cleanName} 的球衣背號（選填，例如 55，未填預設 0）：`, '0');
         const jerseyNum = parseInt(jerseyStr, 10) || 0;
-        addGuestPlayer(cleanName, jerseyNum, '友軍支援');
+        if (!addGuestPlayer(cleanName, jerseyNum, '友軍支援')) return;
         setupLineupList[index] = cleanName;
         renderSetupLineupGrid();
         showToast(`已新增支援選手：#${jerseyNum} ${cleanName} 並指派至第 ${index + 1} 棒！`);
@@ -8762,7 +8806,7 @@ function renderCustomChart(agg) {
         const cleanName = name.trim();
         const jerseyStr = prompt(`請輸入 ${cleanName} 的背號（選填，預設 0）：`, '0');
         const jerseyNum = parseInt(jerseyStr, 10) || 0;
-        addGuestPlayer(cleanName, jerseyNum, '投手支援');
+        if (!addGuestPlayer(cleanName, jerseyNum, '投手支援')) { updateLivePitcherCard(); return; }
         newPitcherName = cleanName;
       }
 
@@ -8861,7 +8905,7 @@ function renderCustomChart(agg) {
         const cleanName = name.trim();
         const jerseyStr = prompt(`請輸入 ${cleanName} 的背號（選填，預設 0）：`, '0');
         const jerseyNum = parseInt(jerseyStr, 10) || 0;
-        addGuestPlayer(cleanName, jerseyNum, '投手支援');
+        if (!addGuestPlayer(cleanName, jerseyNum, '投手支援')) return;
         openPitcherChangeModal(cleanName);
       }
     };
@@ -9646,7 +9690,7 @@ function renderCustomChart(agg) {
         if (isGuestPlayerName(name)) return;
         statsMap[name] = {
           name,
-          jersey: NAME_TO_JERSEY[name] ?? 0,
+          jersey: NAME_TO_JERSEY[name] ?? null,
           pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0,
           k_swing: 0, k_foul: 0,
           bip: 0, ld: 0, gb: 0, fb: 0, pu: 0,
@@ -9691,10 +9735,14 @@ function renderCustomChart(agg) {
         });
       });
 
+      const jerseyCounts = {};
+      Object.values(statsMap).forEach(p => { if (p.jersey !== null) jerseyCounts[p.jersey] = (jerseyCounts[p.jersey] || 0) + 1; });
       Object.values(statsMap).forEach(p => {
         if (p.pa > 0) {
+          // 姓名編為不含底線的 Unicode 碼點，保持逐場紀錄的 gameIdOf 尾碼規則。
+          const suffix = p.jersey !== null && jerseyCounts[p.jersey] === 1 ? String(p.jersey) : `name-${Array.from(p.name).map(c => c.codePointAt(0).toString(16)).join('-')}`;
           logs.push({
-            id: `log_game_${game.id}_${p.jersey}`,
+            id: `log_game_${game.id}_${suffix}`,
             gameId: game.id,
             date: game.date,
             tag: `場記賽事: ${game.tag || '聯賽'} vs ${game.opponent}`,
@@ -9777,9 +9825,18 @@ function renderCustomChart(agg) {
       if (!game) return;
       if (!confirm(`確定要將本場比賽（${game.date} vs ${game.opponent}）自全隊日誌庫中撤銷移除？\n移除後全隊戰況與球員個人累計三圍將扣除此場成績。`)) return;
 
+      const previousExcluded = game.excludedFromLogs;
       game.excludedFromLogs = true;
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
       const gamesSynced = await commitGamesToGitHub(allGames, `撤銷賽事統計: ${game.date} vs ${game.opponent}`);
+      if (!gamesSynced) {
+        if (previousExcluded === undefined) delete game.excludedFromLogs; else game.excludedFromLogs = previousExcluded;
+        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        renderAll();
+        renderSelectedGameReview(game.id);
+        showSyncResult(false, '', '撤銷失敗：賽事排除狀態未上傳，日誌保持原樣，請直接重試。');
+        return;
+      }
       const prefix1 = `log_game_${game.id}_`;
       const prefix2 = `log_auto_${game.id}_`;
       allLogs = allLogs.filter(l => !l.id.startsWith(prefix1) && !l.id.startsWith(prefix2));
@@ -9807,7 +9864,7 @@ function renderCustomChart(agg) {
 
       select.innerHTML = allGames.map(g => `
         <option value="${g.id}" ${g.id === selectedReviewGameId ? 'selected' : ''}>
-          ${g.date} vs ${g.opponent} (${g.finalScore ? (g.finalScore.us || g.finalScore.opp ? g.finalScore.us + ':' + g.finalScore.opp : '比分未記錄') : '進行中'}) [${g.tag || '聯賽'}]
+          ${g.date} vs ${g.opponent} (${g.finalScore ? (isGameScoreRecorded(g) ? g.finalScore.us + ':' + g.finalScore.opp : '比分未記錄') : '進行中'}) [${g.tag || '聯賽'}]
         </option>
       `).join('');
 
@@ -9849,9 +9906,19 @@ function renderCustomChart(agg) {
       const game = allGames.find(g => g.id === selectedReviewGameId);
       if (!game) return;
       pendingLogins.add(game.id);
+      const previousExcluded = game.excludedFromLogs;
       delete game.excludedFromLogs;
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
       const gamesSynced = await commitGamesToGitHub(allGames, `重新納入賽事統計: ${game.date} vs ${game.opponent}`);
+      if (!gamesSynced) {
+        if (previousExcluded !== undefined) game.excludedFromLogs = previousExcluded;
+        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        pendingLogins.delete(game.id);
+        renderAll();
+        renderSelectedGameReview(game.id);
+        showSyncResult(false, '', '登入失敗：賽事納入狀態未上傳，日誌保持原樣，請直接重試。');
+        return;
+      }
       const { count, success } = await syncGameToTeamLogs(game);
       if (gamesSynced && success) pendingLogins.delete(game.id);
       renderAll();
@@ -9898,7 +9965,7 @@ function renderCustomChart(agg) {
 
       const isWin = game.finalScore.us > game.finalScore.opp;
       const isLoss = game.finalScore.us < game.finalScore.opp;
-      const scoreRecorded = game.finalScore.us > 0 || game.finalScore.opp > 0;
+      const scoreRecorded = isGameScoreRecorded(game);
       const resultLabel = !scoreRecorded ? '比分未記錄' : isWin ? 'VICTORY 勝利' : isLoss ? 'DEFEAT 落敗' : 'TIE 平手';
       const resultStyle = isWin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : isLoss ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'bg-slate-800 text-slate-300 border border-slate-600';
       const isLogged = !pendingLogins.has(game.id) && isGameAlreadyLogged(game.id);
@@ -10112,7 +10179,9 @@ function renderCustomChart(agg) {
       const totalHits = Object.values(ourInnHits).reduce((a, b) => a + b, 0);
       const totalRuns = game.finalScore.us;
 
-      if (totalHits >= 10 && totalRuns < 6) {
+      if (!scoreRecorded) {
+        diagnosisNotes.push({ type: 'neutral', title: '得分效率尚無法評估', desc: `比分未記錄，無法評估得分效率（全場 ${totalHits} 支安打）。` });
+      } else if (totalHits >= 10 && totalRuns < 6) {
         diagnosisNotes.push({
           type: 'danger',
           title: '得點圈打擊串聯斷層 (殘壘偏高)',
@@ -10233,8 +10302,8 @@ function renderCustomChart(agg) {
             </div>
             <div class="space-y-3">
               ${diagnosisNotes.map(n => `
-                <div class="p-3.5 rounded-xl border ${n.type === 'danger' ? 'bg-rose-950/30 border-rose-800/50' : 'bg-emerald-950/30 border-emerald-800/50'}">
-                  <h4 class="text-xs font-black ${n.type === 'danger' ? 'text-rose-300' : 'text-emerald-300'} mb-1">${n.title}</h4>
+                <div class="p-3.5 rounded-xl border ${n.type === 'danger' ? 'bg-rose-950/30 border-rose-800/50' : n.type === 'neutral' ? 'bg-slate-900/60 border-slate-700' : 'bg-emerald-950/30 border-emerald-800/50'}">
+                  <h4 class="text-xs font-black ${n.type === 'danger' ? 'text-rose-300' : n.type === 'neutral' ? 'text-slate-300' : 'text-emerald-300'} mb-1">${n.title}</h4>
                   <p class="text-xs text-slate-300 leading-relaxed">${n.desc}</p>
                 </div>
               `).join('')}
@@ -10773,11 +10842,11 @@ function renderCustomChart(agg) {
     loadLogsFromGitHub();
   
     </script>
-  <script src="ui-comfort.js?v=20261011-auditfixes"></script>
-  <script src="team-insights.js?v=20261011-auditfixes"></script>
+  <script src="ui-comfort.js?v=20261011-audit2"></script>
+  <script src="team-insights.js?v=20261011-audit2"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
   <script src="lineup-recommender.js?v=20261011-auditfixes"></script>
   <script src="player-diagnostics.js?v=20261010-diag3"></script>
-  <script src="team-records.js?v=20261011-ui4"></script>
+  <script src="team-records.js?v=20261011-audit2"></script>
 </body>
 </html>

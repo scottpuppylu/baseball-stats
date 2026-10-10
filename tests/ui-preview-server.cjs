@@ -8,7 +8,7 @@ const port = Number(process.env.UI_PREVIEW_PORT || 54321);
 const stored = new Map();
 for (const name of ['logs', 'games', 'avatars', 'tags', 'defense', 'guests']) {
   const filename = path.join(root, 'data', `${name}.json`);
-  stored.set(`data/${name}.json`, fs.existsSync(filename) ? fs.readFileSync(filename) : Buffer.from('[]'));
+  if (fs.existsSync(filename)) stored.set(`data/${name}.json`, fs.readFileSync(filename));
 }
 const injection = `<script>
 window.__previewWrites = [];
@@ -42,7 +42,7 @@ http.createServer(async (req, res) => {
     const pathname = decodeURIComponent(new URL(req.url, `http://localhost:${port}`).pathname);
     if (pathname.startsWith('/__mock-api/')) {
       const file = pathname.slice('/__mock-api/'.length);
-      if (!stored.has(file)) { res.writeHead(404).end('{}'); return; }
+      if (!stored.has(file) && req.method !== 'PUT') { res.writeHead(404).end('{}'); return; }
       if (req.method === 'PUT') {
         let body = '';
         for await (const chunk of req) body += chunk;

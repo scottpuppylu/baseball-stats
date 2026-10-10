@@ -425,3 +425,38 @@ npm test
 修改的 `ui-comfort.js`、`team-insights.js`、`lineup-recommender.js` 已更新快取標記；未修改的 CSS／模型／診斷／生涯紀錄模組保留版本。頁首版本以 Node 的 `Intl.DateTimeFormat` 明確指定 `Asia/Taipei` 更新。
 
 驗證結果：`npm test` 13/13 組通過（98 項單元、12 組瀏覽器；新增集中回歸與 63 組響應式版面均通過）。正式資料檔無內容異動，預覽的真實 GitHub 請求為 0；提交前頁首版本更新為 `v261011.0452`。
+
+## 2026/10/11 第二輪自檢修正（#1–#15，Baseline v4）
+
+本輪依使用者指定範圍修正 15 項問題，保留現有頁面、按鈕、圖表、欄位與跑者出局延續打席規則，不新增 RBI。正式 `data/*.json` 與內嵌 token 保持原樣。新瀏覽器套件 `tests/ui-audit-fixes-2.cjs` 已註冊到 `tests/run-all.cjs`；每個案例使用新的瀏覽器儲存空間及記憶體 GitHub mock，結尾核對 pageerror、正式資料雜湊與真實 GitHub 請求數。
+
+| 問題 | 修改檔案與函式 | 回歸案例與驗證 |
+| --- | --- | --- |
+| #1 撤銷失敗與重整 | `index.html`：`undoGameFromTeamLogs`、`syncReviewGameToTeamLogs` | `1-sync-order`：games PUT 500 時還原旗標，不送出 logs；reload 與雲端一致。games 成功、logs 失敗後 reload 仍排除；反向過帳亦驗證失敗不改 logs、重試成功恢復。 |
+| #2 首次載入重複 ID | `index.html`：`loadLogsFromGitHub`、`buildGameLogs` | `2-first-load-ids`：首次載入無重複 ID，林志豪 #95、楊喬豐 #46 正確；缺背號或同背號以姓名 Unicode 碼點尾碼區分，不含底線，`gameIdOf` 正則仍解析同一賽事。 |
+| #3 登記上傳失敗無法重試 | `index.html`：`addPlayerForm` submit | `3-registration-retry`：只由成功寫入的日誌重建背號表；第一次寫入失敗保留輸入，再送出成功且僅一筆 `reg_`。 |
+| #4 同名支援覆蓋正式隊員 | `index.html`：`isGuestPlayerName`、`getAllAvailablePlayerNames`、`addGuestPlayer`、`syncJerseyMaps` 及五個呼叫端 | `4-guest-collision`：拒絕同名支援且沒有 guests PUT；原背號、打席、生涯場數不變。舊同名支援資料以正式隊員優先；支援表單、打序、代打、場上換投、場下換投都中止指派。 |
+| #5 不可能的手動數據 | `index.html`：`addLogForm` submit | `5-manual-validation`：拒絕 3 打席 4 安、負值、小數、BB+SF 超過 PA、K 超過 AB−H；全部不得上傳，合法數據仍成功。沒有其他編輯手動日誌的表單。 |
+| #6 覆盤出局數未進投手局數 | `index.html`：`getAggregatedPitcherStats` | `6-pitcher-outs`：優先採有效 0–3 `outsAdded`，舊資料缺值依原類型推算，其他計數不變。覆盤將 1 改成 0 並儲存，投手少 1 個出局、TBF 不變。 |
+| #7 無比分仍評論零分 | `index.html`：共用 `isGameScoreRecorded`、`renderGameReview`、`renderSelectedGameReview`；`team-insights.js`：團隊逐場戰績、`drawGameImage` | `7-unrecorded-diagnosis`：四場 0:0 均顯示中性提示，不出現攻下／換得 0 分；有比分仍使用原效率文案。近況、賽後圖改用共用判斷，MVP 算法沒有使用終場得分。 |
+| #8 終場比分未進單場紀錄 | `team-records.js`：`teamGameRecords` | `8-final-score-record`：覆盤儲存 12:8 即反映單場 12 分；比分未記錄時沿用逐局加總。安打、全壘打及最佳單局來源維持原樣。 |
+| #9 年度備援被當單場 | `team-insights.js`：`isSummaryTag`；測試獨立計算副本 | `9-annual-fallback`：內建年度備援不算單場、不進單場紀錄／連續紀錄／猛打賞／逐場里程碑，生涯仍有 7 轟。其他模組引用同一套逐場分類。 |
+| #10 手機點列無法展開 | `ui-comfort.js`：折疊表 click 捕捉監聽 | `10-mobile-fold-navigation`：非姓名欄展開明細並留在原頁；姓名與明細按鈕仍能進入檔案；桌機原點列行為不變。三位正式投手的手機表格亦能展開，保留投手選取並提供檔案入口。 |
+| #11 背號 0 查找失效 | `index.html`：`syncJerseyMaps` 及既有背號顯示／查找 | `11-zero-jersey`：登記 #0、補登鎖定提示、成功補登、球員下拉與表格均顯示 #0。既有 `??` 與 `!== undefined` 顯示保留 0；移除唯一把 0 排除的 truthy 判斷。 |
+| #12 氣泡零值變一 | `index.html`：`renderCustomChart` | `12-bubble-zero`：零全壘打保留 rawZ=0，tooltip 顯示 0、最小半徑；null／undefined／NaN 才是缺值，tooltip 顯示 `--`。 |
+| #13 無用 Z 軸篩選 | `index.html`：`renderCustomChart` | `13-unused-z`：散佈、雙軸圖的 HR／xBA Z 選擇點數一致；非氣泡圖停用選單並標示用途，切回氣泡圖恢復原選擇。 |
+| #14 空區間殘留投手 | `index.html`：`renderPitchingStudio` | `14-empty-pitching`：2099 年下拉只顯示停用的無紀錄選項，頭像、圖表與專屬區塊清空；保留選擇，日期恢復後回到田耕宇。 |
+| #15 可選支援名冊 404 | `index.html`：`fetchGitHubContent`、`loadDatabaseSource`、`loadGuestsFromGitHub`、`loadLogsFromGitHub`；`tests/ui-preview-server.cjs` | `15-optional-guest-file`：實際預覽 GET 404，視為 missing 並保留本機名冊、狀態正常；首次 PUT 不帶 sha 可建立，reload 保留名冊；500 仍警告。不新增正式 guests.json。 |
+
+投手比較基準在修改前的 `964b134` 擷取：正式資料沒有正式投手彙總（支援投手仍依原規則排除）；將四場賽事的投手改為正式隊員的記憶體複本後，田耕宇 21 出局、sFIP 4.5，盧宣嘉 18 出局、sFIP 4.5。修正後逐值相同，另以上述覆盤事件驗證可修改出局數。
+
+`tests/sync-feedback.test.cjs` 保留原有四組撤銷／過帳案例及全部斷言，依 #1 的新要求更新失敗預期：games 失敗須還原旗標、保留日誌且不得呼叫 logs 上傳；只有 games 成功、logs 失敗才留下部分過帳狀態。未刪除或放寬斷言。完整性 BASELINE 升至 v4，script／handlers／ids 仍以原正則及 LF 正規化方式計算，idCount 維持 276。
+
+修改的 `ui-comfort.js`、`team-insights.js`、`team-records.js` 均更新為 `?v=20261011-audit2`；其餘模組及 CSS 未改。版本徽章由 Node `Intl.DateTimeFormat` 明確指定 `Asia/Taipei`，提交前再次更新。
+
+驗證結果：
+
+- 最新完整 `npm test` **14/14 組通過**：98/98 單元、13 組瀏覽器，新增 15/15 回歸、63 組響應式版面、42 組原操作流程均通過。第一次完整執行的打序套件因 Chrome CDP 連線未啟動而未開始；重跑完整套件後全部通過。
+- 實際 `git stash` 暫存業務修正，切回 `964b134` 跑 #1、#2、#4、#10、#15：五項皆在對應斷言失敗（依序為多送出 logs、重複 ID、同名支援未拒絕、點列離開排行榜、缺檔回 200）。`stash pop` 後逐檔核對修正雜湊，完整還原；修正版 15 項全部通過。
+- 獨立 smoke：1440、1024、390 三種寬度，每種 12 個頁面（含場記 live／review／spray）沒有空白或 pageerror；每種均實際切換球員、確認打序推薦、下載 CSV 並檢查內容、下載賽後圖並確認 PNG 格式，共 36 個頁面與 12 個操作驗證。截圖另做目視核對。
+- 正式五個 JSON 的 SHA-256、token 雜湊均未變，沒有新增 guests.json；測試與 smoke 的真實 GitHub 請求為 0。所有既有測試斷言保留，DOM ID 仍為 276 個。報告、截圖與匯出檔只放在 Windows 暫存目錄。

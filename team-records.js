@@ -69,7 +69,7 @@
         hr += (inn.plateAppearances || []).filter(p => p.result === 'HR').length;
         if (!bestInning || (inn.runs || 0) > bestInning.runs) bestInning = {runs: inn.runs || 0, inning: inn.inningNum};
       }
-      rows.push({game, runs, hits, hr, bestInning});
+      rows.push({game, runs: isGameScoreRecorded(game) ? Number(game.finalScore.us) : runs, hits, hr, bestInning});
     }
     const top = (key, value, label) => {
       const best = rows.filter(r => value(r) > 0).sort((a, b) => value(b) - value(a))[0];

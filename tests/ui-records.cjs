@@ -31,7 +31,7 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       const check=await page.evaluate(()=>{
         const sum={};const games={};
         const key=l=>l.gameId||(String(l.id).match(/^log_(?:game|auto)_(.+)_[^_]+$/)||[])[1]||`${l.date}|${l.tag||''}`;
-        const summary=t=>/總數據|彙總|總計/.test(String(t||''));
+        const summary=t=>/總數據|彙總|總計|總結/.test(String(t||''));
         for(const l of allLogs){if(!(Number(l.pa)>0)||isGuestPlayerName(l.name))continue;const s=sum[l.name]||(sum[l.name]={pa:0,h:0,hr:0,h2:0,h3:0,bb:0});for(const k of Object.keys(s))s[k]+=Number(l[k])||0;
           if(!summary(l.tag)){const g=(games[l.name]||(games[l.name]={}));const gk=key(l);const s2=g[gk]||(g[gk]={h:0,ab:0,hr:0});s2.h+=Number(l.h)||0;s2.ab+=Number(l.ab)||0;s2.hr+=Number(l.hr)||0;}}
         const names=Object.keys(sum);

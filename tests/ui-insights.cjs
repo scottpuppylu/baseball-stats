@@ -219,7 +219,7 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
         // Manually logged games (no scorebook id) also count; a player appears in them with a plate appearance.
         const manual=new Map();
         for(const l of getFilteredLogs()){
-          if(/總數據|彙總|總計/.test(l.tag||'')||!(Number(l.pa)>0)||l.gameId||/^log_(game|auto)_/.test(l.id))continue;
+          if(/總數據|彙總|總計|總結/.test(l.tag||'')||!(Number(l.pa)>0)||l.gameId||/^log_(game|auto)_/.test(l.id))continue;
           const k=`${l.date}|${l.tag||''}`;
           if(!manual.has(k))manual.set(k,new Set());
           manual.get(k).add(l.name);
@@ -255,7 +255,7 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
         const section=document.getElementById('insightTeamGameLogSection');
         const agg=getAnalysisAgg();
         const names=new Set(agg.players.map(p=>p.name));
-        const summary=t=>/總數據|彙總|總計/.test(String(t||''));
+        const summary=t=>/總數據|彙總|總計|總結/.test(String(t||''));
         const logs=getFilteredLogs().filter(l=>names.has(l.name)&&!summary(l.tag));
         const t=logs.reduce((s,l)=>{for(const k of ['pa','ab','h','h2','h3','hr','bb','sf'])s[k]+=Number(l[k])||0;return s;},{pa:0,ab:0,h:0,h2:0,h3:0,hr:0,bb:0,sf:0});
         const tb=t.h+t.h2+2*t.h3+3*t.hr;

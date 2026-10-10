@@ -535,9 +535,14 @@
   workspace.addEventListener('click', event => {
     const row = event.target.closest('table.ui-fold-table tbody tr:not(.ui-row-detail):not(.ui-group-row)');
     if (!row || event.target.closest('button, a, select, input')) return;
+    const table = row.closest('table');
+    const tappedCell = event.target.closest('td');
+    const nameIndex = Number(table.dataset.uiNameCol) - 1;
+    // 姓名維持原本的球員跳轉／投手選取；其他欄位在捕捉階段攔下列的 onclick。
+    if (tappedCell && tappedCell.cellIndex === nameIndex && row.onclick) return;
+    event.stopPropagation();
     const next = row.nextElementSibling;
     if (next && next.classList.contains('ui-row-detail')) { next.remove(); row.classList.remove('ui-row-open'); return; }
-    const table = row.closest('table');
     const labels = headerLabels(table);
     const detail = document.createElement('tr');
     detail.className = 'ui-row-detail';
@@ -557,10 +562,29 @@
       grid.append(item);
     });
     cell.append(grid);
+    if (row.onclick) {
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.className = 'mt-2 min-h-[36px] px-3 py-2 rounded-lg bg-sky-950 border border-sky-700 text-sky-300 text-xs';
+      open.textContent = table.closest('#panelPitching') ? '查看投手分析' : '查看球員檔案';
+      open.addEventListener('click', e => row.onclick.call(row, e));
+      cell.append(open);
+      if (table.closest('#panelPitching')) {
+        const profile = open.cloneNode(true);
+        profile.textContent = '查看球員檔案';
+        profile.addEventListener('click', () => {
+          const name = row.cells[nameIndex]?.querySelector('span:last-child')?.textContent || row.cells[nameIndex]?.textContent;
+          selectedPlayerName = String(name || '').replace(/^\s*#\S+\s*/, '').trim();
+          switchMainTab('tabProfile');
+          renderPlayerProfile(getAnalysisAgg());
+        });
+        cell.append(profile);
+      }
+    }
     detail.append(cell);
     row.after(detail);
     row.classList.add('ui-row-open');
-  });
+  }, true);
 
   // On phones the sync text gives way to the status dot (which opens the same message); the dot takes its colour,
   // so a failed upload still shows red at a glance.
