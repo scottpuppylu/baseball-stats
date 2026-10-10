@@ -44,7 +44,7 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
 
     // Every sidebar label is the same plain name as the page title it opens.
     const names=[];
-    for (const key of ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary']) {
+    for (const key of ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Records','Glossary']) {
       const label=(await page.locator(`#btnTab${key} span`).textContent()).trim();
       await page.evaluate(k=>switchMainTab(`tab${k}`),key);
       // The heading follows the tab asynchronously; wait briefly, then compare whatever it shows.

@@ -10,7 +10,7 @@ const {chromium} = require('playwright');
 
 const root = path.resolve(__dirname, '..');
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
-const browserTests = ['ui-integrity-browser', 'ui-workflows', 'spray-archive-browser', 'ui-insights', 'ui-lineup', 'ui-data-fixes', 'ui-review-fixes', 'ui-responsive', 'ui-mobile-comfort', 'ui-avatar', 'ui-tablet']
+const browserTests = ['ui-integrity-browser', 'ui-workflows', 'spray-archive-browser', 'ui-insights', 'ui-lineup', 'ui-data-fixes', 'ui-review-fixes', 'ui-records', 'ui-responsive', 'ui-mobile-comfort', 'ui-avatar', 'ui-tablet']
   .filter(name => fs.existsSync(path.join(__dirname, `${name}.cjs`)));
 
 const freePort = () => new Promise((resolve, reject) => {

@@ -62,6 +62,13 @@ test('player diagnostics only read data and never write, store or call the netwo
   assert.doesNotMatch(script, /\b(?:allLogs|allGames|activeGame|playerAvatars)\s*=(?!=)/);
   assert.ok(html.includes('<script src="player-diagnostics.js?v='), 'loaded by the page');
 });
+test('career records only read data and never write, store or call the network', () => {
+  const script = fs.readFileSync(path.join(root, 'team-records.js'), 'utf8');
+  new vm.Script(script);
+  assert.doesNotMatch(script, /\b(?:fetch|localStorage|XMLHttpRequest|GITHUB_TOKEN|commit\w*ToGitHub)\b/);
+  assert.doesNotMatch(script, /\b(?:allLogs|allGames|activeGame|playerAvatars)\s*=(?!=)/);
+  assert.ok(html.includes('<script src="team-records.js?v='), 'loaded by the page');
+});
 test('presentation script parses and does not directly access persistent data or network', () => {
   const script = fs.readFileSync(path.join(root, 'ui-comfort.js'), 'utf8');
   new vm.Script(script);

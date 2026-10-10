@@ -8,8 +8,8 @@ const os=require('node:os');
 const {chromium}=require('playwright');
 const url=process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa');
-const PAGES=[['Overview'],['Profile'],['Leaderboard'],['Analytics'],['Compare'],['Lineup'],['Scorebook','live'],['Scorebook','review'],['Scorebook','spray'],['Pitching'],['Glossary']];
-const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Glossary'];
+const PAGES=[['Overview'],['Profile'],['Leaderboard'],['Analytics'],['Compare'],['Lineup'],['Scorebook','live'],['Scorebook','review'],['Scorebook','spray'],['Pitching'],['Records'],['Glossary']];
+const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Records','Glossary'];
 (async()=>{
   fs.mkdirSync(output,{recursive:true});
   const browser=await chromium.launch({headless:true,channel:'chrome'});
@@ -42,7 +42,8 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Glos
           return {small:targets.map(el=>`${el.tagName}:${(el.textContent||'').trim().slice(0,10)}`),zoom:fields.map(el=>el.id||el.tagName),tiny:tiny.slice(0,5),
             overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
             chips:bar.hidden?[]:[...bar.querySelectorAll('button')].map(b=>b.textContent),
-            total:document.documentElement.scrollHeight,header:document.getElementById('appHeader').getBoundingClientRect().height,
+            // Sections added after the density baseline (the career records) are not part of that comparison.
+            total:document.documentElement.scrollHeight-['insightCareerSection'].reduce((a,id)=>a+(document.getElementById(id)?.offsetHeight||0),0),header:document.getElementById('appHeader').getBoundingClientRect().height,
             start:panel.getBoundingClientRect().top+window.scrollY-(document.querySelector('#appWorkspace > div:not(.ui-page-heading):not(.ui-section-bar)')?.getBoundingClientRect().height||0)};
         });
         // No sideways scrolling anywhere (the jump-chip row is navigation, not content), and every folded
