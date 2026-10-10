@@ -26,7 +26,7 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
-  <link rel="stylesheet" href="ui-comfort.css?v=20261010-order">
+  <link rel="stylesheet" href="ui-comfort.css?v=20261010-norbi">
 </head>
 <body class="bg-[#070a12] text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white overflow-x-hidden">
 
@@ -48,7 +48,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261010.2237</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261010.2302</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -1483,18 +1483,8 @@
                       </div>
                     </div>
 
-                    <!-- 打點 (RBI) 與回壘得分 (Runs Scored) -->
-                    <div class="grid grid-cols-2 gap-3 border-t border-slate-800 pt-3 text-xs">
-                      <div>
-                        <label class="block text-slate-400 mb-1 font-semibold">打點 (RBI)：</label>
-                        <div class="flex items-center space-x-1" id="rbiButtonGroup">
-                          <button onclick="selectRbi(0)" id="rbi_0" class="flex-1 py-1 rounded bg-amber-600 text-white font-bold font-mono">0</button>
-                          <button onclick="selectRbi(1)" id="rbi_1" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">1</button>
-                          <button onclick="selectRbi(2)" id="rbi_2" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">2</button>
-                          <button onclick="selectRbi(3)" id="rbi_3" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">3</button>
-                          <button onclick="selectRbi(4)" id="rbi_4" class="flex-1 py-1 rounded bg-slate-900 text-slate-300 font-mono">4</button>
-                        </div>
-                      </div>
+                    <!-- 回壘得分 (Runs Scored)；本隊不記打點 -->
+                    <div class="grid grid-cols-1 gap-3 border-t border-slate-800 pt-3 text-xs">
                       <div>
                         <label class="block text-slate-400 mb-1 font-semibold">本回合得分 (R)：</label>
                         <div class="flex items-center space-x-1" id="runsScoredButtonGroup">
@@ -1535,7 +1525,6 @@
                           <th class="p-2.5 text-center">結果</th>
                           <th class="p-2.5 text-center">擊球型態</th>
                           <th class="p-2.5 text-center">落點守位</th>
-                          <th class="p-2.5 text-center">打點</th>
                           <th class="p-2.5 text-center">出局數</th>
                           <th class="p-2.5">實況描述</th>
                           <th class="p-2.5 text-center">操作</th>
@@ -1900,9 +1889,9 @@
                   <p class="text-slate-400 text-[11px]">外野高飛球被接殺但護送三壘跑者回本壘得分 (SF)；擊出滾地球形成雙殺 (DP)。</p>
                 </div>
                 <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">打點 (RBI) 與 得分 (R)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">Runs Batted In / Runs Scored</p>
-                  <p class="text-slate-400 text-[11px]">打擊送回隊友產生之實質分數 (RBI)；跑壘者踩過本壘板之得分數 (R)。</p>
+                  <span class="font-bold text-white text-xs block">得分 (R)</span>
+                  <p class="font-mono text-sky-400 text-[11px]">Runs Scored</p>
+                  <p class="text-slate-400 text-[11px]">跑壘者踩過本壘板之得分數 (R)。</p>
                 </div>
                 <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
                   <span class="font-bold text-white text-xs block">打擊率 (AVG, Batting Average)</span>
@@ -3773,7 +3762,7 @@
         { num: 7, title: '戰術銜接 (Rally Anchor)', desc: '【打線流暢關鍵】：穩定擊球掌握度 (Contact%)，避免攻勢中段斷層' },
         { num: 8, title: '後段支撐 (Lower Core)', desc: '【穩健施壓】：具備纏鬥與消耗球數能力，延續局數出局數' },
         { num: 9, title: '伏兵前哨 (Pre-Turn)', desc: '【輪轉先驅】：極力避免出局，為打線輪回十棒與前段重砲鋪路' },
-        { num: 10, title: '雙核伏兵 (Co-Turn)', desc: '【深層壘包堆積】：與十一棒形成後段雙伏兵，擴大前段重砲打點機會' },
+        { num: 10, title: '雙核伏兵 (Co-Turn)', desc: '【深層壘包堆積】：與十一棒形成後段雙伏兵，擴大前段重砲得分機會' },
         { num: 11, title: '十一棒伏兵 (Second Leadoff)', desc: '【慢壘輪轉小核彈】：後段最高上壘率 (OBP)，慢壘2~3輪打席中，上壘即可無縫串聯 1 棒與【最強第 2 棒】！' }
       ] : [
         { num: 1, title: '開路先鋒 (Leadoff)', desc: '【上壘機器】：高 OBP 與 SDI 2.0，首局首出局前不輕易出局，為最強二棒鋪路' },
@@ -8730,7 +8719,7 @@ function renderCustomChart(agg) {
               <h3 class="text-base sm:text-lg font-black text-white">${batterName}</h3>
             </div>
             <p class="text-xs text-slate-400 font-mono mt-0.5">
-              本場打擊：<span class="text-white font-bold">${matchAb}</span> 打數 <span class="text-emerald-400 font-bold">${matchH}</span> 安打 | <span class="text-amber-400 font-bold">${matchRbi}</span> 打點 | <span class="text-sky-400 font-bold">${matchR}</span> 得分
+              本場打擊：<span class="text-white font-bold">${matchAb}</span> 打數 <span class="text-emerald-400 font-bold">${matchH}</span> 安打 | <span class="text-sky-400 font-bold">${matchR}</span> 得分
             </p>
           </div>
         </div>
@@ -9552,7 +9541,6 @@ function renderCustomChart(agg) {
             <td class="p-2.5 text-center">${resBadge}</td>
             <td class="p-2.5 text-center text-slate-400">${p.trajectory || '-'}</td>
             <td class="p-2.5 text-center font-mono text-sky-300 font-bold">${p.location || '-'}</td>
-            <td class="p-2.5 text-center font-bold text-amber-300">${p.rbi || 0}</td>
             <td class="p-2.5 text-center text-slate-400">${p.outsAtEnd} 出局</td>
             <td class="p-2.5 text-slate-300 truncate max-w-[200px]">${p.desc}</td>
             <td class="p-2.5 text-center">
@@ -10138,7 +10126,6 @@ function renderCustomChart(agg) {
             <td class="p-2.5 text-center font-mono">${p.pa}</td>
             <td class="p-2.5 text-center font-bold text-slate-200 font-mono">${p.ab}</td>
             <td class="p-2.5 text-center font-bold text-emerald-400 font-mono">${p.h}</td>
-            <td class="p-2.5 text-center font-bold text-amber-400 font-mono">${p.rbi}</td>
             <td class="p-2.5 text-center text-sky-400 font-bold font-mono">${p.r}</td>
             <td class="p-2.5 text-center text-slate-300 font-mono">${p.bb}</td>
             <td class="p-2.5 text-center text-rose-400 font-mono">${p.k}</td>
@@ -10162,7 +10149,6 @@ function renderCustomChart(agg) {
           <td class="p-2.5 text-center font-mono">${teamTotalPa}</td>
           <td class="p-2.5 text-center font-mono">${teamTotalAb}</td>
           <td class="p-2.5 text-center font-mono text-emerald-400">${teamTotalH}</td>
-          <td class="p-2.5 text-center font-mono text-amber-400">${teamTotalRbi}</td>
           <td class="p-2.5 text-center font-mono text-sky-400">${teamTotalR}</td>
           <td class="p-2.5 text-center font-mono">${teamTotalBb}</td>
           <td class="p-2.5 text-center font-mono text-rose-400">${teamTotalK}</td>
@@ -10279,7 +10265,6 @@ function renderCustomChart(agg) {
                   <th class="p-2.5 text-center">打席</th>
                   <th class="p-2.5 text-center">打數</th>
                   <th class="p-2.5 text-center">安打</th>
-                  <th class="p-2.5 text-center">打點</th>
                   <th class="p-2.5 text-center">得分</th>
                   <th class="p-2.5 text-center">保送</th>
                   <th class="p-2.5 text-center">三振</th>
@@ -10369,9 +10354,6 @@ function renderCustomChart(agg) {
               </select>
             </td>
             <td class="p-2 text-center">
-              <input type="number" id="edit_play_rbi_${innIdx}_${playIdx}" value="${p.rbi || 0}" min="0" max="4" class="w-12 bg-slate-900 border border-slate-700 text-center text-amber-400 font-bold rounded py-1 text-xs">
-            </td>
-            <td class="p-2 text-center">
               <input type="number" id="edit_play_r_${innIdx}_${playIdx}" value="${p.runsScored || 0}" min="0" max="4" class="w-12 bg-slate-900 border border-slate-700 text-center text-sky-400 font-bold rounded py-1 text-xs">
             </td>
             <td class="p-2 text-center">
@@ -10446,7 +10428,6 @@ function renderCustomChart(agg) {
                       <th class="p-2 text-center">打擊結果</th>
                       <th class="p-2 text-center">球型</th>
                       <th class="p-2 text-center">落點</th>
-                      <th class="p-2 text-center">打點</th>
                       <th class="p-2 text-center">得分</th>
                       <th class="p-2 text-center">操作</th>
                     </tr>
@@ -10866,11 +10847,11 @@ function renderCustomChart(agg) {
     loadLogsFromGitHub();
   
     </script>
-  <script src="ui-comfort.js?v=20261010-order"></script>
-  <script src="team-insights.js?v=20261010-phone"></script>
+  <script src="ui-comfort.js?v=20261010-norbi"></script>
+  <script src="team-insights.js?v=20261010-mvp"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
   <script src="lineup-recommender.js?v=20261010-fixes"></script>
   <script src="player-diagnostics.js?v=20261010-diag3"></script>
-  <script src="team-records.js?v=20261010-order"></script>
+  <script src="team-records.js?v=20261010-norbi"></script>
 </body>
 </html>

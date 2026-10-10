@@ -452,7 +452,7 @@
   // opens the rest underneath as label–value pairs. Tables with one or two rows become a full card instead.
   // Tables with form fields (editing) or merged body cells keep sideways scrolling.
   const KEY_COLUMNS = ['當前排行指標', '出賽率', '出賽／總場數', '近況 OPS', '差距', '狀態', '安打-打數', '單場 OPS', 'OPS', 'wRC+', '打擊率', 'AVG',
-    '領先優勢', '安打', '打點', '打數', '累計 OPS', '比分', '打席', '全壘打', '保送', '三振', 'sFIP', '局數 (IP)'];
+    '領先優勢', '安打', '打數', '累計 OPS', '比分', '打席', '全壘打', '保送', '三振', 'sFIP', '局數 (IP)'];
   const keyRank = label => {
     // A column headed by a player (「#30 洪銘駿」, the two sides of a comparison) is what the table is about.
     if (/^#\d+\s/.test(label)) return -1;
@@ -517,7 +517,7 @@
       const keep = new Set(identity);
       // A single game's box score reads as at-bats, hits and RBI rather than rates.
       const boxScore = labels.includes('打席歷程') && labels.includes('打數');
-      const BOX = ['打數', '安打', '打點', '得分', '三振', '保送'];
+      const BOX = ['打數', '安打', '得分', '三振', '保送'];
       labels.map((label, i) => ({i, rank: boxScore && BOX.includes(label) ? -0.5 + BOX.indexOf(label) / 10 : keyRank(label)})).filter(c => !keep.has(c.i)).sort((a, b) => a.rank - b.rank || a.i - b.i)
         .forEach(c => { if (used + widths[c.i] <= area.clientWidth - 18) { keep.add(c.i); used += widths[c.i]; } });
       if (keep.size === labels.length) { table.classList.add('ui-wrap-table'); return; } // everything fits once the desktop min-width goes

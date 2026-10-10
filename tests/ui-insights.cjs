@@ -313,6 +313,39 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
         return {r,g,b};
       });
       assert.ok(!(badge.r===11&&badge.g===17&&badge.b===32),`badge pixels drawn (${JSON.stringify(badge)})`);
+      // MVP: independent recalculation, tie rules, no MVP without a positive contribution, and the card in the corner.
+      const mvp=await page.evaluate(()=>{
+        let num=0,pa=0;
+        for(const l of allLogs){if(!(Number(l.pa)>0)||isGuestPlayerName(l.name))continue;const h=+l.h||0,h2=+l.h2||0,h3=+l.h3||0,hr=+l.hr||0;num+=0.69*(+l.bb||0)+0.89*(h-h2-h3-hr)+1.27*h2+1.62*h3+2.10*hr;pa+=+l.pa;}
+        const base=num/pa;
+        const games=allGames.map(g=>{
+          const rows=teamInsights.gameSummary(g).rows.filter(r=>r.pa>0&&!isGuestPlayerName(r.name));
+          const score=r=>((0.69*r.bb+0.89*(r.h-r.h2-r.h3-r.hr)+1.27*r.h2+1.62*r.h3+2.10*r.hr)-base*r.pa)/1.2-0.1*r.k;
+          const tb=r=>r.h+r.h2+2*r.h3+3*r.hr;
+          const best=rows.slice().sort((a,b)=>score(b)-score(a)||tb(b)-tb(a)||b.h-a.h||a.k-b.k||(a.slot||99)-(b.slot||99))[0];
+          const m=teamInsights.gameMvp(g,teamInsights.gameSummary(g).rows);
+          return {expected:best&&score(best)>0?best.name:null,got:m&&m.name,score:m?Math.abs(m.score-score(best)):0,tags:m?m.tags.length:0,line:m?/打數 \d+ 安打/.test(m.line):true,
+            guest:m?!isGuestPlayerName(m.name):true};
+        });
+        // Nobody above average: no MVP.
+        const flat=teamInsights.gameMvp(allGames[0],[{name:'測試甲',slot:1,pa:3,ab:3,h:0,h2:0,h3:0,hr:0,bb:0,k:2}]);
+        // Photo-less MVP still gets a card; gold card border in the bottom-right corner of the image.
+        const canvas=teamInsights.drawGameImage(allGames[0]);
+        const ctx=canvas.getContext('2d');const W=canvas.width,H=canvas.height;
+        const region=ctx.getImageData(W-56-420,H-90-460,420,460).data;let gold=0;
+        for(let i=0;i<region.length;i+=4) if(region[i]>230&&region[i+1]>170&&region[i+1]<210&&region[i+2]<80) gold++;
+        const left=ctx.getImageData(56,H-90-200,300,200).data;let goldLeft=0;
+        for(let i=0;i<left.length;i+=4) if(left[i]>230&&left[i+1]>170&&left[i+1]<210&&left[i+2]<80) goldLeft++;
+        return {games,flat,gold,goldLeft};
+      });
+      for(const g of mvp.games){
+        assert.equal(g.got,g.expected,'MVP is the best game score (with the tie rules)');
+        assert.ok(g.score<1e-9&&g.line&&g.guest,'MVP score, stat line, never a guest');
+        if(g.got) assert.ok(g.tags>=1&&g.tags<=3,'one to three best-performance notes');
+      }
+      assert.equal(mvp.flat,null,'no MVP when nobody beats the team average');
+      assert.ok(mvp.gold>800,`MVP card drawn in the bottom-right corner (${mvp.gold} gold pixels)`);
+      assert.ok(mvp.gold>mvp.goldLeft*3,'the card sits on the right, not the left');
       assert.ok(image.h>1000);
       const summary=await page.evaluate(()=>{const s=teamInsights.gameSummary(allGames.find(g=>g.id==='game_20260920_4922'));return {pa:s.rows.reduce((a,r)=>a+r.pa,0),h:s.rows.reduce((a,r)=>a+r.h,0)};});
       const review=await page.evaluate(()=>{const cells=[...document.querySelectorAll('#gameReviewDetailContainer tr')].find(tr=>tr.textContent.includes('合計')).querySelectorAll('td');return {pa:Number(cells[2].textContent),h:Number(cells[4].textContent)};});

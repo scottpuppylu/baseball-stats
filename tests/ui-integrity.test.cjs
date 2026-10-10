@@ -12,10 +12,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // 1-15 fix set (see docs/UI_QA.md). The v1 baseline from 903cf977 and its authorized-diff chain are in git history.
 // Any further change to these must be authorized and the digests updated together with the QA document.
 const BASELINE = {
-  script: 'd5d612efa0f2f8b67438cc9cca97cfa17c36be6b266b37430eb3bd30d3cc34c3',
-  handlers: 'd0ab0fb814806457ce82eaa0b98c25daaca9fc26a9785f7377875a5a92abca55',
-  idCount: 283,
-  ids: '92cf03632932349ba75c97bf0a825ab22d1097180f98c8b07e3f26a41968c0d8'
+  script: '8ad648ad6800039126c0dc30de1f97cbfa7045df444446f050cb26d09617308b',
+  handlers: 'fd15b9c7acc8502bc8e68493b2e9beb6aa64972911a9a6e4d4e5be66f4875291',
+  idCount: 276,
+  ids: '4f99927a9810284481320e0caa44f463b5701ea968699aafef142e49064dab18'
 };
 test('business script is byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
@@ -30,7 +30,8 @@ test('all nine page panels and their original controls remain present', () => {
     assert.ok(html.includes(`id="panel${name}"`));
     assert.ok(html.includes(`id="btnTab${name}"`));
   }
-  for (const id of ['filterStartDate','filterEndDate','addLogForm','setupLineupGrid','interactiveFieldSvg','trajectoryButtonGroup','rbiButtonGroup','runsScoredButtonGroup','defenseModal','guestModal','substituteModal','pitcherChangeModal','cropModal','gameReviewDetailContainer']) assert.ok(html.includes(`id="${id}"`), id);
+  // rbiButtonGroup was removed on request (2026/10/10): the team does not record RBI.
+  for (const id of ['filterStartDate','filterEndDate','addLogForm','setupLineupGrid','interactiveFieldSvg','trajectoryButtonGroup','runsScoredButtonGroup','defenseModal','guestModal','substituteModal','pitcherChangeModal','cropModal','gameReviewDetailContainer']) assert.ok(html.includes(`id="${id}"`), id);
 });
 test('all static and template DOM identifiers remain intact', () => {
   const added = new Set(['appHeader','mainNavigation','appWorkspace']);

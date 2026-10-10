@@ -15,23 +15,6 @@
   const allGamesNow = () => (typeof allGames !== 'undefined' ? allGames : []).filter(g => g && g.status !== 'in_progress');
 
   // ---------- Data ----------
-  // RBI only exist in scorebook plate appearances (manual logs have none).
-  function rbiByGame() {
-    const out = new Map(); // name -> Map(gameId -> rbi)
-    for (const game of allGamesNow()) {
-      for (const inn of game.innings || []) {
-        if (!isInningOurBat(game.ourRole, inn.topBottom)) continue;
-        for (const pa of inn.plateAppearances || []) {
-          if (isRunnerOutPlay(pa) || !pa.batterName) continue;
-          if (!out.has(pa.batterName)) out.set(pa.batterName, new Map());
-          const m = out.get(pa.batterName);
-          m.set(game.id, (m.get(game.id) || 0) + (pa.rbi || 0));
-        }
-      }
-    }
-    return out;
-  }
-
   // Longest run of single games (with a plate appearance) without a strikeout, and the current one.
   function noKStreak(games) {
     let run = 0, best = 0;
@@ -43,13 +26,11 @@
     return {now: run, best};
   }
 
-  function playerRecord(name, rbiMap) {
+  function playerRecord(name) {
     const games = TI.playerGames(name, allLogsNow());
     if (!games.length) return null;
     const career = games[games.length - 1].toDate; // includes season summaries
     const single = games.filter(g => !g.summary);
-    const rbiGames = rbiMap.get(name) || new Map();
-    const rbi = [...rbiGames.values()].reduce((a, b) => a + b, 0);
     const st = TI.streaks(games);
     const nk = noKStreak(games);
     const fun = {
@@ -67,19 +48,13 @@
       for (const g of single) if (f(g.stats) > 0 && (!bestGame || f(g.stats) > f(bestGame.stats))) bestGame = g;
       return bestGame ? {key, value: f(bestGame.stats), date: bestGame.date, tag: bestGame.tag} : {key, value: 0};
     });
-    const rbiBest = [...rbiGames.entries()].sort((a, b) => b[1] - a[1])[0];
-    if (rbiBest && rbiBest[1] > 0) {
-      const g = allGamesNow().find(x => x.id === rbiBest[0]);
-      highs.push({key: '打點（場記）', value: rbiBest[1], date: g ? g.date : '', tag: g ? g.tag : ''});
-    } else highs.push({key: '打點（場記）', value: 0});
-    return {name, games, single, career, rbi, gamesPlayed: single.length, hasSummary: games.length > single.length,
+    return {name, games, single, career, gamesPlayed: single.length, hasSummary: games.length > single.length,
       streaks: st, fun, highs, milestones: TI.milestones(games)};
   }
 
   function teamRecords() {
-    const rbiMap = rbiByGame();
     const names = [...new Set(allLogsNow().filter(l => Number(l.pa) > 0).map(l => l.name))].filter(n => n && !isGuestPlayerName(n));
-    return names.map(n => playerRecord(n, rbiMap)).filter(Boolean);
+    return names.map(n => playerRecord(n)).filter(Boolean);
   }
 
   // Team single-game and single-inning records from the scorebook.
@@ -130,7 +105,7 @@
   }
 
   function singleGameList(list, key, limit = 3) {
-    const rows = list.flatMap(p => p.single.map(g => ({p, g, v: key === '打點（場記）' ? 0 : ({'安打': g.stats.h, '全壘打': g.stats.hr, '壘打數': tb(g.stats), '長打': g.stats.h2 + g.stats.h3 + g.stats.hr, '保送': g.stats.bb})[key]})))
+    const rows = list.flatMap(p => p.single.map(g => ({p, g, v: ({'安打': g.stats.h, '全壘打': g.stats.hr, '壘打數': tb(g.stats), '長打': g.stats.h2 + g.stats.h3 + g.stats.hr, '保送': g.stats.bb})[key]})))
       .filter(x => x.v > 0).sort((a, b) => b.v - a.v || (a.g.date < b.g.date ? -1 : 1)).slice(0, limit);
     if (!rows.length) return empty('尚無紀錄');
     return `<ol class="space-y-1">${rows.map(x => `<li class="flex items-center justify-between gap-2 text-xs" data-record-row>
@@ -146,17 +121,11 @@
     const rateList = list.filter(p => p.career.pa >= MIN_RATE_PA);
     const careerCards = [
       ['安打', p => p.career.h], ['全壘打', p => p.career.hr], ['壘打數', p => tb(p.career)], ['二壘安打', p => p.career.h2],
-      ['三壘安打', p => p.career.h3], ['保送', p => p.career.bb], ['打席', p => p.career.pa], ['出賽（單場紀錄）', p => p.gamesPlayed],
-      ['打點（場記）', p => p.rbi]
+      ['三壘安打', p => p.career.h3], ['保送', p => p.career.bb], ['打席', p => p.career.pa], ['出賽（單場紀錄）', p => p.gamesPlayed]
     ].map(([title, f]) => card(title, leaderList(list, f))).join('');
     const rateCards = [['打擊率', p => p.career.avg], ['上壘率', p => p.career.obp], ['長打率', p => p.career.slg], ['OPS', p => p.career.ops]]
       .map(([title, f]) => card(`${title}<span class="text-slate-500 font-normal">（≥ ${MIN_RATE_PA} 打席）</span>`, leaderList(rateList, f, rate))).join('');
-    const singleCards = ['安打', '全壘打', '壘打數', '長打', '保送'].map(k => card(`單場${k}`, singleGameList(list, k))).join('') +
-      card('單場打點（場記）', (() => {
-        const rows = list.flatMap(p => p.highs.filter(h => h.key === '打點（場記）' && h.value > 0).map(h => ({p, h}))).sort((a, b) => b.h.value - a.h.value).slice(0, 3);
-        return rows.length ? `<ol class="space-y-1">${rows.map(x => `<li class="flex items-center justify-between gap-2 text-xs" data-record-row><span class="flex flex-col min-w-0">${nameButton(x.p.name)}${when(x.h)}</span><b class="font-mono text-white">${x.h.value}</b></li>`).join('')}</ol>`
-          : empty('尚無紀錄（場記登打打點後出現）');
-      })());
+    const singleCards = ['安打', '全壘打', '壘打數', '長打', '保送'].map(k => card(`單場${k}`, singleGameList(list, k))).join('');
     const streakCards = [
       ['最長連續安打', p => p.streaks.bestHit, '場'], ['最長連續上壘', p => p.streaks.bestOnBase, '場'], ['最長連續無三振', p => p.fun.noK.best, '場'],
       ['進行中：連續安打', p => p.streaks.hit, '場'], ['進行中：連續上壘', p => p.streaks.onBase, '場']
@@ -177,7 +146,7 @@
         <div class="grid grid-cols-1 ${cols} gap-3">${body}</div></section>`;
     panel.innerHTML =
       section('recordsCareer', '生涯排行榜', `全部紀錄（不受頁首日期篩選影響），含年度彙總；比率類需滿 ${MIN_RATE_PA} 打席。點姓名看個人檔案。`, careerCards + rateCards) +
-      section('recordsSingle', '單場紀錄', '單一比賽的最佳表現；年度彙總不算單場。打點只有場記賽事才有。', singleCards + teamCard) +
+      section('recordsSingle', '單場紀錄', '單一比賽的最佳表現；年度彙總不算單場。', singleCards + teamCard) +
       section('recordsStreaks', '連續紀錄', '連續安打：有打數的場次連續擊出安打（只有保送的場次不中斷也不延長）；連續上壘：每場至少一次安打或保送；連續無三振：有打席的場次沒有三振。「進行中」為到最近一場仍在延續。', streakCards) +
       section('recordsFun', '趣味紀錄與里程碑', '猛打賞、多轟、安打全中與完全打擊；里程碑為每一支全壘打的序號，與第 10／25／50／75／100… 支安打。', funCards + feedCard);
   }
@@ -231,7 +200,7 @@
       .map(([k, f]) => ({k, r: rankOf(list, name, f)})).filter(x => x.r);
     const line = `<div class="grid grid-cols-4 sm:grid-cols-8 gap-2 text-center" data-career-line>${[
       ['出賽', me.gamesPlayed + (me.hasSummary ? '+' : '')], ['打席', c.pa], ['安打', c.h], ['二安', c.h2], ['三安', c.h3], ['全壘打', c.hr], ['保送', c.bb], ['三振', c.k],
-      ['打擊率', rate(c.avg)], ['上壘率', rate(c.obp)], ['長打率', rate(c.slg)], ['OPS', rate(c.ops)], ['壘打數', tb(c)], ['打點(場記)', me.rbi], ['猛打賞', me.fun.threeHit], ['多轟場', me.fun.multiHr]
+      ['打擊率', rate(c.avg)], ['上壘率', rate(c.obp)], ['長打率', rate(c.slg)], ['OPS', rate(c.ops)], ['壘打數', tb(c)], ['猛打賞', me.fun.threeHit], ['多轟場', me.fun.multiHr]
     ].map(([k, v]) => `<div class="bg-slate-950/70 border border-slate-800 rounded-lg py-1.5"><div class="text-[10px] text-slate-400">${k}</div><div class="font-mono font-black text-white">${v}</div></div>`).join('')}</div>`;
     const highs = card('生涯單場最佳', `<ul class="space-y-1">${me.highs.map(h => `<li class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-300">${h.key}</span><span class="flex items-center gap-2">${h.value ? when(h) : ''}<b class="font-mono text-white">${h.value || '—'}</b></span></li>`).join('')}</ul>`);
     const streaks = card('連續紀錄（生涯）', `<ul class="space-y-1 text-xs">${[
@@ -249,7 +218,7 @@
     const milestoneCard = card('生涯里程碑', marks.length ? `<ul class="space-y-1">${marks.map(m => `<li class="flex items-center justify-between gap-2 text-xs"><span class="${m.kind === 'hr' ? 'text-amber-300' : 'text-emerald-300'}">🏅 ${esc(m.text)}</span>${when(m)}</li>`).join('')}</ul>` : empty('尚未達成里程碑（首支全壘打、第 10 支安打起算）'));
     section.innerHTML = `${head}${line}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${highs}${streaks}${fun}${milestoneCard}</div>
-      <p class="text-[11px] text-slate-500">生涯數字含年度彙總（出賽數後的「+」表示另有彙總紀錄）；單場、連續與趣味紀錄只看單場紀錄。打點只有場記賽事。</p>`;
+      <p class="text-[11px] text-slate-500">生涯數字含年度彙總（出賽數後的「+」表示另有彙總紀錄）；單場、連續與趣味紀錄只看單場紀錄。</p>`;
   }
 
   // ---------- Page wiring: a nav button and panel added next to the others ----------

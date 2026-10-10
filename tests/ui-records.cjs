@@ -57,6 +57,23 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       await page.evaluate(()=>{document.getElementById('filterStartDate').value='2026-09-20';document.getElementById('filterEndDate').value='2026-09-20';document.getElementById('filterEndDate').dispatchEvent(new Event('change'));renderAll();});
       assert.equal(await page.locator('#panelRecords').textContent(),before,'date filter does not change career records');
       await page.evaluate(()=>{document.getElementById('filterStartDate').value='';document.getElementById('filterEndDate').value='';renderAll();});
+      // The team does not record RBI: no page shows it (records, scorer, review, glossary).
+      const rbiPages=await page.evaluate(async()=>{
+        const out=[];
+        for(const t of ['Overview','Profile','Leaderboard','Compare','Records','Analytics','Pitching','Lineup','Scorebook','Glossary']){
+          switchMainTab(`tab${t}`);
+          for(const sub of t==='Scorebook'?['live','review','spray']:[null]){
+            if(sub) switchScorebookSubTab(sub);
+            await new Promise(r=>requestAnimationFrame(r));
+            const text=document.querySelector('main > [id^=panel]:not(.hidden)').innerText;
+            if(/打點|RBI/.test(text)) out.push(t+(sub?`/${sub}`:''));
+          }
+        }
+        switchMainTab('tabRecords');
+        return out;
+      });
+      assert.deepEqual(rbiPages,[],'no RBI anywhere');
+      assert.equal(await page.locator('#rbiButtonGroup, [id^="rbi_"]').count(),0,'no RBI input in the scorer');
       // A name opens that player's profile, with the career section.
       const name=await page.locator('#panelRecords [data-record-player]').first().getAttribute('data-record-player');
       await page.locator('#panelRecords [data-record-player]').first().click();

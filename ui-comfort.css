@@ -238,8 +238,8 @@ table.ui-measure thead th img, table.ui-fold-table thead th img { display: none;
   #liveBattingSection > .grid > div:first-child > div:first-child { flex-wrap: wrap; gap: 6px; }
   #fieldPosButtonsContainer { gap: 5px; }
   #fieldPosButtonsContainer button { min-height: 40px; }
-  #rbiButtonGroup, #runsScoredButtonGroup { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 4px; }
-  #rbiButtonGroup > button, #runsScoredButtonGroup > button { width: auto; margin-left: 0; padding: 4px; }
+  #runsScoredButtonGroup { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 4px; }
+  #runsScoredButtonGroup > button { width: auto; margin-left: 0; padding: 4px; }
   #selectedLocationDisplay { font-size: 12px; }
   .ui-touch-detail { bottom: calc(86px + env(safe-area-inset-bottom)); }
   #globalToastContainer { bottom: calc(86px + env(safe-area-inset-bottom)) !important; left: 12px; right: 12px; max-width: none; }
@@ -273,9 +273,8 @@ table.ui-measure thead th img, table.ui-fold-table thead th img { display: none;
   /* Small controls get a finger-sized hit area without changing their look. */
   main button[onclick^="removePlayerTag"] { min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; margin: -8px -6px -8px 0; }
   main summary { padding: 12px 2px; }
-  /* Live scoring: RBI and runs each get a full row of 44px buttons; opponent score and line score readable. */
-  .grid:has(> div > #rbiButtonGroup) { grid-template-columns: 1fr !important; gap: 10px; }
-  #rbiButtonGroup > button, #runsScoredButtonGroup > button { min-height: 44px; font-size: 16px; }
+  /* Live scoring: runs-scored buttons in a full row of 44px buttons; opponent score and line score readable. */
+  #runsScoredButtonGroup > button { min-height: 44px; font-size: 16px; }
   main button[onclick^="adjustOpponentScore"] { width: 44px; height: 44px; font-size: 18px; }
   #liveScoreboardBody td:first-child { white-space: nowrap; }
 

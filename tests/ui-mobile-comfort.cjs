@@ -160,12 +160,12 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
         const shown=el=>{const s=getComputedStyle(el);const b=el.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&b.width>0&&b.height>0&&!el.closest('.hidden');};
         const small=[...panel.querySelectorAll('button,select,input:not([type=hidden]),[onclick]')].filter(shown).filter(el=>el.type!=='checkbox'&&el.type!=='radio')
           .filter(el=>{const b=el.getBoundingClientRect();return b.width<36||b.height<36;}).map(el=>el.id||el.textContent.trim().slice(0,6));
-        const rbi=document.getElementById('rbi_1').getBoundingClientRect();
+        const rbi=document.getElementById('runs_1').getBoundingClientRect(); // runs scored (RBI is not recorded)
         return {small,rbi:[Math.round(rbi.width),Math.round(rbi.height)],
           overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};
       });
       assert.deepEqual(live.small,[],`${width} live scoring: every control at least 36×36`);
-      assert.ok(live.rbi[0]>=44&&live.rbi[1]>=44,`${width} live scoring: RBI buttons ${live.rbi}`);
+      assert.ok(live.rbi[0]>=44&&live.rbi[1]>=44,`${width} live scoring: runs-scored buttons ${live.rbi}`);
       assert.equal(live.overflow,false,`${width} live scoring: no sideways scroll`);
       await page.screenshot({path:path.join(output,`${width}-MobileLive.png`),fullPage:true});
       await page.evaluate(()=>{activeGame=window.activeGame=null;localStorage.removeItem('rebas_active_game');});

@@ -657,13 +657,13 @@
       }
     }
     const batters = getGameOrderedBatters(game).map(b => ({...b}));
-    const box = new Map(batters.map(b => [b.name, {pa: 0, ab: 0, h: 0, h2: 0, h3: 0, hr: 0, bb: 0, k: 0, rbi: 0}]));
+    const box = new Map(batters.map(b => [b.name, {pa: 0, ab: 0, h: 0, h2: 0, h3: 0, hr: 0, bb: 0, k: 0}]));
     // Mirrors the review box score: runner outs never count as the batter's plate appearance.
     for (const inn of game.innings || []) {
       for (const pa of inn.plateAppearances || []) {
         if (isRunnerOutPlay(pa)) continue;
         if (!box.has(pa.batterName)) {
-          box.set(pa.batterName, {pa: 0, ab: 0, h: 0, h2: 0, h3: 0, hr: 0, bb: 0, k: 0, rbi: 0});
+          box.set(pa.batterName, {pa: 0, ab: 0, h: 0, h2: 0, h3: 0, hr: 0, bb: 0, k: 0});
           batters.push({slot: pa.slot || 99, name: pa.batterName, isSub: true});
         }
         const p = box.get(pa.batterName);
@@ -675,7 +675,6 @@
         if (pa.result === 'HR') p.hr++;
         if (pa.result === 'BB') p.bb++;
         if (['K', 'K_FOUL', '界外K'].includes(pa.result)) p.k++;
-        p.rbi += pa.rbi || 0;
       }
     }
     const maxInning = Math.max(7, ...(game.innings || []).map(i => i.inningNum));
@@ -701,7 +700,55 @@
     return out;
   }
 
-  function drawGameImage(game) {
+  // ---------- Game MVP ----------
+  // Each batting event is worth its run value (the site's wOBA weights). A player's game score is the runs he
+  // produced above what an average team batter would have produced in the same plate appearances, with a
+  // strikeout costing a little more than other outs (in slowpitch it moves no runner). RBI are not recorded,
+  // so they play no part. Ties: more total bases, more hits, fewer strikeouts, earlier in the order.
+  const EVENT_RUNS = {bb: 0.69, h1: 0.89, h2: 1.27, h3: 1.62, hr: 2.10};
+  const WOBA_SCALE = 1.2, K_COST = 0.1;
+  function teamWobaBaseline() {
+    let num = 0, pa = 0;
+    for (const l of (typeof allLogs !== 'undefined' ? allLogs : [])) {
+      if (!(Number(l.pa) > 0) || isGuestPlayerName(l.name)) continue;
+      const h = +l.h || 0, h2 = +l.h2 || 0, h3 = +l.h3 || 0, hr = +l.hr || 0;
+      num += EVENT_RUNS.bb * (+l.bb || 0) + EVENT_RUNS.h1 * (h - h2 - h3 - hr) + EVENT_RUNS.h2 * h2 + EVENT_RUNS.h3 * h3 + EVENT_RUNS.hr * hr;
+      pa += +l.pa;
+    }
+    return pa ? num / pa : 0.45;
+  }
+  function mvpScore(r, base) {
+    const h1 = r.h - r.h2 - r.h3 - r.hr;
+    const produced = EVENT_RUNS.bb * r.bb + EVENT_RUNS.h1 * h1 + EVENT_RUNS.h2 * r.h2 + EVENT_RUNS.h3 * r.h3 + EVENT_RUNS.hr * r.hr;
+    return (produced - base * r.pa) / WOBA_SCALE - K_COST * r.k;
+  }
+  function gameMvp(game, rows) {
+    const base = teamWobaBaseline();
+    const ranked = rows.filter(r => r.pa > 0 && !isGuestPlayerName(r.name))
+      .map(r => ({...r, tb: r.h + r.h2 + 2 * r.h3 + 3 * r.hr, xbh: r.h2 + r.h3 + r.hr, score: mvpScore(r, base)}))
+      .sort((a, b) => b.score - a.score || b.tb - a.tb || b.h - a.h || a.k - b.k || (a.slot || 99) - (b.slot || 99));
+    const m = ranked[0];
+    if (!m || m.score <= 0) return null;
+    // What made the game, strongest first: milestones, a perfect day, home runs, three hits, extra bases,
+    // the team's best total, walks, then streaks still going.
+    const rec = gameRecords(game, rows);
+    const own = list => list.filter(t => t.startsWith(`${m.name} `)).map(t => t.slice(m.name.length + 1));
+    const tags = [...own(rec.marks)];
+    if (m.ab >= 2 && m.h === m.ab) tags.push(`${m.ab} 打數全部安打`);
+    else if (m.pa >= 2 && m.h + m.bb === m.pa) tags.push('每個打席都上壘');
+    if (m.hr > 1) tags.push(`單場 ${m.hr} 轟`);
+    else if (m.hr && !tags.some(t => t.includes('全壘打'))) tags.push('擊出全壘打'); // a home-run milestone already says it
+    if (m.h >= 3) tags.push(`猛打賞（${m.h} 安）`);
+    if (m.xbh >= 2) tags.push(`${m.xbh} 支長打`);
+    if (m.tb > 0 && m.tb === Math.max(...ranked.map(r => r.tb))) tags.push(`全隊最多壘打數（${m.tb}）`);
+    if (m.bb >= 2) tags.push(`${m.bb} 次保送`);
+    tags.push(...own(rec.hitStreaks).map(t => `連續 ${t}安打`));
+    if (!tags.length) tags.push(`全隊最高打擊貢獻`);
+    const line = `${m.ab} 打數 ${m.h} 安打${m.xbh ? `・${m.xbh} 長打` : ''}${m.bb ? `・${m.bb} 保送` : ''}・壘打數 ${m.tb}`;
+    return {name: m.name, slot: m.slot, score: m.score, line, tags: [...new Set(tags)].slice(0, 3), ranked, baseline: base};
+  }
+
+  function drawGameImage(game, options = {}) {
     const s = gameSummary(game);
     const score = game.finalScore || {us: 0, opp: 0};
     const result = score.us > score.opp ? ['勝', '#34d399'] : score.us < score.opp ? ['敗', '#fb7185'] : ['和', '#fbbf24'];
@@ -711,25 +758,35 @@
     if (hr.length) highlights.push(`全壘打：${hr.join('、')}`);
     const multi = s.rows.filter(r => r.h >= 2).map(r => `${r.name} ${r.h}安`);
     if (multi.length) highlights.push(`多安打：${multi.join('、')}`);
-    const rbi = s.rows.filter(r => r.rbi >= 2).map(r => `${r.name} ${r.rbi}分打點`);
-    if (rbi.length) highlights.push(`打點：${rbi.join('、')}`);
     const records = gameRecords(game, s.rows);
     if (records.marks.length) highlights.push(`里程碑：${records.marks.join('、')}`);
     if (records.hitStreaks.length) highlights.push(`連續安打：${records.hitStreaks.join('、')}`);
     if (records.onBaseStreaks.length) highlights.push(`連續上壘：${records.onBaseStreaks.join('、')}`);
+    const mvp = gameMvp(game, s.rows);
+    const CARD_W = 420, CARD_GAP = 28;
+    const textWidth = mvp ? W - pad * 2 - CARD_W - CARD_GAP : W - pad * 2;
     const canvas = document.createElement('canvas');
     const c = canvas.getContext('2d');
-    // Wrap highlight lines at "、" so long lists stay readable instead of being cut off.
-    c.font = `600 26px ${FONT}`;
-    const wrapped = highlights.flatMap(line => {
+    // Wrap at "、" (or by character for long words) so nothing is cut off.
+    const wrapText = (line, width, font, indent = '　　') => {
+      c.font = font;
       const out = [''];
       for (const part of line.split(/(?<=、)/)) {
-        if (out[out.length - 1] && c.measureText(out[out.length - 1] + part).width > W - pad * 2) out.push('　　' + part);
+        if (out[out.length - 1] && c.measureText(out[out.length - 1] + part).width > width) out.push(indent + part);
         else out[out.length - 1] += part;
       }
-      return out;
-    });
-    const H = 560 + (s.rows.length + 1) * rowH + wrapped.length * 42 + 120;
+      return out.flatMap(seg => {
+        const pieces = [''];
+        for (const ch of seg) { if (c.measureText(pieces[pieces.length - 1] + ch).width > width) pieces.push(ch); else pieces[pieces.length - 1] += ch; }
+        return pieces;
+      });
+    };
+    const wrapped = highlights.flatMap(line => wrapText(line, textWidth, `600 26px ${FONT}`));
+    const tagFont = `600 22px ${FONT}`;
+    const tagLines = mvp ? mvp.tags.flatMap(t => wrapText(`★ ${t}`, CARD_W - 48, tagFont, '　')) : [];
+    const cardH = mvp ? 196 + tagLines.length * 32 + 58 : 0;
+    const bandH = Math.max(wrapped.length * 42, cardH);
+    const H = 560 + (s.rows.length + 1) * rowH + 50 + bandH + 90;
     canvas.width = W;
     canvas.height = H;
     const text = (str, x, y, size, color, align = 'left', weight = 700) => {
@@ -779,32 +836,69 @@
 
     // Batting box score.
     y = 540;
-    const cols = [['棒', 70], ['打者', 250], ['打席', 470], ['打數', 560], ['安打', 650], ['長打', 750], ['打點', 850], ['保送', 930], ['三振', 1010]];
+    const cols = [['棒', 70], ['打者', 250], ['打席', 490], ['打數', 590], ['安打', 690], ['長打', 790], ['保送', 890], ['三振', 990]];
     c.fillStyle = '#111c33';
     c.fillRect(pad - 16, y - 36, W - (pad - 16) * 2, rowH);
     cols.forEach(([label, x]) => text(label, x, y, 22, '#94a3b8', x > 400 ? 'center' : 'left', 600));
-    const totals = {pa: 0, ab: 0, h: 0, xb: 0, rbi: 0, bb: 0, k: 0};
+    const totals = {pa: 0, ab: 0, h: 0, xb: 0, bb: 0, k: 0};
     s.rows.forEach((r, i) => {
       const ry = y + (i + 1) * rowH;
       const xb = r.h2 + r.h3 + r.hr;
-      for (const [k, v] of Object.entries({pa: r.pa, ab: r.ab, h: r.h, xb, rbi: r.rbi, bb: r.bb, k: r.k})) totals[k] += v;
+      for (const [k, v] of Object.entries({pa: r.pa, ab: r.ab, h: r.h, xb, bb: r.bb, k: r.k})) totals[k] += v;
       text(r.isSub ? '替' : r.slot, 70, ry, 24, r.isSub ? '#c4b5fd' : '#fbbf24');
       text(r.name, 130, ry, 26, '#f1f5f9');
-      [r.pa, r.ab, r.h, xb, r.rbi, r.bb, r.k].forEach((v, j) => text(v, cols[j + 2][1], ry, 26, j === 2 && v > 0 ? '#34d399' : j === 3 && v > 0 ? '#fbbf24' : '#e2e8f0', 'center', j === 2 ? 800 : 600));
+      [r.pa, r.ab, r.h, xb, r.bb, r.k].forEach((v, j) => text(v, cols[j + 2][1], ry, 26, j === 2 && v > 0 ? '#34d399' : j === 3 && v > 0 ? '#fbbf24' : '#e2e8f0', 'center', j === 2 ? 800 : 600));
     });
     const ty = y + (s.rows.length + 1) * rowH;
     c.fillStyle = '#334155';
     c.fillRect(pad - 16, ty - 38, W - (pad - 16) * 2, 2);
     text('合計', 130, ty, 26, '#fbbf24');
-    [totals.pa, totals.ab, totals.h, totals.xb, totals.rbi, totals.bb, totals.k].forEach((v, j) => text(v, cols[j + 2][1], ty, 26, '#fbbf24', 'center', 800));
+    [totals.pa, totals.ab, totals.h, totals.xb, totals.bb, totals.k].forEach((v, j) => text(v, cols[j + 2][1], ty, 26, '#fbbf24', 'center', 800));
 
-    let hy = ty + 70;
+    const bandTop = ty + 50;
+    let hy = bandTop + 30;
     wrapped.forEach(line => {
       text(line, pad, hy, 26, '#e2e8f0', 'left', 600);
       hy += 42;
     });
+    if (mvp) drawMvpCard(c, text, mvp, W - pad - CARD_W, bandTop + bandH - cardH, CARD_W, cardH, tagLines, options.mvpPhoto);
     text(`${TEAM_NAME} 數據中心 · 長打含二壘安打、三壘安打、全壘打`, W / 2, H - 40, 20, '#475569', 'center', 500);
     return canvas;
+  }
+
+  function drawMvpCard(c, text, mvp, x, y, w, h, tagLines, photo) {
+    const round = (rx, ry, rw, rh, r) => { c.beginPath(); c.moveTo(rx + r, ry); c.arcTo(rx + rw, ry, rx + rw, ry + rh, r); c.arcTo(rx + rw, ry + rh, rx, ry + rh, r); c.arcTo(rx, ry + rh, rx, ry, r); c.arcTo(rx, ry, rx + rw, ry, r); c.closePath(); };
+    const gradient = c.createLinearGradient(x, y, x + w, y + h);
+    gradient.addColorStop(0, '#2a1d06');
+    gradient.addColorStop(1, '#111c33');
+    round(x, y, w, h, 22); c.fillStyle = gradient; c.fill();
+    c.lineWidth = 3; c.strokeStyle = '#fbbf24'; c.stroke();
+    // Badge
+    round(x + 24, y + 22, 132, 38, 19); c.fillStyle = '#fbbf24'; c.fill();
+    text('🏆 本場 MVP', x + 90, y + 50, 22, '#1c1203', 'center', 900);
+    // Photo (or the initial, as on the site)
+    const size = 104, cx = x + 24 + size / 2, cy = y + 78 + size / 2;
+    c.save(); c.beginPath(); c.arc(cx, cy, size / 2, 0, Math.PI * 2); c.closePath(); c.clip();
+    if (photo && photo.complete && photo.naturalWidth) {
+      const scale = Math.max(size / photo.naturalWidth, size / photo.naturalHeight);
+      const dw = photo.naturalWidth * scale, dh = photo.naturalHeight * scale;
+      c.drawImage(photo, cx - dw / 2, cy - dh / 2, dw, dh);
+    } else {
+      const g = c.createLinearGradient(cx - size / 2, cy - size / 2, cx + size / 2, cy + size / 2);
+      g.addColorStop(0, '#0284c7'); g.addColorStop(1, '#312e81');
+      c.fillStyle = g; c.fillRect(cx - size / 2, cy - size / 2, size, size);
+      text(mvp.name.slice(0, 1), cx, cy + 16, 46, '#ffffff', 'center', 900);
+    }
+    c.restore();
+    c.beginPath(); c.arc(cx, cy, size / 2 + 2, 0, Math.PI * 2); c.lineWidth = 4; c.strokeStyle = '#fbbf24'; c.stroke();
+    // Name and line
+    const tx = x + 24 + size + 20;
+    const jersey = typeof NAME_TO_JERSEY !== 'undefined' && NAME_TO_JERSEY[mvp.name] !== undefined ? `#${NAME_TO_JERSEY[mvp.name]}` : '';
+    if (jersey) text(jersey, tx, y + 112, 24, '#fbbf24', 'left', 800);
+    text(mvp.name, tx, y + 152, 40, '#ffffff', 'left', 900);
+    text(`MVP 指數 +${mvp.score.toFixed(1)}`, tx, y + 184, 20, '#fcd34d', 'left', 600);
+    text(mvp.line, x + 24, y + 222, 22, '#e2e8f0', 'left', 600);
+    tagLines.forEach((t, i) => text(t, x + 24, y + 260 + i * 32, 22, '#fde68a', 'left', 600));
   }
 
   function closeImageModal() {
@@ -821,7 +915,16 @@
     const game = allGames.find(g => g.id === gameId);
     if (!game) return;
     closeImageModal();
-    const canvas = drawGameImage(game);
+    const s0 = gameSummary(game);
+    const mvp = gameMvp(game, s0.rows);
+    let mvpPhoto = null;
+    const photoData = mvp && typeof playerAvatars !== 'undefined' ? playerAvatars[mvp.name] : null;
+    if (photoData) {
+      mvpPhoto = new Image();
+      mvpPhoto.src = photoData;
+      await Promise.race([mvpPhoto.decode().catch(() => {}), new Promise(resolve => setTimeout(resolve, 1500))]);
+    }
+    const canvas = drawGameImage(game, {mvpPhoto});
     const filename = `${TEAM_NAME}_${game.date}_vs_${game.opponent || '對手'}.png`.replace(/[\\/:*?"<>|\s]+/g, '_');
     const modal = document.createElement('div');
     modal.id = 'insightImageModal';
@@ -912,5 +1015,5 @@
     if (selectedReviewGameId) addImageButton(selectedReviewGameId);
   } catch (error) { console.error('[team-insights] init', error); }
 
-  window.teamInsights = {SAMPLE_PA, RECENT_GAMES, playerGames, form, teamGames, formBoard, streaks, milestones, gameRecords, attendance, gameSummary, drawGameImage, openImageModal};
+  window.teamInsights = {SAMPLE_PA, RECENT_GAMES, playerGames, form, teamGames, formBoard, streaks, milestones, gameRecords, gameMvp, mvpScore, teamWobaBaseline, attendance, gameSummary, drawGameImage, openImageModal};
 })();

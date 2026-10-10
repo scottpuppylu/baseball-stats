@@ -65,7 +65,6 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     await field.click({position:{x:fieldBox.width*.3,y:fieldBox.height*.35}});
     await click(page,'#traj_line');
     await click(page,'#res_HR');
-    await click(page,'#rbi_2');
     await click(page,'#runs_2');
     await click(page,'button[onclick="submitBattedBallPlay()"]');
     assert.equal((await state(page)).finalScore.us,2);
