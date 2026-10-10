@@ -44,7 +44,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261002.1755</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261010.0041</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -542,7 +542,6 @@
                   <option value="woba">加權上壘率 (wOBA)</option>
                   <option value="rc">預估創造得分 (RC)</option>
                   <option value="rc_27">每27出局得分 (RC/27)</option>
-                      <option value="rc_27">每27出局得分 (RC/27)</option>
                 </optgroup>
                 <optgroup label="打擊與長打深度">
                   <option value="avg">打擊率 (AVG)</option>
@@ -629,7 +628,7 @@
                     <option value="ld_xba">Statcast 擊球品質象限 (LD% vs. xBA)</option>
                     <option value="contact_sdi">紀律與好球帶控制 (Contact% vs. SDI 2.0)</option>
                     <option value="wrc_iso">得分產能與長打破壞 (wRC+ vs. ISO)</option>
-                    <option value="babip_xba">運氣偏差檢驗象限 (BABIP vs. xBA)</option>
+                    <option value="babip_xba">運氣偏差檢驗象限 (實際 AVG vs. xBA)</option>
                   </select>
                 </div>
               </div>
@@ -697,7 +696,6 @@
                       <option value="ops">整體攻擊指數 (OPS)</option>
                       <option value="woba">加權上壘率 (wOBA)</option>
                       <option value="rc">預估創造得分 (RC)</option>
-                  <option value="rc_27">每27出局得分 (RC/27)</option>
                       <option value="rc_27">每27出局得分 (RC/27)</option>
                     </optgroup>
                     <optgroup label="Statcast 預期期望數據">
@@ -740,11 +738,11 @@
             <div>
               <div class="flex items-center space-x-2">
                 <span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">LUCK & REGRESSION MATRIX</span>
-                <h3 class="text-base sm:text-lg font-black text-purple-300 tracking-tight">Statcast 擊球品質與運氣回歸矩陣 (xBA vs. BABIP)</h3>
+                <h3 class="text-base sm:text-lg font-black text-purple-300 tracking-tight">Statcast 擊球品質與運氣回歸矩陣 (xBA vs. 實際 AVG)</h3>
               </div>
-              <p class="text-xs text-slate-400 mt-1">對角虛線為 45 度無偏差期望基準線 (y = x)：線上方為運氣優勢穿透區 (Luck+)，線下方為強擊運氣差遭沒收區 (Unlucky)</p>
+              <p class="text-xs text-slate-400 mt-1">對角虛線為 45 度無偏差期望基準線 (y = x)：線上方為運氣優勢穿透區 (Luck+)，線下方為強擊運氣差遭沒收區 (Unlucky)。只含有場記擊球型態的球員，實際打擊率與預期取自同一批打席。</p>
             </div>
-            <span class="text-xs font-mono text-purple-400 bg-purple-950/80 px-2.5 py-1 rounded-lg border border-purple-800/60 font-semibold">全隊 14 人客觀實證</span>
+            <span id="luckSampleBadge" class="text-xs font-mono text-purple-400 bg-purple-950/80 px-2.5 py-1 rounded-lg border border-purple-800/60 font-semibold">有場記擊球資料 -- 人</span>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
@@ -755,11 +753,11 @@
               <span class="font-bold text-slate-200 block text-sm border-b border-slate-800 pb-2">🧠 賽伯計量運氣因子球探解讀</span>
               <div class="space-y-2.5">
                 <div class="p-2.5 rounded-xl bg-amber-950/30 border border-amber-800/50 space-y-1">
-                  <span class="font-bold text-amber-300 block">🟢 線上方：運氣優勢穿透區 (BABIP > xBA)</span>
+                  <span class="font-bold text-amber-300 block">🟢 線上方：運氣優勢穿透區 (AVG > xBA)</span>
                   <p class="text-slate-400 text-[11px] leading-relaxed">打者場內安打率高於純擊球品質期望，通常代表擊球落點巧、對手防守失誤偏多或速度推進快，未來數據可能產生小幅校正回歸。</p>
                 </div>
                 <div class="p-2.5 rounded-xl bg-sky-950/30 border border-sky-800/50 space-y-1">
-                  <span class="font-bold text-sky-300 block">🔵 線下方：強擊運氣受損區 (xBA > BABIP)</span>
+                  <span class="font-bold text-sky-300 block">🔵 線下方：強擊運氣受損區 (xBA > AVG)</span>
                   <p class="text-slate-400 text-[11px] leading-relaxed">打者擊球初速快且平飛球 (LD%) 充沛，但常直找野手手套遭沒收。此類打者揮棒機制極佳，後續賽事強烈看好安打大爆發！</p>
                 </div>
               </div>
@@ -1857,7 +1855,7 @@
               <p class="text-xs text-slate-400 mt-1">完整收錄淡江航太系壘賽伯計量模型、慢速壘球專屬特化規程、進階破壞力推導與球探擊球指標全集</p>
             </div>
             <div class="flex items-center space-x-2 text-xs font-mono text-slate-400">
-              <span class="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-sky-400 font-bold">4 大分類・共 32 項指標</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-sky-400 font-bold">5 大分類・共 37 項說明</span>
             </div>
           </div>
 
@@ -1880,11 +1878,11 @@
 
                 <div class="bg-slate-950 p-4 rounded-xl border border-indigo-900/40 space-y-2 shadow-sm">
                   <div class="flex items-center justify-between">
-                    <span class="font-black text-indigo-300 text-sm">現代賽伯計量最強二棒理論 (The Modern Super-#2)</span>
-                    <span class="font-mono text-[10px] text-indigo-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Tom Tango 'The Book'</span>
+                    <span class="font-black text-indigo-300 text-sm">計時賽排棒模型 (Timed-Game Batting Order)</span>
+                    <span class="font-mono text-[10px] text-indigo-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Markov + Clock</span>
                   </div>
-                  <p><span class="text-slate-400">核心原則：</span>全隊最高綜合攻擊破壞力之 MVP 打者必須排在【第 2 棒】！</p>
-                  <p><span class="text-slate-400">說明：</span>現代棒球統計學權威 Tom Tango 與近年 MLB (Judge, Ohtani) 實證推翻了傳統『三棒最強、二棒助攻』的迷思。第 3 棒常在兩出局壘上無人時登場，得分效益低；而第 2 棒第一局 100% 登場打擊、得點圈機率高，且整場累積打席數僅次於第一棒！在慢速壘球單場僅打 2~3 輪的極端打席遞減環境下，將最強打者置於第 2 棒能保證整場產出最大化！</p>
+                  <p><span class="text-slate-400">核心原則：</span>不套用固定的棒次角色，而是計算每種排法在 90 分鐘計時賽中的預期得分，選出最高者。</p>
+                  <p><span class="text-slate-400">說明：</span>The Book 指出最強的打者應放在 1、2、4 棒，因為前段打席較多；但最佳排法取決於比賽環境。模型逐打席計算出局數與壘上狀態，並依比賽時鐘決定能打幾局（時間到不開新局），再搜尋預期得分最高的棒次。本隊上壘率很高，長打者排在高上壘率打者之後時常更有利，因此最強打者不一定在第 2 棒；前段棒次之間的差距通常很小，可用「鎖定棒次」依教練判斷調整。</p>
                 </div>
                 <div class="bg-slate-950 p-4 rounded-xl border border-rose-900/40 space-y-2 shadow-sm">
                   <div class="flex items-center justify-between">
@@ -1970,14 +1968,6 @@
                   <p><span class="text-slate-400">意義：</span>賽伯計量衡量個人單兵破壞力的最高殿堂指標！假設整支球隊 9 個棒次全由該打者一人包辦，打滿正規 9 局（27 個出局數）時，球隊預期能攻下的總分數。慢壘中大於 15.0 分即屬超強進攻重砲！</p>
                 </div>
 
-                <div class="bg-slate-950 p-4 rounded-xl border border-amber-900/40 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-bold text-amber-300 text-sm">每27出局預估得分 (RC/27)</span>
-                    <span class="font-mono text-[10px] text-amber-400">Runs Created per 27 Outs</span>
-                  </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-amber-300 font-bold">RC/27 = (RC × 27) / (AB - H + SF)</span></p>
-                  <p><span class="text-slate-400">意義：</span>賽伯計量衡量個人單兵破壞力的最高殿堂指標！假設整支球隊 9 個棒次全由該打者一人包辦，打滿正規 9 局（27 個出局數）時，球隊預期能攻下的總分數。慢壘中大於 15.0 分即屬超強進攻重砲！</p>
-                </div>
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
                   <div class="flex items-center justify-between">
                     <span class="font-bold text-white text-sm">純長打率 (ISO)</span>
@@ -2396,6 +2386,32 @@
       showToast(lastCloudStatusText || "雲端資料庫：已即時同步");
     };
 
+    // Corrupted browser storage must not stop the whole page from loading.
+    function readStoredJson(key, fallback) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return value === null || value === undefined ? fallback : value;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    // A value placed inside an inline handler attribute, e.g. onclick="fn(${jsArg(name)})": names with quotes stay intact.
+    function jsArg(value) {
+      return JSON.stringify(String(value ?? '')).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
+    // Cloud writes get a generous timeout so a bad field connection reports a failure instead of hanging.
+    const WRITE_TIMEOUT_MS = 20000;
+    async function fetchWrite(url, options = {}) {
+      try {
+        return await fetchWithTimeout(url, options, WRITE_TIMEOUT_MS);
+      } catch (err) {
+        if (err && err.name === 'AbortError') throw new Error(`網路逾時（${WRITE_TIMEOUT_MS / 1000} 秒），請稍後重試`);
+        throw err;
+      }
+    }
+
     const GITHUB_REPO = "scottpuppylu/baseball-stats";
     const GITHUB_BRANCH = "main";
     const DATA_FILE_PATH = "data/logs.json";
@@ -2466,7 +2482,7 @@
         return [];
       }
     })();
-    let activeGame = window.activeGame = JSON.parse(localStorage.getItem('rebas_active_game')) || null;
+    let activeGame = window.activeGame = readStoredJson('rebas_active_game', null);
 
 
     const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
@@ -2538,7 +2554,7 @@
     };
 
 
-    let defenseRankings = JSON.parse(localStorage.getItem('rebas_defense_rankings')) || { ...DEFAULT_DEFENSE_RANKINGS };
+    let defenseRankings = readStoredJson('rebas_defense_rankings', null) || { ...DEFAULT_DEFENSE_RANKINGS };
 
 
     let JERSEY_TO_NAME = { ...DEFAULT_JERSEY_MAP };
@@ -2565,13 +2581,8 @@
         const { content, sha } = await fetchGitHubContent(GUESTS_FILE_PATH);
         currentGuestsSha = sha;
         if (Array.isArray(content)) {
-          const merged = [...guestPlayers];
-          content.forEach(cg => {
-            if (cg && cg.name && !merged.some(m => m.name === cg.name)) {
-              merged.push(cg);
-            }
-          });
-          guestPlayers = window.guestPlayers = merged;
+          // The cloud roster wins, so a guest removed on another device stays removed here.
+          guestPlayers = window.guestPlayers = content.filter(g => g && g.name);
           localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
         }
         return true;
@@ -2589,7 +2600,7 @@
 
     async function commitGuestsToGitHub(updatedGuests, commitMessage = "update: sync guest players via portal") {
       try {
-        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GUESTS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GUESTS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
           headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
         });
         if (getShaRes.ok) {
@@ -2605,7 +2616,7 @@
           branch: GITHUB_BRANCH
         };
         if (currentGuestsSha) putBody.sha = currentGuestsSha;
-        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GUESTS_FILE_PATH}`, {
+        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GUESTS_FILE_PATH}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${GITHUB_TOKEN}`,
@@ -2747,7 +2758,7 @@
             <span class="font-bold text-white text-xs">#${g.jersey !== undefined ? g.jersey : 0} ${g.name}</span>
             <span class="text-[10px] text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded border border-purple-800/50">${g.tag || '支援'}</span>
           </div>
-          <button type="button" onclick="removeGuestPlayer('${g.name}')" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 rounded bg-rose-950/40 border border-rose-900/50 transition">
+          <button type="button" onclick="removeGuestPlayer(${jsArg(g.name)})" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 rounded bg-rose-950/40 border border-rose-900/50 transition">
             🗑️ 移除
           </button>
         </div>
@@ -2917,8 +2928,8 @@
     let currentTagsSha = null;
     let currentDefenseSha = null;
     let selectedPlayerName = "";
-    let playerAvatars = JSON.parse(localStorage.getItem('rebas_player_avatars')) || {};
-    let playerTags = JSON.parse(localStorage.getItem('rebas_player_tags')) || {};
+    let playerAvatars = readStoredJson('rebas_player_avatars', null) || {};
+    let playerTags = readStoredJson('rebas_player_tags', null) || {};
 
 
     let currentLogsPage = 1;
@@ -3156,7 +3167,7 @@
 
 
       try {
-        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
           headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
         });
         if (getShaRes.ok) {
@@ -3178,7 +3189,7 @@
         if (currentDefenseSha) putBody.sha = currentDefenseSha;
 
 
-        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}`, {
+        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${GITHUB_TOKEN}`,
@@ -3320,7 +3331,7 @@
 
 
         return `
-          <div onclick="toggleAttendancePlayer('${name}')" class="cursor-pointer select-none rounded-xl p-2 border transition duration-150 flex items-center space-x-2.5 ${
+          <div onclick="toggleAttendancePlayer(${jsArg(name)})" class="cursor-pointer select-none rounded-xl p-2 border transition duration-150 flex items-center space-x-2.5 ${
             isPresent
               ? 'bg-sky-950/60 border-sky-500/70 shadow-sm hover:border-sky-400'
               : 'bg-slate-950/40 border-slate-800/80 opacity-40 hover:opacity-75'
@@ -3350,7 +3361,7 @@
     
     // 指定打擊 (DH) 制度設定前置條件 (localStorage 持久化)
     // 規則確認：有 DH 制時投手 (P) 依然要打，所以總共會變 11 棒 (10 位守備員全打 + 1 位純打擊 DH)
-    let isDhEnabled = window.isDhEnabled = localStorage.getItem('rebas_has_dh') !== null ? JSON.parse(localStorage.getItem('rebas_has_dh')) : false;
+    let isDhEnabled = window.isDhEnabled = readStoredJson('rebas_has_dh', false) === true;
     let customDhSlot = Number(localStorage.getItem('rebas_custom_dh_slot')) || 4;
 
     // 統一更新全系統 DH 賽制按鈕與說明標籤
@@ -4086,10 +4097,9 @@
       const totalOps = lineupPlayers.reduce((a, b) => a + b.ops, 0) / targetSize;
       const totalWrc = lineupPlayers.reduce((a, b) => a + b.wrc_plus, 0) / targetSize;
 
-      // 預估單場總得分
-      const meanObp = lineupPlayers.reduce((a, b) => a + b.obp, 0) / targetSize;
-      const meanSlg = lineupPlayers.reduce((a, b) => a + b.slg, 0) / targetSize;
-      const projectedRuns = (meanObp * meanSlg * 14.5).toFixed(1);
+      // 預估單場得分：與推薦打線使用同一個計時賽模型 (lineup-model.js)；模型尚未載入時顯示「—」
+      const analysis = typeof window.analyzeLineupOrder === 'function' ? window.analyzeLineupOrder(customLineup.slice(0, targetSize), pList) : null;
+      const projectedRuns = analysis ? analysis.runs.toFixed(2) : '—';
 
       // 打線流暢係數 (斷層標準差)
       const variance = lineupPlayers.reduce((sum, p) => sum + Math.pow(p.ops - totalOps, 2), 0) / targetSize;
@@ -4145,9 +4155,9 @@
           <span class="text-[10px] text-slate-500 block">${totalWrc >= 100 ? '優於團隊歷史平均' : '低於團隊歷史平均'}</span>
         </div>
         <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-          <span class="text-[10px] text-slate-400 block font-medium">預估單場總得分 (Runs/7局)</span>
+          <span class="text-[10px] text-slate-400 block font-medium">模擬預期得分 (計時賽)</span>
           <span class="font-mono text-cyan-400 font-black text-lg block tabular-nums">${projectedRuns} 分</span>
-          <span class="text-[10px] text-slate-500 block">壘包期望值演算法推估</span>
+          <span class="text-[10px] text-slate-500 block">${analysis ? `推薦打線 ${analysis.recommendedRuns.toFixed(2)} 分・約 ${analysis.innings.toFixed(1)} 局` : '與推薦打線同一模型'}</span>
         </div>
         <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
           <span class="text-[10px] text-slate-400 block font-medium">打線流暢係數 (斷層標準差)</span>
@@ -4162,54 +4172,26 @@
 
       // 渲染逐棒深度數據與適配度檢驗表
       const tableBody = document.getElementById('customLineupTableBody');
-      const tacticalRoles = isDhEnabled ? [
-        '開路先鋒 (Leadoff)',
-        '現代超強二棒 (Super-#2)',
-        '全能攻擊軸心 (All-Around)',
-        '終極清壘重砲 (Clean-Up)',
-        '火力護衛推進 (Protection)',
-        '中段突穿打擊 (Mid Punch)',
-        '戰術銜接支撐 (Rally Anchor)',
-        '後段防線消耗 (Lower Core)',
-        '輪轉伏兵前哨 (Pre-Turn)',
-        '雙核伏兵串聯 (Co-Turn)',
-        '十一棒伏兵 (Second Leadoff)'
-      ] : [
-        '開路先鋒 (Leadoff)',
-        '現代超強二棒 (Super-#2)',
-        '全能攻擊軸心 (All-Around)',
-        '終極清壘重砲 (Clean-Up)',
-        '火力護衛推進 (Protection)',
-        '中段突穿打擊 (Mid Punch)',
-        '戰術銜接支撐 (Rally Anchor)',
-        '後段防線消耗 (Lower Core)',
-        '輪轉伏兵前哨 (Pre-Turn)',
-        '十棒第二開路 (Second Leadoff)'
-      ];
+      // 每棒的打席分布與換位建議都來自計時賽模型，不再套用固定的棒次角色。
+      const slotRole = idx => analysis
+        ? `每場 ${analysis.paBySlot[idx].toFixed(1)} 打席・打到第 3 次 ${Math.round(analysis.third[idx] * 100)}%`
+        : `第 ${idx + 1} 棒`;
 
       tableBody.innerHTML = lineupPlayers.map((p, idx) => {
         const slot = idx + 1;
         const posInfo = assignedPositions[p.name] || { posKey: 'DH', label: 'DH/指定打擊', rankText: '彈性支援', isDh: false };
 
-        let fitGrade = 'A';
-        let fitClass = 'bg-sky-500/20 text-sky-300 border-sky-500/40';
-
-        if (slot === 1) {
-          if (p.obp >= 0.550 && p.k_pct <= 0.05) { fitGrade = 'S (完美開路)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
-          else if (p.obp < 0.450) { fitGrade = 'C (上壘偏低)'; fitClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40'; }
-        } else if (slot === 2) {
-          if (p.woba >= 0.550 && p.contact_pct >= 0.90) { fitGrade = 'S (超強核心)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
-          else if (p.k_pct > 0.10) { fitGrade = 'B (注意吞K)'; fitClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40'; }
-        } else if (slot === 4) {
-          if (p.iso >= 0.280 && p.slg >= 0.700) { fitGrade = 'S (重砲清道夫)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
-          else if (p.iso < 0.180) { fitGrade = 'C (長打不足)'; fitClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40'; }
-        } else if (slot === 3) {
-          if (p.avg >= 0.450 && p.ops >= 1.100) { fitGrade = 'S (全能軸心)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
-        } else if (slot === 5) {
-          if (p.slg >= 0.600) { fitGrade = 'S (優質保護)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
-        } else if (slot === targetSize) {
-          if (p.obp >= 0.500) { fitGrade = 'S (黃金伏兵)'; fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'; }
-          else if (p.obp < 0.380) { fitGrade = 'B (伏兵成效弱)'; fitClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40'; }
+        let fitGrade = '—';
+        let fitClass = 'bg-slate-800 text-slate-400 border-slate-700';
+        if (analysis) {
+          const swap = analysis.swaps[idx];
+          if (swap.gain >= 0.02) {
+            fitGrade = `與第 ${swap.partnerSlot} 棒互換 +${swap.gain.toFixed(2)} 分`;
+            fitClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+          } else {
+            fitGrade = '位置適當';
+            fitClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+          }
         }
 
         let posBadge = '';
@@ -4229,7 +4211,7 @@
             <td class="p-2.5 text-center font-sans text-xs">
               ${posBadge}
             </td>
-            <td class="p-2.5 text-slate-300 font-sans text-[11px]">${tacticalRoles[idx]}</td>
+            <td class="p-2.5 text-slate-300 font-sans text-[11px]">${slotRole(idx)}</td>
             <td class="p-2.5 text-center text-slate-300 tabular-nums">${p.avg.toFixed(3)}</td>
             <td class="p-2.5 text-center text-emerald-400 font-bold tabular-nums">${p.obp.toFixed(3)}</td>
             <td class="p-2.5 text-center text-sky-400 font-bold tabular-nums">${p.slg.toFixed(3)}</td>
@@ -4292,15 +4274,15 @@
 
       // 投手 P 必保檢驗：不論有無 DH 投手都要打擊！
       const pitcherRanks = defenseRankings['P'] || DEFAULT_DEFENSE_RANKINGS['P'] || [];
-      const hasPitcher = lineupPlayers.some(p => pitcherRanks.includes(p.name));
-      if (!hasPitcher) {
+      // 與推薦打線一致：守位配對後實際守投手的人必須在投手排名中
+      const pitcherBatter = lineupPlayers.find(p => assignedPositions[p.name]?.posKey === 'P' && pitcherRanks.includes(p.name));
+      if (!pitcherBatter) {
         notes.push({
           type: 'danger',
-          title: '【致命防守漏洞】：打線中無合格投手 (P)',
-          desc: `先發 ${targetSize} 棒中無人具備合格投手 (P) 順位！慢壘投手必須親自打擊，若打線無投手將面臨無人可登板投球之嚴重防守崩潰風險！建議調整至少 1 位具備投球資格之球員入打線。`
+          title: '【致命防守漏洞】：沒有合格投手守投手位置',
+          desc: `守位配對後，投手 (P) 位置不是由投手排名中的球員擔任（排名內的投手可能被更優先的守位占走或不在打線中）。請把投手排名中的球員排入打線，或調整守位排名。`
         });
       } else {
-        const pitcherBatter = lineupPlayers.find(p => pitcherRanks.includes(p.name));
         notes.push({
           type: 'success',
           title: '【投手戰力就緒】：打線已包含合格投手',
@@ -4326,44 +4308,18 @@
         }
       }
 
-      if (lineupPlayers[0].obp < 0.450) {
-        notes.push({
-          type: 'warning',
-          title: '一棒上壘率偏低 (開路堆疊效率弱)',
-          desc: `第 1 棒 ${lineupPlayers[0].name} OBP 僅 ${lineupPlayers[0].obp.toFixed(3)}，無法有效在首局首出局前堆積壘包，建議調換 OBP 更高之選手。`
-        });
-      }
-
-      // 現代賽伯計量最強二棒與慢壘 2~3 輪打席前傾檢驗
-      const topBatterInLineup = [...lineupPlayers].sort((a, b) => b.wrc_plus - a.wrc_plus)[0];
-      if (lineupPlayers[1].name === topBatterInLineup.name) {
-        notes.push({
-          type: 'success',
-          title: `【現代最強二棒完美配置】：${lineupPlayers[1].name} 扛大核`,
-          desc: `全隊綜合進攻破壞力最高之打者 ${lineupPlayers[1].name} (wRC+ ${lineupPlayers[1].wrc_plus.toFixed(1)} / OPS ${lineupPlayers[1].ops.toFixed(3)}) 置於第 2 棒，完全符合現代賽伯計量學與慢壘單場僅 2~3 輪打席之極端前傾優勢！`
-        });
-      } else if (lineupPlayers[1].wrc_plus < 105) {
-        notes.push({
-          type: 'warning',
-          title: `第二棒攻擊火力不足 (違背現代最強二棒原則)`,
-          desc: `第 2 棒 ${lineupPlayers[1].name} wRC+ (${lineupPlayers[1].wrc_plus.toFixed(1)}) 偏低。慢壘一場僅 2~3 輪打席，第二棒擁有全場最高得分期望值且第一局必登場，強烈建議將全隊最強進攻核心 (${topBatterInLineup.name}, wRC+ ${topBatterInLineup.wrc_plus.toFixed(1)}) 移至第 2 棒！`
-        });
-      }
-
-      if (lineupPlayers[3].iso < 0.200) {
-        notes.push({
-          type: 'warning',
-          title: '第四棒長打穿透力缺口 (Clean-up 威脅不足)',
-          desc: `第 4 棒 ${lineupPlayers[3].name} 純長打率 (ISO) 僅 ${lineupPlayers[3].iso.toFixed(3)}，壘上有跑者時難以給予對手長打清壘威脅。`
-        });
-      }
-
-      if (lineupPlayers[4].slg < 0.500) {
-        notes.push({
-          type: 'warning',
-          title: '第五棒長打保護傘不足',
-          desc: `第 5 棒 ${lineupPlayers[4].name} 長打率偏低 (${lineupPlayers[4].slg.toFixed(3)})，對手投手容易策略性閃避第四棒正面投球。`
-        });
+      // 換位建議：與推薦打線同一模型，找出任兩棒互換後每場得分提升最多的組合。
+      if (analysis) {
+        let bestSlot = -1;
+        analysis.swaps.forEach((swap, i) => { if (bestSlot < 0 || swap.gain > analysis.swaps[bestSlot].gain) bestSlot = i; });
+        const best = analysis.swaps[bestSlot];
+        if (best && best.gain >= 0.02) {
+          notes.push({
+            type: 'warning',
+            title: `建議互換第 ${bestSlot + 1} 棒與第 ${best.partnerSlot} 棒`,
+            desc: `${lineupPlayers[bestSlot].name} 與 ${lineupPlayers[best.partnerSlot - 1].name} 互換後，計時賽模型預期每場多 ${best.gain.toFixed(2)} 分。`
+          });
+        }
       }
 
       // 相鄰棒次落差檢驗
@@ -4391,19 +4347,11 @@
         }
       }
 
-      if (pLast.obp >= 0.500) {
-        notes.push({
-          type: 'success',
-          title: `第 ${targetSize} 棒伏兵小核彈戰術成效顯著`,
-          desc: `第 ${targetSize} 棒 ${pLast.name} OBP 達 ${pLast.obp.toFixed(3)}，局數輪轉時能極高機率為 1~3 棒超強打線提前堆疊壘包！`
-        });
-      }
-
       if (notes.filter(n => n.type !== 'success').length === 0) {
         notes.push({
           type: 'success',
-          title: '打線配置符合現代賽伯計量高得分期望值',
-          desc: `1~${targetSize} 棒前後段串聯流暢，中心棒次長打破壞力充沛，斷層標準差小，具備高延續性與強大得分產能。`
+          title: '打線順序已接近最佳',
+          desc: analysis ? `任兩棒互換每場預期得分都提升不到 0.02 分（模擬 ${analysis.runs.toFixed(2)} 分）。` : `1~${targetSize} 棒無重複且投手已就位。`
         });
       }
 
@@ -4527,7 +4475,8 @@ window.toggleDiagnosticsCollapse = function() {
       try {
         const { content, sha } = await fetchGitHubContent(AVATARS_FILE_PATH);
         currentAvatarsSha = sha;
-        playerAvatars = { ...playerAvatars, ...content };
+        // The cloud copy wins, so an avatar cleared on another device stays cleared here.
+        playerAvatars = (content && typeof content === 'object' && !Array.isArray(content)) ? content : {};
         localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
         return true;
       } catch (err) {
@@ -4546,7 +4495,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       try {
-        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
           headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
         });
         if (getShaRes.ok) {
@@ -4568,7 +4517,7 @@ window.toggleDiagnosticsCollapse = function() {
         if (currentAvatarsSha) putBody.sha = currentAvatarsSha;
 
 
-        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}`, {
+        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${GITHUB_TOKEN}`,
@@ -4607,7 +4556,8 @@ window.toggleDiagnosticsCollapse = function() {
       try {
         const { content, sha } = await fetchGitHubContent(TAGS_FILE_PATH);
         currentTagsSha = sha;
-        playerTags = { ...playerTags, ...content };
+        // The cloud copy wins, so a tag removed on another device stays removed here.
+        playerTags = (content && typeof content === 'object' && !Array.isArray(content)) ? content : {};
         localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
         return true;
       } catch (err) {
@@ -4626,7 +4576,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       try {
-        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
           headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
         });
         if (getShaRes.ok) {
@@ -4648,7 +4598,7 @@ window.toggleDiagnosticsCollapse = function() {
         if (currentTagsSha) putBody.sha = currentTagsSha;
 
 
-        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}`, {
+        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${GITHUB_TOKEN}`,
@@ -4792,7 +4742,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       try {
-        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
           headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
         });
         if (getShaRes.ok) {
@@ -4812,7 +4762,7 @@ window.toggleDiagnosticsCollapse = function() {
         if (currentFileSha) putBody.sha = currentFileSha;
 
 
-        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`, {
+        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${GITHUB_TOKEN}`,
@@ -5208,6 +5158,29 @@ window.toggleDiagnosticsCollapse = function() {
       return uniqueNames;
     }
 
+    // Hit and total-base rates per batted-ball type, measured from this team's own scorebook (home runs
+    // counted separately) and regressed toward generic defaults with 10 balls of weight per type.
+    const XSTAT_DEFAULTS = {
+      line: { hit: 0.68, tb: 0.95 }, grounder: { hit: 0.28, tb: 0.30 }, fly: { hit: 0.38, tb: 0.75 }, popup: { hit: 0.02, tb: 0.02 }
+    };
+    function getBattedBallRates() {
+      const counts = {};
+      Object.keys(XSTAT_DEFAULTS).forEach(key => { counts[key] = { n: 0, hits: 0, tb: 0 }; });
+      (allGames || []).forEach(g => (g.innings || []).forEach(inn => (inn.plateAppearances || []).forEach(pa => {
+        const c = counts[pa.trajectory];
+        if (!c || isRunnerOutPlay(pa) || pa.result === 'HR') return;
+        c.n++;
+        const bases = { '1H': 1, '2H': 2, '3H': 3 }[pa.result] || 0;
+        if (bases) { c.hits++; c.tb += bases; }
+      })));
+      const rates = {};
+      Object.entries(XSTAT_DEFAULTS).forEach(([key, d]) => {
+        const c = counts[key];
+        rates[key] = { hit: (c.hits + 10 * d.hit) / (c.n + 10), tb: (c.tb + 10 * d.tb) / (c.n + 10), n: c.n };
+      });
+      return rates;
+    }
+
     function getFilteredLogs() {
       const s = document.getElementById('filterStartDate')?.value || '';
       const e = document.getElementById('filterEndDate')?.value || '';
@@ -5250,8 +5223,20 @@ window.toggleDiagnosticsCollapse = function() {
             name: l.name, pa: 0, ab: 0, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0,
             k_swing: 0, k_foul: 0,
             bip: 0, ld: 0, gb: 0, fb: 0, pu: 0,
-            pull: 0, cent: 0, oppo: 0
+            pull: 0, cent: 0, oppo: 0,
+            // Plate appearances from scorebook games that carry batted-ball types (the xStats sample)
+            t_pa: 0, t_ab: 0, t_h: 0, t_bb: 0, t_sf: 0, t_h2: 0, t_h3: 0, t_hr: 0
           };
+        }
+        if (l.bip !== undefined) {
+          const g = grouped[l.name];
+          const th1 = Number(l.h1) || 0, th2 = Number(l.h2) || 0, th3 = Number(l.h3) || 0, thr = Number(l.hr) || 0;
+          g.t_pa += Number(l.pa) || 0;
+          g.t_bb += Number(l.bb) || 0;
+          g.t_sf += Number(l.sf) || 0;
+          g.t_h += th1 + th2 + th3 + thr;
+          g.t_h2 += th2; g.t_h3 += th3; g.t_hr += thr;
+          g.t_ab = Math.max(0, g.t_pa - g.t_bb - g.t_sf);
         }
         grouped[l.name].pa += Number(l.pa) || 0;
         const h1 = Number(l.h1) || 0;
@@ -5316,6 +5301,7 @@ window.toggleDiagnosticsCollapse = function() {
       const teamRcTotal = (teamAb + teamBbVal) > 0 ? ((teamH + teamBbVal) * teamTbTotal) / (teamAb + teamBbVal) : 0;
       const teamRc27 = (teamRcTotal * 27) / teamOutsTotal;
 
+      const xRates = getBattedBallRates();
       list.forEach(p => {
         p.avg = p.ab > 0 ? p.h / p.ab : 0;
         p.obp = (p.ab + p.bb + p.sf) > 0 ? (p.h + p.bb) / (p.ab + p.bb + p.sf) : 0;
@@ -5349,29 +5335,39 @@ window.toggleDiagnosticsCollapse = function() {
         p.contact_pct = p.ab > 0 ? (p.ab - p.k) / p.ab : 1.0;
         p.bb_k_ratio = p.k > 0 ? p.bb / p.k : p.bb;
 
-        // ★★★ Statcast 擊球型態與品質百分比
-        const validBip = p.bip > 0 ? p.bip : Math.max(1, bipDenom);
-        p.ld_pct = p.bip > 0 ? p.ld / p.bip : (p.h2 + p.h3) / validBip;
-        p.gb_pct = p.bip > 0 ? p.gb / p.bip : Math.max(0, (validBip - p.ld - p.fb - p.pu) / validBip);
-        p.fb_pct = p.bip > 0 ? p.fb / p.bip : (p.hr * 2) / validBip;
+        // ★★★ Statcast 擊球型態與品質百分比：只有場記擊球型態的球員才有；沒有資料者標記 tracked=false，
+        // 畫面改顯示「無資料」，下列中性數值只為避免舊程式出錯，不作為真實數據呈現。
+        p.tracked = p.bip > 0 && p.t_ab > 0;
+        p.ld_pct = p.bip > 0 ? p.ld / p.bip : 0;
+        p.gb_pct = p.bip > 0 ? p.gb / p.bip : 0;
+        p.fb_pct = p.bip > 0 ? p.fb / p.bip : 0;
         p.pu_pct = p.bip > 0 ? p.pu / p.bip : 0;
 
         // ★★★ 廣角噴流方向指標
-        p.pull_pct = p.bip > 0 ? p.pull / p.bip : 0.40;
-        p.cent_pct = p.bip > 0 ? p.cent / p.bip : 0.35;
-        p.oppo_pct = p.bip > 0 ? p.oppo / p.bip : 0.25;
+        p.pull_pct = p.bip > 0 ? p.pull / p.bip : 0;
+        p.cent_pct = p.bip > 0 ? p.cent / p.bip : 0;
+        p.oppo_pct = p.bip > 0 ? p.oppo / p.bip : 0;
 
-        // ★★★ Statcast 預期期望打擊數據 (xBA, xSLG, xwOBA)
-        if (p.bip > 0 && p.ab > 0) {
-          p.xba = ((p.ld * 0.68) + (p.gb * 0.28) + (Math.max(0, p.fb - p.hr) * 0.38) + (p.pu * 0.02) + (p.hr * 1.0)) / p.ab;
-          p.xslg = ((p.ld * 0.95) + (p.gb * 0.30) + (Math.max(0, p.fb - p.hr) * 0.75) + (p.pu * 0.02) + (p.hr * 4.0)) / p.ab;
-          p.xwoba = p.pa > 0 ? (0.69 * p.bb + 0.89 * Math.max(0, p.xba * p.ab - (p.h2 + p.h3 + p.hr)) + 1.27 * p.h2 + 1.62 * p.h3 + 2.10 * p.hr) / p.pa : p.woba;
+        // ★★★ 預期數據 (xBA, xSLG, xwOBA)：分子分母都只用場記擊球樣本，安打率取自本隊各擊球型態的實際結果
+        if (p.tracked) {
+          const nonHrFly = Math.max(0, p.fb - p.t_hr);
+          const ldNonHr = Math.max(0, p.ld - Math.max(0, p.t_hr - p.fb));
+          const xHits = ldNonHr * xRates.line.hit + p.gb * xRates.grounder.hit + nonHrFly * xRates.fly.hit + p.pu * xRates.popup.hit + p.t_hr;
+          const xBases = ldNonHr * xRates.line.tb + p.gb * xRates.grounder.tb + nonHrFly * xRates.fly.tb + p.pu * xRates.popup.tb + 4 * p.t_hr;
+          p.xba = xHits / p.t_ab;
+          p.xslg = xBases / p.t_ab;
+          p.xwoba = p.t_pa > 0 ? (0.69 * p.t_bb + 0.89 * Math.max(0, xHits - (p.t_h2 + p.t_h3 + p.t_hr)) + 1.27 * p.t_h2 + 1.62 * p.t_h3 + 2.10 * p.t_hr) / p.t_pa : 0;
+          // Actual results over the same sample, so actual-vs-expected compares like with like.
+          p.t_avg = p.t_h / p.t_ab;
+          p.t_slg = (p.t_h - p.t_h2 - p.t_h3 - p.t_hr + 2 * p.t_h2 + 3 * p.t_h3 + 4 * p.t_hr) / p.t_ab;
+          p.t_woba = p.t_pa > 0 ? (0.69 * p.t_bb + 0.89 * (p.t_h - p.t_h2 - p.t_h3 - p.t_hr) + 1.27 * p.t_h2 + 1.62 * p.t_h3 + 2.10 * p.t_hr) / p.t_pa : 0;
         } else {
           p.xba = p.avg;
           p.xslg = p.slg;
           p.xwoba = p.woba;
+          p.t_avg = p.avg; p.t_slg = p.slg; p.t_woba = p.woba;
         }
-        p.luck_factor = p.avg - p.xba; // 運氣因子 (大於0為好運安打，小於0為強勁擊球運氣差被沒收)
+        p.luck_factor = p.tracked ? p.t_avg - p.xba : 0; // 運氣因子 (同一樣本的實際打擊率 - 預期打擊率)
       });
 
       return {
@@ -5407,7 +5403,7 @@ window.toggleDiagnosticsCollapse = function() {
             <span class="text-xl sm:text-2xl font-black text-sky-400 my-0.5 block tracking-tight tabular-nums truncate">${c.val}</span>
             <span class="text-[9px] sm:text-[10px] text-slate-500 font-mono block truncate">${c.sub}</span>
           </div>
-          ${c.player ? `<div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${c.player}'; switchMainTab('tabProfile');" title="點擊檢視 ${c.player} 檔案">${renderAvatarElement(c.player, 'w-12 h-12 sm:w-16 sm:h-16 text-base sm:text-xl ring-2 ring-sky-400/80 shadow-md hover:scale-105 transition')}</div>` : ''}
+          ${c.player ? `<div class="shrink-0 cursor-pointer" onclick="selectedPlayerName=${jsArg(c.player)}; switchMainTab('tabProfile');" title="點擊檢視 ${c.player} 檔案">${renderAvatarElement(c.player, 'w-12 h-12 sm:w-16 sm:h-16 text-base sm:text-xl ring-2 ring-sky-400/80 shadow-md hover:scale-105 transition')}</div>` : ''}
         </div>
       `).join('');
     }
@@ -5428,11 +5424,14 @@ window.toggleDiagnosticsCollapse = function() {
       `;
 
 
-      let filtered = agg.players.filter(p => p.pa >= minPa);
-
-
       const isAscending = metric.endsWith('_asc');
       const realKey = isAscending ? metric.replace('_asc', '') : metric;
+      // Batted-ball metrics rank only players with scorebook batted-ball types.
+      const needsTracking = ['xba', 'xwoba', 'ld_pct', 'pull_pct', 'oppo_pct'].includes(realKey);
+      let filtered = agg.players.filter(p => p.pa >= minPa && (!needsTracking || p.tracked));
+      if (needsTracking) {
+        document.getElementById('leaderboardMetricCard').insertAdjacentHTML('beforeend', '<p class="text-[10px] text-amber-300">此指標只列出有場記擊球型態紀錄的球員；只有手動補登日誌者不列入排名。</p>');
+      }
 
 
       filtered.sort((a, b) => {
@@ -5443,10 +5442,10 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       const formatVal = (val, key) => {
-        if (['avg', 'obp', 'slg', 'iso', 'babip', 'woba', 'seca'].includes(key)) return Number(val).toFixed(3);
-        if (['ops', 'sdi'].includes(key)) return (val >= 0 ? '+' : '') + Number(val).toFixed(3);
-        if (['wrc_plus', 'ops_plus'].includes(key)) return Number(val).toFixed(1);
-        if (['bb_pct', 'k_pct', 'contact_pct'].includes(key)) return (Number(val) * 100).toFixed(1) + '%';
+        if (['avg', 'obp', 'slg', 'iso', 'babip', 'woba', 'seca', 'ops', 'xba', 'xwoba', 'xslg'].includes(key)) return Number(val).toFixed(3);
+        if (key === 'sdi') return (val >= 0 ? '+' : '') + Number(val).toFixed(3);
+        if (['wrc_plus', 'ops_plus', 'rc', 'rc_27'].includes(key)) return Number(val).toFixed(1);
+        if (['bb_pct', 'k_pct', 'contact_pct', 'ld_pct', 'pull_pct', 'oppo_pct'].includes(key)) return (Number(val) * 100).toFixed(1) + '%';
         if (key === 'bb_k_ratio') return Number(val).toFixed(2);
         return val;
       };
@@ -5464,7 +5463,7 @@ window.toggleDiagnosticsCollapse = function() {
       podium.innerHTML = top3.map((p, idx) => `
         <div class="border ${podiumColors[idx].border} ${podiumColors[idx].bg} rounded-2xl p-3.5 sm:p-4 flex items-center space-x-3.5 shadow-xl">
           <div class="text-2xl sm:text-3xl font-black ${podiumColors[idx].text} w-5 sm:w-6 text-center tabular-nums">${idx + 1}</div>
-          <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${p.name}'; switchMainTab('tabProfile');" title="點擊檢視 ${p.name} 檔案">
+          <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName=${jsArg(p.name)}; switchMainTab('tabProfile');" title="點擊檢視 ${p.name} 檔案">
             ${renderAvatarElement(p.name, 'w-16 h-16 sm:w-20 sm:h-20 text-2xl sm:text-3xl ' + podiumColors[idx].ring)}
           </div>
           <div class="flex-1 min-w-0">
@@ -5576,7 +5575,7 @@ window.toggleDiagnosticsCollapse = function() {
 
       document.getElementById('compareCardA').innerHTML = `
         <div class="flex items-center space-x-3 sm:space-x-4">
-          <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${pA.name}'; switchMainTab('tabProfile');" title="點擊檢視 ${pA.name} 檔案">
+          <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName=${jsArg(pA.name)}; switchMainTab('tabProfile');" title="點擊檢視 ${pA.name} 檔案">
             ${renderAvatarElement(pA.name, 'w-24 h-24 sm:w-28 sm:h-28 text-3xl sm:text-4xl ring-4 ring-sky-500/70 shadow-2xl')}
           </div>
           <div class="flex-1 min-w-0">
@@ -5594,7 +5593,7 @@ window.toggleDiagnosticsCollapse = function() {
 
       document.getElementById('compareCardB').innerHTML = `
         <div class="flex items-center space-x-3 sm:space-x-4">
-          <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${pB.name}'; switchMainTab('tabProfile');" title="點擊檢視 ${pB.name} 檔案">
+          <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName=${jsArg(pB.name)}; switchMainTab('tabProfile');" title="點擊檢視 ${pB.name} 檔案">
             ${renderAvatarElement(pB.name, 'w-24 h-24 sm:w-28 sm:h-28 text-3xl sm:text-4xl ring-4 ring-amber-500/70 shadow-2xl')}
           </div>
           <div class="flex-1 min-w-0">
@@ -5649,10 +5648,24 @@ window.toggleDiagnosticsCollapse = function() {
       tbody.innerHTML = '';
 
 
+      // Batted-ball metrics exist only for players with scorebook batted-ball types.
+      const STATCAST_KEYS = ['ld_pct', 'gb_pct', 'fb_pct', 'pu_pct', 'pull_pct', 'cent_pct', 'oppo_pct', 'xba', 'xslg', 'xwoba', 'luck_factor'];
       metricsMeta.forEach(m => {
         const valA = Number(pA[m.key]) || 0;
         const valB = Number(pB[m.key]) || 0;
         const lower = m.lowerBetter || false;
+        if (STATCAST_KEYS.includes(m.key) && (!pA.tracked || !pB.tracked)) {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-800/50 transition';
+          tr.innerHTML = `
+            <td class="p-3 font-medium text-slate-200">${m.label}</td>
+            <td class="p-3 text-center font-mono text-slate-400 tabular-nums">${pA.tracked ? m.fmt(valA) : '—'}</td>
+            <td class="p-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">無場記資料</span></td>
+            <td class="p-3 text-center font-mono text-slate-400 tabular-nums">${pB.tracked ? m.fmt(valB) : '—'}</td>
+          `;
+          tbody.appendChild(tr);
+          return;
+        }
 
 
         let leadHtml = '';
@@ -5812,24 +5825,25 @@ window.toggleDiagnosticsCollapse = function() {
 
       if (statsA) {
         statsA.innerHTML = `
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${(pA.pull_pct * 100).toFixed(0)}%</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${(pA.cent_pct * 100).toFixed(0)}%</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${(pA.oppo_pct * 100).toFixed(0)}%</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">平飛LD%</span><b class="text-purple-300">${(pA.ld_pct * 100).toFixed(0)}%</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${pA.tracked ? (pA.pull_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${pA.tracked ? (pA.cent_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${pA.tracked ? (pA.oppo_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">平飛LD%</span><b class="text-purple-300">${pA.tracked ? (pA.ld_pct * 100).toFixed(0) + '%' : '—'}</b></div>
         `;
       }
       if (statsB) {
         statsB.innerHTML = `
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${(pB.pull_pct * 100).toFixed(0)}%</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${(pB.cent_pct * 100).toFixed(0)}%</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${(pB.oppo_pct * 100).toFixed(0)}%</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">平飛LD%</span><b class="text-purple-300">${(pB.ld_pct * 100).toFixed(0)}%</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${pB.tracked ? (pB.pull_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${pB.tracked ? (pB.cent_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${pB.tracked ? (pB.oppo_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">平飛LD%</span><b class="text-purple-300">${pB.tracked ? (pB.ld_pct * 100).toFixed(0) + '%' : '—'}</b></div>
         `;
       }
 
       if (summary) {
-        const typeA = pA.pull_pct > 0.52 ? '強力拉打型' : pA.oppo_pct > 0.35 ? '推打穿透型' : '全方位廣角型';
-        const typeB = pB.pull_pct > 0.52 ? '強力拉打型' : pB.oppo_pct > 0.35 ? '推打穿透型' : '全方位廣角型';
+        const sprayType = p => !p.tracked ? '無場記擊球資料' : p.pull_pct > 0.52 ? '強力拉打型' : p.oppo_pct > 0.35 ? '推打穿透型' : '全方位廣角型';
+        const typeA = sprayType(pA);
+        const typeB = sprayType(pB);
         summary.innerHTML = `
           <div class="flex items-center space-x-2 mb-1">
             <span class="font-bold text-amber-300">💡 雙雄打擊型態空間對比：</span>
@@ -5838,9 +5852,9 @@ window.toggleDiagnosticsCollapse = function() {
             <span class="text-amber-300"><b>${pB.name}</b> (${typeB})</span>
           </div>
           <p class="text-slate-400 text-[11px] leading-relaxed">
-            【${pA.name}】：拉打 ${(pA.pull_pct*100).toFixed(0)}% / 推打 ${(pA.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pA.ld_pct*100).toFixed(0)}%，每27出局產能 (RC/27: <b class="text-white">${pA.rc_27.toFixed(1)}</b> 分)。<br>
-            【${pB.name}】：拉打 ${(pB.pull_pct*100).toFixed(0)}% / 推打 ${(pB.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pB.ld_pct*100).toFixed(0)}%，每27出局產能 (RC/27: <b class="text-white">${pB.rc_27.toFixed(1)}</b> 分)。
-            ${pA.pull_pct > pB.pull_pct ? `${pA.name} 具備更高拉打比率，對手容易啟動左移防守；而 ${pB.name} 展現更均衡之全場推打涵蓋面。` : `${pB.name} 具備更高拉打比率，而 ${pA.name} 展現更均衡之全場推打涵蓋面。`}
+            【${pA.name}】：${pA.tracked ? `拉打 ${(pA.pull_pct*100).toFixed(0)}% / 推打 ${(pA.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pA.ld_pct*100).toFixed(0)}%` : '無場記擊球資料'}，每27出局產能 (RC/27: <b class="text-white">${pA.rc_27.toFixed(1)}</b> 分)。<br>
+            【${pB.name}】：${pB.tracked ? `拉打 ${(pB.pull_pct*100).toFixed(0)}% / 推打 ${(pB.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pB.ld_pct*100).toFixed(0)}%` : '無場記擊球資料'}，每27出局產能 (RC/27: <b class="text-white">${pB.rc_27.toFixed(1)}</b> 分)。
+            ${!pA.tracked || !pB.tracked ? '' : pA.pull_pct > pB.pull_pct ? `${pA.name} 具備更高拉打比率，對手容易啟動左移防守；而 ${pB.name} 展現更均衡之全場推打涵蓋面。` : `${pB.name} 具備更高拉打比率，而 ${pA.name} 展現更均衡之全場推打涵蓋面。`}
           </p>
         `;
       }
@@ -5849,7 +5863,7 @@ function getPercentile(val, key, pList, invert = false) {
       const vals = pList.map(d => {
         if (key === 'bb_pct') return d.pa > 0 ? d.bb / d.pa : 0;
         if (key === 'k_pct') return d.pa > 0 ? d.k / d.pa : 0;
-        if (key === 'sdi') return d.pa > 0 ? (d.bb - 1.5 * d.k) / d.pa : 0;
+        if (key === 'sdi') return d.sdi || 0; // same SDI 2.0 formula as the player value being ranked
         return d[key] || 0;
       });
       const min = Math.min(...vals);
@@ -5931,7 +5945,7 @@ function getPercentile(val, key, pList, invert = false) {
         else if (p.result === '1H') { color = '#22c55e'; r = 6; }
 
         return `
-          <circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.9" class="hover:scale-150 transition cursor-pointer" onmouseenter="showProfileSprayTooltip('${p.batterName}', '${p.gameDate}', '${p.opponent}', '${p.inningNum}', '${p.result}', '${p.trajectory}', '${p.location}')">
+          <circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.9" class="hover:scale-150 transition cursor-pointer" onmouseenter="showProfileSprayTooltip(${jsArg(p.batterName)}, ${jsArg(p.gameDate)}, ${jsArg(p.opponent)}, ${jsArg(p.inningNum)}, ${jsArg(p.result)}, ${jsArg(p.trajectory)}, ${jsArg(p.location)})">
             <title>${p.batterName} | ${p.result} | ${p.trajectory} | ${p.location}</title>
           </circle>
         `;
@@ -6042,17 +6056,17 @@ function renderPlayerProfile(agg) {
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                   <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">${p.name}</span>
                   <span class="bg-sky-950 text-sky-400 border border-sky-800 text-xs px-2.5 py-0.5 rounded-lg font-mono font-bold">#${NAME_TO_JERSEY[p.name] ?? '--'}</span>
-                  ${playerAvatars[p.name] ? `<button onclick="clearAvatar('${p.name}')" class="text-xs text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
+                  ${playerAvatars[p.name] ? `<button onclick="clearAvatar(${jsArg(p.name)})" class="text-xs text-slate-500 hover:text-rose-400 underline font-mono transition" title="清除此頭像並同步雲端">清除頭像</button>` : ''}
                 </div>
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
                   ${currentTags.map((t, idx) => `
                     <span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[11px] px-2.5 py-0.5 rounded-full font-medium shadow-sm group">
                       <span>#${t}</span>
-                      <button onclick="removePlayerTag('${p.name}', ${idx})" class="text-amber-400/60 hover:text-rose-400 font-bold ml-0.5 transition" title="移除標籤">&times;</button>
+                      <button onclick="removePlayerTag(${jsArg(p.name)}, ${idx})" class="text-amber-400/60 hover:text-rose-400 font-bold ml-0.5 transition" title="移除標籤">&times;</button>
                     </span>
                   `).join('')}
                   ${currentTags.length < 3 ? `
-                    <button onclick="addPlayerTag('${p.name}')" class="inline-flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-700/80 hover:border-amber-500/40 text-[11px] px-2 py-0.5 rounded-full font-medium transition shadow-sm">
+                    <button onclick="addPlayerTag(${jsArg(p.name)})" class="inline-flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-700/80 hover:border-amber-500/40 text-[11px] px-2 py-0.5 rounded-full font-medium transition shadow-sm">
                       <span>+ 標籤</span>
                       <span class="text-[9px] text-slate-500 font-mono">(${currentTags.length}/3)</span>
                     </button>
@@ -6192,13 +6206,14 @@ function renderPlayerProfile(agg) {
           </div>
 
           <!-- ★★★ Statcast 現代擊球品質與落點深度解析面板 (全寬延展) ★★★ -->
+          ${p.tracked ? `
           <div class="bg-slate-950/80 p-4 sm:p-5 rounded-2xl border border-sky-900/40 space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
               <div class="flex items-center space-x-2">
                 <span class="bg-sky-500/20 text-sky-300 border border-sky-500/40 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">STATCAST METRICS</span>
                 <h4 class="text-sm sm:text-base font-bold text-white tracking-tight">Statcast 擊球型態與品質深度解析</h4>
               </div>
-              <span class="text-xs font-mono text-slate-400">有效擊球樣本: <b class="text-sky-400">${p.bip || p.ab}</b> 球</span>
+              <span class="text-xs font-mono text-slate-400">有效擊球樣本: <b class="text-sky-400">${p.bip}</b> 球</span>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
@@ -6250,7 +6265,10 @@ function renderPlayerProfile(agg) {
                 </span>
               </div>
             </div>
-          </div>
+          </div>` : `
+          <div class="bg-slate-950/80 p-4 sm:p-5 rounded-2xl border border-slate-800 text-xs text-slate-400">
+            <span class="font-bold text-slate-300">Statcast 擊球型態：無資料</span>　此球員在目前日期範圍內沒有場記擊球型態紀錄（只有手動補登日誌），平飛／滾地／拉打比例與預期數據不予推估。
+          </div>`}
         `;
       }
       
@@ -6321,8 +6339,8 @@ function renderPlayerProfile(agg) {
             labels: ['平飛 (LD%)', '滾地 (GB%)', '高飛 (FB%)', '沖天 (PU%)'],
             datasets: [
               {
-                label: `${p.name} 個人`,
-                data: [p.ld_pct * 100, p.gb_pct * 100, p.fb_pct * 100, p.pu_pct * 100],
+                label: p.tracked ? `${p.name} 個人` : `${p.name}（無場記擊球資料）`,
+                data: p.tracked ? [p.ld_pct * 100, p.gb_pct * 100, p.fb_pct * 100, p.pu_pct * 100] : [null, null, null, null],
                 backgroundColor: ['rgba(52, 211, 153, 0.7)', 'rgba(251, 191, 36, 0.7)', 'rgba(56, 189, 248, 0.7)', 'rgba(248, 113, 113, 0.7)'],
                 borderColor: ['#34d399', '#fbbf24', '#38bdf8', '#f87171'],
                 borderWidth: 1.5,
@@ -6364,7 +6382,7 @@ function renderPlayerProfile(agg) {
           data: {
             labels: ['拉打 (Pull)', '中線 (Center)', '推打 (Oppo)'],
             datasets: [{
-              data: [p.pull_pct * 100, p.cent_pct * 100, p.oppo_pct * 100],
+              data: p.tracked ? [p.pull_pct * 100, p.cent_pct * 100, p.oppo_pct * 100] : [0, 0, 0],
               backgroundColor: ['rgba(245, 158, 11, 0.65)', 'rgba(56, 189, 248, 0.65)', 'rgba(52, 211, 153, 0.65)'],
               borderColor: ['#f59e0b', '#38bdf8', '#34d399'],
               borderWidth: 1.5
@@ -6398,16 +6416,16 @@ function renderPlayerProfile(agg) {
             labels: ['打擊率 (BA)', '長打率 (SLG)', '加權上壘 (wOBA)'],
             datasets: [
               {
-                label: '實績 (Actual)',
-                data: [p.avg, p.slg, p.woba],
+                label: '實績 (同一場記樣本)',
+                data: p.tracked ? [p.t_avg, p.t_slg, p.t_woba] : [null, null, null],
                 backgroundColor: 'rgba(56, 189, 248, 0.7)',
                 borderColor: '#38bdf8',
                 borderWidth: 1.5,
                 borderRadius: 4
               },
               {
-                label: 'Statcast預期 (xStats)',
-                data: [p.xba, p.xslg, p.xwoba],
+                label: p.tracked ? 'Statcast預期 (xStats)' : '無場記擊球資料',
+                data: p.tracked ? [p.xba, p.xslg, p.xwoba] : [null, null, null],
                 backgroundColor: 'rgba(167, 139, 250, 0.7)',
                 borderColor: '#a78bfa',
                 borderWidth: 1.5,
@@ -6544,7 +6562,7 @@ function renderPlayerProfile(agg) {
         card.innerHTML = `
           <div>
             <div class="flex items-center space-x-3 border-b border-slate-800/80 pb-3">
-              <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName='${p.name}'; renderPlayerProfile(getAnalysisAgg());" title="鎖定該球員檔案">
+              <div class="shrink-0 cursor-pointer" onclick="selectedPlayerName=${jsArg(p.name)}; renderPlayerProfile(getAnalysisAgg());" title="鎖定該球員檔案">
                 ${renderAvatarElement(p.name, 'w-14 h-14 sm:w-16 sm:h-16 text-xl sm:text-2xl ring-2 ring-rose-500/50 shadow-md')}
               </div>
               <div class="flex-1 min-w-0">
@@ -6604,6 +6622,10 @@ function renderPlayerProfile(agg) {
 
     function renderQuadrantChart(agg) {
       const pList = agg.players;
+      let points = pList;
+      // Batted-ball presets use only players with scorebook batted-ball types; averages come from the same sample.
+      const tracked = pList.filter(p => p.tracked);
+      const trackedAb = tracked.reduce((s, p) => s + p.t_ab, 0) || 1;
       const qCanvas = document.getElementById('quadrantChart');
       if (!qCanvas || !qCanvas.getContext) return;
       const ctx = qCanvas.getContext('2d');
@@ -6620,9 +6642,10 @@ function renderPlayerProfile(agg) {
       if (preset === 'ld_xba') {
         xKey = 'ld_pct'; yKey = 'xba';
         xLabel = '平飛球率 (LD%)'; yLabel = '預期打擊率 (xBA)';
-        const teamBipTotal = pList.reduce((s, p) => s + (p.bip || 0), 0) || 1;
-        xAvg = pList.reduce((s, p) => s + (p.ld || 0), 0) / teamBipTotal;
-        yAvg = agg.teamAvg;
+        points = tracked;
+        const teamBipTotal = tracked.reduce((s, p) => s + (p.bip || 0), 0) || 1;
+        xAvg = tracked.reduce((s, p) => s + (p.ld || 0), 0) / teamBipTotal;
+        yAvg = tracked.reduce((s, p) => s + p.xba * p.t_ab, 0) / trackedAb;
         quadrantDesc = 'Statcast 擊球品質象限：右上角為高品質平飛安打製造機，右上打者擊球初速與仰角最甜！';
       } else if (preset === 'contact_sdi') {
         xKey = 'contact_pct'; yKey = 'sdi';
@@ -6639,13 +6662,13 @@ function renderPlayerProfile(agg) {
         yAvg = 100.0;
         quadrantDesc = '綜合產能與長打象限：右上角為長打破壞力強且進攻產能卓越之核心清壘重砲！';
       } else if (preset === 'babip_xba') {
-        xKey = 'xba'; yKey = 'babip';
-        xLabel = '預期打擊率 (xBA)'; yLabel = '場內安打率 (BABIP)';
-        xAvg = agg.teamAvg;
-        const bipDenom = pList.reduce((s, p) => s + (p.ab - p.k - p.hr + p.sf), 0) || 1;
-        const bipHits = pList.reduce((s, p) => s + (p.h - p.hr), 0);
-        yAvg = bipHits / bipDenom;
-        quadrantDesc = '運氣偏差檢驗象限：y > x 為高穿透運氣佳，x > y 為強勁擊球運氣差被沒收！';
+        // Actual average over the same scorebook sample as xBA, so the comparison is like for like.
+        xKey = 'xba'; yKey = 't_avg';
+        xLabel = '預期打擊率 (xBA)'; yLabel = '實際打擊率 (同一場記樣本)';
+        points = tracked;
+        xAvg = tracked.reduce((s, p) => s + p.xba * p.t_ab, 0) / trackedAb;
+        yAvg = tracked.reduce((s, p) => s + p.t_h, 0) / trackedAb;
+        quadrantDesc = '運氣偏差檢驗象限（只含有場記擊球型態的球員）：實際打擊率高於預期為運氣偏好，低於預期為強擊被沒收。';
       }
 
       if (descEl) descEl.textContent = quadrantDesc;
@@ -6660,8 +6683,8 @@ function renderPlayerProfile(agg) {
         type: 'scatter',
         data: {
           datasets: [{
-            data: pList.map(d => ({ x: d[xKey], y: d[yKey], name: d.name, rawObj: d })),
-            backgroundColor: pList.map(d => (d[yKey] >= yAvg && d[xKey] >= xAvg) ? '#34d399' : '#38bdf8'),
+            data: points.map(d => ({ x: d[xKey], y: d[yKey], name: d.name, rawObj: d })),
+            backgroundColor: points.map(d => (d[yKey] >= yAvg && d[xKey] >= xAvg) ? '#34d399' : '#38bdf8'),
             pointRadius: 7,
             hoverRadius: 10
           }]
@@ -6745,9 +6768,13 @@ function renderPlayerProfile(agg) {
       const ctx = canvas.getContext('2d');
       if (luckRegressionChartInst) luckRegressionChartInst.destroy();
 
-      const scatterData = pList.map(p => ({
+      // Actual average over the same scorebook sample as xBA; players without batted-ball types are left out.
+      const trackedPlayers = pList.filter(p => p.tracked);
+      const sampleBadge = document.getElementById('luckSampleBadge');
+      if (sampleBadge) sampleBadge.textContent = `有場記擊球資料 ${trackedPlayers.length} 人`;
+      const scatterData = trackedPlayers.map(p => ({
         x: p.xba,
-        y: p.babip,
+        y: p.t_avg,
         name: p.name,
         luck: p.luck_factor
       }));
@@ -6790,7 +6817,7 @@ function renderPlayerProfile(agg) {
                 label: c => {
                   if (c.datasetIndex === 1) return '無偏差期望基準線 (y = x)';
                   const d = c.raw;
-                  return `${d.name}: (預期xBA: ${d.x.toFixed(3)}, 實績BABIP: ${d.y.toFixed(3)}, 運氣差額: ${(d.luck >= 0 ? '+' : '') + d.luck.toFixed(3)})`;
+                  return `${d.name}: (預期xBA: ${d.x.toFixed(3)}, 實際AVG: ${d.y.toFixed(3)}, 運氣差額: ${(d.luck >= 0 ? '+' : '') + d.luck.toFixed(3)})`;
                 }
               }
             },
@@ -6805,7 +6832,7 @@ function renderPlayerProfile(agg) {
               min: 0.1, max: 0.8
             },
             y: {
-              title: { display: true, text: '場內安打率 (BABIP)', color: '#38bdf8' },
+              title: { display: true, text: '實際打擊率 (同一場記樣本)', color: '#38bdf8' },
               grid: { color: 'rgba(255,255,255,0.05)' },
               min: 0.1, max: 0.8
             }
@@ -6894,7 +6921,7 @@ function renderTeamSpatialLab(agg) {
         else if (p.result === '2H') { color = '#38bdf8'; r = 6; }
         else if (p.result === '1H') { color = '#22c55e'; r = 5.5; }
 
-        return `<circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.85" class="hover:scale-150 transition cursor-pointer" onmouseenter="showTeamSpatialTooltip('${p.batterName}', '${p.gameDate}', '${p.opponent}', '${p.inningNum}', '${p.result}', '${p.trajectory}', '${p.location}')"><title>${p.batterName} | ${p.result} | ${p.trajectory} | ${p.location}</title></circle>`;
+        return `<circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.85" class="hover:scale-150 transition cursor-pointer" onmouseenter="showTeamSpatialTooltip(${jsArg(p.batterName)}, ${jsArg(p.gameDate)}, ${jsArg(p.opponent)}, ${jsArg(p.inningNum)}, ${jsArg(p.result)}, ${jsArg(p.trajectory)}, ${jsArg(p.location)})"><title>${p.batterName} | ${p.result} | ${p.trajectory} | ${p.location}</title></circle>`;
       }).join('');
 
       let pull = 0, cent = 0, oppo = 0;
@@ -6980,11 +7007,13 @@ function renderTeamSpatialLab(agg) {
       }
     };
 function renderCustomChart(agg) {
-      const pList = agg.players;
       const type = document.getElementById('customChartType').value;
       const xKey = document.getElementById('customXVar').value;
       const yKey = document.getElementById('customYVar').value;
       const zKey = document.getElementById('customZVar').value;
+      // Batted-ball variables exist only for players with scorebook batted-ball types.
+      const BATTED_BALL_KEYS = ['ld_pct', 'gb_pct', 'fb_pct', 'pu_pct', 'pull_pct', 'oppo_pct', 'xba', 'xslg', 'xwoba'];
+      const pList = [xKey, yKey, zKey].some(k => BATTED_BALL_KEYS.includes(k)) ? agg.players.filter(p => p.tracked) : agg.players;
       const cCanvas = document.getElementById('customChart'); if (!cCanvas || !cCanvas.getContext) return; const ctx = cCanvas.getContext('2d');
 
 
@@ -7535,9 +7564,7 @@ function renderCustomChart(agg) {
 
 
     // 簡承均超標數據納入/排除開關 (預設納入，儲存於 localStorage)
-    let includeChien = window.includeChien = localStorage.getItem('rebas_include_chien') !== null 
-      ? JSON.parse(localStorage.getItem('rebas_include_chien')) 
-      : true;
+    let includeChien = window.includeChien = readStoredJson('rebas_include_chien', true) !== false;
 
     window.toggleChienFilter = function() {
       includeChien = !includeChien;
@@ -7573,7 +7600,7 @@ function renderCustomChart(agg) {
       // 1. 初始化聚合字典 (以基準數據打底)
       const pMap = {};
       baselinePitchingStats.forEach(bp => {
-        pMap[bp.name] = { ...bp };
+        pMap[bp.name] = { ...bp, gameIds: new Set() };
       });
 
       // 2. 遍歷所有歷史賽事中的我方守備半局與防守事件
@@ -7598,11 +7625,12 @@ function renderCustomChart(agg) {
               if (isGuestPlayerName(pName)) return;
               if (!pMap[pName]) {
                 pMap[pName] = {
-                  name: pName, games: 1, outs: 0, tbf: 0, bb: 0,
+                  name: pName, games: 0, gameIds: new Set(), outs: 0, tbf: 0, bb: 0,
                   k_swing: 0, k_foul: 0, go: 0, fo: 0, dp: 0, runner_out: 0, hits: 0, runs: 0
                 };
               }
               const p = pMap[pName];
+              p.gameIds.add(g.id); // appearances = distinct games pitched
               if (evt.type === 'GO') { p.go++; p.outs++; p.tbf++; }
               else if (evt.type === 'FO') { p.fo++; p.outs++; p.tbf++; }
               else if (evt.type === 'K') { p.k_swing++; p.outs++; p.tbf++; }
@@ -7615,10 +7643,13 @@ function renderCustomChart(agg) {
             });
           } else {
             // 若該局無細分事件，至少累計局數、安打與失分
+            // Support players stay out of the team pitching norms here too.
+            if (isGuestPlayerName(defaultP)) return;
             const p = pMap[defaultP] || (pMap[defaultP] = {
-              name: defaultP, games: 1, outs: 0, tbf: 0, bb: 0,
+              name: defaultP, games: 0, gameIds: new Set(), outs: 0, tbf: 0, bb: 0,
               k_swing: 0, k_foul: 0, go: 0, fo: 0, dp: 0, runner_out: 0, hits: 0, runs: 0
             });
+            p.gameIds.add(g.id);
             p.outs += 3;
             p.runs += (inn.runs || 0);
             p.hits += (inn.hits || 0);
@@ -7629,6 +7660,8 @@ function renderCustomChart(agg) {
 
       // 3. 計算慢速壘球專屬賽伯計量指標
       const list = Object.values(pMap).map(p => {
+        p.games = (p.games || 0) + p.gameIds.size;
+        delete p.gameIds;
         const ipFull = p.outs / 3;
         const ipDisplay = Math.floor(p.outs / 3) + '.' + (p.outs % 3);
         const k_total = p.k_swing + p.k_foul;
@@ -7910,7 +7943,7 @@ function renderCustomChart(agg) {
         tbody.innerHTML = pList.map(p => {
           const isSelected = p.name === selectedPitcherName;
           return `
-            <tr class="hover:bg-slate-800/60 transition cursor-pointer ${isSelected ? 'bg-teal-950/20 border-l-4 border-teal-400' : ''}" onclick="selectPitcherRow('${p.name}')">
+            <tr class="hover:bg-slate-800/60 transition cursor-pointer ${isSelected ? 'bg-teal-950/20 border-l-4 border-teal-400' : ''}" onclick="selectPitcherRow(${jsArg(p.name)})">
               <td class="p-3 font-bold text-white flex items-center space-x-2.5">
                 ${renderAvatarElement(p.name, 'w-9 h-9 text-xs ring-1 ring-teal-400/80')}
                 <span>#${NAME_TO_JERSEY[p.name] ?? ''} ${p.name}</span>
@@ -8198,7 +8231,7 @@ function renderCustomChart(agg) {
       }
 
       try {
-        const getShaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
+        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
           headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
         });
         if (getShaRes.ok) {
@@ -8216,7 +8249,7 @@ function renderCustomChart(agg) {
         };
         if (currentGamesSha) putBody.sha = currentGamesSha;
 
-        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}`, {
+        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${GITHUB_TOKEN}`,
@@ -9006,18 +9039,20 @@ function renderCustomChart(agg) {
       const o2 = document.getElementById('outLamp2');
       const o3 = document.getElementById('outLamp3');
 
-      if (o1) o1.className = `w-3 h-3 rounded-full ${outs >= 1 ? 'bg-rose-500 shadow-md shadow-rose-500/50' : 'bg-slate-800'}`;
-      if (o2) o2.className = `w-3 h-3 rounded-full ${outs >= 2 ? 'bg-rose-500 shadow-md shadow-rose-500/50' : 'bg-slate-800'}`;
-      if (o3) o3.className = `w-3 h-3 rounded-full ${outs >= 3 ? 'bg-rose-500 shadow-md shadow-rose-500/50' : 'bg-slate-800'}`;
+      // Only the colours change; size and diamond positions keep the markup's layout.
+      const lamp = on => `w-3.5 h-3.5 rounded-full border transition ${on ? 'bg-rose-500 border-rose-400 shadow-md shadow-rose-500/50' : 'bg-slate-800 border-slate-700'}`;
+      if (o1) o1.className = lamp(outs >= 1);
+      if (o2) o2.className = lamp(outs >= 2);
+      if (o3) o3.className = lamp(outs >= 3);
 
       const b = activeGame.currentBases || { first: null, second: null, third: null };
+      const base = (position, on) => `absolute ${position} w-6 h-6 rotate-45 border-2 transition cursor-pointer shadow ${on ? 'bg-amber-400 border-amber-300 shadow-amber-400/50' : 'bg-slate-800 border-slate-600 hover:border-amber-400'}`;
       const d1 = document.getElementById('baseDiamond1');
       const d2 = document.getElementById('baseDiamond2');
       const d3 = document.getElementById('baseDiamond3');
-
-      if (d1) d1.className = `w-4 h-4 transform rotate-45 border transition-all cursor-pointer ${b.first ? 'bg-amber-400 border-amber-300 shadow-sm shadow-amber-400/50' : 'bg-slate-900 border-slate-700'}`;
-      if (d2) d2.className = `w-4 h-4 transform rotate-45 border transition-all cursor-pointer ${b.second ? 'bg-amber-400 border-amber-300 shadow-sm shadow-amber-400/50' : 'bg-slate-900 border-slate-700'}`;
-      if (d3) d3.className = `w-4 h-4 transform rotate-45 border transition-all cursor-pointer ${b.third ? 'bg-amber-400 border-amber-300 shadow-sm shadow-amber-400/50' : 'bg-slate-900 border-slate-700'}`;
+      if (d1) d1.className = base('right-2 top-8', b.first);
+      if (d2) d2.className = base('top-0', b.second);
+      if (d3) d3.className = base('left-2 top-8', b.third);
     }
 
     window.toggleBaseRunner = function(baseKey) {
@@ -9030,7 +9065,19 @@ function renderCustomChart(agg) {
 
     window.adjustOpponentScore = function(delta) {
       if (!activeGame) return;
+      if (delta < 0 && (activeGame.finalScore.opp || 0) <= 0) return;
       activeGame.finalScore.opp = Math.max(0, activeGame.finalScore.opp + delta);
+      // Keep the line score in step: credit the opponent's current half-inning, or their latest one while we bat.
+      const oppHalves = activeGame.innings.filter(i => !isInningOurBat(activeGame.ourRole, i.topBottom));
+      let target = activeGame.innings.find(i => i.inningNum === activeGame.currentInning && i.topBottom === activeGame.currentHalf && !isInningOurBat(activeGame.ourRole, i.topBottom));
+      if (!target && delta < 0) target = [...oppHalves].reverse().find(i => (i.runs || 0) > 0);
+      if (!target) target = oppHalves[oppHalves.length - 1];
+      if (!target) {
+        const oppHalf = isInningOurBat(activeGame.ourRole, 'top') ? 'bottom' : 'top';
+        target = { inningNum: activeGame.currentInning, topBottom: oppHalf, runs: 0, hits: 0, plateAppearances: [], defensiveEvents: [] };
+        activeGame.innings.push(target);
+      }
+      target.runs = Math.max(0, (target.runs || 0) + delta);
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
       updateLiveScoreboard();
     };
@@ -9216,9 +9263,10 @@ function renderCustomChart(agg) {
       // 若壘上有人，優先清除跑者
       const b = activeGame.currentBases || { first: null, second: null, third: null };
       let runnerLoc = '壘上跑者';
-      if (b.third) { b.third = null; runnerLoc = '三壘跑者'; }
-      else if (b.second) { b.second = null; runnerLoc = '二壘跑者'; }
-      else if (b.first) { b.first = null; runnerLoc = '一壘跑者'; }
+      let runnerBase = null; // remembered so undo can put the runner back
+      if (b.third) { b.third = null; runnerLoc = '三壘跑者'; runnerBase = 'third'; }
+      else if (b.second) { b.second = null; runnerLoc = '二壘跑者'; runnerBase = 'second'; }
+      else if (b.first) { b.first = null; runnerLoc = '一壘跑者'; runnerBase = 'first'; }
 
       let curInning = activeGame.innings.find(i => i.inningNum === activeGame.currentInning && i.topBottom === activeGame.currentHalf);
       if (!curInning) {
@@ -9240,6 +9288,7 @@ function renderCustomChart(agg) {
         slot: activeGame.currentBatterIdx + 1,
         result: 'OUT',
         isRunnerOut: true,
+        runnerBase,
         trajectory: 'none',
         location: 'Bases',
         x: 0.5,
@@ -9297,7 +9346,8 @@ function renderCustomChart(agg) {
       }
 
       let outsAdded = 0;
-      if (['GO', 'FO', 'LO', 'K', '界外K'].includes(currentPlayInput.result)) outsAdded = 1;
+      // A fielder's choice retires a runner: one out.
+      if (['GO', 'FO', 'LO', 'K', '界外K', 'FC'].includes(currentPlayInput.result)) outsAdded = 1;
       else if (currentPlayInput.result === 'DP') outsAdded = 2;
       else if (currentPlayInput.result === 'SF') outsAdded = 1;
 
@@ -9313,6 +9363,7 @@ function renderCustomChart(agg) {
       else if (currentPlayInput.result === '2H') desc = `${batterName} 掃出 ${currentPlayInput.location} 平飛二壘安打`;
       else if (currentPlayInput.result === '3H') desc = `${batterName} 擊出深遠三壘安打`;
       else if (currentPlayInput.result === 'DP') desc = `${batterName} 擊出雙殺打 (+2 出局)`;
+      else if (currentPlayInput.result === 'FC') desc = `${batterName} 野手選擇上壘，壘上跑者出局 (+1 出局)`;
       else desc = `${batterName} 擊出 ${currentPlayInput.location} 方向 ${currentPlayInput.result}`;
 
       const paRecord = {
@@ -9392,12 +9443,22 @@ function renderCustomChart(agg) {
 
       const pa = curInning.plateAppearances[playIdx];
       curInning.plateAppearances.splice(playIdx, 1);
-      curInning.runs = Math.max(0, curInning.runs - pa.runsScored);
+      curInning.runs = Math.max(0, curInning.runs - (pa.runsScored || 0));
       if (['1H', '2H', '3H', 'HR'].includes(pa.result)) curInning.hits = Math.max(0, curInning.hits - 1);
-      activeGame.finalScore.us = Math.max(0, activeGame.finalScore.us - pa.runsScored);
-      activeGame.currentOuts = Math.max(0, activeGame.currentOuts - pa.outsAdded);
+      activeGame.finalScore.us = Math.max(0, activeGame.finalScore.us - (pa.runsScored || 0));
+      // Outs are recounted from what is left in this half-inning.
+      activeGame.currentOuts = Math.min(3, curInning.plateAppearances.reduce((sum, p) => sum + (p.outsAdded || 0), 0));
 
-      activeGame.currentBatterIdx = (activeGame.currentBatterIdx - 1 + activeGame.lineup.length) % activeGame.lineup.length;
+      if (isRunnerOutPlay(pa)) {
+        // A runner out never moved the batter, so the batter stays; the runner goes back to their base.
+        if (pa.runnerBase) {
+          activeGame.currentBases = activeGame.currentBases || { first: null, second: null, third: null };
+          activeGame.currentBases[pa.runnerBase] = 'Runner';
+        }
+      } else if (!curInning.plateAppearances.slice(playIdx).some(p => !isRunnerOutPlay(p))) {
+        // Undoing the latest batter brings that batter back up; undoing an older one leaves the current batter.
+        activeGame.currentBatterIdx = ((pa.slot || 1) - 1) % activeGame.lineup.length;
+      }
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
 
       updateLiveScoreboard();
@@ -10218,7 +10279,7 @@ function renderCustomChart(agg) {
             </td>
             <td class="p-2 text-center">
               <select id="edit_play_res_${innIdx}_${playIdx}" class="bg-slate-900 border border-slate-700 text-amber-300 font-bold text-xs rounded px-2 py-1">
-                ${['1H', '2H', '3H', 'HR', 'BB', 'K', '界外K', 'GO', 'FO', 'LO', 'SF', 'E', 'FC', 'DP'].map(r => `<option value="${r}" ${r === p.result ? 'selected' : ''}>${r}</option>`).join('')}
+                ${['1H', '2H', '3H', 'HR', 'BB', 'K', '界外K', 'GO', 'FO', 'LO', 'SF', 'E', 'FC', 'DP', 'OUT'].map(r => `<option value="${r}" ${r === p.result ? 'selected' : ''}>${r === 'OUT' ? '跑者出局' : r}</option>`).join('')}
               </select>
             </td>
             <td class="p-2 text-center">
@@ -10599,7 +10660,7 @@ function renderCustomChart(agg) {
         else if (p.result === '1H') { color = '#22c55e'; r = 5.5; }
 
         return `
-          <circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.85" class="hover:scale-125 transition cursor-pointer" onmouseenter="showSprayTooltip('${p.batterName}', '${p.gameDate}', '${p.opponent}', '${p.inningNum}', '${p.result}', '${p.trajectory}', '${p.location}')">
+          <circle cx="${px}" cy="${py}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="1.5" opacity="0.85" class="hover:scale-125 transition cursor-pointer" onmouseenter="showSprayTooltip(${jsArg(p.batterName)}, ${jsArg(p.gameDate)}, ${jsArg(p.opponent)}, ${jsArg(p.inningNum)}, ${jsArg(p.result)}, ${jsArg(p.trajectory)}, ${jsArg(p.location)})">
             <title>${p.batterName} | ${p.result} | ${p.trajectory} | ${p.location}</title>
           </circle>
         `;
@@ -10718,6 +10779,6 @@ function renderCustomChart(agg) {
   <script src="ui-comfort.js?v=20261004-header-brand"></script>
   <script src="team-insights.js?v=20261010-runner"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
-  <script src="lineup-recommender.js?v=20261010-pa3"></script>
+  <script src="lineup-recommender.js?v=20261010-fixes"></script>
 </body>
 </html>

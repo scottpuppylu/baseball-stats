@@ -8,36 +8,22 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\n/g, '\n');
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
-// Digests from 903cf977 before the UI edit: protect the entire business script
-// and every existing inline event handler, rather than sample calculations.
-test('business script outside the authorized spray archive, Taiwan date, live data binding and attendance changes remains byte-identical to the approved baseline', () => {
-  const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1]
-    .replace('    // Archived estimated coordinates remain stored; fielding locations and stats stay intact.\n    function isSprayChartArchived(game) {\n      return game?.sprayChartArchive?.excluded === true;\n    }\n\n', '')
-    .replace(/^ +if \(isSprayChartArchived\((?:g|game)\)\) return;\n/gm, '')
-    .replace('!isSprayChartArchived(game) && pa.x', 'pa.x')
-    .replace("${isSprayChartArchived(game) ? '推估座標已封存，不納入噴流圖；守位與成績保留' : `共 ${sprayPointsHtml.length} 顆擊球`}", '共 ${sprayPointsHtml.length} 顆擊球')
-    .replace("    // Default dates follow Taiwan time; toISOString() is UTC and lags a day before 08:00.\n    function getTaipeiDateString() {\n      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());\n    }\n\n", '')
-    .replace('_${getTaipeiDateString()}.csv', '_${new Date().toISOString().slice(0,10)}.csv')
-    .replaceAll('getTaipeiDateString()', 'new Date().toISOString().slice(0, 10)')
-    .replace("    // Several paths reassign only the local binding; keep window.allGames / window.allLogs live so stats never read a stale copy.\n    Object.defineProperty(window, 'allGames', { get: () => allGames, set: value => { allGames = value; }, configurable: true });\n    Object.defineProperty(window, 'allLogs', { get: () => allLogs, set: value => { allLogs = value; }, configurable: true });\n", '')
-    // Attendance: PA threshold 15 -> 14, re-pick defaults after the cloud load unless the coach edited them.
-    .replace("    // Default attendance and lineup priority threshold; set once the coach changes attendance by hand.\n    const MIN_ATTENDANCE_PA = 14;\n    let attendanceEdited = false;\n", '')
-    .replace(/^ {6}attendanceEdited = true;\n/gm, '')
-    .replace("      // The first render picked default attendance from cached data; redo it with cloud data unless edited.\n      if (!attendanceEdited) attendanceInitialized = false;\n", '')
-    .replace("      initAttendance(Object.values(JERSEY_TO_NAME), historicalPaMap);\n      renderAttendanceGrid(historicalPaMap);", '      renderAttendanceGrid(historicalPaMap);')
-    .replaceAll('MIN_ATTENDANCE_PA', '15')
-    .replaceAll('(歷史PA ≥ 14)', '(歷史PA ≥ 15)')
-    // Runner outs ('OUT' from the runner-out button) are never the batter's PA; aggregate spray charts follow the date range.
-    .replace("    // A runner out keeps the batter at the plate, so it is never the batter's PA. The runner-out button\n    // stored these as result 'OUT' without the flag, which is the only place 'OUT' is written.\n    function isRunnerOutPlay(pa) {\n      return pa.result === 'RUNNER_OUT' || pa.result === 'OUT' || pa.isRunnerOut === true;\n    }\n\n    // Aggregate charts follow the header date range, like every other number on the page.\n    function isGameInDateRange(game) {\n      const start = document.getElementById('filterStartDate')?.value || '';\n      const end = document.getElementById('filterEndDate')?.value || '';\n      return (!start || game.date >= start) && (!end || game.date <= end);\n    }\n\n", '')
-    .replaceAll('!isRunnerOutPlay(pa)', "pa.result !== 'RUNNER_OUT' && !pa.isRunnerOut")
-    .replaceAll('isRunnerOutPlay(pa)', "pa.result === 'RUNNER_OUT' || pa.isRunnerOut")
-    .replace("        result: 'OUT',\n        isRunnerOut: true,\n", "        result: 'OUT',\n")
-    .replace(/^ +if \(!isGameInDateRange\((?:g|game)\)\) return;\n/gm, '');
-  assert.equal(hash(script), '6fb7e6ffe46cd4c480889a2a0d88025f0f32810dd4226a31b5b5ad157f5832a8');
+// Baseline v2 (2026/10/10): the business script, inline handlers and DOM identifiers after the authorized
+// 1-15 fix set (see docs/UI_QA.md). The v1 baseline from 903cf977 and its authorized-diff chain are in git history.
+// Any further change to these must be authorized and the digests updated together with the QA document.
+const BASELINE = {
+  script: 'e46a7fe3751df8aefdee9ccca510f797e7c329ed15b7ee4bb93990da740a1af2',
+  handlers: 'd0ab0fb814806457ce82eaa0b98c25daaca9fc26a9785f7377875a5a92abca55',
+  idCount: 283,
+  ids: '92cf03632932349ba75c97bf0a825ab22d1097180f98c8b07e3f26a41968c0d8'
+};
+test('business script is byte-identical to the approved baseline', () => {
+  const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
+  assert.equal(hash(script), BASELINE.script);
 });
-test('all original inline action handlers remain identical and in order', () => {
+test('all inline action handlers remain identical and in order', () => {
   const handlers = [...html.matchAll(/\bon(?:click|change|submit|input|mouseover|mouseout|mouseenter|mouseleave)\s*=\s*"([^"]*)"/g)].map(x => x[0]).join('\n');
-  assert.equal(hash(handlers), '6fcf56a7dd0885fc827fa02aca175a1d16d1af0503b8a5616a50a4e59fdefb23');
+  assert.equal(hash(handlers), BASELINE.handlers);
 });
 test('all nine page panels and their original controls remain present', () => {
   for (const name of ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary']) {
@@ -46,11 +32,11 @@ test('all nine page panels and their original controls remain present', () => {
   }
   for (const id of ['filterStartDate','filterEndDate','addLogForm','setupLineupGrid','interactiveFieldSvg','trajectoryButtonGroup','rbiButtonGroup','runsScoredButtonGroup','defenseModal','guestModal','substituteModal','pitcherChangeModal','cropModal','gameReviewDetailContainer']) assert.ok(html.includes(`id="${id}"`), id);
 });
-test('all 282 original static and template DOM identifiers remain intact', () => {
+test('all static and template DOM identifiers remain intact', () => {
   const added = new Set(['appHeader','mainNavigation','appWorkspace']);
   const ids = [...html.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]).filter(id=>!added.has(id));
-  assert.equal(ids.length,282);
-  assert.equal(hash(ids.join('\n')), 'e255c808cc91b83a7b850fe954e4fd5c7073db4286b42db1699d70c4b1da237d');
+  assert.equal(ids.length, BASELINE.idCount);
+  assert.equal(hash(ids.join('\n')), BASELINE.ids);
 });
 test('insight script parses, only reads data, and never writes or calls the network', () => {
   const script = fs.readFileSync(path.join(root, 'team-insights.js'), 'utf8');

@@ -208,6 +208,20 @@
   window.calculateRecommendedLineup = recommend;
   window.calculateLegacyRecommendedLineup = legacyRecommend;
 
+  // Same model for any order (the custom lineup analyzer): expected runs, PA and third-PA chance per slot,
+  // and for each slot the best single swap. Null until a recommendation has fixed the game settings.
+  window.analyzeLineupOrder = function (names, players) {
+    if (!lastResult || !names || !names.length) return null;
+    const {sim} = lastResult;
+    const team = M.teamRates(players);
+    const byName = new Map(players.map(p => [p.name, p]));
+    const models = names.map(n => modelFor(n, byName, team));
+    const order = models.map((m, i) => i);
+    const detail = M.evaluateOrder(models, order, sim.cfg);
+    const swaps = M.slotSensitivity(models, order, sim.cfg).map(s => ({gain: -s.loss, partnerSlot: s.partnerSlot}));
+    return {runs: detail.runs, innings: detail.innings, paBySlot: detail.paBySlot, third: detail.paAtLeast.map(x => x[2]), swaps, recommendedRuns: sim.runs};
+  };
+
   // ---------- Summary under the recommended table ----------
   function slotBars(detail) {
     const max = Math.max(...detail.paBySlot, 1);

@@ -49,6 +49,10 @@ for (const status of [200, 403, 409, 500, 'network']) {
         return { ok: status === 200, status, json: async () => ({ sha: 'test', content: { sha: 'test' }, message: 'test error' }) };
       },
     });
+    Object.assign(ctx, {AbortController, setTimeout, clearTimeout});
+    vm.runInContext(extract('async function fetchWithTimeout(', '\n    }'), ctx);
+    vm.runInContext(extract('const WRITE_TIMEOUT_MS', ';'), ctx);
+    vm.runInContext(extract('async function fetchWrite(', '\n    }'), ctx);
     vm.runInContext(extract('async function commitGuestsToGitHub(', '\n    }'), ctx);
     assert.equal(await ctx.commitGuestsToGitHub([]), status === 200);
     assert.equal(ctx.statuses.at(-1).type, status === 200 ? 'success' : 'error');
@@ -127,4 +131,34 @@ test('runner outs, including the legacy OUT records, never count as the batter\'
   for (const result of ['1H', '2H', '3H', 'HR', 'BB', 'SF', 'K', '界外K', 'GO', 'FO', 'LO', 'E', 'FC', 'DP']) assert.equal(ctx.isRunnerOutPlay({result}), false, result);
   // The runner-out button now also stores the flag.
   assert.match(source, /result: 'OUT',\n\s+isRunnerOut: true,/);
+});
+
+test('cloud writes time out with a readable error instead of hanging', async () => {
+  const ctx = context({AbortController, setTimeout, clearTimeout,
+    fetch: (url, options) => new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), {name: 'AbortError'}))))});
+  vm.runInContext(extract('async function fetchWithTimeout(', '\n    }'), ctx);
+  vm.runInContext('const WRITE_TIMEOUT_MS = 30;', ctx);
+  vm.runInContext(extract('async function fetchWrite(', '\n    }'), ctx);
+  await assert.rejects(ctx.fetchWrite('https://example.test'), /網路逾時/);
+});
+
+test('corrupted browser storage falls back instead of throwing', () => {
+  const ctx = context({localStorage: {getItem: key => (key === 'bad' ? '{not json' : key === 'none' ? null : '{"a":1}')}});
+  vm.runInContext(extract('function readStoredJson(', '\n    }'), ctx);
+  // Objects from the vm realm have a different prototype, so compare their JSON.
+  assert.equal(JSON.stringify(ctx.readStoredJson('bad', {fallback: true})), '{"fallback":true}');
+  assert.equal(ctx.readStoredJson('none', 'x'), 'x');
+  assert.equal(JSON.stringify(ctx.readStoredJson('ok', null)), '{"a":1}');
+});
+
+test('names with quotes survive inside inline handlers', () => {
+  const ctx = context({});
+  vm.runInContext(extract('function jsArg(', '\n    }'), ctx);
+  const attr = `toggle(${ctx.jsArg(`O'Neil "Jr" <b>`)})`;
+  assert.doesNotMatch(attr, /"|</, 'no raw double quote or tag can break out of the attribute');
+  // The browser decodes &quot; before running the handler, which must then be a valid call.
+  const decoded = attr.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
+  let received;
+  new vm.Script(decoded).runInNewContext({toggle: v => { received = v; }});
+  assert.equal(received, `O'Neil "Jr" <b>`);
 });

@@ -26,7 +26,7 @@ fs.mkdirSync(output,{recursive:true});
           assert.equal(await page.locator('#uiToolsToggle').count(),0,'no tools collapse control');
           const statusSelector=width<1024?'.ui-header-brand button[onclick="showCloudStatusToast()"]':'#syncStatusBadge';
           assert.ok(await page.locator('.ui-header-brand').isVisible(),'original brand visible');
-          for(const text of ['淡江航太系壘','系統建構：盧宣嘉','v261002.1755']) assert.ok(await page.locator('.ui-header-brand').getByText(text,{exact:true}).isVisible(),text);
+          for(const text of ['淡江航太系壘','系統建構：盧宣嘉',/^v\d{6}\.\d{4}$/]) assert.ok(await page.locator('.ui-header-brand').getByText(text,{exact:true}).isVisible(),String(text)); // version: vYYMMDD.HHMM
           assert.equal(await page.locator('.ui-current-page').isVisible(),false,'page name must not replace brand');
           const toolBoxes=await Promise.all(['#uiDrawerToggle','.ui-header-brand',statusSelector,'button[onclick="manualRefresh()"]','button[onclick="openDefenseModal()"]','#btnToggleChien','#exportCsvBtn'].map(selector=>page.locator(selector).boundingBox()));
           const centers=toolBoxes.map(box=>box.y+box.height/2);
