@@ -74,6 +74,54 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
         return {one:one.includes(small.name)&&!one.includes(big[0].name),none:document.getElementById('insightCompareSampleNote').textContent.trim()===''};
       });
       assert.deepEqual(compare,{one:true,none:true});
+      // Head-to-head game log on the compare page: every pair adds up to each player's own totals.
+      const h2h=await page.evaluate(()=>{
+        const agg=getFullAgg();
+        const names=agg.players.filter(p=>p.pa>0).map(p=>p.name);
+        const pairs=names.slice(1).map(n=>[names[0],n]).concat([[names[1],names[2]]]);
+        const out=pairs.map(([a,b])=>{
+          comparePlayerAName=a;comparePlayerBName=b;renderComparison(agg);
+          const section=document.getElementById('insightCompareGameLogSection');
+          const ga=teamInsights.playerGames(a),gb=teamInsights.playerGames(b);
+          const keys=new Set([...ga,...gb].map(g=>g.key));
+          const kb=new Set(gb.filter(g=>!g.summary).map(g=>g.key));
+          const shared=ga.filter(g=>!g.summary&&kb.has(g.key));
+          const sum=offset=>[...section.querySelectorAll('tbody tr')].reduce((s,tr)=>{
+            const td=tr.querySelectorAll('td');
+            // "未出賽" collapses a player's five cells into one.
+            const cells=[...td].slice(2);
+            const first=offset===0?cells[0]:(cells[0].colSpan>1?cells[1]:cells[5]);
+            const m=first&&first.textContent.match(/^(\d+)-(\d+)$/);
+            return m?{h:s.h+Number(m[1]),ab:s.ab+Number(m[2])}:s;
+          },{h:0,ab:0});
+          const pa=agg.players.find(p=>p.name===a),pb=agg.players.find(p=>p.name===b);
+          const cards=[...section.querySelectorAll('[data-h2h-card]')].map(c=>c.textContent);
+          const fa=teamInsights.form(ga);
+          return {a,b,rows:section.querySelectorAll('tbody tr').length,keys:keys.size,
+            sharedText:section.querySelector('[data-h2h-shared]').textContent.includes(`同場出賽 ${shared.length} 場`),
+            sumA:sum(0),sumB:sum(1),totA:{h:pa.h,ab:pa.ab},totB:{h:pb.h,ab:pb.ab},
+            cardOps:!fa.recent||cards[0].includes(`OPS ${fa.recent.ops.toFixed(3).replace(/^0\./,'.')}`),
+            hot:section.querySelectorAll('[data-h2h-card] .text-emerald-300').length<=1,
+            svg:section.querySelectorAll('svg polyline').length};
+        });
+        comparePlayerAName=names[0];comparePlayerBName=names[0];renderComparison(agg);
+        const same=document.getElementById('insightCompareGameLogSection').textContent.includes('請在上方選擇兩位不同的球員');
+        comparePlayerAName=names[0];comparePlayerBName=names[1];renderComparison(agg);
+        document.getElementById('insightCompareGameLogSection').scrollIntoView();
+        return {out,same,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};
+      });
+      for(const r of h2h.out) {
+        assert.equal(r.rows,r.keys,`${r.a} vs ${r.b}: one row per game either played`);
+        assert.ok(r.sharedText,`${r.a} vs ${r.b}: shared game count`);
+        assert.deepEqual(r.sumA,r.totA,`${r.a}: H-AB cells add up to the profile totals`);
+        assert.deepEqual(r.sumB,r.totB,`${r.b}: H-AB cells add up to the profile totals`);
+        assert.ok(r.cardOps,`${r.a}: recent OPS matches the profile game log`);
+        assert.ok(r.hot,'at most one player is marked hotter');
+      }
+      assert.ok(h2h.out.some(r=>r.svg===2),'dual OPS trend draws both players');
+      assert.ok(h2h.same,'same player twice asks for two players');
+      assert.ok(!h2h.overflow,'compare page must not overflow');
+      await page.screenshot({path:path.join(output,`${width}-CompareGameLog.png`)});
       await page.evaluate(()=>{switchMainTab('tabScorebook');switchScorebookSubTab('review');renderSelectedGameReview('game_20260920_4922');});
       await page.locator('[data-insight-image]').click();
       await page.waitForSelector('#insightImageModal img');

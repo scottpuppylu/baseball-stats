@@ -58,6 +58,21 @@
     </svg>`;
   }
 
+  // Recent form against the whole period; season summaries never count as recent games.
+  function form(games) {
+    const season = games[games.length - 1].toDate;
+    const played = games.filter(g => !g.summary);
+    const recentCount = Math.min(RECENT_GAMES, played.length);
+    const recent = recentCount ? statsFor(played.slice(-RECENT_GAMES).flatMap(g => g.logs)) : null;
+    const diff = recent ? recent.ops - season.ops : 0;
+    const trend = played.length <= RECENT_GAMES ? '<span class="text-slate-400">場數不足以比較近況</span>'
+      : Math.abs(diff) < 0.05 ? '<span class="text-slate-300">與本期相近</span>'
+        : diff > 0 ? `<span class="text-emerald-400">▲ 近況較佳（OPS +${rate(diff)}）</span>`
+          : `<span class="text-rose-400">▼ 近況下滑（OPS −${rate(-diff)}）</span>`;
+    return {season, played, recentCount, recent, diff, trend};
+  }
+  const line = s => `${rate(s.avg)} / ${rate(s.obp)} / ${rate(s.slg)}`;
+
   function renderGameLog(name) {
     const anchor = document.getElementById('playerProfileCard');
     if (!anchor) return;
@@ -74,16 +89,7 @@
       section.innerHTML = '<p class="text-xs text-slate-500">此日期範圍內沒有逐場紀錄。</p>';
       return;
     }
-    const season = games[games.length - 1].toDate;
-    const played = games.filter(g => !g.summary);
-    const recentCount = Math.min(RECENT_GAMES, played.length);
-    const recent = recentCount ? statsFor(played.slice(-RECENT_GAMES).flatMap(g => g.logs)) : null;
-    const diff = recent ? recent.ops - season.ops : 0;
-    const trend = played.length <= RECENT_GAMES ? '<span class="text-slate-400">場數不足以比較近況</span>'
-      : Math.abs(diff) < 0.05 ? '<span class="text-slate-300">與本期相近</span>'
-        : diff > 0 ? `<span class="text-emerald-400">▲ 近況較佳（OPS +${rate(diff)}）</span>`
-          : `<span class="text-rose-400">▼ 近況下滑（OPS −${rate(-diff)}）</span>`;
-    const line = s => `${rate(s.avg)} / ${rate(s.obp)} / ${rate(s.slg)}`;
+    const {season, played, recentCount, recent, trend} = form(games);
     const rows = games.slice().reverse().map(g => `
       <tr class="hover:bg-slate-800/50 ${g.summary ? 'bg-slate-800/40' : ''}">
         <td class="p-2 font-mono whitespace-nowrap">${esc(g.date)}</td>
@@ -160,6 +166,132 @@
     const a = list.find(p => p.name === comparePlayerAName) || list[0];
     const b = list.find(p => p.name === comparePlayerBName) || (list.length > 1 ? list[1] : list[0]);
     note.innerHTML = [...new Set([a, b])].filter(p => p && p.pa < SAMPLE_PA).map(p => sampleNoteHtml(p.name, p.pa)).join('');
+  }
+
+  // ---------- 2b. Head-to-head game log and recent form (compare page) ----------
+  const COLORS = {a: '#38bdf8', b: '#fbbf24'};
+
+  // Both players' cumulative OPS on one timeline of every game either of them played.
+  function dualSparkline(timeline, byKeyA, byKeyB) {
+    if (timeline.length < 2) return '';
+    const series = [byKeyA, byKeyB].map(byKey => {
+      const running = [];
+      return timeline.map((key, i) => {
+        const game = byKey.get(key);
+        if (!game) return null;
+        running.push(...game.logs);
+        return {i, v: statsFor(running).ops};
+      }).filter(Boolean);
+    });
+    const max = Math.max(1, ...series.flat().map(p => p.v));
+    const step = 300 / (timeline.length - 1);
+    const xy = p => `${(p.i * step).toFixed(1)},${(56 - (p.v / max) * 52).toFixed(1)}`;
+    const draw = (points, color) => points.length ? `
+      <polyline points="${points.map(xy).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${points.map(p => `<circle cx="${xy(p).split(',')[0]}" cy="${xy(p).split(',')[1]}" r="3" fill="${color}"/>`).join('')}` : '';
+    return `<svg viewBox="-4 0 308 60" class="w-full h-16" role="img" aria-label="雙人累計 OPS 走勢">${draw(series[0], COLORS.a)}${draw(series[1], COLORS.b)}</svg>`;
+  }
+
+  function compareCard(name, games, color, better) {
+    if (!games.length) return `<div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 text-xs text-slate-400"><b style="color:${color}">${esc(name)}</b>：此日期範圍內沒有逐場紀錄。</div>`;
+    const {season, played, recentCount, recent, trend} = form(games);
+    return `<div class="bg-slate-950/70 border rounded-xl p-3 space-y-1.5 ${better ? 'border-emerald-500/50' : 'border-slate-800'}" data-h2h-card>
+      <div class="flex items-center justify-between gap-2">
+        <b class="text-sm" style="color:${color}">${esc(name)}</b>
+        ${better ? '<span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-600/50 rounded px-1.5 py-0.5">近況較熱</span>' : ''}
+      </div>
+      ${recent ? `<div class="text-[11px] text-slate-400">近 ${recentCount} 場（${recent.pa} 打席）AVG / OBP / SLG</div>
+      <div class="font-mono font-black text-white text-base">${line(recent)}<span class="text-xs text-slate-400 font-semibold">　OPS ${rate(recent.ops)}</span></div>
+      <div class="text-xs">${trend}</div>` : '<div class="text-xs text-slate-400">只有年度彙總，沒有單場紀錄可看近況。</div>'}
+      <div class="text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">本期 ${played.length} 場${games.length > played.length ? '＋年度彙總' : ''}・${season.pa} 打席　${line(season)}　OPS ${rate(season.ops)}</div>
+    </div>`;
+  }
+
+  function compareCells(game, other) {
+    if (!game) return '<td class="p-2 text-center text-slate-600" colspan="5">未出賽</td>';
+    const s = game.stats;
+    const win = other && !game.summary && s.ops > other.stats.ops;
+    return `<td class="p-2 text-center font-mono font-bold text-white">${s.h}-${s.ab}</td>
+      <td class="p-2 text-center font-mono text-amber-300">${s.hr}</td>
+      <td class="p-2 text-center font-mono">${s.bb}</td>
+      <td class="p-2 text-center font-mono text-rose-300">${s.k}</td>
+      <td class="p-2 text-center font-mono ${win ? 'text-emerald-300 font-black' : 'text-slate-300'}">${game.summary ? '—' : rate(s.ops)}${win ? ' ▲' : ''}</td>`;
+  }
+
+  function renderCompareGameLog(agg) {
+    const panel = document.getElementById('panelCompare');
+    if (!panel || !agg.players.length) return;
+    let section = document.getElementById('insightCompareGameLogSection');
+    if (!section) {
+      section = document.createElement('section');
+      section.id = 'insightCompareGameLogSection';
+      section.className = 'bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 backdrop-blur-sm';
+      panel.appendChild(section);
+    }
+    // Same fallback the comparison itself uses when nobody is selected yet.
+    const list = agg.players;
+    const a = (list.find(p => p.name === comparePlayerAName) || list[0]).name;
+    const b = (list.find(p => p.name === comparePlayerBName) || (list.length > 1 ? list[1] : list[0])).name;
+    const head = `<div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
+        <span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">GAME LOG H2H</span>
+        <h3 class="text-lg font-black text-purple-200">逐場成績與近況對決</h3>
+      </div>`;
+    if (a === b) {
+      section.innerHTML = `${head}<p class="text-xs text-slate-400">請在上方選擇兩位不同的球員。</p>`;
+      return;
+    }
+    const gamesA = playerGames(a), gamesB = playerGames(b);
+    const byKeyA = new Map(gamesA.map(g => [g.key, g])), byKeyB = new Map(gamesB.map(g => [g.key, g]));
+    const all = new Map([...gamesA, ...gamesB].map(g => [g.key, g]));
+    const keys = [...all.values()].sort((x, y) => (x.date === y.date ? x.key.localeCompare(y.key) : x.date < y.date ? -1 : 1)).map(g => g.key);
+    const timeline = keys.filter(k => !all.get(k).summary);
+    // Shared single games, compared by that game's OPS.
+    const shared = timeline.filter(k => byKeyA.has(k) && byKeyB.has(k));
+    let winsA = 0, winsB = 0;
+    for (const k of shared) {
+      const diff = byKeyA.get(k).stats.ops - byKeyB.get(k).stats.ops;
+      if (diff > 0) winsA++; else if (diff < 0) winsB++;
+    }
+    const recentOps = games => { const f = games.length ? form(games) : null; return f && f.recent ? f.recent.ops : null; };
+    const opsA = recentOps(gamesA), opsB = recentOps(gamesB);
+    const hotter = opsA !== null && opsB !== null && Math.abs(opsA - opsB) >= 0.05 ? (opsA > opsB ? 'a' : 'b') : '';
+    const rows = keys.slice().reverse().map(k => {
+      const g = all.get(k), ga = byKeyA.get(k), gb = byKeyB.get(k);
+      return `<tr class="hover:bg-slate-800/50 ${g.summary ? 'bg-slate-800/40' : ''}">
+        <td class="p-2 font-mono whitespace-nowrap">${esc(g.date)}</td>
+        <td class="p-2 text-slate-300 whitespace-nowrap">${esc(gameLabel(g.tag))}${g.summary ? ' <span class="text-[10px] text-slate-400 border border-slate-600 rounded px-1">年度彙總</span>' : ''}</td>
+        ${compareCells(ga, gb)}${compareCells(gb, ga)}
+      </tr>`;
+    }).join('');
+    const sub = '<th class="p-2">安打-打數</th><th class="p-2">全壘打</th><th class="p-2">保送</th><th class="p-2">三振</th><th class="p-2">單場 OPS</th>';
+    section.innerHTML = `${head}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        ${compareCard(a, gamesA, COLORS.a, hotter === 'a')}
+        ${compareCard(b, gamesB, COLORS.b, hotter === 'b')}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3" data-h2h-shared>
+          <div class="text-[11px] text-slate-400">同場出賽 ${shared.length} 場・單場 OPS 較高</div>
+          ${shared.length ? `<div class="font-mono font-black text-lg"><span style="color:${COLORS.a}">${winsA}</span><span class="text-slate-500"> : </span><span style="color:${COLORS.b}">${winsB}</span>${shared.length - winsA - winsB ? `<span class="text-xs text-slate-400 font-semibold">　平 ${shared.length - winsA - winsB}</span>` : ''}</div>
+          <div class="text-[11px] text-slate-500">${esc(a)} 對 ${esc(b)}</div>` : '<div class="text-xs text-slate-400 mt-1">此範圍內兩人沒有同場出賽紀錄。</div>'}
+        </div>
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 md:col-span-2">
+          <div class="text-[11px] text-slate-400 flex flex-wrap gap-x-3">累計 OPS 走勢（由舊到新）
+            <span style="color:${COLORS.a}">● ${esc(a)}</span><span style="color:${COLORS.b}">● ${esc(b)}</span></div>
+          ${dualSparkline(timeline, byKeyA, byKeyB) || '<div class="text-xs text-slate-500 mt-2">至少兩場才有走勢</div>'}
+        </div>
+      </div>
+      <div class="overflow-x-auto rounded-xl border border-slate-800" tabindex="0">
+        <table class="w-full text-xs text-slate-200 min-w-[760px]">
+          <thead class="bg-slate-950 text-slate-400">
+            <tr><th class="p-2 text-left" rowspan="2">日期</th><th class="p-2 text-left" rowspan="2">賽事</th>
+              <th class="p-2" colspan="5" style="color:${COLORS.a}">${esc(a)}</th><th class="p-2" colspan="5" style="color:${COLORS.b}">${esc(b)}</th></tr>
+            <tr>${sub}${sub}</tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/80">${rows}</tbody>
+        </table>
+      </div>
+      <p class="text-[11px] text-slate-500">依目前日期範圍；與個人頁「逐場成績與近況」同一套分場與算法。▲ 為同場單場 OPS 較高者；「近況較熱」為近 ${RECENT_GAMES} 場 OPS 相差 .050 以上的一方。年度彙總不列入近況、走勢與同場比較。</p>`;
   }
 
   // ---------- 3. Post-game image ----------
@@ -383,7 +515,10 @@
     renderProfileNote(agg);
     renderGameLog(agg.players.some(p => p.name === selectedPlayerName) ? selectedPlayerName : '');
   });
-  after('renderComparison', renderCompareNote);
+  after('renderComparison', agg => {
+    renderCompareNote(agg);
+    renderCompareGameLog(agg);
+  });
   after('renderSelectedGameReview', addImageButton);
 
   // The first render happened before this file loaded.
@@ -391,8 +526,9 @@
     renderProfileNote(getAnalysisAgg());
     renderGameLog(selectedPlayerName);
     renderCompareNote(getFullAgg());
+    renderCompareGameLog(getFullAgg());
     if (selectedReviewGameId) addImageButton(selectedReviewGameId);
   } catch (error) { console.error('[team-insights] init', error); }
 
-  window.teamInsights = {SAMPLE_PA, RECENT_GAMES, playerGames, gameSummary, drawGameImage, openImageModal};
+  window.teamInsights = {SAMPLE_PA, RECENT_GAMES, playerGames, form, gameSummary, drawGameImage, openImageModal};
 })();
