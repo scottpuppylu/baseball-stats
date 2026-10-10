@@ -67,6 +67,7 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
 .ui-column-toolbar select { background: #152138; border: 1px solid #3a506c; padding: 6px 12px; color: #e2e8f0; }
 .ui-column-toolbar[hidden] { display: none; }
 .ui-column-hidden { display: none !important; }
+.ui-section-bar, .ui-back-top { display: none; }
 .ui-touch-detail {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   z-index: 80; width: min(92vw, 560px); padding: 14px 44px 14px 16px;
@@ -161,7 +162,7 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
   .ui-date-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; color: #cbd5e1; font-size: 13px; padding: 6px 10px; border-radius: 9px; background: #152138; border: 1px solid #30435e; }
   body.ui-date-collapsed #appHeader .ui-date-controls { display: none; }
   #appHeader > div > div:nth-child(2) > div { gap: 5px; }
-  #filterStartDate, #filterEndDate { flex: 1 1 0; max-width: none; width: 120px; font-size: 13px; min-height: 36px; }
+  #filterStartDate, #filterEndDate { flex: 1 1 0; max-width: none; width: 120px; font-size: 16px; min-height: 40px; }
   #appHeader > div > div:nth-child(2) > div > div { flex: 1 1 100%; margin-left: 0; display: flex; gap: 5px; }
   #appHeader > div > div:nth-child(2) > div > div > button { flex: 1; margin-left: 0; min-height: 32px; }
   #mainNavigation {
@@ -230,6 +231,41 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
   #selectedLocationDisplay { font-size: 12px; }
   .ui-touch-detail { bottom: calc(86px + env(safe-area-inset-bottom)); }
   #globalToastContainer { bottom: calc(86px + env(safe-area-inset-bottom)) !important; left: 12px; right: 12px; max-width: none; }
+
+  /* ---- Phone comfort pass (2026/10/10) ---- */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: 64px; }
+  /* No double-tap zoom delay or grey flash on taps. */
+  button, a, select, summary, label, [onclick], [role="button"] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  /* iOS zooms the page when a field under 16px gets focus; Tailwind text classes used to win over the old rule. */
+  :is(main, #appHeader, [id$="Modal"]) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) { font-size: 16px !important; }
+  /* Nothing smaller than 11px on a phone. */
+  :is(main, [id$="Modal"]) :is(.text-\[8px\], .text-\[9px\]) { font-size: 11px !important; line-height: 1.35; }
+  [id$="Modal"] :is(.text-\[10px\], .text-\[11px\]) { font-size: 12px; }
+  /* Section jump bar: sticks to the top while scrolling a long page. */
+  .ui-section-bar { display: flex; gap: 6px; overflow-x: auto; position: sticky; top: 0; z-index: 45; margin: 0 -12px 14px !important; padding: 8px 12px; background: #0b1120f0; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #22324a; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .ui-section-bar[hidden] { display: none; }
+  .ui-section-bar::-webkit-scrollbar { display: none; }
+  .ui-section-bar button { flex: 0 0 auto; min-height: 38px; padding: 0 13px; border-radius: 999px; border: 1px solid #30435e; background: #152138; color: #cbd5e1; font-size: 13px; white-space: nowrap; }
+  .ui-section-bar button[aria-current="true"] { background: #0c4a6e; border-color: #38bdf8; color: #e0f2fe; font-weight: 700; }
+  .ui-back-top { display: flex; position: fixed; right: 14px; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 74; width: 48px; height: 48px; border-radius: 50%; align-items: center; justify-content: center; background: #1b3a53; color: #bae6fd; border: 1px solid #38bdf866; box-shadow: 0 8px 24px #0009; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .2s, transform .2s; }
+  .ui-back-top.is-visible { opacity: 1; pointer-events: auto; transform: none; }
+  .ui-back-top svg { width: 22px; height: 22px; }
+  /* Wide tables keep the name column while scrolling sideways. */
+  .ui-sticky-cols tr > :first-child, .ui-sticky-two tr > :nth-child(2) { position: sticky; z-index: 2; background-color: #0f1a2e; }
+  .ui-sticky-cols tr > :first-child { left: 0; box-shadow: 1px 0 0 #22324a; }
+  .ui-sticky-two tr > :nth-child(2) { left: var(--ui-sticky-left, 48px); box-shadow: 1px 0 0 #22324a; }
+  .ui-sticky-two tr > :first-child { box-shadow: none; }
+  .ui-sticky-cols thead tr > :first-child, .ui-sticky-two thead tr > :nth-child(2) { background-color: #020617; z-index: 3; }
+  /* Drawer and dialogs do not scroll the page behind them. */
+  #mainNavigation, [id$="Modal"] > div { overscroll-behavior: contain; }
+  /* Small controls get a finger-sized hit area without changing their look. */
+  main button[onclick^="removePlayerTag"] { min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; margin: -8px -6px -8px 0; }
+  main summary { padding: 12px 2px; }
+  /* Live scoring: RBI and runs each get a full row of 44px buttons; opponent score and line score readable. */
+  .grid:has(> div > #rbiButtonGroup) { grid-template-columns: 1fr !important; gap: 10px; }
+  #rbiButtonGroup > button, #runsScoredButtonGroup > button { min-height: 44px; font-size: 16px; }
+  main button[onclick^="adjustOpponentScore"] { width: 44px; height: 44px; font-size: 18px; }
+  #liveScoreboardBody td:first-child { white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }

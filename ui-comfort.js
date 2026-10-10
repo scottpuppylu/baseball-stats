@@ -247,6 +247,134 @@
       if (node.id === 'globalToastContainer') watchToastContainer(node);
     }));
   }).observe(document.body, {childList: true});
+  // ---------- Phone comfort: section jump bar, back-to-top, sticky name column ----------
+  const phone = () => window.innerWidth < 768;
+  const sectionBar = document.createElement('nav');
+  sectionBar.className = 'ui-section-bar';
+  sectionBar.setAttribute('aria-label', '本頁段落');
+  heading.after(sectionBar);
+  let sectionTargets = [];
+  const visible = el => el.getClientRects().length > 0 && !el.closest('.hidden');
+  // Short chip names for the long section titles (matched by a distinctive part of the title).
+  const SHORT_LABELS = [
+    ['逐場成績與近況對決', '逐場對決'], ['逐場成績與近況', '逐場近況'], ['深度能力檔案', '能力檔案'], ['擊球落點噴流', '擊球落點'],
+    ['擊球型態與預期', '擊球型態'], ['弱點診斷', '弱點診斷'], ['多維象限', '象限與圖表'], ['運氣回歸', '運氣回歸'],
+    ['空間擊球噴流', '全隊落點'], ['雙人選手數據對決', '指標對決'], ['雙雄球場擊球噴流', '落點對照'], ['指定打擊', '賽制 DH'],
+    ['出席陣容', '出席名單'], ['最佳棒次推薦', '推薦打線'], ['自訂棒次', '自訂打線'], ['投手進階分析', '投手總覽'],
+    ['數據排行總表', '投手排行'], ['實戰作戰與技術方針', '投手方針'], ['出賽率', '出賽率'], ['排行榜', '排行榜'],
+    ['專屬特化規程', '慢壘特有'], ['進階賽伯計量高階', '進階指標'], ['傳統打擊三圍', '傳統成績'], ['擊球掌握度、控制紀律', '擊球與紀律'], ['投手賽伯計量進階指標', '投手指標']
+  ];
+  const shortLabel = text => (SHORT_LABELS.find(([match]) => text.includes(match)) || [])[1];
+  const sectionLabel = section => {
+    // The overview's results block has tab buttons instead of a heading.
+    if (section.querySelector('#tabSummaryBtn')) return '成績與日誌';
+    const h = section.matches('h2, h3, h4') ? section : section.querySelector('h2, h3');
+    if (!h) return '';
+    const short = shortLabel(h.textContent);
+    if (short) return short;
+    // Drop parenthetical English / notes so a chip stays short: 「Statcast 擊球品質與運氣回歸矩陣 (xBA vs. 實際 AVG)」→ the Chinese part.
+    let text = h.textContent.replace(/\s+/g, ' ').replace(/[（(][^）)]*[）)]/g, '').replace(/^[一二三四五六七八九十]+、/, '').trim();
+    text = text.replace(/^[A-Za-z0-9 .&:+\-/]+(?=[一-鿿])/, '').trim() || text;
+    return text.length > 11 ? `${text.slice(0, 10)}…` : text;
+  };
+  function buildSections() {
+    const panel = workspace.querySelector('[id^="panel"]:not(.hidden)');
+    const found = panel ? [...panel.querySelectorAll('section')].filter(s => visible(s) && s.offsetHeight > 120 && !s.parentElement.closest('section')) : [];
+    let items = found.map(section => ({section, label: sectionLabel(section)})).filter(item => item.label);
+    // A page that is one long section (the glossary) jumps between its own sub-headings instead.
+    if (items.length < 2 && found.length === 1) items = [...found[0].querySelectorAll('h3')].filter(visible).map(h => ({section: h, label: sectionLabel(h)})).filter(item => item.label);
+    const key = items.map(item => item.label).join('|');
+    if (sectionBar.dataset.key === key) return;
+    sectionBar.dataset.key = key;
+    sectionTargets = items.map(item => item.section);
+    sectionBar.hidden = items.length < 2;
+    sectionBar.innerHTML = '';
+    items.forEach((item, index) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.textContent = item.label;
+      chip.dataset.index = index;
+      chip.addEventListener('click', () => {
+        // Land just below the sticky chip row.
+        const top = item.section.getBoundingClientRect().top + window.scrollY - (sectionBar.offsetHeight + 12);
+        window.scrollTo({top, behavior: 'smooth'});
+      });
+      sectionBar.append(chip);
+    });
+    markSection();
+  }
+  function markSection() {
+    if (sectionBar.hidden || !sectionTargets.length) return;
+    let current = 0;
+    // At the very bottom the last sections can never reach the top, so pick the last one on screen.
+    const atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
+    const line = atBottom ? window.innerHeight * 0.7 : sectionBar.offsetHeight + 40;
+    sectionTargets.forEach((section, index) => { if (section.getBoundingClientRect().top < line) current = index; });
+    sectionBar.querySelectorAll('button').forEach(chip => {
+      const on = Number(chip.dataset.index) === current;
+      if (on && chip.getAttribute('aria-current') !== 'true') {
+        chip.setAttribute('aria-current', 'true');
+        // Scroll only the chip row; scrollIntoView would also move the page.
+        sectionBar.scrollTo({left: chip.offsetLeft - (sectionBar.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth'});
+      } else if (!on) chip.removeAttribute('aria-current');
+    });
+  }
+  const backTop = document.createElement('button');
+  backTop.type = 'button';
+  backTop.className = 'ui-back-top';
+  backTop.setAttribute('aria-label', '回到頁面頂端');
+  backTop.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+  backTop.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+  document.body.append(backTop);
+  let scrollQueued = false, lastScrollY = 0;
+  window.addEventListener('scroll', () => {
+    if (scrollQueued) return;
+    scrollQueued = true;
+    requestAnimationFrame(() => {
+      scrollQueued = false;
+      // Only while scrolling back up (when someone is looking for the top), so it never sits on content being read.
+      const y = window.scrollY;
+      const up = y < lastScrollY - 4, down = y > lastScrollY + 4;
+      if (up || down) lastScrollY = y;
+      if (up) backTop.classList.toggle('is-visible', phone() && y > window.innerHeight * 1.2);
+      if (down || y <= window.innerHeight * 1.2) backTop.classList.remove('is-visible');
+      markSection();
+    });
+  }, {passive: true});
+
+  // Wide tables keep the player column in view while scrolling sideways (single-row headers only,
+  // so grouped headers never get a mismatched sticky cell). A narrow first column (slot / rank) also
+  // keeps the next column, which is then the name.
+  function stickyColumns() {
+    document.querySelectorAll('.ui-table-scroll table').forEach(table => {
+      const area = table.closest('.ui-table-scroll');
+      const multiRowHead = table.tHead && table.tHead.rows.length > 1;
+      const firstRow = table.rows[0];
+      let one = false, two = false, left = 0;
+      if (phone() && !multiRowHead && firstRow && firstRow.cells.length > 1 && area.scrollWidth > area.clientWidth + 2) {
+        left = firstRow.cells[0].getBoundingClientRect().width;
+        two = left > 0 && left < 64 && firstRow.cells.length > 3;
+        // Pinning is only worth it while the pinned part leaves room for the data (at most about half).
+        const pinned = left + (two ? firstRow.cells[1].getBoundingClientRect().width : 0);
+        one = pinned <= area.clientWidth * 0.52;
+        two = one && two;
+      }
+      // Decide first, then write once: class changes re-run this observer.
+      if (table.classList.contains('ui-sticky-cols') !== one) table.classList.toggle('ui-sticky-cols', one);
+      if (table.classList.contains('ui-sticky-two') !== two) table.classList.toggle('ui-sticky-two', two);
+      if (two) table.style.setProperty('--ui-sticky-left', `${Math.round(left)}px`);
+    });
+  }
+  let comfortQueued = false;
+  const queueComfort = () => {
+    if (comfortQueued) return;
+    comfortQueued = true;
+    requestAnimationFrame(() => { comfortQueued = false; buildSections(); stickyColumns(); });
+  };
+  new MutationObserver(queueComfort).observe(workspace, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
+  window.addEventListener('resize', queueComfort);
+
   updateNavigation();
   enhanceTables();
+  queueComfort();
 })();
