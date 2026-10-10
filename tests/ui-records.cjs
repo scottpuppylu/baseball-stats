@@ -36,21 +36,32 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
           if(!summary(l.tag)){const g=(games[l.name]||(games[l.name]={}));const gk=key(l);const s2=g[gk]||(g[gk]={h:0,ab:0,hr:0});s2.h+=Number(l.h)||0;s2.ab+=Number(l.ab)||0;s2.hr+=Number(l.hr)||0;}}
         const names=Object.keys(sum);
         const top=f=>Math.max(...names.map(f));
-        const shown=title=>{const card=[...document.querySelectorAll('#panelRecords .text-amber-300')].find(t=>t.textContent.trim().startsWith(title))?.parentElement;const first=card?.querySelector('[data-record-row] b');return first?first.textContent.trim():null;};
+        // Each card is marked data-record-card; its first row carries the leading value.
+        const shown=title=>{const first=document.querySelector(`#panelRecords [data-record-card="${title}"] [data-record-row]`);return first?first.dataset.value:null;};
         const records=teamRecords.teamRecords();
         const threeHit=Math.max(...names.map(n=>Object.values(games[n]||{}).filter(g=>g.h>=3).length));
         return {players:records.length,expectedPlayers:names.length,
           h:[shown('安打'),String(top(n=>sum[n].h))],hr:[shown('全壘打'),String(top(n=>sum[n].hr))],
           singleH:[shown('單場安打'),String(Math.max(...names.flatMap(n=>Object.values(games[n]||{}).map(g=>g.h))))],
-          threeHit:[shown('猛打賞'),threeHit?`${threeHit} 場`:null],
+          threeHit:[shown('猛打賞'),threeHit?String(threeHit):null],
           rateMin:records.filter(r=>r.career.pa>=teamRecords.MIN_RATE_PA).length,
-          rateShown:[...document.querySelectorAll('#panelRecords .text-amber-300')].find(t=>t.textContent.startsWith('打擊率'))?.parentElement.querySelectorAll('[data-record-row]').length,
+          rateShown:document.querySelectorAll('#panelRecords [data-record-card="打擊率"] [data-record-row]').length,
+          rateNames:[...document.querySelectorAll('#panelRecords [data-record-card="打擊率"] [data-record-player]')].map(b=>b.dataset.recordPlayer).every(n=>sum[n].pa>=teamRecords.MIN_RATE_PA),
+          hero:[...document.querySelectorAll('#panelRecords [data-record-hero]')].map(h=>h.dataset.recordHero),
+          heroHits:document.querySelector('#panelRecords [data-record-hero="生涯安打王"]')?.textContent.includes(String(top(n=>sum[n].h))),
+          grouped:[...document.querySelectorAll('#panelRecords [data-record-card="最長連續安打"] [data-record-row]')].map(r=>Number(r.dataset.value)).every((v,i,a)=>i===0||a[i-1]>v),
+          locked:[...document.querySelectorAll('#panelRecords [data-record-locked] [data-record-card]')].map(x=>x.dataset.recordCard),
+          lockedExpected:[['單場多轟',r=>r.fun.multiHr],['完全打擊',r=>r.fun.cycle],['猛打賞',r=>r.fun.threeHit],['多安打場',r=>r.fun.multiHit],['安打全中',r=>r.fun.perfect]].filter(([,f])=>!records.some(r=>f(r)>0)).map(([t])=>t),
           streak:records.every(r=>JSON.stringify(r.streaks)===JSON.stringify(teamInsights.streaks(teamInsights.playerGames(r.name,allLogs)))),
           pa:records.every(r=>r.career.pa===sum[r.name].pa)};
       });
       assert.equal(check.players,check.expectedPlayers,'every team player with a plate appearance');
       for(const k of ['h','hr','singleH','threeHit']) assert.equal(check[k][0],check[k][1],`${k} leader`);
-      assert.equal(check.rateShown,Math.min(5,check.rateMin),'rate leaders only from players with enough PA');
+      assert.ok(check.rateShown>=Math.min(5,check.rateMin)&&check.rateNames,'rate leaders only from players with enough PA');
+      assert.deepEqual(check.hero,['生涯安打王','生涯全壘打王','生涯 OPS 王','單場最多安打','最長連續安打','最新里程碑'],'隊史之最 tiles');
+      assert.ok(check.heroHits,'hit king tile shows the career hit total');
+      assert.ok(check.grouped,'grouped cards: one row per value, highest first (ties share a row)');
+      assert.deepEqual(check.locked.sort(),check.lockedExpected.sort(),'records nobody holds yet are listed as locked');
       assert.ok(check.streak&&check.pa,'streaks and career PA match the game logs');
       // Career records ignore the date filter.
       const before=await page.locator('#panelRecords').textContent();
