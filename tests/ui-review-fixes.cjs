@@ -42,6 +42,31 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
     });
     assert.deepEqual(logo,{header:true,icon:true,touch:true,sidebar:true,sidebarFile:true,imageFile:true},'team logo assets load everywhere');
 
+    // Classification and order: navigation groups, one metric taxonomy everywhere, glossary categories, profile order.
+    const order=await page.evaluate(()=>{
+      const nav=[...document.getElementById('mainNavigation').children].filter(c=>c.classList.contains('ui-nav-group')||c.id.startsWith('btnTab')).map(c=>c.classList.contains('ui-nav-group')?`[${c.textContent}]`:c.id.replace('btnTab',''));
+      const groupsOf=id=>[...document.querySelectorAll(`#${id} optgroup`)].map(g=>g.label);
+      switchMainTab('tabCompare');
+      const compareGroups=[...document.querySelectorAll('#compareTableBody .ui-group-row')].map(r=>r.textContent.trim());
+      const compareRows=[...document.querySelectorAll('#compareTableBody tr:not(.ui-group-row)')].length;
+      switchMainTab('tabProfile');
+      const profile=[...document.querySelectorAll('#panelProfile > section')].map(s=>s.id||(s.querySelector('#diagnosticsCardsContainer')?'diagnostics':s.querySelector('#profileBattedBallChart')?'battedBall':s.querySelector('#profileSprayPointsContainer')?'spray':'profile'));
+      const glossary=[...document.querySelectorAll('#panelGlossary h3')].map(h=>h.textContent.trim().replace(/（.*$/,''));
+      const cards=[...document.querySelectorAll('#panelGlossary .grid > div')].length;
+      switchMainTab('tabOverview');
+      return {nav,lb:groupsOf('leaderboardMetricSelect'),x:groupsOf('customXVar'),y:groupsOf('customYVar'),compareGroups,compareRows,profile,glossary,cards};
+    });
+    assert.deepEqual(order.nav,['[數據]','Overview','Profile','Leaderboard','Compare','Records','Analytics','Pitching','[比賽]','Lineup','Scorebook','[參考]','Glossary'],'navigation groups and order');
+    const TAX=['綜合產值','打擊三圍與長打','紀律與接觸','擊球品質與方向（場記擊球型態）','基礎累積'];
+    assert.deepEqual(order.lb,TAX,'leaderboard menu uses the shared groups');
+    for(const g of [order.x,order.y]) assert.deepEqual(g,TAX.filter(t=>g.includes(t)),'custom chart menus use the shared groups in the same order');
+    assert.deepEqual(order.compareGroups,TAX,'comparison table grouped the same way');
+    assert.equal(order.compareRows,31,'all 31 comparison metrics kept');
+    assert.deepEqual(order.profile,['profile','insightGameLogSection','diagnostics','battedBall','spray','insightCareerSection'],'profile: now → detail → history');
+    assert.deepEqual(order.glossary,['一、基礎數據與打擊三圍','二、綜合產值','三、紀律、擊球品質與方向','四、慢壘規則與本站模型','五、投手指標'],'glossary categories');
+    assert.equal(order.cards,37,'all 37 glossary entries kept');
+    assert.ok(await page.locator('#uiLineupDefense').count(),'lineup page has its own 守位設定 entry');
+
     // Every sidebar label is the same plain name as the page title it opens.
     const names=[];
     for (const key of ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Records','Glossary']) {

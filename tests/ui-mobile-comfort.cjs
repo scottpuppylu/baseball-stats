@@ -55,7 +55,7 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
           for(const t of [...panel.querySelectorAll('table.ui-fold-table')].filter(t=>t.getClientRects().length)){
             const head=[...t.tHead.rows[0].cells];
             const folded=head.filter(c=>c.classList.contains('ui-col-folded')).map(c=>c.textContent.trim());
-            const row=t.tBodies[0].rows[0];row.click();
+            const row=[...t.tBodies[0].rows].find(r=>!r.classList.contains('ui-group-row')&&!r.classList.contains('ui-row-detail'));row.click(); // group header rows are not data
             const shown=[...row.nextElementSibling.querySelectorAll('.ui-detail-grid > div > span')].map(s=>s.textContent);
             missing.push(...folded.filter(l=>!shown.includes(l)));
             row.click();

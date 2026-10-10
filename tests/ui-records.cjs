@@ -64,8 +64,9 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
         const cells=[...s.querySelectorAll('[data-career-line] > div')].map(d=>[d.children[0].textContent,d.children[1].textContent]);
         return {visible:!document.getElementById('panelProfile').classList.contains('hidden'),records:document.getElementById('panelRecords').classList.contains('hidden'),
           title:s.querySelector('h3').textContent.includes(name),pa:cells.find(c=>c[0]==='打席')?.[1]===String(rec.career.pa),hits:cells.find(c=>c[0]==='安打')?.[1]===String(rec.career.h),
-          afterLog:s.previousElementSibling?.id==='insightGameLogSection'};},name);
-      assert.deepEqual(profile,{visible:true,records:true,title:true,pa:true,hits:true,afterLog:true},`profile career section for ${name}`);
+          // Profile order: profile, recent form, diagnosis, batted-ball types, spray, career last.
+          last:s===[...document.querySelectorAll('#panelProfile > section')].filter(x=>x.getClientRects().length).at(-1)};},name);
+      assert.deepEqual(profile,{visible:true,records:true,title:true,pa:true,hits:true,last:true},`profile career section for ${name}`);
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'no sideways scroll');
       assert.deepEqual(errors,[]);
       assert.deepEqual(await page.evaluate(()=>window.__previewWrites),[],'records never write');

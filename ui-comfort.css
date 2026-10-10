@@ -68,6 +68,10 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
 .ui-column-toolbar[hidden] { display: none; }
 .ui-column-hidden { display: none !important; }
 .ui-section-bar, .ui-back-top { display: none; }
+/* Navigation group labels (數據／比賽／參考) and the lineup page shortcut to the defensive rankings. */
+.ui-nav-group { font-size: 11px; font-weight: 700; letter-spacing: .12em; color: #7e94af; padding: 12px 12px 2px; }
+.ui-lineup-defense { margin-top: 8px; min-height: 36px; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; color: #fcd34d; background: #451a0380; border: 1px solid #b4530980; }
+.ui-lineup-defense:hover { background: #78350f99; }
 /* Phone table folding (classes are only ever set on phones). */
 .ui-col-folded { display: none !important; }
 .ui-phone-only { display: none; }
@@ -181,6 +185,7 @@ table.ui-measure thead th img, table.ui-fold-table thead th img { display: none;
   body.ui-nav-open #mainNavigation { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   #mainNavigation::before { content: '所有功能'; grid-column: 1 / -1; padding: 4px 5px 10px; font-size: 16px; font-weight: 700; }
   #mainNavigation > button { min-height: 56px; font-size: 13px; padding: 10px; white-space: normal; text-align: left; gap: 8px; }
+  #mainNavigation > .ui-nav-group { grid-column: 1 / -1; padding: 4px 4px 0; }
   .ui-nav-backdrop { position: fixed; inset: 0; z-index: 49; background: #020617aa; backdrop-filter: blur(3px); }
   body.ui-nav-open .ui-nav-backdrop { display: block; }
   .ui-mobile-nav {
@@ -358,9 +363,9 @@ table.ui-measure thead th img, table.ui-fold-table thead th img { display: none;
   .ui-wrap-table td { padding-top: 5px; padding-bottom: 5px; }
   .ui-fold-table[data-ui-name-col="1"] tr > :nth-child(1), .ui-fold-table[data-ui-name-col="2"] tr > :nth-child(2) { max-width: var(--ui-name-max, 150px); white-space: normal !important; word-break: keep-all; }
   .ui-fold-table[data-ui-name-col="1"] tr > :nth-child(1) *, .ui-fold-table[data-ui-name-col="2"] tr > :nth-child(2) * { white-space: normal !important; word-break: keep-all; }
-  .ui-fold-table tbody tr:not(.ui-row-detail) { cursor: pointer; }
-  .ui-fold-table tbody tr:not(.ui-row-detail) > td:first-child { position: relative; padding-left: 18px !important; }
-  .ui-fold-table tbody tr:not(.ui-row-detail) > td:first-child::before { content: '▸'; position: absolute; left: 5px; top: 50%; transform: translateY(-50%); color: #7dd3fc; font-size: 11px; }
+  .ui-fold-table tbody tr:not(.ui-row-detail):not(.ui-group-row) { cursor: pointer; }
+  .ui-fold-table tbody tr:not(.ui-row-detail):not(.ui-group-row) > td:first-child { position: relative; padding-left: 18px !important; }
+  .ui-fold-table tbody tr:not(.ui-row-detail):not(.ui-group-row) > td:first-child::before { content: '▸'; position: absolute; left: 5px; top: 50%; transform: translateY(-50%); color: #7dd3fc; font-size: 11px; }
   .ui-fold-table tbody tr.ui-row-open > td:first-child::before { content: '▾'; }
   .ui-fold-table tbody tr.ui-row-open > td { background-color: #13233b; }
   .ui-fold-table thead tr > :first-child { padding-left: 18px !important; }

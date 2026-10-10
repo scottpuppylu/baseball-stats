@@ -190,6 +190,25 @@
     return {rank: sorted.indexOf(mine) + 1, of: sorted.length};
   }
 
+  // Profile order: who the player is now (profile, recent form, diagnosis), then the batted-ball detail behind
+  // the diagnosis (types, then where the balls went), and history (career records) last.
+  function arrangeProfile(career) {
+    const panel = document.getElementById('panelProfile');
+    if (!panel) return;
+    const sectionOf = el => el && el.closest('#panelProfile > section');
+    const order = [
+      panel.querySelector(':scope > section'),
+      document.getElementById('insightGameLogSection'),
+      sectionOf(document.getElementById('diagnosticsCardsContainer')),
+      sectionOf(document.getElementById('profileBattedBallChart')),
+      sectionOf(document.getElementById('profileSprayPointsContainer')),
+      career
+    ].filter((el, i, all) => el && all.indexOf(el) === i);
+    const current = [...panel.children].filter(el => order.includes(el));
+    if (current.length === order.length && current.every((el, i) => el === order[i])) return;
+    order.forEach(el => panel.append(el));
+  }
+
   function renderProfileRecords(name) {
     const anchor = document.getElementById('insightGameLogSection') || document.getElementById('playerProfileCard')?.closest('section');
     if (!anchor) return;
@@ -200,7 +219,7 @@
       section.className = 'bg-slate-900/80 border border-amber-900/40 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4 backdrop-blur-sm';
       section.addEventListener('click', openPlayer);
     }
-    if (section.previousElementSibling !== anchor) anchor.after(section);
+    arrangeProfile(section);
     const list = teamRecords();
     const me = list.find(p => p.name === name);
     const head = `<div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">

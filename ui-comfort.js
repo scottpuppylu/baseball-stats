@@ -258,6 +258,7 @@
   const visible = el => el.getClientRects().length > 0 && !el.closest('.hidden');
   // Short chip names for the long section titles (matched by a distinctive part of the title).
   const SHORT_LABELS = [
+    ['基礎數據與打擊三圍', '基礎與三圍'], ['綜合產值（進階', '綜合產值'], ['紀律、擊球品質與方向', '紀律與擊球'], ['慢壘規則與本站模型', '規則與模型'], ['投手指標（慢速壘球', '投手指標'],
     ['生涯紀錄與趣味', '生涯紀錄'], ['生涯排行榜', '生涯排行'], ['單場紀錄', '單場紀錄'], ['連續紀錄', '連續紀錄'], ['趣味紀錄與里程碑', '趣味紀錄'],
     ['逐場成績與近況對決', '逐場對決'], ['逐場成績與近況', '逐場近況'], ['深度能力檔案', '能力檔案'], ['擊球落點噴流', '擊球落點'],
     ['擊球型態與預期', '擊球型態'], ['弱點診斷', '弱點診斷'], ['多維象限', '象限與圖表'], ['運氣回歸', '運氣回歸'],
@@ -406,6 +407,46 @@
       if (card.querySelectorAll('p').length >= 2) foldable(card);
     });
   }
+  // ---------- Navigation groups ----------
+  // Pages ordered by how they are used: the numbers (people first, then team-wide analysis), the game-day
+  // tools in workflow order (lineup before scoring), and the reference last. Buttons keep their own handlers.
+  const NAV_GROUPS = [
+    ['數據', ['Overview', 'Profile', 'Leaderboard', 'Compare', 'Records', 'Analytics', 'Pitching']],
+    ['比賽', ['Lineup', 'Scorebook']],
+    ['參考', ['Glossary']]
+  ];
+  function arrangeNav() {
+    const want = [];
+    for (const [label, keys] of NAV_GROUPS) {
+      let head = navigation.querySelector(`.ui-nav-group[data-group="${label}"]`);
+      if (!head) {
+        head = document.createElement('div');
+        head.className = 'ui-nav-group';
+        head.dataset.group = label;
+        head.setAttribute('aria-hidden', 'true');
+        head.textContent = label;
+      }
+      want.push(head, ...keys.map(key => document.getElementById(`btnTab${key}`)).filter(Boolean));
+    }
+    const current = [...navigation.children].filter(el => want.includes(el));
+    if (current.length === want.length && current.every((el, i) => el === want[i])) return;
+    want.forEach(el => navigation.append(el)); // the drawer's close button stays first
+  }
+  new MutationObserver(arrangeNav).observe(navigation, {childList: true}); // the records page adds its button later
+  arrangeNav();
+
+  // The lineup page gets its own way into the defensive rankings it is built on (the header button stays too).
+  const lineupFirst = document.querySelector('#panelLineup > section');
+  if (lineupFirst && typeof window.openDefenseModal === 'function' && !document.getElementById('uiLineupDefense')) {
+    const shortcut = document.createElement('button');
+    shortcut.type = 'button';
+    shortcut.id = 'uiLineupDefense';
+    shortcut.className = 'ui-lineup-defense';
+    shortcut.textContent = '🛡️ 守位設定（推薦打線依據）';
+    shortcut.addEventListener('click', () => window.openDefenseModal());
+    lineupFirst.querySelector('h3')?.closest('div.flex, div')?.parentElement?.append(shortcut);
+  }
+
   // ---------- Phone tables: no sideways scrolling ----------
   // A wide table keeps its name column(s) plus the most useful columns that fit the screen; tapping a row
   // opens the rest underneath as label–value pairs. Tables with one or two rows become a full card instead.
@@ -424,7 +465,8 @@
     const row = table.tHead && table.tHead.rows[table.tHead.rows.length - 1];
     return row ? [...row.cells].map(cell => cell.textContent.replace(/\s+/g, ' ').trim()) : [];
   };
-  const bodyRows = table => [...(table.tBodies[0]?.rows || [])].filter(row => !row.classList.contains('ui-row-detail'));
+  // Group header rows (one cell across the table) separate sections; they are not data rows.
+  const bodyRows = table => [...(table.tBodies[0]?.rows || [])].filter(row => !row.classList.contains('ui-row-detail') && !row.classList.contains('ui-group-row'));
   function foldTables() {
     document.querySelectorAll('.ui-table-scroll table').forEach(table => {
       const area = table.closest('.ui-table-scroll');
@@ -488,7 +530,7 @@
   }
   // Tapping a folded row shows its hidden columns right below it.
   workspace.addEventListener('click', event => {
-    const row = event.target.closest('table.ui-fold-table tbody tr:not(.ui-row-detail)');
+    const row = event.target.closest('table.ui-fold-table tbody tr:not(.ui-row-detail):not(.ui-group-row)');
     if (!row || event.target.closest('button, a, select, input')) return;
     const next = row.nextElementSibling;
     if (next && next.classList.contains('ui-row-detail')) { next.remove(); row.classList.remove('ui-row-open'); return; }
