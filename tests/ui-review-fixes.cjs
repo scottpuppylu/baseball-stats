@@ -158,6 +158,61 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
       return ok;
     });
     if (optionOk!==null) assert.ok(optionOk,'review editor offers and preserves the runner-out option');
+    // Review editing: cancel restores the game, add/delete keep typed values, switching games discards edits.
+    const review=await page.evaluate(async()=>{
+      switchMainTab('tabScorebook');switchScorebookSubTab('review');
+      const game=allGames.find(g=>g.innings.some(i=>(i.plateAppearances||[]).length>1));
+      const original=JSON.stringify(game);
+      const stored=localStorage.getItem('rebas_all_games');
+      renderSelectedGameReview(game.id);
+      toggleEditCurrentReviewGame();
+      document.getElementById('editGameOpponent').value='尚未儲存的對手';
+      const innIdx=game.innings.findIndex(i=>(i.plateAppearances||[]).length>1);
+      const before=game.innings[innIdx].plateAppearances.length;
+      document.querySelector(`button[onclick="deletePlayFromReviewInning('${game.id}', ${innIdx}, 0)"]`).click();
+      const kept=document.getElementById('editGameOpponent').value;
+      const afterDelete=allGames.find(g=>g.id===game.id).innings[innIdx].plateAppearances.length;
+      toggleEditCurrentReviewGame(); // 取消
+      const restored=allGames.find(g=>g.id===game.id);
+      const cancel={kept,deleted:afterDelete===before-1,restored:JSON.stringify(restored)===original,
+        storage:localStorage.getItem('rebas_all_games')===stored||JSON.stringify(JSON.parse(localStorage.getItem('rebas_all_games')).find(g=>g.id===game.id))===original,
+        editing:isEditingReviewGame};
+      // Opening another game while editing throws the unsaved edits away.
+      toggleEditCurrentReviewGame();
+      document.querySelector(`button[onclick="deletePlayFromReviewInning('${game.id}', ${innIdx}, 0)"]`).click();
+      const other=allGames.find(g=>g.id!==game.id);
+      renderSelectedGameReview(other.id);
+      const switched={restored:JSON.stringify(allGames.find(g=>g.id===game.id))===original,editing:isEditingReviewGame};
+      // Saving keeps a runner out's own location instead of turning it into P.
+      const withOut=allGames.find(g=>g.innings.some(i=>(i.plateAppearances||[]).some(p=>p.result==='OUT')));
+      renderSelectedGameReview(withOut.id);toggleEditCurrentReviewGame();
+      await saveEditedReviewGame(withOut.id);
+      const outPlay=allGames.find(g=>g.id===withOut.id).innings.flatMap(i=>i.plateAppearances||[]).find(p=>p.result==='OUT');
+      return {cancel,switched,outLocation:outPlay.location,editingAfterSave:isEditingReviewGame};
+    });
+    assert.equal(review.cancel.kept,'尚未儲存的對手','deleting a row keeps values typed elsewhere');
+    assert.ok(review.cancel.deleted,'the row was deleted while editing');
+    assert.ok(review.cancel.restored,'cancel restores the game exactly');
+    assert.ok(review.cancel.storage,'cancel leaves the saved copy unchanged');
+    assert.equal(review.cancel.editing,false);
+    assert.deepEqual(review.switched,{restored:true,editing:false},'opening another game discards unsaved edits');
+    assert.equal(review.outLocation,'Bases','runner out keeps its location after saving');
+    assert.equal(review.editingAfterSave,false);
+
+    // Avatars are shared blob: URLs, not repeated base64 strings.
+    const avatars=await page.evaluate(async()=>{
+      renderAll();
+      const imgs=[...document.querySelectorAll('img[alt]')].filter(i=>Object.keys(playerAvatars).includes(i.alt));
+      await Promise.all(imgs.map(i=>i.decode().catch(()=>{})));
+      const html=document.documentElement.outerHTML;
+      return {count:imgs.length,blob:imgs.every(i=>i.src.startsWith('blob:')),loaded:imgs.filter(i=>i.complete&&i.naturalWidth>0).length,
+        dataUris:(html.match(/data:image\/[a-z]+;base64/g)||[]).length,size:html.length};
+    });
+    assert.ok(avatars.count>0,'fixture avatars are shown');
+    assert.ok(avatars.blob,'avatar images use blob: URLs');
+    assert.equal(avatars.loaded,avatars.count,'every avatar image decodes');
+    assert.equal(avatars.dataUris,0,'no base64 avatars left in the page');
+    assert.ok(avatars.size<1000000,`page HTML stays small (${avatars.size})`);
     assert.deepEqual(errors,[],'runtime errors');
     await context.close();
 
@@ -176,7 +231,7 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
     await brokenPage.waitForFunction(()=>typeof allLogs!=='undefined'&&allLogs.length>0&&document.getElementById('uiPageTitle'));
     assert.deepEqual(brokenErrors,[],'corrupted storage runtime errors');
     await broken.close();
-    console.log('review fixes: expected-stats, leaderboard, glossary, pitching-games, custom-model, diamond, runner-out-undo, fc-out, opp-line-score, review-out-option, corrupted-storage');
+    console.log('review fixes: expected-stats, leaderboard, glossary, pitching-games, custom-model, diamond, runner-out-undo, fc-out, opp-line-score, review-out-option, review-cancel-restore, review-keeps-typed, review-switch-discard, runner-out-location, avatar-blob-urls, corrupted-storage');
   } finally {
     await browser.close();
   }

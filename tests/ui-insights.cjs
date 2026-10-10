@@ -122,6 +122,86 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       assert.ok(h2h.same,'same player twice asks for two players');
       assert.ok(!h2h.overflow,'compare page must not overflow');
       await page.screenshot({path:path.join(output,`${width}-CompareGameLog.png`)});
+      // Streaks, single-game highs and career milestones on the profile game log.
+      const recs=await page.evaluate(()=>{
+        document.getElementById('filterStartDate').value='';document.getElementById('filterEndDate').value='';renderAll();
+        const agg=getAnalysisAgg();
+        return agg.players.filter(p=>p.pa>0).map(p=>{
+          selectedPlayerName=p.name;renderPlayerProfile(agg);
+          const section=document.getElementById('insightGameLogSection');
+          const games=teamInsights.playerGames(p.name);
+          const single=games.filter(g=>!g.summary);
+          // Independent hitting streak: games with an at-bat, counted back from the latest.
+          let hit=0;for(const g of single.slice().reverse()){if(g.stats.ab===0)continue;if(g.stats.h>0)hit++;else break;}
+          const career=teamInsights.playerGames(p.name,allLogs);
+          const marks=teamInsights.milestones(career).filter(m=>m.kind==='hr');
+          const gameHr=career.filter(g=>!g.summary).reduce((s,g)=>s+g.stats.hr,0);
+          const totalHr=career.reduce((s,g)=>s+g.stats.hr,0);
+          const cells=section.querySelector('[data-records]');
+          const badges=section.querySelectorAll('[data-milestone]').length;
+          const inRange=new Set(games.map(g=>g.key));
+          const expectedBadges=teamInsights.milestones(career).filter(m=>inRange.has(m.key)).length;
+          return {name:p.name,hit,shown:cells?cells.textContent.includes(`連續安打${hit} 場`)||cells.querySelector('.grid .font-mono').textContent.startsWith(String(hit)):single.length===0,
+            hrMarks:marks.length,gameHr,consecutive:marks.every((m,i)=>i===0||m.n===marks[i-1].n+1),lastN:marks.length?marks.at(-1).n:0,totalHr,
+            badges,expectedBadges,highs:!cells||cells.textContent.includes('本期單場最佳')};
+        });
+      });
+      for(const r of recs){
+        assert.ok(r.shown,`${r.name}: current hitting streak shown (${r.hit})`);
+        assert.equal(r.hrMarks,r.gameHr,`${r.name}: one milestone per home run hit in a game`);
+        assert.ok(r.consecutive&&r.lastN<=r.totalHr,`${r.name}: home run numbers count up to the career total`);
+        assert.equal(r.badges,r.expectedBadges,`${r.name}: milestone badges in the game table`);
+        assert.ok(r.highs,`${r.name}: single-game highs card`);
+      }
+      assert.ok(recs.some(r=>r.hrMarks>0),'fixture has at least one game home run milestone');
+      // The post-game image lists the milestones reached in that game.
+      const imageRecords=await page.evaluate(()=>allGames.map(g=>{
+        const rows=teamInsights.gameSummary(g).rows;
+        const rec=teamInsights.gameRecords(g,rows);
+        const hrRows=rows.filter(r=>r.hr>0&&!isGuestPlayerName(r.name)).length;
+        return {id:g.id,marks:rec.marks,hrRows,hrMarks:rec.marks.filter(m=>m.includes('全壘打')).length,hrTotal:rows.filter(r=>!isGuestPlayerName(r.name)).reduce((s,r)=>s+r.hr,0)};
+      }));
+      for(const g of imageRecords) assert.equal(g.hrMarks,g.hrTotal,`${g.id}: every team home run in the game is a numbered milestone`);
+      assert.ok(imageRecords.some(g=>g.marks.length),'some game shows milestones on its image');
+
+      // Attendance on the overview page.
+      const att=await page.evaluate(()=>{
+        switchMainTab('tabOverview');renderAll();
+        const section=document.getElementById('insightAttendanceSection');
+        const a=teamInsights.attendance();
+        const finished=allGames.filter(g=>g.status!=='in_progress');
+        // Manually logged games (no scorebook id) also count; a player appears in them with a plate appearance.
+        const manual=new Map();
+        for(const l of getFilteredLogs()){
+          if(/總數據|彙總|總計/.test(l.tag||'')||!(Number(l.pa)>0)||l.gameId||/^log_(game|auto)_/.test(l.id))continue;
+          const k=`${l.date}|${l.tag||''}`;
+          if(!manual.has(k))manual.set(k,new Set());
+          manual.get(k).add(l.name);
+        }
+        const check=a.rows.map(r=>{
+          const expected=finished.filter(g=>getGameAllBatters(g).includes(r.name)).length+[...manual.values()].filter(set=>set.has(r.name)).length;
+          return {name:r.name,ok:r.played===expected&&r.start+r.sub<=r.played&&r.since<=a.games};
+        });
+        const rows=section.querySelectorAll('[data-attendance] tbody tr').length;
+        document.getElementById('filterStartDate').value='2026-09-19';document.getElementById('filterEndDate').value='2026-09-19';
+        document.getElementById('filterEndDate').dispatchEvent(new Event('change'));
+        const narrowed=teamInsights.attendance().games;
+        const header=document.getElementById('insightAttendanceSection').textContent.includes('共 2 場');
+        document.getElementById('filterStartDate').value='';document.getElementById('filterEndDate').value='';renderAll();
+        return {games:a.games,finished:finished.length+manual.size,rows,roster:a.rows.length,check,narrowed,header,
+          sorted:a.rows.every((r,i)=>i===0||a.rows[i-1].played>=r.played),
+          noGuests:a.rows.every(r=>!isGuestPlayerName(r.name)),
+          after:section.previousElementSibling===document.getElementById('summaryTableBody').closest('section')};
+      });
+      assert.equal(att.games,att.finished,'every finished scorebook game counts once');
+      assert.equal(att.rows,att.roster,'one row per team member');
+      for(const c of att.check) assert.ok(c.ok,`${c.name}: games played match the lineups`);
+      assert.deepEqual([att.narrowed,att.header],[2,true],'attendance follows the date range');
+      assert.ok(att.sorted&&att.noGuests&&att.after,'sorted, team members only, below the summary table');
+      await page.locator('#insightAttendanceSection').scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(output,`${width}-Attendance.png`)});
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'overview must not overflow');
+
       // Team game log and player form board on the analytics page.
       const team=await page.evaluate(()=>{
         switchMainTab('tabAnalytics');

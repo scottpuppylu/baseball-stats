@@ -12,7 +12,7 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // 1-15 fix set (see docs/UI_QA.md). The v1 baseline from 903cf977 and its authorized-diff chain are in git history.
 // Any further change to these must be authorized and the digests updated together with the QA document.
 const BASELINE = {
-  script: 'e46a7fe3751df8aefdee9ccca510f797e7c329ed15b7ee4bb93990da740a1af2',
+  script: '24177bd27fc0bcc3e5d98dfa701c3efbf72feb26228a9c3c26c7189fb6d6a4e5',
   handlers: 'd0ab0fb814806457ce82eaa0b98c25daaca9fc26a9785f7377875a5a92abca55',
   idCount: 283,
   ids: '92cf03632932349ba75c97bf0a825ab22d1097180f98c8b07e3f26a41968c0d8'

@@ -26,9 +26,9 @@
   // Manual season totals such as "114年度總數據" are not single games.
   const isSummaryTag = tag => /總數據|彙總|總計/.test(String(tag || ''));
 
-  function playerGames(name) {
+  function playerGames(name, logs = getFilteredLogs()) {
     const groups = new Map();
-    for (const log of getFilteredLogs()) {
+    for (const log of logs) {
       if (log.name !== name) continue;
       const key = gameIdOf(log) || `${log.date}|${log.tag || ''}`;
       if (!groups.has(key)) groups.set(key, {key, date: log.date, tag: log.tag, summary: isSummaryTag(log.tag), logs: []});
@@ -42,6 +42,82 @@
       running.push(...game.logs);
       return {...game, stats: statsFor(game.logs), toDate: statsFor(running)};
     });
+  }
+
+  // ---------- 1b. Streaks, single-game highs and career milestones ----------
+  const HIT_MILESTONES = [10, 25, 50, 75, 100, 150, 200, 300];
+  const totalBases = s => s.h + s.h2 + 2 * s.h3 + 3 * s.hr;
+
+  // Streaks over single games in order. A game with no at-bat (only walks or sacrifice flies) neither
+  // extends nor breaks a hitting streak; any game with a plate appearance counts for the on-base streak.
+  function streaks(games) {
+    const run = {hit: 0, onBase: 0}, best = {hit: 0, onBase: 0};
+    for (const g of games) {
+      if (g.summary) continue;
+      const s = g.stats;
+      if (s.ab > 0) run.hit = s.h > 0 ? run.hit + 1 : 0;
+      if (s.pa > 0) run.onBase = s.h + s.bb > 0 ? run.onBase + 1 : 0;
+      best.hit = Math.max(best.hit, run.hit);
+      best.onBase = Math.max(best.onBase, run.onBase);
+    }
+    return {hit: run.hit, onBase: run.onBase, bestHit: best.hit, bestOnBase: best.onBase};
+  }
+
+  function singleGameHighs(games) {
+    const single = games.filter(g => !g.summary);
+    const top = (key, value) => {
+      let bestGame = null;
+      for (const g of single) if (value(g.stats) > 0 && (!bestGame || value(g.stats) > value(bestGame.stats))) bestGame = g;
+      return bestGame ? {key, value: value(bestGame.stats), date: bestGame.date, tag: bestGame.tag} : null;
+    };
+    return [top('安打', s => s.h), top('全壘打', s => s.hr), top('壘打數', totalBases), top('保送', s => s.bb)].filter(Boolean);
+  }
+
+  // Career milestones reached in single games: every home run number and hit totals at fixed marks.
+  // Season summaries count toward the totals but are not games where a milestone happened.
+  function milestones(careerGames) {
+    const out = [];
+    let hr = 0, h = 0;
+    for (const g of careerGames) {
+      const s = g.stats;
+      if (!g.summary) {
+        for (let n = hr + 1; n <= hr + s.hr; n++) out.push({key: g.key, date: g.date, tag: g.tag, kind: 'hr', n, text: n === 1 ? '生涯首支全壘打' : `生涯第 ${n} 支全壘打`});
+        for (const mark of HIT_MILESTONES) if (h < mark && h + s.h >= mark) out.push({key: g.key, date: g.date, tag: g.tag, kind: 'h', n: mark, text: `生涯第 ${mark} 支安打`});
+      }
+      hr += s.hr;
+      h += s.h;
+    }
+    return out;
+  }
+
+  const careerGamesOf = name => playerGames(name, typeof allLogs !== 'undefined' ? allLogs : []);
+
+  function recordsHtml(name, games) {
+    const single = games.filter(g => !g.summary);
+    if (!single.length) return '';
+    const st = streaks(games);
+    const highs = singleGameHighs(games);
+    const career = careerGamesOf(name);
+    const marks = milestones(career).slice(-6).reverse();
+    const streakCell = (label, now, best) => `<div class="bg-slate-900/70 rounded-lg p-2 text-center">
+        <div class="text-[10px] text-slate-400">${label}</div>
+        <div class="font-mono font-black text-lg ${now >= 3 ? 'text-amber-300' : 'text-white'}">${now}<span class="text-xs text-slate-400 font-semibold"> 場</span></div>
+        <div class="text-[10px] text-slate-500">本期最長 ${best} 場</div>
+      </div>`;
+    return `<div class="grid grid-cols-1 md:grid-cols-3 gap-3" data-records>
+      <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 space-y-2">
+        <div class="text-[11px] text-slate-400">目前連續紀錄（本期，由最近一場往回算）</div>
+        <div class="grid grid-cols-2 gap-2">${streakCell('連續安打', st.hit, st.bestHit)}${streakCell('連續上壘', st.onBase, st.bestOnBase)}</div>
+      </div>
+      <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3">
+        <div class="text-[11px] text-slate-400 mb-1">本期單場最佳</div>
+        ${highs.length ? `<ul class="text-xs space-y-1">${highs.map(x => `<li class="flex justify-between gap-2"><span class="text-slate-300">${x.key}</span><span class="font-mono"><b class="text-white">${x.value}</b> <span class="text-slate-500">${esc(x.date)}</span></span></li>`).join('')}</ul>` : '<div class="text-xs text-slate-500">尚無</div>'}
+      </div>
+      <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3">
+        <div class="text-[11px] text-slate-400 mb-1">生涯里程碑（全部紀錄）</div>
+        ${marks.length ? `<ul class="text-xs space-y-1">${marks.map(m => `<li class="flex justify-between gap-2"><span class="${m.kind === 'hr' ? 'text-amber-300' : 'text-emerald-300'}">🏅 ${esc(m.text)}</span><span class="font-mono text-slate-500">${esc(m.date)}</span></li>`).join('')}</ul>` : '<div class="text-xs text-slate-500">尚未達成里程碑（首支全壘打、第 10 支安打起算）</div>'}
+      </div>
+    </div>`;
   }
 
   function sparkline(games) {
@@ -90,10 +166,12 @@
       return;
     }
     const {season, played, recentCount, recent, trend} = form(games);
+    const marksByGame = new Map();
+    for (const m of milestones(careerGamesOf(name))) marksByGame.set(m.key, [...(marksByGame.get(m.key) || []), m.text]);
     const rows = games.slice().reverse().map(g => `
       <tr class="hover:bg-slate-800/50 ${g.summary ? 'bg-slate-800/40' : ''}">
         <td class="p-2 font-mono whitespace-nowrap">${esc(g.date)}</td>
-        <td class="p-2 text-slate-300 whitespace-nowrap">${esc(gameLabel(g.tag))}${g.summary ? ' <span class="text-[10px] text-slate-400 border border-slate-600 rounded px-1">年度彙總</span>' : ''}</td>
+        <td class="p-2 text-slate-300 whitespace-nowrap">${esc(gameLabel(g.tag))}${g.summary ? ' <span class="text-[10px] text-slate-400 border border-slate-600 rounded px-1">年度彙總</span>' : ''}${(marksByGame.get(g.key) || []).map(t => ` <span class="text-[10px] text-amber-300 border border-amber-500/40 rounded px-1" data-milestone>🏅 ${esc(t)}</span>`).join('')}</td>
         <td class="p-2 text-center font-mono">${g.stats.pa}</td>
         <td class="p-2 text-center font-mono font-bold text-white">${g.stats.h}-${g.stats.ab}</td>
         <td class="p-2 text-center font-mono">${g.stats.h2}</td>
@@ -126,6 +204,7 @@
           ${sparkline(played) || '<div class="text-xs text-slate-500 mt-2">至少兩場才有走勢</div>'}
         </div>
       </div>
+      ${recordsHtml(name, games)}
       <div class="overflow-x-auto rounded-xl border border-slate-800" tabindex="0">
         <table class="w-full text-xs text-slate-200 min-w-[640px]">
           <thead class="bg-slate-950 text-slate-400">
@@ -463,6 +542,89 @@
       <p class="text-[11px] text-slate-500">依目前日期範圍與「納入常模」設定，與個人頁「逐場成績與近況」同一套分場與算法；年度彙總不列入逐場與近況，但會算進球員的「本期 OPS」。比分只有記了最終比分的場記賽事才有（0:0 視為未記比分）。本期不足 ${RECENT_GAMES + 1} 場時，近況等於全部單場，不判斷升降；近況打席未滿 10 標示小樣本。</p>`;
   }
 
+  // ---------- 2d. Attendance (overview page) ----------
+  // Games in the date range: finished scorebook games (lineups and substitutes count as appearances) plus
+  // manually logged games (a plate appearance counts). Season summaries are not games.
+  function attendance() {
+    const s = document.getElementById('filterStartDate')?.value || '';
+    const e = document.getElementById('filterEndDate')?.value || '';
+    const inRange = date => (!s || date >= s) && (!e || date <= e);
+    const games = new Map();
+    for (const game of (typeof allGames !== 'undefined' ? allGames : [])) {
+      if (!game || game.status === 'in_progress' || !inRange(game.date)) continue;
+      const players = new Map();
+      for (const b of getGameOrderedBatters(game)) if (!players.has(b.name)) players.set(b.name, b.isSub ? 'sub' : 'start');
+      games.set(game.id, {key: game.id, date: game.date, players});
+    }
+    for (const log of getFilteredLogs()) {
+      if (isSummaryTag(log.tag) || !(Number(log.pa) > 0)) continue;
+      const key = gameIdOf(log) || `${log.date}|${log.tag || ''}`;
+      if (gameIdOf(log)) continue; // scorebook games are counted from their lineups above
+      if (!games.has(key)) games.set(key, {key, date: log.date, players: new Map()});
+      games.get(key).players.set(log.name, 'log');
+    }
+    const ordered = [...games.values()].sort((a, b) => (a.date === b.date ? a.key.localeCompare(b.key) : a.date < b.date ? -1 : 1));
+    const roster = [...new Set(Object.values(typeof JERSEY_TO_NAME !== 'undefined' ? JERSEY_TO_NAME : {}))]
+      .filter(name => isOfficialTeamPlayer(name) && !isGuestPlayerName(name));
+    const rows = roster.map(name => {
+      let played = 0, start = 0, sub = 0, last = '', since = 0;
+      for (const g of ordered) {
+        const role = g.players.get(name);
+        if (role) { played++; if (role === 'start') start++; if (role === 'sub') sub++; last = g.date; since = 0; } else since++;
+      }
+      return {name, jersey: typeof NAME_TO_JERSEY !== 'undefined' ? NAME_TO_JERSEY[name] : undefined, played, start, sub, last, since: played ? since : ordered.length,
+        rate: ordered.length ? played / ordered.length : 0};
+    }).sort((a, b) => b.played - a.played || a.since - b.since || a.name.localeCompare(b.name));
+    const appearances = ordered.reduce((sum, g) => sum + [...g.players.keys()].filter(n => roster.includes(n)).length, 0);
+    return {games: ordered.length, rows, perGame: ordered.length ? appearances / ordered.length : 0, range: [s, e]};
+  }
+
+  function renderAttendance() {
+    const anchor = document.getElementById('summaryTableBody')?.closest('section');
+    if (!anchor) return;
+    let section = document.getElementById('insightAttendanceSection');
+    if (!section) {
+      section = document.createElement('section');
+      section.id = 'insightAttendanceSection';
+      section.className = 'bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4 backdrop-blur-sm';
+      anchor.after(section);
+    }
+    const a = attendance();
+    const range = a.range[0] || a.range[1] ? `${a.range[0] || '最早'} ～ ${a.range[1] || '最新'}` : '全部日期';
+    const head = `<div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
+        <span class="bg-teal-500/10 text-teal-400 border border-teal-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">ATTENDANCE</span>
+        <h3 class="text-base sm:text-lg font-black text-teal-200">出賽率</h3>
+        <span class="text-xs text-slate-400">${esc(range)}・共 ${a.games} 場${a.games ? `・平均每場 ${a.perGame.toFixed(1)} 位隊員上場` : ''}</span>
+      </div>`;
+    if (!a.games) {
+      section.innerHTML = `${head}<p class="text-xs text-slate-500">此日期範圍內沒有比賽紀錄。</p>`;
+      return;
+    }
+    const rows = a.rows.map(r => {
+      const pct = Math.round(r.rate * 100);
+      const color = pct >= 75 ? 'bg-emerald-500' : pct >= 50 ? 'bg-sky-500' : pct > 0 ? 'bg-amber-500' : 'bg-slate-700';
+      return `<tr class="hover:bg-slate-800/50" data-attendance-row>
+        <td class="p-2 whitespace-nowrap"><span class="text-slate-500 font-mono">${r.jersey !== undefined ? `#${esc(r.jersey)}` : ''}</span> <b class="text-slate-100">${esc(r.name)}</b></td>
+        <td class="p-2 text-center font-mono font-bold text-white">${r.played}／${a.games}</td>
+        <td class="p-2 min-w-[140px]"><div class="flex items-center gap-2"><div class="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden"><div class="${color} h-full rounded-full" style="width:${pct}%"></div></div><span class="font-mono text-xs w-10 text-right">${pct}%</span></div></td>
+        <td class="p-2 text-center font-mono">${r.start}</td>
+        <td class="p-2 text-center font-mono">${r.sub}</td>
+        <td class="p-2 text-center font-mono text-slate-300 whitespace-nowrap">${r.last ? esc(r.last) : '—'}</td>
+        <td class="p-2 text-center font-mono ${r.since >= 3 ? 'text-rose-300 font-bold' : 'text-slate-400'}">${r.since}</td>
+      </tr>`;
+    }).join('');
+    section.innerHTML = `${head}
+      <div class="overflow-x-auto rounded-xl border border-slate-800" tabindex="0">
+        <table class="w-full text-xs text-slate-200 min-w-[640px]" data-attendance>
+          <thead class="bg-slate-950 text-slate-400">
+            <tr><th class="p-2 text-left">隊員</th><th class="p-2">出賽／總場數</th><th class="p-2">出賽率</th><th class="p-2">先發</th><th class="p-2">替補</th><th class="p-2">最近出賽</th><th class="p-2">連續未出賽</th></tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/80">${rows}</tbody>
+        </table>
+      </div>
+      <p class="text-[11px] text-slate-500">依頁首日期範圍（可用學年按鈕切換學期）。場記賽事以先發打線與替補名單計算出場（未打到打席的替補也算）；手動補登以有打席計算，先發／替補欄只統計場記賽事。進行中的比賽與年度彙總不列入。只列正式隊員；支援選手不列入。</p>`;
+  }
+
   // ---------- 3. Post-game image ----------
   function gameSummary(game) {
     const ourRuns = {}, ourHits = {}, oppRuns = {};
@@ -500,6 +662,25 @@
     return {ourRuns, ourHits, oppRuns, maxInning, rows: batters.map(b => ({...b, ...box.get(b.name)}))};
   }
 
+  // Milestones reached and streaks alive as of this game, using everything recorded before it plus this
+  // game's own box score (so it works before the game is posted to the team logs).
+  const STREAK_SHOW = {hit: 3, onBase: 5};
+  function gameRecords(game, rows) {
+    const out = {marks: [], hitStreaks: [], onBaseStreaks: []};
+    const before = g => g.date < game.date || (g.date === game.date && g.key.localeCompare(game.id) < 0);
+    for (const r of rows) {
+      if (!r.pa || isGuestPlayerName(r.name)) continue;
+      const history = careerGamesOf(r.name).filter(g => g.key !== game.id && before(g));
+      const current = {key: game.id, date: game.date, tag: game.tag, summary: false, stats: {pa: r.pa, ab: r.ab, h: r.h, h2: r.h2, h3: r.h3, hr: r.hr, bb: r.bb}};
+      const games = [...history, current];
+      for (const m of milestones(games)) if (m.key === game.id) out.marks.push(`${r.name} ${m.text}`);
+      const st = streaks(games);
+      if (r.h > 0 && st.hit >= STREAK_SHOW.hit) out.hitStreaks.push(`${r.name} ${st.hit} 場`);
+      if (r.h + r.bb > 0 && st.onBase >= STREAK_SHOW.onBase) out.onBaseStreaks.push(`${r.name} ${st.onBase} 場`);
+    }
+    return out;
+  }
+
   function drawGameImage(game) {
     const s = gameSummary(game);
     const score = game.finalScore || {us: 0, opp: 0};
@@ -512,6 +693,10 @@
     if (multi.length) highlights.push(`多安打：${multi.join('、')}`);
     const rbi = s.rows.filter(r => r.rbi >= 2).map(r => `${r.name} ${r.rbi}分打點`);
     if (rbi.length) highlights.push(`打點：${rbi.join('、')}`);
+    const records = gameRecords(game, s.rows);
+    if (records.marks.length) highlights.push(`里程碑：${records.marks.join('、')}`);
+    if (records.hitStreaks.length) highlights.push(`連續安打：${records.hitStreaks.join('、')}`);
+    if (records.onBaseStreaks.length) highlights.push(`連續上壘：${records.onBaseStreaks.join('、')}`);
     const canvas = document.createElement('canvas');
     const c = canvas.getContext('2d');
     // Wrap highlight lines at "、" so long lists stay readable instead of being cut off.
@@ -690,6 +875,7 @@
   });
   after('renderSelectedGameReview', addImageButton);
   after('renderLuckRegressionChart', renderTeamGameLog);
+  after('renderSummaryTable', renderAttendance);
 
   // The first render happened before this file loaded.
   try {
@@ -698,8 +884,9 @@
     renderCompareNote(getFullAgg());
     renderCompareGameLog(getFullAgg());
     renderTeamGameLog(getAnalysisAgg());
+    renderAttendance();
     if (selectedReviewGameId) addImageButton(selectedReviewGameId);
   } catch (error) { console.error('[team-insights] init', error); }
 
-  window.teamInsights = {SAMPLE_PA, RECENT_GAMES, playerGames, form, teamGames, formBoard, gameSummary, drawGameImage, openImageModal};
+  window.teamInsights = {SAMPLE_PA, RECENT_GAMES, playerGames, form, teamGames, formBoard, streaks, milestones, gameRecords, attendance, gameSummary, drawGameImage, openImageModal};
 })();

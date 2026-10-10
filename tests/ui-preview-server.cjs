@@ -31,7 +31,8 @@ window.fetch = (input, options = {}) => {
       window.__previewWrites.push(file);
       if (window.__previewFailWrites) return Promise.resolve(new Response('{}', {status: 500}));
     }
-    return previewFetch('/__mock-api/' + file, {...options, headers: {'Content-Type': 'application/json'}});
+    const accept = (options.headers && (options.headers.Accept || options.headers.accept)) || '';
+    return previewFetch('/__mock-api/' + file, {...options, headers: {'Content-Type': 'application/json', 'X-Mock-Accept': accept}});
   }
   return previewFetch(input, options);
 };
@@ -48,7 +49,11 @@ http.createServer(async (req, res) => {
         stored.set(file, Buffer.from(JSON.parse(body).content, 'base64'));
       }
       res.writeHead(200, {'Content-Type': 'application/json', 'Cache-Control': 'no-store'});
-      res.end(JSON.stringify(req.method === 'PUT' ? {content:{sha:'isolated-preview-sha'}} : {sha: 'isolated-preview-sha', content: stored.get(file).toString('base64')}));
+      const data = stored.get(file);
+      // Like GitHub: the raw media type returns the file itself; JSON carries base64 content only up to 1 MB.
+      if (req.method !== 'PUT' && /vnd\.github\.raw/.test(req.headers['x-mock-accept'] || '')) { res.end(data); return; }
+      const large = data.length > (Number(process.env.UI_PREVIEW_INLINE_LIMIT) || 1024 * 1024);
+      res.end(JSON.stringify(req.method === 'PUT' ? {content:{sha:'isolated-preview-sha'}} : {sha: 'isolated-preview-sha', encoding: large ? 'none' : 'base64', content: large ? '' : data.toString('base64')}));
       return;
     }
     const filename = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));

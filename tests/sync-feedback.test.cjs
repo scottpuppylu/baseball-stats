@@ -94,6 +94,11 @@ for (const gamesSynced of [false, true]) {
           commitGamesToGitHub: async () => gamesSynced,
           commitLogsToGitHub: async () => logsSynced,
         });
+        if (name === 'saveEditedReviewGame') {
+          vm.runInContext('let reviewEditSnapshot = null; const FIELD_LOCATIONS = [];', ctx);
+          vm.runInContext(extract('function applyReviewFormToGame(', '\n    }'), ctx);
+          ctx.isInningOurBat = () => true;
+        }
         install(ctx, name);
         await ctx.window[name](name === 'deleteSingleLog' ? 'log_game_test_game_1' : 'test_game');
         assert.equal(ctx.messages.at(-1).type === 'error', !success);
@@ -161,4 +166,34 @@ test('names with quotes survive inside inline handlers', () => {
   let received;
   new vm.Script(decoded).runInNewContext({toggle: v => { received = v; }});
   assert.equal(received, `O'Neil "Jr" <b>`);
+});
+
+test('files over 1 MB are read through the raw media type instead of failing', async () => {
+  const calls = [];
+  const ctx = context({AbortController, setTimeout, clearTimeout, GITHUB_REPO: 'test', GITHUB_BRANCH: 'main', GITHUB_TOKEN: 'mock',
+    base64ToUtf8: value => Buffer.from(value, 'base64').toString('utf8'),
+    fetch: async (url, options) => {
+      const accept = options.headers.Accept;
+      calls.push(accept);
+      if (/raw/.test(accept)) return {ok: true, status: 200, text: async () => '[{"id":"big"}]'};
+      return {ok: true, status: 200, json: async () => (url.includes('small')
+        ? {sha: 's1', encoding: 'base64', content: Buffer.from('[{"id":"small"}]').toString('base64')}
+        : {sha: 's2', encoding: 'none', content: ''})};
+    }});
+  vm.runInContext(extract('async function fetchWithTimeout(', '\n    }'), ctx);
+  vm.runInContext(extract('async function fetchGitHubContent(', '\n    }'), ctx);
+  const small = await ctx.fetchGitHubContent('data/small.json');
+  assert.equal(JSON.stringify(small), '{"content":[{"id":"small"}],"sha":"s1"}');
+  assert.equal(calls.length, 1, 'small files need one request');
+  const big = await ctx.fetchGitHubContent('data/big.json');
+  assert.equal(JSON.stringify(big), '{"content":[{"id":"big"}],"sha":"s2"}', 'large file content comes from the raw response, sha from the metadata');
+  assert.match(calls.at(-1), /application\/vnd\.github\.raw/);
+});
+
+test('review editing keeps unsaved changes on a copy that cancel restores', () => {
+  assert.match(source, /reviewEditSnapshot = game \? \{ id: game\.id, json: JSON\.stringify\(game\) \}/);
+  for (const name of ['addPlayToReviewInning', 'deletePlayFromReviewInning', 'addDefenseEventToReviewInning', 'deleteDefenseEventFromReviewInning']) {
+    const body = extract(`window.${name} = function(`, '\n    };');
+    assert.match(body, /if \(isEditingReviewGame\) applyReviewFormToGame\(game\);/, `${name} keeps typed values`);
+  }
 });

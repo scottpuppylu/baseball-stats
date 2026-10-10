@@ -44,7 +44,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261010.0524</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261010.1349</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -2660,8 +2660,16 @@
       const res = await fetchWithTimeout(url, { headers }, timeoutMs);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const content = JSON.parse(base64ToUtf8(data.content));
-      return { content, sha: data.sha };
+      let text;
+      if (data.encoding === 'base64' && data.content) {
+        text = base64ToUtf8(data.content);
+      } else {
+        // Files over 1 MB come back without inline content; the raw media type of the same API serves up to 100 MB.
+        const raw = await fetchWithTimeout(url, { headers: { ...headers, 'Accept': 'application/vnd.github.raw' } }, Math.max(timeoutMs, 10000));
+        if (!raw.ok) throw new Error(`HTTP ${raw.status}`);
+        text = await raw.text();
+      }
+      return { content: JSON.parse(text), sha: data.sha };
     }
 
     async function fetchLocalContent(filePath, timeoutMs = 1500) {
@@ -4797,10 +4805,35 @@ window.toggleDiagnosticsCollapse = function() {
     }
 
 
+    // Each photo is turned into one short blob: URL and reused, instead of repeating ~11 KB of base64 per <img> on every render.
+    const avatarUrlCache = new Map();
+    function avatarSrc(data) {
+      if (!/^data:/.test(data)) return data;
+      let url = avatarUrlCache.get(data);
+      if (url) return url;
+      try {
+        const comma = data.indexOf(',');
+        const mime = (data.slice(0, comma).match(/^data:([^;,]+)/) || [])[1] || 'image/jpeg';
+        const binary = atob(data.slice(comma + 1));
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      } catch (e) {
+        return data;
+      }
+      // Drop URLs of photos that were replaced or cleared.
+      if (avatarUrlCache.size > Object.keys(playerAvatars).length + 8) {
+        const live = new Set(Object.values(playerAvatars));
+        for (const [key, value] of avatarUrlCache) if (!live.has(key)) { URL.revokeObjectURL(value); avatarUrlCache.delete(key); }
+      }
+      avatarUrlCache.set(data, url);
+      return url;
+    }
+
     function renderAvatarElement(name, sizeClass = 'w-10 h-10 text-sm') {
       const avatarData = playerAvatars[name];
       if (avatarData) {
-        return `<img src="${avatarData}" alt="${name}" class="${sizeClass} rounded-full object-cover border-2 border-sky-400/80 shadow-md shrink-0 transition duration-150">`;
+        return `<img src="${avatarSrc(avatarData)}" alt="${name}" class="${sizeClass} rounded-full object-cover border-2 border-sky-400/80 shadow-md shrink-0 transition duration-150">`;
       }
       const char = name ? name.substring(0, 1) : '航';
       return `
@@ -9861,8 +9894,30 @@ function renderCustomChart(agg) {
       renderSelectedGameReview(selectedReviewGameId);
     }
 
+    // Unsaved review edits live on a copy taken when editing starts; cancelling (or opening another game) puts it back.
+    let reviewEditSnapshot = null;
+    function restoreReviewEditSnapshot() {
+      const snap = reviewEditSnapshot;
+      reviewEditSnapshot = null;
+      isEditingReviewGame = false;
+      if (!snap) return;
+      const idx = allGames.findIndex(g => g.id === snap.id);
+      if (idx === -1 || JSON.stringify(allGames[idx]) === snap.json) return; // deleted, or nothing changed
+      allGames[idx] = JSON.parse(snap.json);
+      window.allGames = allGames;
+      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      syncAllGamesToTeamLogs();
+      renderAll();
+    }
+
     window.toggleEditCurrentReviewGame = function() {
-      isEditingReviewGame = !isEditingReviewGame;
+      if (isEditingReviewGame) {
+        restoreReviewEditSnapshot();
+      } else {
+        const game = allGames.find(g => g.id === selectedReviewGameId);
+        reviewEditSnapshot = game ? { id: game.id, json: JSON.stringify(game) } : null;
+        isEditingReviewGame = true;
+      }
       renderSelectedGameReview(selectedReviewGameId);
     };
 
@@ -9903,6 +9958,7 @@ function renderCustomChart(agg) {
     };
 
     window.renderSelectedGameReview = function(gameId) {
+      if (reviewEditSnapshot && reviewEditSnapshot.id !== gameId) restoreReviewEditSnapshot();
       selectedReviewGameId = gameId;
       const game = allGames.find(g => g.id === gameId);
       const container = document.getElementById('gameReviewDetailContainer');
@@ -10289,7 +10345,7 @@ function renderCustomChart(agg) {
             </td>
             <td class="p-2 text-center">
               <select id="edit_play_loc_${innIdx}_${playIdx}" class="bg-slate-900 border border-slate-700 text-sky-300 text-xs rounded px-2 py-1 font-bold">
-                ${['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'SF', 'RC', 'RF'].map(loc => `<option value="${loc}" ${loc === p.location ? 'selected' : ''}>${loc}</option>`).join('')}
+                ${(FIELD_LOCATIONS.includes(p.location) ? '' : `<option value="${p.location || ''}" selected>— 無落點</option>`) + FIELD_LOCATIONS.map(loc => `<option value="${loc}" ${loc === p.location ? 'selected' : ''}>${loc}</option>`).join('')}
               </select>
             </td>
             <td class="p-2 text-center">
@@ -10467,6 +10523,7 @@ function renderCustomChart(agg) {
     window.addPlayToReviewInning = function(gameId, innIdx) {
       const game = allGames.find(g => g.id === gameId);
       if (!game || !game.innings[innIdx]) return;
+      if (isEditingReviewGame) applyReviewFormToGame(game);
 
       const inn = game.innings[innIdx];
       inn.plateAppearances = inn.plateAppearances || [];
@@ -10494,6 +10551,7 @@ function renderCustomChart(agg) {
     window.deletePlayFromReviewInning = function(gameId, innIdx, playIdx) {
       const game = allGames.find(g => g.id === gameId);
       if (!game || !game.innings[innIdx] || !game.innings[innIdx].plateAppearances) return;
+      if (isEditingReviewGame) applyReviewFormToGame(game);
 
       game.innings[innIdx].plateAppearances.splice(playIdx, 1);
       renderSelectedGameReview(gameId);
@@ -10503,6 +10561,7 @@ function renderCustomChart(agg) {
     window.addDefenseEventToReviewInning = function(gameId, innIdx) {
       const game = allGames.find(g => g.id === gameId);
       if (!game || !game.innings[innIdx]) return;
+      if (isEditingReviewGame) applyReviewFormToGame(game);
 
       const inn = game.innings[innIdx];
       inn.defensiveEvents = inn.defensiveEvents || [];
@@ -10524,16 +10583,17 @@ function renderCustomChart(agg) {
     window.deleteDefenseEventFromReviewInning = function(gameId, innIdx, defIdx) {
       const game = allGames.find(g => g.id === gameId);
       if (!game || !game.innings[innIdx] || !game.innings[innIdx].defensiveEvents) return;
+      if (isEditingReviewGame) applyReviewFormToGame(game);
 
       game.innings[innIdx].defensiveEvents.splice(defIdx, 1);
       renderSelectedGameReview(gameId);
       showToast('已移除該守備事件');
     };
 
-    window.saveEditedReviewGame = async function(gameId) {
-      const game = allGames.find(g => g.id === gameId);
-      if (!game) return;
-
+    const FIELD_LOCATIONS = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'SF', 'RC', 'RF'];
+    // Copies everything typed in the review editor into the game object (also used before adding or deleting a row,
+    // so re-rendering the form does not throw away values not yet saved).
+    function applyReviewFormToGame(game) {
       const oppInput = document.getElementById('editGameOpponent');
       const dateInput = document.getElementById('editGameDate');
       const tagInput = document.getElementById('editGameTag');
@@ -10564,7 +10624,7 @@ function renderCustomChart(agg) {
             if (bSel) p.batterName = bSel.value;
             if (rSel) p.result = rSel.value;
             if (tSel) p.trajectory = tSel.value;
-            if (lSel) p.location = lSel.value;
+            if (lSel && lSel.value) p.location = lSel.value; // the no-location option keeps the original value
             if (rbiInput) p.rbi = parseInt(rbiInput.value, 10) || 0;
             if (rInput) p.runsScored = parseInt(rInput.value, 10) || 0;
           });
@@ -10589,6 +10649,13 @@ function renderCustomChart(agg) {
           inn.hits = (inn.defensiveEvents || []).filter(cur => cur.type === 'HIT').length;
         }
       });
+    }
+
+    window.saveEditedReviewGame = async function(gameId) {
+      const game = allGames.find(g => g.id === gameId);
+      if (!game) return;
+
+      applyReviewFormToGame(game);
 
       localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
       const gamesSynced = await commitGamesToGitHub(allGames, `修改賽事紀錄(含投手數據): ${game.date} vs ${game.opponent}`);
@@ -10596,11 +10663,14 @@ function renderCustomChart(agg) {
       // 重新計算並自動綁定更新全隊打擊與投手賽伯計量
       syncAllGamesToTeamLogs();
       const logsSynced = await commitLogsToGitHub(allLogs, `連動更新賽事日誌: ${game.date} vs ${game.opponent}`);
+      // Once the cloud holds this version, cancelling must not roll back past it.
+      if (gamesSynced && reviewEditSnapshot && reviewEditSnapshot.id === game.id) reviewEditSnapshot.json = JSON.stringify(game);
       if (!gamesSynced || !logsSynced) {
         showSyncResult(false, '', '修改資料尚未完整同步；已保留本機變更，請再次點擊儲存重試。');
         return;
       }
 
+      reviewEditSnapshot = null;
       isEditingReviewGame = false;
       renderAll();
       renderGameReview();
@@ -10777,7 +10847,7 @@ function renderCustomChart(agg) {
   
     </script>
   <script src="ui-comfort.js?v=20261010-names"></script>
-  <script src="team-insights.js?v=20261010-teamlog"></script>
+  <script src="team-insights.js?v=20261010-records"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
   <script src="lineup-recommender.js?v=20261010-fixes"></script>
 </body>
