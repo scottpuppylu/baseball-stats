@@ -45,6 +45,25 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Glos
             total:document.documentElement.scrollHeight,header:document.getElementById('appHeader').getBoundingClientRect().height,
             start:panel.getBoundingClientRect().top+window.scrollY-(document.querySelector('#appWorkspace > div:not(.ui-page-heading):not(.ui-section-bar)')?.getBoundingClientRect().height||0)};
         });
+        // No sideways scrolling anywhere (the jump-chip row is navigation, not content), and every folded
+        // column comes back when its row is tapped — folding hides nothing for good.
+        const fold=await page.evaluate(()=>{
+          const panel=document.querySelector('[id^=panel]:not(.hidden)');
+          const sideways=[...panel.querySelectorAll('*')].filter(el=>{if(!el.getClientRects().length)return false;const o=getComputedStyle(el).overflowX;return (o==='auto'||o==='scroll')&&el.scrollWidth>el.clientWidth+4;}).map(el=>el.id||el.className.toString().slice(0,30));
+          const missing=[];
+          for(const t of [...panel.querySelectorAll('table.ui-fold-table')].filter(t=>t.getClientRects().length)){
+            const head=[...t.tHead.rows[0].cells];
+            const folded=head.filter(c=>c.classList.contains('ui-col-folded')).map(c=>c.textContent.trim());
+            const row=t.tBodies[0].rows[0];row.click();
+            const shown=[...row.nextElementSibling.querySelectorAll('.ui-detail-grid > div > span')].map(s=>s.textContent);
+            missing.push(...folded.filter(l=>!shown.includes(l)));
+            row.click();
+            if(row.nextElementSibling?.classList.contains('ui-row-detail'))missing.push('detail did not close');
+          }
+          return {sideways,missing};
+        });
+        assert.deepEqual(fold.sideways,[],`${width} ${name}: no sideways-scrolling content`);
+        assert.deepEqual(fold.missing,[],`${width} ${name}: folded columns all reachable by tapping a row`);
         assert.deepEqual(r.small,[],`${width} ${name}: every control is at least 36×36`);
         assert.deepEqual(r.zoom,[],`${width} ${name}: no field under 16px (iOS would zoom)`);
         assert.deepEqual(r.tiny,[],`${width} ${name}: no text under 11px`);
@@ -63,6 +82,29 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Glos
         assert.ok(Object.values(heights).every(h=>h.header<=110),'header at most two compact rows');
         assert.ok(Object.values(heights).every(h=>h.start<=280),'content starts in the top third of the screen');
       }
+      // A re-render with identical data rebuilds the rows; the phone layout must come back, not fall back to scrolling.
+      for(const t of ['Leaderboard','Analytics','Lineup']) {
+        await page.evaluate(t=>{switchMainTab(`tab${t}`);window.scrollTo(0,0);},t);
+        await page.waitForTimeout(200);
+        await page.evaluate(()=>renderAll()); // also re-renders the lineup tables
+        await page.waitForTimeout(300);
+        const after=await page.evaluate(()=>{const panel=document.querySelector('[id^=panel]:not(.hidden)');
+          return {sideways:[...panel.querySelectorAll('*')].filter(el=>{if(!el.getClientRects().length)return false;const o=getComputedStyle(el).overflowX;return (o==='auto'||o==='scroll')&&el.scrollWidth>el.clientWidth+4;}).length,
+            folded:[...panel.querySelectorAll('table.ui-fold-table')].filter(x=>x.getClientRects().length).every(x=>[...x.tBodies[0].rows].filter(r=>!r.classList.contains('ui-row-detail')).every(r=>r.querySelector('.ui-col-folded')))};});
+        assert.deepEqual(after,{sideways:0,folded:true},`${width} ${t}: phone layout survives a re-render`);
+      }
+      // The comparison table keeps both players side by side; attendance bars keep their length.
+      await page.evaluate(()=>{switchMainTab('tabCompare');window.scrollTo(0,0);});
+      await page.waitForTimeout(250);
+      const compare=await page.evaluate(()=>{const t=document.querySelector('#panelCompare table');return [...t.tHead.rows[0].cells].filter(c=>!c.classList.contains('ui-col-folded')&&c.getClientRects().length).map(c=>c.textContent.trim());});
+      assert.equal(compare.filter(l=>/^#\d+\s/.test(l)).length,2,`${width}: both players visible in the comparison (${compare})`);
+      assert.equal(await page.locator('[data-h2h-phone]').isVisible(),true,`${width}: two-player game list shown as phone blocks`);
+      await page.evaluate(()=>{switchMainTab('tabOverview');window.scrollTo(0,0);});
+      await page.waitForTimeout(250);
+      const bars=await page.evaluate(()=>[...document.querySelectorAll('[data-attendance-row]')].slice(0,6).map(row=>{
+        const fill=row.querySelector('[style*="width:"]');const track=fill.parentElement;
+        return {pct:parseFloat(fill.style.width),ratio:fill.getBoundingClientRect().width/track.getBoundingClientRect().width,height:fill.getBoundingClientRect().height};}));
+      for(const b of bars) assert.ok(Math.abs(b.ratio*100-b.pct)<=2&&b.height<=10,`${width}: attendance bar ${JSON.stringify(b)}`);
       // Folded glossary card opens on tap and shows its English name and full explanation.
       await page.evaluate(()=>{switchMainTab('tabGlossary');window.scrollTo(0,0);});
       await page.waitForTimeout(250);
@@ -144,6 +186,8 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Glos
     assert.equal(await desk.locator('.ui-section-bar').isVisible(),false,'no jump bar on desktop');
     assert.equal(await desk.locator('.ui-back-top').isVisible(),false,'no back-to-top on desktop');
     assert.equal(await desk.evaluate(()=>document.querySelectorAll('.ui-sticky-cols').length),0,'no pinned columns on desktop');
+    assert.equal(await desk.evaluate(()=>document.querySelectorAll('.ui-fold-table, .ui-card-table, .ui-wrap-table, .ui-col-folded').length),0,'desktop tables are never folded');
+    assert.equal(await desk.evaluate(()=>{switchMainTab('tabCompare');return document.querySelector('[data-h2h-phone]').getClientRects().length;}),0,'desktop keeps the full two-player table');
     await desk.close();
     fs.writeFileSync(path.join(output,'mobile-comfort-report.json'),JSON.stringify(report,null,2));
     console.log(JSON.stringify({passed:true,chips:report[390],output}));

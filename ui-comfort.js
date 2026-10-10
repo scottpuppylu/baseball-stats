@@ -404,6 +404,117 @@
       if (card.querySelectorAll('p').length >= 2) foldable(card);
     });
   }
+  // ---------- Phone tables: no sideways scrolling ----------
+  // A wide table keeps its name column(s) plus the most useful columns that fit the screen; tapping a row
+  // opens the rest underneath as label–value pairs. Tables with one or two rows become a full card instead.
+  // Tables with form fields (editing) or merged body cells keep sideways scrolling.
+  const KEY_COLUMNS = ['當前排行指標', '出賽率', '出賽／總場數', '近況 OPS', '差距', '狀態', '安打-打數', '單場 OPS', 'OPS', 'wRC+', '打擊率', 'AVG',
+    '領先優勢', '安打', '打點', '打數', '累計 OPS', '比分', '打席', '全壘打', '保送', '三振', 'sFIP', '局數 (IP)'];
+  const keyRank = label => {
+    // A column headed by a player (「#30 洪銘駿」, the two sides of a comparison) is what the table is about.
+    if (/^#\d+\s/.test(label)) return -1;
+    const exact = KEY_COLUMNS.indexOf(label);
+    if (exact !== -1) return exact;
+    const partial = KEY_COLUMNS.findIndex(key => label.includes(key));
+    return partial === -1 ? 100 : partial + 50;
+  };
+  const headerLabels = table => {
+    const row = table.tHead && table.tHead.rows[table.tHead.rows.length - 1];
+    return row ? [...row.cells].map(cell => cell.textContent.replace(/\s+/g, ' ').trim()) : [];
+  };
+  const bodyRows = table => [...(table.tBodies[0]?.rows || [])].filter(row => !row.classList.contains('ui-row-detail'));
+  function foldTables() {
+    document.querySelectorAll('.ui-table-scroll table').forEach(table => {
+      const area = table.closest('.ui-table-scroll');
+      const rows = bodyRows(table);
+      const labels = headerLabels(table);
+      const signature = `${phone()}|${area.clientWidth}|${rows.length}|${rows[0]?.textContent.length || 0}|${labels.join('|')}`;
+      // Same table and still laid out: a re-render that rebuilt the rows (same size, new cells) must be redone.
+      const intact = (!table.classList.contains('ui-fold-table') || rows.every(row => row.querySelector('.ui-col-folded'))) &&
+        (!table.classList.contains('ui-card-table') || rows.every(row => row.cells.length === 1 || row.cells[0].dataset.label !== undefined));
+      if (table.dataset.uiFoldSig === signature && intact) return;
+      table.dataset.uiFoldSig = signature;
+      table.querySelectorAll('.ui-col-folded').forEach(cell => cell.classList.remove('ui-col-folded'));
+      table.querySelectorAll('.ui-row-detail').forEach(row => row.remove());
+      table.classList.remove('ui-fold-table', 'ui-card-table', 'ui-wrap-table');
+      // The overview summary has its own column picker (重點表現／全部欄位…), which already fits a phone.
+      const usable = phone() && !table.closest('#viewSummary') && labels.length >= 3 && table.tHead.rows.length === 1 && rows.length > 0 &&
+        !table.querySelector('input, select, textarea') && rows.every(row => row.cells.length === labels.length) && area.scrollWidth > area.clientWidth + 4;
+      const hint = area.previousElementSibling?.classList.contains('ui-table-hint') ? area.previousElementSibling : null;
+      if (hint) hint.textContent = '左右滑動查看完整欄位';
+      // An empty table (a single message row) needs no wide header on a phone.
+      if (phone() && rows.length && rows.every(row => row.cells.length === 1 && row.cells[0].colSpan > 1)) { table.classList.add('ui-card-table'); return; }
+      if (!usable) return;
+      // Small tables first try to fit by letting text wrap; nothing is folded if that works.
+      if (labels.length <= 5) {
+        table.classList.add('ui-wrap-table');
+        if (area.scrollWidth <= area.clientWidth + 2) return;
+        table.classList.remove('ui-wrap-table');
+      }
+      if (rows.length <= 2) {
+        // One or two rows (a single pitcher, a summary): every value as a labelled card.
+        table.classList.add('ui-card-table');
+        rows.forEach(row => [...row.cells].forEach((cell, i) => { cell.dataset.label = labels[i]; }));
+        return;
+      }
+      table.classList.add('ui-measure'); // natural column widths, without the table's desktop min-width
+      // Column width = its data, but never so narrow that a short header (「全壘打」) breaks into one character per line.
+      const headerRoom = label => Math.min(64, label.length * 12 + 16);
+      const widths = labels.map((label, i) => Math.max(headerRoom(label), ...rows.map(row => row.cells[i].getBoundingClientRect().width)));
+      table.classList.remove('ui-measure');
+      // A slot / rank first column always brings the name next to it; the name column wraps at about 120px.
+      const slotFirst = widths[0] < 72 || /^(棒次|名次|#|排名)$/.test(labels[0]);
+      const identity = slotFirst && labels.length > 3 ? [0, 1] : [0];
+      const NAME_MAX = 150;
+      // Only a real name column wraps (a player with avatar, or the metric names of a comparison); dates do not.
+      const last = identity[identity.length - 1];
+      const nameCol = /^(選手|球員|隊員|打者|評比指標)$/.test(labels[last]) || rows.some(row => row.cells[last].querySelector('img, .rounded-full'));
+      let used = identity.reduce((sum, i) => sum + (i === last && nameCol ? Math.min(widths[i], NAME_MAX) : widths[i]), 0);
+      const keep = new Set(identity);
+      // A single game's box score reads as at-bats, hits and RBI rather than rates.
+      const boxScore = labels.includes('打席歷程') && labels.includes('打數');
+      const BOX = ['打數', '安打', '打點', '得分', '三振', '保送'];
+      labels.map((label, i) => ({i, rank: boxScore && BOX.includes(label) ? -0.5 + BOX.indexOf(label) / 10 : keyRank(label)})).filter(c => !keep.has(c.i)).sort((a, b) => a.rank - b.rank || a.i - b.i)
+        .forEach(c => { if (used + widths[c.i] <= area.clientWidth - 18) { keep.add(c.i); used += widths[c.i]; } });
+      if (keep.size === labels.length) { table.classList.add('ui-wrap-table'); return; } // everything fits once the desktop min-width goes
+      table.classList.add('ui-fold-table');
+      table.style.setProperty('--ui-name-max', `${NAME_MAX}px`);
+      if (nameCol) table.dataset.uiNameCol = String(last + 1); else delete table.dataset.uiNameCol;
+      [table.tHead.rows[0], ...rows].forEach(row => [...row.cells].forEach((cell, i) => cell.classList.toggle('ui-col-folded', !keep.has(i))));
+      if (hint) hint.textContent = `點一列查看其他 ${labels.length - keep.size} 項數據`;
+    });
+  }
+  // Tapping a folded row shows its hidden columns right below it.
+  workspace.addEventListener('click', event => {
+    const row = event.target.closest('table.ui-fold-table tbody tr:not(.ui-row-detail)');
+    if (!row || event.target.closest('button, a, select, input')) return;
+    const next = row.nextElementSibling;
+    if (next && next.classList.contains('ui-row-detail')) { next.remove(); row.classList.remove('ui-row-open'); return; }
+    const table = row.closest('table');
+    const labels = headerLabels(table);
+    const detail = document.createElement('tr');
+    detail.className = 'ui-row-detail';
+    const cell = document.createElement('td');
+    cell.colSpan = labels.length;
+    const grid = document.createElement('div');
+    grid.className = 'ui-detail-grid';
+    [...row.cells].forEach((source, i) => {
+      if (!source.classList.contains('ui-col-folded')) return;
+      const item = document.createElement('div');
+      if (source.textContent.trim().length > 18) item.className = 'ui-detail-wide';
+      const label = document.createElement('span');
+      label.textContent = labels[i];
+      const value = document.createElement('b');
+      value.innerHTML = source.innerHTML; // the site's own cell markup (colours, badges)
+      item.append(label, value);
+      grid.append(item);
+    });
+    cell.append(grid);
+    detail.append(cell);
+    row.after(detail);
+    row.classList.add('ui-row-open');
+  });
+
   // On phones the sync text gives way to the status dot (which opens the same message); the dot takes its colour,
   // so a failed upload still shows red at a glance.
   const statusDot = document.querySelector('.ui-header-brand button[onclick="showCloudStatusToast()"] span');
@@ -422,7 +533,7 @@
   const queueComfort = () => {
     if (comfortQueued) return;
     comfortQueued = true;
-    requestAnimationFrame(() => { comfortQueued = false; densify(); buildSections(); stickyColumns(); });
+    requestAnimationFrame(() => { comfortQueued = false; densify(); buildSections(); foldTables(); stickyColumns(); });
   };
   window.addEventListener('resize', placeDateToggle);
   placeDateToggle();

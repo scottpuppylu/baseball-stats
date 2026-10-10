@@ -346,6 +346,21 @@
         ${compareCells(ga, gb)}${compareCells(gb, ga)}
       </tr>`;
     }).join('');
+    // Phone version of the same table: one block per game, each player on one line (every value kept).
+    const phoneLine = (name, color, game, other) => {
+      if (!game) return `<div class="flex justify-between gap-2"><span style="color:${color}">● ${esc(name)}</span><span class="text-slate-500">未出賽</span></div>`;
+      const st = game.stats;
+      const win = other && !game.summary && st.ops > other.stats.ops;
+      return `<div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5"><span style="color:${color}" class="font-bold">● ${esc(name)}</span>
+        <span class="font-mono text-slate-200"><b class="text-white">${st.h}-${st.ab}</b>　HR ${st.hr}　BB ${st.bb}　K ${st.k}　OPS <b class="${win ? 'text-emerald-300' : ''}">${game.summary ? '—' : rate(st.ops)}${win ? ' ▲' : ''}</b></span></div>`;
+    };
+    const phoneList = keys.slice().reverse().map(k => {
+      const g = all.get(k), ga = byKeyA.get(k), gb = byKeyB.get(k);
+      return `<div class="py-2 space-y-1" data-h2h-phone-row>
+        <div class="text-[11px] text-slate-400 font-mono">${esc(g.date)}・${esc(gameLabel(g.tag))}${g.summary ? '・年度彙總' : ''}</div>
+        ${phoneLine(a, COLORS.a, ga, gb)}${phoneLine(b, COLORS.b, gb, ga)}
+      </div>`;
+    }).join('');
     const sub = '<th class="p-2">安打-打數</th><th class="p-2">全壘打</th><th class="p-2">保送</th><th class="p-2">三振</th><th class="p-2">單場 OPS</th>';
     section.innerHTML = `${head}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -364,7 +379,7 @@
           ${dualSparkline(timeline, byKeyA, byKeyB) || '<div class="text-xs text-slate-500 mt-2">至少兩場才有走勢</div>'}
         </div>
       </div>
-      <div class="overflow-x-auto rounded-xl border border-slate-800" tabindex="0">
+      <div class="overflow-x-auto rounded-xl border border-slate-800 ui-wide-only" tabindex="0">
         <table class="w-full text-xs text-slate-200 min-w-[760px]">
           <thead class="bg-slate-950 text-slate-400">
             <tr><th class="p-2 text-left" rowspan="2">日期</th><th class="p-2 text-left" rowspan="2">賽事</th>
@@ -374,6 +389,7 @@
           <tbody class="divide-y divide-slate-800/80">${rows}</tbody>
         </table>
       </div>
+      <div class="ui-phone-only rounded-xl border border-slate-800 px-3 divide-y divide-slate-800/80 text-xs" data-h2h-phone>${phoneList}</div>
       <p class="text-[11px] text-slate-500">依目前日期範圍；與個人頁「逐場成績與近況」同一套分場與算法。▲ 為同場單場 OPS 較高者；「近況較熱」為近 ${RECENT_GAMES} 場 OPS 相差 .050 以上的一方。年度彙總不列入近況、走勢與同場比較。</p>`;
   }
 

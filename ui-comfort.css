@@ -68,6 +68,13 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
 .ui-column-toolbar[hidden] { display: none; }
 .ui-column-hidden { display: none !important; }
 .ui-section-bar, .ui-back-top { display: none; }
+/* Phone table folding (classes are only ever set on phones). */
+.ui-col-folded { display: none !important; }
+.ui-phone-only { display: none; }
+table.ui-measure { min-width: 0 !important; width: auto !important; }
+/* Headers wrap while measuring and when folded, so the data (not a long title or photo) sets column widths. */
+table.ui-measure thead th, table.ui-fold-table thead th, table.ui-measure thead th *, table.ui-fold-table thead th * { white-space: normal !important; }
+table.ui-measure thead th img, table.ui-fold-table thead th img { display: none; }
 .ui-touch-detail {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   z-index: 80; width: min(92vw, 560px); padding: 14px 44px 14px 16px;
@@ -303,7 +310,8 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
   main .h-56 { height: 190px !important; }
   /* Tables: tighter rows, smaller avatars. */
   .ui-table-scroll td, .ui-table-scroll th { padding: 6px 7px; }
-  .ui-table-scroll td :is(img, div).rounded-full { width: 28px !important; height: 28px !important; font-size: 11px; }
+  /* Avatars only (photo, or the initial on a gradient) — progress bars are rounded too. */
+  .ui-table-scroll td :is(img.rounded-full.object-cover, div.rounded-full.bg-gradient-to-br) { width: 28px !important; height: 28px !important; font-size: 11px; }
   .ui-table-scroll td.space-x-3 > :not([hidden]) ~ :not([hidden]), .ui-table-scroll td .space-x-3 > :not([hidden]) ~ :not([hidden]) { margin-left: 7px; }
   /* Profile bio: photo on the left, name and tags beside it (was a tall centred column). The photo stays large enough
      to recognise (120px, see 手機頭像後續調整) and the camera stays outside it. */
@@ -341,6 +349,43 @@ main > div > section { border-color: var(--ui-line) !important; box-shadow: 0 8p
   /* Attendance cards a little tighter. */
   #attendanceGrid { gap: 6px !important; }
   #attendanceGrid > * { padding: 7px !important; }
+  /* Wide tables without sideways scrolling: key columns stay, a tap opens the rest under the row. */
+  table.ui-fold-table, table.ui-card-table, table.ui-wrap-table { min-width: 0 !important; width: 100% !important; }
+  /* Only the label column wraps; badges, values and names stay on one line. */
+  .ui-wrap-table tr > :first-child, .ui-wrap-table tr > :first-child * { white-space: normal !important; }
+  .ui-wrap-table th { white-space: normal !important; word-break: keep-all; }
+  .ui-wrap-table td:not(:first-child) span { white-space: nowrap !important; }
+  .ui-wrap-table td { padding-top: 5px; padding-bottom: 5px; }
+  .ui-fold-table[data-ui-name-col="1"] tr > :nth-child(1), .ui-fold-table[data-ui-name-col="2"] tr > :nth-child(2) { max-width: var(--ui-name-max, 150px); white-space: normal !important; word-break: keep-all; }
+  .ui-fold-table[data-ui-name-col="1"] tr > :nth-child(1) *, .ui-fold-table[data-ui-name-col="2"] tr > :nth-child(2) * { white-space: normal !important; word-break: keep-all; }
+  .ui-fold-table tbody tr:not(.ui-row-detail) { cursor: pointer; }
+  .ui-fold-table tbody tr:not(.ui-row-detail) > td:first-child { position: relative; padding-left: 18px !important; }
+  .ui-fold-table tbody tr:not(.ui-row-detail) > td:first-child::before { content: '▸'; position: absolute; left: 5px; top: 50%; transform: translateY(-50%); color: #7dd3fc; font-size: 11px; }
+  .ui-fold-table tbody tr.ui-row-open > td:first-child::before { content: '▾'; }
+  .ui-fold-table tbody tr.ui-row-open > td { background-color: #13233b; }
+  .ui-fold-table thead tr > :first-child { padding-left: 18px !important; }
+  .ui-row-detail > td { background: #0b1527; padding: 8px 10px 10px !important; white-space: normal !important; text-align: left !important; }
+  .ui-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px 10px; }
+  .ui-detail-grid > div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .ui-detail-grid span { color: #8ea2bb; font-size: 11px; line-height: 1.25; }
+  .ui-detail-grid b { font-weight: 600; font-size: 13px; color: #e2e8f0; white-space: normal; overflow-wrap: anywhere; }
+  .ui-detail-grid b * { white-space: normal !important; }
+  .ui-detail-grid > .ui-detail-wide { grid-column: 1 / -1; }
+  /* One- or two-row tables become labelled cards. */
+  .ui-card-table thead { display: none; }
+  .ui-card-table tbody, .ui-card-table tbody tr { display: block; width: 100%; }
+  .ui-card-table tbody tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; padding: 10px; }
+  .ui-card-table tbody tr + tr { border-top: 1px solid #22324a; }
+  .ui-card-table tbody td { display: flex; flex-direction: column; gap: 1px; padding: 0 !important; text-align: left !important; white-space: normal !important; min-width: 0; }
+  .ui-card-table tbody td::before { content: attr(data-label); color: #8ea2bb; font-size: 11px; font-weight: 400; line-height: 1.25; }
+  .ui-card-table tbody td:first-child { grid-column: 1 / -1; }
+  /* Sections that ship their own phone layout. */
+  .ui-phone-only { display: block; }
+  .ui-wide-only { display: none !important; }
+  /* Card strips that used to scroll sideways become grids. */
+  #teamSummaryCards { grid-auto-flow: row !important; grid-template-columns: 1fr 1fr !important; grid-auto-columns: auto !important; overflow: visible !important; padding: 0 !important; gap: 7px !important; }
+  #teamSummaryCards > div { min-height: 0 !important; padding: 9px 10px !important; }
+  #playerProfileCard > .grid { grid-auto-flow: row !important; grid-template-columns: 1fr !important; grid-auto-columns: auto !important; overflow: visible !important; padding-bottom: 0 !important; gap: 7px !important; }
   /* Bottom bar a little slimmer. */
   .ui-mobile-nav { padding-top: 5px; padding-bottom: calc(5px + env(safe-area-inset-bottom)); }
   .ui-mobile-nav button { min-height: 48px; gap: 2px; font-size: 11px; }
