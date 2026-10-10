@@ -25,7 +25,8 @@ fs.mkdirSync(output,{recursive:true});
         const camera=await portrait.locator(':scope > :last-child').boundingBox();
         assert.ok(photo.width>=120 && photo.height>=120,'portrait should be large enough to recognize');
         if(width<768) {
-          assert.ok(camera.x>=photo.x+photo.width,'camera must not overlap portrait');
+          // Beside or below the photo, never on top of it.
+          assert.ok(camera.x>=photo.x+photo.width||camera.y>=photo.y+photo.height,'camera must not overlap portrait');
           assert.ok(camera.x+camera.width<=width,'camera remains inside viewport');
           assert.equal(await portrait.locator(':scope > :nth-child(2)').isVisible(),false,'touch hover overlay must not obscure portrait');
         }

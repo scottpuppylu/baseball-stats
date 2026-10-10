@@ -24,7 +24,7 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Glos
       page.on('pageerror',e=>errors.push(e.message));
       await page.goto(url);
       await page.waitForFunction(()=>window.PlayerDiagnostics&&allLogs.some(l=>String(l.id).startsWith('log_game_')));
-      const pages={};
+      const pages={}, heights={};
       for(const [tab,sub] of PAGES) {
         const name=tab+(sub?`-${sub}`:'');
         await page.evaluate(([t,s])=>{switchMainTab(`tab${t}`);if(s)switchScorebookSubTab(s);window.scrollTo(0,0);},[tab,sub]);
@@ -41,7 +41,9 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Glos
           const bar=document.querySelector('.ui-section-bar');
           return {small:targets.map(el=>`${el.tagName}:${(el.textContent||'').trim().slice(0,10)}`),zoom:fields.map(el=>el.id||el.tagName),tiny:tiny.slice(0,5),
             overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
-            chips:bar.hidden?[]:[...bar.querySelectorAll('button')].map(b=>b.textContent)};
+            chips:bar.hidden?[]:[...bar.querySelectorAll('button')].map(b=>b.textContent),
+            total:document.documentElement.scrollHeight,header:document.getElementById('appHeader').getBoundingClientRect().height,
+            start:panel.getBoundingClientRect().top+window.scrollY-(document.querySelector('#appWorkspace > div:not(.ui-page-heading):not(.ui-section-bar)')?.getBoundingClientRect().height||0)};
         });
         assert.deepEqual(r.small,[],`${width} ${name}: every control is at least 36×36`);
         assert.deepEqual(r.zoom,[],`${width} ${name}: no field under 16px (iOS would zoom)`);
@@ -50,7 +52,26 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Glos
         if(LONG.includes(tab)) assert.ok(r.chips.length>=2,`${width} ${name}: section jump bar (${r.chips})`);
         assert.ok(r.chips.every(c=>c.length<=11),`${width} ${name}: short chip labels`);
         pages[name]=r.chips.length;
+        heights[name]=r;
       }
+      // Density: compact header, content soon after it, and every long page clearly shorter than before the
+      // density pass (390 px heights measured on the same fixture, 2026/10/10).
+      if(width===390) {
+        const BEFORE={Overview:2851,Profile:6757,Leaderboard:2249,Analytics:5183,Compare:5120,Lineup:7667,'Scorebook-live':1924,'Scorebook-review':2588,Pitching:2255,Glossary:7906};
+        for(const [name,before] of Object.entries(BEFORE)) assert.ok(heights[name].total<=before*0.9,`${name}: ${heights[name].total}px vs ${before}px before`);
+        assert.ok(heights.Glossary.total<=BEFORE.Glossary*0.65,'glossary folds to an index');
+        assert.ok(Object.values(heights).every(h=>h.header<=110),'header at most two compact rows');
+        assert.ok(Object.values(heights).every(h=>h.start<=280),'content starts in the top third of the screen');
+      }
+      // Folded glossary card opens on tap and shows its English name and full explanation.
+      await page.evaluate(()=>{switchMainTab('tabGlossary');window.scrollTo(0,0);});
+      await page.waitForTimeout(250);
+      const card=page.locator('#panelGlossary .grid > .ui-fold').first();
+      const hiddenBefore=await card.evaluate(c=>[...c.querySelectorAll('p')].slice(1).every(p=>getComputedStyle(p).display==='none'));
+      await card.click();
+      const opened=await card.evaluate(c=>({open:c.classList.contains('ui-open'),expanded:c.getAttribute('aria-expanded'),shown:[...c.querySelectorAll('p')].every(p=>getComputedStyle(p).display!=='none')}));
+      assert.ok(hiddenBefore,'folded card hides the explanation');
+      assert.deepEqual(opened,{open:true,expanded:'true',shown:true},'tapping a card opens it');
       // Jump bar: sticky, lands each section just under itself and marks it; back-to-top returns to 0.
       await page.evaluate(()=>{switchMainTab('tabProfile');window.scrollTo(0,0);});
       await page.waitForTimeout(250);

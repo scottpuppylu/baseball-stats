@@ -365,12 +365,67 @@
       if (two) table.style.setProperty('--ui-sticky-left', `${Math.round(left)}px`);
     });
   }
+  // ---------- Phone density: fold long text, drop decorative labels ----------
+  // Section descriptions and glossary explanations fold to a couple of lines; a tap opens them.
+  // Elements are marked once (data-ui-density), so re-runs only touch new content.
+  const toggleOpen = event => {
+    const el = event.currentTarget;
+    if (event.target.closest('button, a, select, input, label, summary') && event.target.closest('button, a, select, input, label, summary') !== el) return;
+    el.classList.toggle('ui-open');
+    el.setAttribute('aria-expanded', String(el.classList.contains('ui-open')));
+  };
+  const foldable = el => {
+    el.classList.add('ui-fold');
+    el.setAttribute('aria-expanded', 'false');
+    el.addEventListener('click', toggleOpen);
+  };
+  function densify() {
+    const main = workspace.querySelector('main');
+    if (!main || !phone()) return;
+    // Uppercase English badge pills (「SCOUTING & TACTICAL ADVISORY」…) repeat the Chinese title next to them.
+    main.querySelectorAll('span.rounded-full:not([data-ui-density])').forEach(span => {
+      span.dataset.uiDensity = '';
+      if (/^[A-Z0-9 &:+\-./()·]{4,}$/.test(span.textContent.trim()) && span.closest('section') && span.parentElement.querySelector('h2, h3')) span.classList.add('ui-deco');
+    });
+    // The grey description under a section title.
+    main.querySelectorAll('p.text-xs.text-slate-400:not([data-ui-density])').forEach(p => {
+      p.dataset.uiDensity = '';
+      const block = p.parentElement;
+      if (block && !p.closest('details') && block.querySelector(':scope > div h2, :scope > div h3, :scope > h2, :scope > h3') && p.textContent.trim().length > 26) foldable(p);
+    });
+    // Long bullet lists (the lineup model notes) fold to a few lines.
+    main.querySelectorAll('ul.list-disc:not([data-ui-density])').forEach(ul => {
+      ul.dataset.uiDensity = '';
+      if (ul.children.length >= 4 && !ul.closest('details')) foldable(ul); // inside <details> it is already folded
+    });
+    // Glossary cards: title and formula stay, the explanation folds.
+    document.querySelectorAll('#panelGlossary .grid > div:not([data-ui-density])').forEach(card => {
+      card.dataset.uiDensity = '';
+      if (card.querySelectorAll('p').length >= 2) foldable(card);
+    });
+  }
+  // On phones the sync text gives way to the status dot (which opens the same message); the dot takes its colour,
+  // so a failed upload still shows red at a glance.
+  const statusDot = document.querySelector('.ui-header-brand button[onclick="showCloudStatusToast()"] span');
+  const paintDot = () => { if (statusDot) statusDot.style.background = getComputedStyle(syncBadge).color; };
+  new MutationObserver(paintDot).observe(syncBadge, {attributes: true, attributeFilter: ['class']});
+  paintDot();
+  // On phones the date toggle joins the tool row instead of taking a header row of its own.
+  const toolRow = document.querySelector('#uiHeaderTools > div:last-child');
+  const dateHome = dateToggle.parentElement, dateNext = dateToggle.nextSibling;
+  function placeDateToggle() {
+    if (phone() && toolRow && dateToggle.parentElement !== toolRow) toolRow.append(dateToggle);
+    else if (!phone() && dateToggle.parentElement !== dateHome) dateHome.insertBefore(dateToggle, dateNext);
+  }
+
   let comfortQueued = false;
   const queueComfort = () => {
     if (comfortQueued) return;
     comfortQueued = true;
-    requestAnimationFrame(() => { comfortQueued = false; buildSections(); stickyColumns(); });
+    requestAnimationFrame(() => { comfortQueued = false; densify(); buildSections(); stickyColumns(); });
   };
+  window.addEventListener('resize', placeDateToggle);
+  placeDateToggle();
   new MutationObserver(queueComfort).observe(workspace, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
   window.addEventListener('resize', queueComfort);
 
