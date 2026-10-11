@@ -296,7 +296,7 @@
   }
 
   // Replace the original renderer (renderAll and the mode selector both call the global name).
-  window.renderDiagnostics = renderDiagnostics;
+  window.siteHooks.replace('renderDiagnostics', 'player-diagnostics', renderDiagnostics);
   document.getElementById('diagnosticsCardsContainer')?.addEventListener('click', event => {
     const target = event.target.closest('[data-diag-player]');
     if (!target) return;

@@ -19,7 +19,7 @@ const contexts = [];
   for (const [width, height] of sizes) {
     const context = await browser.newContext({viewport: {width,height}, isMobile: width < 768, hasTouch: width < 1024});
     contexts.push(context);
-    await context.addInitScript(games => localStorage.setItem('rebas_all_games', JSON.stringify(games)), JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'games.json'), 'utf8')));
+    await context.addInitScript(games => localStorage.setItem('rebas_all_games', JSON.stringify(games)), JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'data', 'games.json'), 'utf8')));
     await context.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//, route => { externalGitHub++; return route.abort(); });
     const page = await context.newPage();
     const errors = [];

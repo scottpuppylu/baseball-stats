@@ -21,17 +21,19 @@ function context(extra = {}) {
   const ctx = {
     window: {}, messages, statuses, removed, activeGame: game, allGames: [game], allLogs: [],
     selectedReviewGameId: game.id, isEditingReviewGame: true, pendingLogins: new Set(),
-    document: { getElementById: () => null },
+    document: { getElementById: () => null, querySelectorAll: () => [] },
     localStorage: { setItem() {}, removeItem: key => removed.push(key) },
     showToast: (message, type) => messages.push({ message, type }),
     setStatusBadge: (message, type) => statuses.push({ message, type }),
     confirm: () => true, renderAll() {}, renderLiveScorer() {}, renderGameReview() {},
     renderSelectedGameReview() {}, switchScorebookSubTab() {}, syncAllGamesToTeamLogs() {},
-    commitGamesToGitHub: async () => true, rememberCloudBase() {},
+    commitGamesToGitHub: async () => true, rememberCloudBase() {}, DATA_BRANCH: 'data',
     ...extra,
   };
   vm.createContext(ctx);
   vm.runInContext(extract('function showSyncResult(', '\n    }'), ctx);
+  // Text safety helpers used by loaders and form handlers.
+  for (const name of ['hasUnsafeText', 'rejectUnsafeText', 'sanitizeLoadedData']) vm.runInContext(extract(`function ${name}(`, '\n    }'), ctx);
   return ctx;
 }
 function install(ctx, name) {

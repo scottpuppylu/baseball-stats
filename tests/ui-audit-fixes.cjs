@@ -40,7 +40,7 @@ const output=process.env.UI_QA_OUTPUT||path.join(os.tmpdir(),'baseball-ui-qa');
     report.logs={excludedPa:excluded.before-excluded.after,restored:true,identicalFields:true};
     // 4: cloud failure falls back to static, then to cache, then to a declared failure; toast names the affected data.
     const fail=r=>r.fulfill({status:500,body:'{}'});
-    await page.route('**/__mock-api/data/games.json',fail);
+    await page.route('**/__mock-api/data/games.json?*',fail);
     await page.evaluate(()=>loadLogsFromGitHub());
     const partial=await page.locator('#syncStatusBadge').textContent();
     assert.doesNotMatch(partial,/雲端已同步/);assert.match(partial,/賽事.*備援/);
@@ -52,7 +52,7 @@ const output=process.env.UI_QA_OUTPUT||path.join(os.tmpdir(),'baseball-ui-qa');
     const failed=await page.evaluate(async()=>{localStorage.removeItem('rebas_all_games');return loadGamesFromGitHub();});
     assert.equal(failed,'failed');
     await page.unroute('**/data/games.json?*',fail);
-    await page.unroute('**/__mock-api/data/games.json',fail);
+    await page.unroute('**/__mock-api/data/games.json?*',fail);
     await page.evaluate(()=>loadLogsFromGitHub());
     assert.match(await page.locator('#syncStatusBadge').textContent(),/雲端已同步/);
     report.loading={partial,cache:cached,failed};

@@ -205,7 +205,7 @@
     lastResult = {items, sim, targetSize};
     return {items, hasDh: isDhEnabled, targetSize, model: sim};
   }
-  window.calculateRecommendedLineup = recommend;
+  window.siteHooks.replace('calculateRecommendedLineup', 'lineup-recommender', recommend);
   window.calculateLegacyRecommendedLineup = legacyRecommend;
 
   // Same model for any order (the custom lineup analyzer): expected runs, PA and third-PA chance per slot,
@@ -367,15 +367,8 @@
       </div>`;
   }
 
-  const after = (name, hook) => {
-    const original = window[name];
-    if (typeof original !== 'function') return;
-    window[name] = function (...args) {
-      const result = original.apply(this, args);
-      try { hook(...args); } catch (error) { console.error(`[lineup-recommender] ${name}`, error); }
-      return result;
-    };
-  };
+  // Runs after the site's renderer (registered on index.html's siteHooks; see siteHooks.list()).
+  const after = (name, hook) => window.siteHooks.after(name, 'lineup-recommender', hook);
   after('renderLineupAnalysis', agg => {
     if (!agg.players.length) { lastResult = null; document.getElementById('customLineupModelCard')?.remove(); }
     renderSummary();

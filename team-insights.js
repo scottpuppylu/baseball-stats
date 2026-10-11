@@ -1084,15 +1084,8 @@
   }
 
   // ---------- Hooks: run after the original renderers, never instead of them ----------
-  const after = (name, hook) => {
-    const original = window[name];
-    if (typeof original !== 'function') return;
-    window[name] = function (...args) {
-      const result = original.apply(this, args);
-      try { hook(...args); } catch (error) { console.error(`[team-insights] ${name}`, error); }
-      return result;
-    };
-  };
+  // Runs after the site's renderer (registered on index.html's siteHooks; see siteHooks.list()).
+  const after = (name, hook) => window.siteHooks.after(name, 'team-insights', hook);
   after('renderPlayerProfile', agg => {
     renderProfileNote(agg);
     renderGameLog(agg.players.some(p => p.name === selectedPlayerName) ? selectedPlayerName : '');

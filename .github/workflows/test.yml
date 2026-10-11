@@ -1,0 +1,32 @@
+# Runs the full test suite (unit tests and every browser test against the isolated preview) on each code change.
+# The team's data lives on the `data` branch, so data uploads from the site do not trigger this workflow.
+name: tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Chinese fonts (layout checks measure text)
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+      - run: npm ci
+      # Tests use the runner's preinstalled Google Chrome (Playwright channel "chrome"); no browser download.
+      - run: npm test
+      - name: Screenshots and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-qa
+          path: ${{ runner.temp }}/baseball-ui-qa
+          if-no-files-found: ignore
+    env:
+      UI_QA_OUTPUT: ${{ runner.temp }}/baseball-ui-qa

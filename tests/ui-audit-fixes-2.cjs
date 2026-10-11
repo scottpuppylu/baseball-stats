@@ -24,7 +24,7 @@ let externalGitHub = 0;
     console.log(`▶ ${name}`);
     const errors = [], writes = [];
     const state = {failPut: new Set(), failGet: new Set(), files: new Map()};
-    for (const f of fs.readdirSync(path.join(root, 'data'))) state.files.set(`data/${f}`, fs.readFileSync(path.join(root, 'data', f)));
+    for (const f of fs.readdirSync(path.join(root, 'tests', 'fixtures', 'data'))) state.files.set(`data/${f}`, fs.readFileSync(path.join(root, 'tests', 'fixtures', 'data', f)));
     page.on('pageerror', e => errors.push(e.message));
     await page.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//, r => { externalGitHub++; return r.abort(); });
     await page.route('**/__mock-api/**', async route => {
@@ -42,7 +42,11 @@ let externalGitHub = 0;
       const data = state.files.get(file);
       return route.fulfill({status: 200, contentType: 'application/json', body: raw ? data.toString() : JSON.stringify({sha: 'memory-only', encoding: 'base64', content: data.toString('base64')})});
     });
-    await page.addInitScript(() => { window.confirm = () => true; window.__auditAlerts = []; window.alert = s => window.__auditAlerts.push(s); });
+    await page.addInitScript(() => {
+      window.confirm = () => true;
+      // Messages that used to be alert() are toasts since 2026/10/11; __lastToast() reads the newest one.
+      window.__lastToast = () => [...document.querySelectorAll('#globalToastContainer span')].at(-1)?.textContent || '';
+    });
     try {
       await page.goto(url);
       await page.waitForFunction(() => window.teamRecords && !document.getElementById('syncStatusBadge').textContent.includes('連線同步中'));
@@ -97,7 +101,7 @@ let externalGitHub = 0;
     });
     await check('3-registration-retry', async page => {
       await page.evaluate(() => { __previewFailWrites = true; reg_jersey.value = '77'; reg_name.value = '重試新人'; reg_date.value = '2026-10-11'; addPlayerForm.dispatchEvent(new Event('submit', {cancelable: true})); });
-      await page.waitForFunction(() => __auditAlerts.length > 0);
+      await page.waitForFunction(() => __lastToast().includes('失敗'));
       assert.equal(await page.locator('#reg_name').inputValue(), '重試新人');
       await page.evaluate(() => { __previewFailWrites = false; addPlayerForm.dispatchEvent(new Event('submit', {cancelable: true})); });
       await page.waitForFunction(() => allLogs.some(l => l.id.startsWith('reg_') && l.name === '重試新人'), null, {timeout: 5000});
@@ -116,25 +120,36 @@ let externalGitHub = 0;
       assert.ok(result.available.teamNames.includes('盧宣嘉')); assert.ok(!result.available.guestNames.includes('盧宣嘉'));
       assert.equal(writes.some(w => w.file === 'data/guests.json'), false);
       // All five entry points stop before assigning the rejected name or closing the modal.
-      const callers = await page.evaluate(() => {
+      const callers = await page.evaluate(async () => {
+        // Fill the guest form with the official player's name and submit it.
+        const answer = async pending => {
+          await new Promise(resolve => setTimeout(resolve, 0));
+          const dialog = document.getElementById('uiFormDialog');
+          dialog.querySelector('[data-dialog-field="0"]').value = '盧宣嘉';
+          dialog.querySelector('[data-dialog-field="1"]').value = '99';
+          dialog.querySelector('form').requestSubmit();
+          await pending;
+        };
         guestInputName.value = '盧宣嘉'; submitAddGuestForm({preventDefault() {}});
         activeGame = window.activeGame = JSON.parse(JSON.stringify(allGames[0])); activeGame.currentBatterIdx = 0;
-        const original = JSON.stringify(activeGame); window.prompt = text => text.includes('背號') ? '99' : '盧宣嘉';
-        openSubstituteModal(); substituteNewPlayerSelect.value = '__NEW_GUEST__'; confirmSubstitution();
+        const original = JSON.stringify(activeGame);
+        openSubstituteModal(); substituteNewPlayerSelect.value = '__NEW_GUEST__'; await answer(confirmSubstitution());
         const subUnchanged = JSON.stringify(activeGame) === original && !substituteModal.classList.contains('hidden'); closeSubstituteModal();
-        const pitchBefore = JSON.stringify(activeGame); changeDefensePitcher('__NEW_GUEST_PITCHER__');
-        const setupBefore = JSON.stringify(setupLineupList); updateSetupLineupSlot(0, '__ADD_GUEST__');
-        openPitcherChangeModal(); const modalBefore = JSON.stringify(activeGame); handleModalNewPitcherChange('__NEW_GUEST_PITCHER__');
-        return {input: guestInputName.value, subUnchanged, pitchUnchanged: JSON.stringify(activeGame) === pitchBefore, setupUnchanged: JSON.stringify(setupLineupList) === setupBefore, modalUnchanged: JSON.stringify(activeGame) === modalBefore && !pitcherChangeModal.classList.contains('hidden')};
+        const pitchBefore = JSON.stringify(activeGame); await answer(changeDefensePitcher('__NEW_GUEST_PITCHER__'));
+        renderSetupLineupGrid(); // the grid fills an empty lineup to full length; the snapshot is taken after that
+        const setupBefore = JSON.stringify(setupLineupList); await answer(updateSetupLineupSlot(0, "__ADD_GUEST__"));
+        openPitcherChangeModal(); const modalBefore = JSON.stringify(activeGame); await answer(handleModalNewPitcherChange('__NEW_GUEST_PITCHER__'));
+        return {input: guestInputName.value, subUnchanged, pitchUnchanged: JSON.stringify(activeGame) === pitchBefore, setupUnchanged: JSON.stringify(setupLineupList) === setupBefore, modalUnchanged: JSON.stringify(activeGame) === modalBefore && !pitcherChangeModal.classList.contains('hidden'),
+          dialogClosed: !document.getElementById('uiFormDialog')};
       });
-      assert.equal(callers.input, '盧宣嘉'); assert.ok(callers.subUnchanged && callers.pitchUnchanged && callers.setupUnchanged && callers.modalUnchanged);
+      assert.equal(callers.input, "盧宣嘉"); assert.ok(callers.subUnchanged && callers.pitchUnchanged && callers.setupUnchanged && callers.modalUnchanged && callers.dialogClosed);
     });
     await check('5-manual-validation', async (page, state, writes) => {
       await page.evaluate(() => { new_date.value = '2026-10-11'; new_jersey.value = '30'; new_tag.value = '隔離補登'; new_pa.value = '3'; new_h1.value = '4'; ['new_bb', 'new_sf', 'new_h2', 'new_h3', 'new_hr', 'new_k'].forEach(id => document.getElementById(id).value = '0'); addLogForm.dispatchEvent(new Event('submit', {cancelable: true})); });
-      assert.equal(writes.length, 0); assert.match(await page.evaluate(() => __auditAlerts.at(-1)), /安打/);
+      assert.equal(writes.length, 0); assert.match(await page.evaluate(() => __lastToast()), /安打/);
       for (const [field, value, message] of [['new_h1', '-1', /整數/], ['new_h1', '1.5', /整數/], ['new_bb', '4', /保送/], ['new_k', '3', /三振/]]) {
         await page.evaluate(([f, v]) => { new_h1.value = '1'; new_bb.value = '0'; new_k.value = '0'; document.getElementById(f).value = v; addLogForm.dispatchEvent(new Event('submit', {cancelable: true})); }, [field, value]);
-        assert.equal(writes.length, 0); assert.match(await page.evaluate(() => __auditAlerts.at(-1)), message);
+        assert.equal(writes.length, 0); assert.match(await page.evaluate(() => __lastToast()), message);
       }
       await page.evaluate(() => { new_h1.value = '1'; new_k.value = '1'; addLogForm.dispatchEvent(new Event('submit', {cancelable: true})); });
       await page.waitForFunction(() => allLogs.some(l => l.tag === '隔離補登'));
@@ -215,7 +230,7 @@ let externalGitHub = 0;
     });
     await check('12-bubble-zero', async page => {
       const values = await page.evaluate(() => { customChartType.value = 'bubble'; customXVar.value = 'avg'; customYVar.value = 'ops'; customZVar.value = 'hr'; const agg = getFullAgg(); const zero = agg.players.find(p => p.hr === 0); renderCustomChart(agg); const c = Chart.getChart('customChart'); const point = c.data.datasets[0].data.find(p => p.name === zero.name); const tooltip = c.options.plugins.tooltip.callbacks.label({raw: point}); zero.hr = null; renderCustomChart(agg); const missing = Chart.getChart('customChart'); const m = missing.data.datasets[0].data.find(p => p.name === zero.name); return {point, tooltip, min: Math.min(...c.data.datasets[0].data.map(p => p.r)), missing: missing.options.plugins.tooltip.callbacks.label({raw: m})}; });
-      assert.equal(values.point.rawZ, 0); assert.equal(values.point.r, values.min); assert.match(values.tooltip, /hr: 0/); assert.match(values.missing, /hr: --/);
+      assert.equal(values.point.rawZ, 0); assert.equal(values.point.r, values.min); assert.match(values.tooltip, /全壘打 \(HR\) 0$/); assert.match(values.missing, /全壘打 \(HR\) —$/);
     });
     await check('13-unused-z', async page => {
       const values = await page.evaluate(() => ['scatter', 'dual_axis'].map(type => { customChartType.value = type; customXVar.value = 'avg'; customYVar.value = 'ops'; const counts = ['hr', 'xba'].map(z => { customZVar.value = z; renderCustomChart(getFullAgg()); const c = Chart.getChart('customChart'); return type === 'scatter' ? c.data.datasets[0].data.length : c.data.labels.length; }); const disabled = customZVar.disabled; customChartType.value = 'bubble'; renderCustomChart(getFullAgg()); return {counts, disabled, restored: !customZVar.disabled, selected: customZVar.value}; }));

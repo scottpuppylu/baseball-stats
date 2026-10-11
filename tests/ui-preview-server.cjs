@@ -1,18 +1,29 @@
 // Local QA only: redact the credential and route all GitHub traffic into memory.
 // No requests or writes are sent to GitHub; no data/*.json files are modified.
+// The data comes from the frozen copy in tests/fixtures/data, so tests do not drift when the team's real data changes.
+// Like the real repository, the cloud has two branches: `data` (where the site reads and writes) and `main` (the site code
+// plus the data as it was before the 2026/10/11 move; pages opened before the move may still write there).
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
+const fixtures = path.join(__dirname, 'fixtures', 'data');
 const port = Number(process.env.UI_PREVIEW_PORT || 54321);
-const stored = new Map();
-// Like GitHub: every version of a file has its own sha, and an upload must name the version it replaces.
+// Like GitHub: every version of a file has its own sha (also usable as a blob id), and an upload must name the version it replaces.
 const shaOf = data => crypto.createHash('sha1').update(data).digest('hex');
+const branches = {data: new Map(), main: new Map()};
+const blobs = new Map();
+const put = (branch, file, data) => { branches[branch].set(file, data); blobs.set(shaOf(data), data); };
 for (const name of ['logs', 'games', 'avatars', 'tags', 'defense', 'guests']) {
-  const filename = path.join(root, 'data', `${name}.json`);
-  if (fs.existsSync(filename)) stored.set(`data/${name}.json`, fs.readFileSync(filename));
+  const filename = path.join(fixtures, `${name}.json`);
+  if (!fs.existsSync(filename)) continue;
+  put('data', `data/${name}.json`, fs.readFileSync(filename));
+  put('main', `data/${name}.json`, fs.readFileSync(filename));
 }
+// The marker the site keeps on the data branch: the main-branch versions already merged in (here: the starting copies).
+put('data', 'data/legacy-main.json', Buffer.from(JSON.stringify(Object.fromEntries([...branches.main].map(([file, data]) => [file, shaOf(data)])), null, 2)));
+
 const injection = `<script>
 window.__previewWrites = [];
 window.__previewFailWrites = false;
@@ -29,42 +40,69 @@ const previewFetch = window.fetch.bind(window);
 window.fetch = (input, options = {}) => {
   const url = String(input);
   if (/^https:\\/\\/(api\\.github\\.com|raw\\.githubusercontent\\.com)\\//.test(url)) {
-    const file = url.includes('/contents/') ? url.split('/contents/')[1].split('?')[0] : url.split('/main/')[1]?.split('?')[0];
+    const parsed = new URL(url);
+    let file, ref = parsed.searchParams.get('ref') || 'data', accept = (options.headers && (options.headers.Accept || options.headers.accept)) || '';
+    if (parsed.hostname === 'raw.githubusercontent.com') {
+      const parts = parsed.pathname.split('/'); // /owner/repo/branch/path...
+      ref = parts[3]; file = parts.slice(4).join('/'); accept = 'application/vnd.github.raw';
+    } else if (parsed.pathname.includes('/git/blobs/')) {
+      file = '__blob/' + parsed.pathname.split('/git/blobs/')[1];
+    } else {
+      file = parsed.pathname.split('/contents/')[1];
+    }
     if (options.method === 'PUT') {
       window.__previewWrites.push(file);
       if (window.__previewFailWrites) return Promise.resolve(new Response('{}', {status: 500}));
     }
-    const accept = (options.headers && (options.headers.Accept || options.headers.accept)) || '';
-    return previewFetch('/__mock-api/' + file, {...options, headers: {'Content-Type': 'application/json', 'X-Mock-Accept': accept}});
+    return previewFetch('/__mock-api/' + file + '?ref=' + encodeURIComponent(ref), {...options, headers: {'Content-Type': 'application/json', 'X-Mock-Accept': accept}});
   }
   return previewFetch(input, options);
 };
 </script>`;
+const json = (res, status, body) => res.writeHead(status, {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}).end(JSON.stringify(body));
 http.createServer(async (req, res) => {
   try {
-    const pathname = decodeURIComponent(new URL(req.url, `http://localhost:${port}`).pathname);
+    const parsed = new URL(req.url, `http://localhost:${port}`);
+    const pathname = decodeURIComponent(parsed.pathname);
     if (pathname.startsWith('/__mock-api/')) {
       const file = pathname.slice('/__mock-api/'.length);
-      if (!stored.has(file) && req.method !== 'PUT') { res.writeHead(404).end('{}'); return; }
-      if (req.method === 'PUT') {
-        let body = '';
-        for await (const chunk of req) body += chunk;
-        const put = JSON.parse(body);
-        // 422: the file exists but no sha was sent; 409: the sha is an older version (another device wrote in between).
-        if (stored.has(file) && !put.sha) { res.writeHead(422, {'Content-Type': 'application/json'}).end(JSON.stringify({message: 'sha was not supplied'})); return; }
-        if (stored.has(file) && put.sha !== shaOf(stored.get(file))) { res.writeHead(409, {'Content-Type': 'application/json'}).end(JSON.stringify({message: 'is at a newer version'})); return; }
-        stored.set(file, Buffer.from(put.content, 'base64'));
+      if (file.startsWith('__blob/')) {
+        const data = blobs.get(file.slice('__blob/'.length));
+        return data ? json(res, 200, {encoding: 'base64', content: data.toString('base64')}) : json(res, 404, {});
       }
-      res.writeHead(200, {'Content-Type': 'application/json', 'Cache-Control': 'no-store'});
-      const data = stored.get(file);
+      let body = null;
+      if (req.method === 'PUT') {
+        let text = '';
+        for await (const chunk of req) text += chunk;
+        body = JSON.parse(text);
+      }
+      const ref = (body && body.branch) || parsed.searchParams.get('ref') || 'data';
+      const store = branches[ref];
+      if (!store) return json(res, 404, {message: 'No commit found for the ref'});
+      // A folder: the listing GitHub gives (name, path, sha per file).
+      if (req.method !== 'PUT' && !file.endsWith('.json')) {
+        const entries = [...store].filter(([name]) => name.startsWith(file + '/')).map(([name, data]) => ({type: 'file', name: path.basename(name), path: name, sha: shaOf(data)}));
+        return entries.length ? json(res, 200, entries) : json(res, 404, {});
+      }
+      if (!store.has(file) && req.method !== 'PUT') return json(res, 404, {});
+      if (req.method === 'PUT') {
+        // 422: the file exists but no sha was sent; 409: the sha is an older version (another device wrote in between).
+        if (store.has(file) && !body.sha) return json(res, 422, {message: 'sha was not supplied'});
+        if (store.has(file) && body.sha !== shaOf(store.get(file))) return json(res, 409, {message: 'is at a newer version'});
+        put(ref, file, Buffer.from(body.content, 'base64'));
+      }
+      const data = store.get(file);
       // Like GitHub: the raw media type returns the file itself; JSON carries base64 content only up to 1 MB.
-      if (req.method !== 'PUT' && /vnd\.github\.raw/.test(req.headers['x-mock-accept'] || '')) { res.end(data); return; }
+      if (req.method !== 'PUT' && /vnd\.github\.raw/.test(req.headers['x-mock-accept'] || '')) {
+        res.writeHead(200, {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}).end(data);
+        return;
+      }
       const large = data.length > (Number(process.env.UI_PREVIEW_INLINE_LIMIT) || 1024 * 1024);
-      res.end(JSON.stringify(req.method === 'PUT' ? {content:{sha: shaOf(data)}} : {sha: shaOf(data), encoding: large ? 'none' : 'base64', content: large ? '' : data.toString('base64')}));
-      return;
+      return json(res, 200, req.method === 'PUT' ? {content: {sha: shaOf(data)}} : {sha: shaOf(data), encoding: large ? 'none' : 'base64', content: large ? '' : data.toString('base64')});
     }
-    const filename = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
-    if (!filename.startsWith(root + path.sep) || !fs.existsSync(filename) || fs.statSync(filename).isDirectory()) {
+    // The site's own data/ folder (the last fallback) is the frozen fixture copy as well.
+    const filename = pathname.startsWith('/data/') ? path.join(fixtures, path.basename(pathname)) : path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
+    if (!(filename.startsWith(root + path.sep)) || !fs.existsSync(filename) || fs.statSync(filename).isDirectory()) {
       res.writeHead(404).end('Not found'); return;
     }
     let content = fs.readFileSync(filename);

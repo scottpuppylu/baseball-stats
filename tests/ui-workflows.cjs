@@ -25,7 +25,7 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     const context = await browser.newContext({viewport:{width,height},hasTouch:width<1024});
     contexts.push(context);
     await context.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//, route => route.abort());
-    await context.addInitScript(games => localStorage.setItem('rebas_all_games', JSON.stringify(games)), JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','games.json'),'utf8')));
+    await context.addInitScript(games => localStorage.setItem('rebas_all_games', JSON.stringify(games)), JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures','data','games.json'),'utf8')));
     await context.addInitScript(() => { window.confirm = () => true; window.alert = () => {}; });
     const page = await context.newPage();
     const errors = [];

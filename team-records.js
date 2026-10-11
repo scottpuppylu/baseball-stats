@@ -333,30 +333,19 @@
     panel.className = 'hidden space-y-6';
     panel.addEventListener('click', openPlayer);
     glossaryPanel.before(panel);
-    const original = window.switchMainTab;
-    window.switchMainTab = function (tabId) {
-      // For an id it does not know, the site's own switch hides every page and resets every button.
-      const result = original.call(this, tabId);
+    // After the site's own switch (which, for an id it does not know, hides every page and resets every button).
+    window.siteHooks.after('switchMainTab', 'team-records', tabId => {
       const on = tabId === 'tabRecords';
       panel.classList.toggle('hidden', !on);
       button.className = on ? ACTIVE : INACTIVE;
       // Hidden, the page keeps no markup (about a hundred rows with photos); it re-renders when opened.
       if (on) renderRecordsPage(); else if (panel.firstChild) panel.innerHTML = '';
-      return result;
-    };
+    });
     button.addEventListener('click', () => switchMainTab('tabRecords'));
   }
 
   // ---------- Hooks ----------
-  const after = (name, hook) => {
-    const fn = window[name];
-    if (typeof fn !== 'function') return;
-    window[name] = function (...args) {
-      const result = fn.apply(this, args);
-      try { hook(...args); } catch (error) { console.error(`[team-records] ${name}`, error); }
-      return result;
-    };
-  };
+  const after = (name, hook) => window.siteHooks.after(name, 'team-records', hook);
   after('renderPlayerProfile', agg => renderProfileRecords(agg.players.some(p => p.name === selectedPlayerName) ? selectedPlayerName : ''));
   after('renderAll', () => { if (!document.getElementById(PAGE_ID)?.classList.contains('hidden')) renderRecordsPage(); });
   try { renderProfileRecords(selectedPlayerName); } catch (error) { console.error('[team-records] init', error); }

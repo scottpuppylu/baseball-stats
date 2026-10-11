@@ -228,7 +228,7 @@ const cloud = (page, file) => page.evaluate(async file => {
     assert.deepEqual([defense.C, defense['1B']], [['陳泓銘'], ['吳侑宸']]);
     // A write that loses a race between its read and its write (409) reads again and still keeps both.
     let raced = false;
-    await A.page.route('**/__mock-api/data/logs.json', async route => {
+    await A.page.route('**/__mock-api/data/logs.json?*', async route => {
       if (route.request().method() === 'PUT' && !raced) {
         raced = true;
         await B.page.evaluate(() => commitLogsToGitHub([...allLogs, {id: 'log_race_b', date: '2026-10-11', tag: '競速', name: '洪銘駿', jersey: 30, pa: 1, ab: 1, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0}], 'race'));

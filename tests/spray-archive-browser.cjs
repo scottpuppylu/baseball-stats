@@ -35,7 +35,7 @@ const {chromium}=require('playwright');
       const archived=counts();
       const reviews=original.map(game=>{
         renderSelectedGameReview(game.id);
-        return {points:document.querySelectorAll('#gameReviewDetailContainer svg circle').length,note:document.getElementById('gameReviewDetailContainer').textContent.includes('推估座標已封存')};
+        return {points:document.querySelectorAll('#gameReviewDetailContainer svg circle:has(title)').length,note:document.getElementById('gameReviewDetailContainer').textContent.includes('推估座標已封存')};
       });
       // An unarchived game still draws normally, including all result/player filters.
       const control=JSON.parse(JSON.stringify(original[0]));
@@ -46,7 +46,7 @@ const {chromium}=require('playwright');
       allGames=[...original,control];
       const withControl=counts();
       renderSelectedGameReview(control.id);
-      const controlReview=document.querySelectorAll('#gameReviewDetailContainer svg circle').length;
+      const controlReview=document.querySelectorAll('#gameReviewDetailContainer svg circle:has(title)').length;
       const filters=[];
       for(const filter of ['all','hits','extra','outs']) {
         document.getElementById('teamSprayTypeFilter').value=filter;
