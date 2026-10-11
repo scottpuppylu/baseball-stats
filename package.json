@@ -15,7 +15,10 @@
     "bot:dev": "wrangler dev --config bot/wrangler.jsonc --local",
     "bot:build": "wrangler deploy --dry-run --config bot/wrangler.jsonc --outdir .local/line-worker-dry-run",
     "bot:worker-smoke": "node bot/scripts/worker-smoke.cjs",
-    "bot:security": "node bot/scripts/security-scan.cjs && npm audit"
+    "bot:security": "node bot/scripts/security-scan.cjs && npm audit",
+    "bot:staging:build": "wrangler deploy --dry-run --config bot/wrangler.jsonc --env staging --outdir .local/line-staging-dry-run",
+    "bot:staging:deploy": "wrangler deploy --config bot/wrangler.jsonc --env staging",
+    "bot:staging:migrate": "wrangler d1 migrations apply DB --remote --config bot/wrangler.jsonc --env staging"
   },
   "devDependencies": {
     "@types/node": "24.10.0",

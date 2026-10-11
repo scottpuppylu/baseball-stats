@@ -5,6 +5,19 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { localDatabase } from "../src/local-db";
+import {parseConfigFileTextToJson} from "typescript";
+test("staging uses the same Worker and schema with independent DB and no initial group or push authorization",()=>{
+  const raw=readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8');
+  const parsed=parseConfigFileTextToJson('wrangler.jsonc',raw);assert.equal(parsed.error,undefined);
+  const config=parsed.config,staging=config.env.staging;
+  assert.equal(config.main,'src/worker.ts');assert.equal(staging.name,'tk-aero-line-group-bot-staging');
+  assert.equal(staging.d1_databases[0].binding,'DB');assert.equal(staging.d1_databases[0].database_name,'tk-aero-line-bot-staging');
+  assert.notEqual(staging.d1_databases[0].database_name,config.d1_databases[0].database_name);
+  for(const k of ['ENABLE_PUSH','ALLOW_PUBLIC_STATS'])assert.equal(staging.vars[k],'false');
+  for(const k of ['ALLOWED_GROUP_IDS','BOT_OWNER_USER_IDS'])assert.equal(staging.vars[k],'');
+  const read=(file:string)=>readFileSync(new URL(file,import.meta.url),'utf8').replace(/\r\n/g,'\n');
+  assert.equal(read('../migrations/0001_line_bot_v1.sql'),read('../schema.sql'));
+});
 test("frontend credential dependency removed, credential files ignored and deployment fails closed", () => {
   const index = readFileSync(
     new URL("../../index.html", import.meta.url),
@@ -23,7 +36,7 @@ test("frontend credential dependency removed, credential files ignored and deplo
   assert.match(config,/"ENABLE_PUSH"\s*:\s*"false"/);
   assert.match(config,/"ALLOWED_GROUP_IDS"\s*:\s*""/);
   assert.match(config,/"ALLOW_PUBLIC_STATS"\s*:\s*"false"/);
-  for (const file of [".env", "bot/.dev.vars", ".local/test.sqlite"])
+  for (const file of [".env", "bot/.dev.vars", "bot/.dev.vars.staging", ".local/test.sqlite"])
     assert.equal(
       execFileSync("git", ["check-ignore", file], { encoding: "utf8" }).trim(),
       file,

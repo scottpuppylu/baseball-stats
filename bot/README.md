@@ -2,6 +2,8 @@
 
 這是官方 Messaging API 群組 Bot。隊員在同一個一般群組輸入「選單」，使用 Flex Carousel、Postback、Quick Reply 與原生日期時間選擇器。主程式只有 `/health`、`/webhook` 與排程，沒有另建網站、Rich Menu 或一對一查詢依賴。
 
+目前部署任務請依 [Staging 部署與實機驗收](STAGING.md) 操作；它沿用此 Worker，使用獨立 Staging D1，不改正式網站部署。真實驗收結果與本機 Mock 結果分開記錄。
+
 ## 本機執行與驗證
 
 需要 Node.js 22.13+（本機 SQLite）或較新 LTS、npm；瀏覽器一致性與原網站測試需要 Google Chrome。
@@ -61,7 +63,7 @@ Invoke-RestMethod http://127.0.0.1:8788/mock/event -Method Post -ContentType 'ap
 
 ## 安全與正式資料寫入界線
 
-**先撤銷曾暴露的 GitHub Token。** 前端已移除可還原的憑證陣列與 GitHub 授權寫入；移除程式碼不等於撤銷憑證。擁有者必須到 GitHub token settings 撤銷舊 Token、檢查可存取 repo 與近期異常操作。不要在聊天中提供 Token。既有 Git 歷史沒有被重寫，歷史版本與已部署舊頁仍可能有洩漏。
+依擁有者本次部署定案，既有 GitHub Token 風險不作為 LINE Bot release blocker；本次不調查舊 Token、不要求撤銷才能部署、不重寫 Git 歷史。既有安全修改保留。新的 LINE／Cloudflare 憑證只使用 secrets，禁止提交公開 GitHub 或貼到聊天。
 
 網站的公開讀取、統計、分析、排棒、場記與本機保存保留；原雲端寫入改為同來源 `/api/documents/...`，目前這個 Bot Worker **沒有提供網站寫入 API**。因此，尚未部署另外的身分驗證與授權後端前，網站的雲端上傳／刪除會失敗並保留待同步狀態。這是明確的安全遷移界線，不能宣稱正式網站寫入已全部遷移完成。原有載入時自動合併 main 資料也已停用，防止未授權背景寫入。
 
@@ -93,7 +95,7 @@ Bot 的正式寫入全由已驗證 LINE 簽章的後端執行，再以群組 all
 - 原始基準：`origin/main` 的 `40f2c23cf086c7af2e4fc0ee222d6fe7b8ae6633`；新分支 `codex/line-group-bot-v1`。移除前端憑證後的安全 checkpoint 是 `checkpoint-line-safe-baseline-v1`（`60d51aa`），回退 Bot 請優先使用此版本。舊 OpenChat 工作另存 `codex/openchat-team-v1` 的 `3d3f50e`，不在此交付中。
 - 未部署：切回需要的原分支即可；不要丟棄目前未提交的其他工作。
 - 已部署：先 `ENABLE_PUSH=false`，停用個別比賽提醒或 Webhook，匯出 D1 備份，再回退到已驗證安全 Worker 版本；保留綁定、報名資料表與稽核，不自動刪除。
-- 不可把含舊 Token 的 index 重新公開。若要撤回 Bot 功能，保留前端移除憑證的安全修改；Token 必須仍保持撤銷。不要重寫 Git 歷史，也不要直接修改 main。
+- 本次不改正式網站部署、不重寫 Git 歷史、不直接修改 main。撤回 Bot 請依 Staging 文件使用已驗證的 Worker deployment version；Git 安全 checkpoint 不含 Worker，不能直接當 Worker 回滾產物。
 - 正式部署、D1 初始化、真實群組訊息與實機 Flex 圖形驗收尚待擁有者操作；本機測試通過不代表 LINE 實機已通過。
 
 官方參考：[群組功能](https://developers.line.biz/en/docs/messaging-api/group-chats/)、[簽章驗證](https://developers.line.biz/en/docs/messaging-api/verify-webhook-signature/)、[Flex Message](https://developers.line.biz/en/docs/messaging-api/using-flex-messages/)、[官方 Node SDK](https://line.github.io/line-bot-sdk-nodejs/)、[安全重試](https://developers.line.biz/en/docs/messaging-api/retrying-api-request/)。
