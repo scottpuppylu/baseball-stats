@@ -48,7 +48,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261011.0605</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261011.1546</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -2584,6 +2584,7 @@
         const { content, sha } = await fetchGitHubContent(filePath);
         apply(content, 'cloud');
         setSha(sha);
+        rememberCloudBase(filePath, sha, content);
         localStorage.setItem(storageKey, JSON.stringify(content));
         return 'cloud';
       } catch (err) {
@@ -2591,17 +2592,19 @@
           const cached = readStoredJson(storageKey, []);
           apply(Array.isArray(cached) ? cached : [], 'missing');
           setSha(null);
+          rememberCloudBase(filePath, null, Array.isArray(cached) ? cached : []);
           return 'missing';
         }
         try {
           const content = await fetchLocalContent(filePath);
           apply(content, 'static');
+          rememberCloudBase(filePath, null, content);
           localStorage.setItem(storageKey, JSON.stringify(content));
           return 'static';
         } catch (staticErr) {
           const cached = readStoredJson(storageKey, null);
           if (cached !== null) {
-            try { apply(cached, 'cache'); return 'cache'; } catch (cacheErr) { /* invalid cache */ }
+            try { apply(cached, 'cache'); rememberCloudBase(filePath, null, cached); return 'cache'; } catch (cacheErr) { /* invalid cache */ }
           }
           return 'failed';
         }
@@ -2617,36 +2620,13 @@
 
     async function commitGuestsToGitHub(updatedGuests, commitMessage = "update: sync guest players via portal") {
       try {
-        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GUESTS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
-        });
-        if (getShaRes.ok) {
-          const shaData = await getShaRes.json();
-          currentGuestsSha = shaData.sha;
-        } else {
-          currentGuestsSha = null;
+        const result = await commitJsonFile(GUESTS_FILE_PATH, updatedGuests, commitMessage, g => g.name);
+        currentGuestsSha = result.sha;
+        if (result.merged) {
+          guestPlayers = window.guestPlayers = result.data.filter(g => g && g.name);
+          localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
+          syncJerseyMaps();
         }
-        const base64Content = utf8ToBase64(JSON.stringify(updatedGuests, null, 2));
-        const putBody = {
-          message: commitMessage,
-          content: base64Content,
-          branch: GITHUB_BRANCH
-        };
-        if (currentGuestsSha) putBody.sha = currentGuestsSha;
-        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GUESTS_FILE_PATH}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(putBody)
-        });
-        if (!putRes.ok) {
-          const errData = await putRes.json();
-          throw new Error(errData.message || `GitHub API 支援名冊寫入拒絕 (HTTP ${putRes.status})`);
-        }
-        const resData = await putRes.json();
-        currentGuestsSha = resData.content.sha;
         setStatusBadge('[連線正常] 支援名冊已同步', 'success');
         return true;
       } catch (err) {
@@ -2698,6 +2678,91 @@
       if (!res.ok) throw new Error(`Local file HTTP ${res.status}`);
       return await res.json();
     }
+
+    // ★ 多裝置同時寫入保護：記住本頁載入（或上次寫入）時的雲端內容與版本。寫入前若雲端已被其他裝置更新，
+    // 先把「本機相對於載入時的變更」套到雲端最新內容上（三方合併）再上傳，不覆蓋其他裝置的紀錄。
+    const cloudBase = {};
+    function rememberCloudBase(filePath, sha, content) {
+      cloudBase[filePath] = { sha: sha || null, json: JSON.stringify(content ?? null) };
+    }
+    // Arrays merge item by item (keyOf gives each item's key); objects merge key by key. Items unchanged here keep
+    // the cloud version (including cloud deletions); items added, changed or deleted here win. Without a known base
+    // (the page had not loaded the file yet) nothing can count as deleted here, so it only adds and overwrites.
+    function mergeCloudChanges(base, local, remote, keyOf) {
+      const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+      const isList = Array.isArray(local);
+      const entries = value => {
+        if (isList) return (Array.isArray(value) ? value : []).filter(item => item && keyOf(item) !== undefined && keyOf(item) !== null).map(item => [String(keyOf(item)), item]);
+        return value && typeof value === 'object' && !Array.isArray(value) ? Object.entries(value) : [];
+      };
+      const baseMap = base === null || base === undefined ? null : new Map(entries(base));
+      const localMap = new Map(entries(local)), remoteMap = new Map(entries(remote));
+      const result = new Map(remoteMap);
+      let conflicts = 0;
+      for (const [key, item] of localMap) {
+        const before = baseMap ? baseMap.get(key) : undefined;
+        if (before !== undefined && same(before, item)) continue; // unchanged here: the cloud version stands
+        const theirs = remoteMap.get(key);
+        if (before !== undefined && theirs !== undefined && !same(before, theirs) && !same(item, theirs)) conflicts++;
+        result.set(key, item);
+      }
+      if (baseMap) {
+        for (const [key, before] of baseMap) {
+          if (localMap.has(key)) continue; // deleted here
+          if (remoteMap.has(key) && !same(before, remoteMap.get(key))) conflicts++;
+          result.delete(key);
+        }
+      }
+      if (!isList) return { data: Object.fromEntries(result), conflicts };
+      // Keep this device's order, then the items only the cloud has.
+      const ordered = [];
+      for (const key of localMap.keys()) if (result.has(key)) { ordered.push(result.get(key)); result.delete(key); }
+      for (const item of result.values()) ordered.push(item);
+      return { data: ordered, conflicts };
+    }
+    // Uploads one JSON file without overwriting another device's newer upload. Returns { data, sha, merged, conflicts };
+    // `data` is what was uploaded (the merged content when the cloud had changed). Throws on failure.
+    async function commitJsonFile(filePath, localData, commitMessage, keyOf = null) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        let remote = null, remoteSha = null;
+        try {
+          const res = await fetchGitHubContent(filePath, WRITE_TIMEOUT_MS);
+          remote = res.content;
+          remoteSha = res.sha;
+        } catch (err) {
+          if (err && err.name === 'AbortError') throw new Error(`網路逾時（${WRITE_TIMEOUT_MS / 1000} 秒），請稍後重試`);
+          if (!(err && err.status === 404)) throw err; // a missing file is created below
+        }
+        const base = cloudBase[filePath];
+        let data = localData, merged = false, conflicts = 0;
+        if (remoteSha && (!base || base.sha !== remoteSha)) {
+          const result = mergeCloudChanges(base ? JSON.parse(base.json) : null, localData, remote, keyOf);
+          data = result.data;
+          conflicts = result.conflicts;
+          merged = JSON.stringify(data) !== JSON.stringify(localData);
+        }
+        const putBody = { message: commitMessage, content: utf8ToBase64(JSON.stringify(data, null, 2)), branch: GITHUB_BRANCH };
+        if (remoteSha) putBody.sha = remoteSha;
+        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(putBody)
+        });
+        // 409: another device uploaded between our read and our write; read again and merge again.
+        if (putRes.status === 409 && attempt < 2) continue;
+        if (!putRes.ok) {
+          const errData = await putRes.json().catch(() => ({}));
+          throw new Error(errData.message || `GitHub API 寫入拒絕 (HTTP ${putRes.status})`);
+        }
+        const resData = await putRes.json();
+        const sha = resData && resData.content ? resData.content.sha : null;
+        rememberCloudBase(filePath, sha, data);
+        if (merged) showToast(`雲端已有其他裝置的新紀錄，已自動合併後上傳${conflicts ? `（${conflicts} 筆兩邊都改過，以這台裝置為準）` : ''}`);
+        return { data, sha, merged, conflicts };
+      }
+      throw new Error('雲端資料持續被其他裝置更新，請稍後重試');
+    }
+    // ★ 多裝置同時寫入保護（結束）
 
     // 取得所有可用選手（隊員與非隊員支援）
     window.getAllAvailablePlayerNames = getAllAvailablePlayerNames;
@@ -2980,7 +3045,7 @@
     let compareRadarChartInst = null;
     let pitcherOutProfileChartInst = null;
     let pitcherRadarChartInst = null;
-    let selectedPitcherName = "盧宣嘉";
+    let selectedPitcherName = "";
     let lineupFlowChartInst = null;
     let comparePlayerAName = "";
     let comparePlayerBName = "";
@@ -3190,47 +3255,9 @@
 
 
       try {
-        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
-        });
-        if (getShaRes.ok) {
-          const shaData = await getShaRes.json();
-          currentDefenseSha = shaData.sha;
-        } else {
-          currentDefenseSha = null;
-        }
-
-
-        const base64Content = utf8ToBase64(JSON.stringify(updatedDefense, null, 2));
-
-
-        const putBody = {
-          message: commitMessage,
-          content: base64Content,
-          branch: GITHUB_BRANCH
-        };
-        if (currentDefenseSha) putBody.sha = currentDefenseSha;
-
-
-        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DEFENSE_FILE_PATH}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(putBody)
-        });
-
-
-        if (!putRes.ok) {
-          const errData = await putRes.json();
-          throw new Error(errData.message || 'GitHub API 守備排名寫入拒絕');
-        }
-
-
-        const resData = await putRes.json();
-        currentDefenseSha = resData.content.sha;
-        defenseRankings = updatedDefense;
+        const result = await commitJsonFile(DEFENSE_FILE_PATH, updatedDefense, commitMessage);
+        currentDefenseSha = result.sha;
+        defenseRankings = result.data;
         localStorage.setItem('rebas_defense_rankings', JSON.stringify(defenseRankings));
 
 
@@ -4517,47 +4544,9 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       try {
-        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
-        });
-        if (getShaRes.ok) {
-          const shaData = await getShaRes.json();
-          currentAvatarsSha = shaData.sha;
-        } else {
-          currentAvatarsSha = null;
-        }
-
-
-        const base64Content = utf8ToBase64(JSON.stringify(updatedAvatars, null, 2));
-
-
-        const putBody = {
-          message: commitMessage,
-          content: base64Content,
-          branch: GITHUB_BRANCH
-        };
-        if (currentAvatarsSha) putBody.sha = currentAvatarsSha;
-
-
-        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${AVATARS_FILE_PATH}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(putBody)
-        });
-
-
-        if (!putRes.ok) {
-          const errData = await putRes.json();
-          throw new Error(errData.message || 'GitHub API 頭像寫入拒絕');
-        }
-
-
-        const resData = await putRes.json();
-        currentAvatarsSha = resData.content.sha;
-        playerAvatars = updatedAvatars;
+        const result = await commitJsonFile(AVATARS_FILE_PATH, updatedAvatars, commitMessage);
+        currentAvatarsSha = result.sha;
+        playerAvatars = result.data;
         localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
 
 
@@ -4587,47 +4576,9 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       try {
-        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
-        });
-        if (getShaRes.ok) {
-          const shaData = await getShaRes.json();
-          currentTagsSha = shaData.sha;
-        } else {
-          currentTagsSha = null;
-        }
-
-
-        const base64Content = utf8ToBase64(JSON.stringify(updatedTags, null, 2));
-
-
-        const putBody = {
-          message: commitMessage,
-          content: base64Content,
-          branch: GITHUB_BRANCH
-        };
-        if (currentTagsSha) putBody.sha = currentTagsSha;
-
-
-        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${TAGS_FILE_PATH}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(putBody)
-        });
-
-
-        if (!putRes.ok) {
-          const errData = await putRes.json();
-          throw new Error(errData.message || 'GitHub API 標籤寫入拒絕');
-        }
-
-
-        const resData = await putRes.json();
-        currentTagsSha = resData.content.sha;
-        playerTags = updatedTags;
+        const result = await commitJsonFile(TAGS_FILE_PATH, updatedTags, commitMessage);
+        currentTagsSha = result.sha;
+        playerTags = result.data;
         localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
 
 
@@ -4724,49 +4675,14 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       try {
-        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
-        });
-        if (getShaRes.ok) {
-          const shaData = await getShaRes.json();
-          currentFileSha = shaData.sha;
-        }
-
-
-        const base64Content = utf8ToBase64(JSON.stringify(updatedLogs, null, 2));
-
-
-        const putBody = {
-          message: commitMessage,
-          content: base64Content,
-          branch: GITHUB_BRANCH
-        };
-        if (currentFileSha) putBody.sha = currentFileSha;
-
-
-        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(putBody)
-        });
-
-
-        if (!putRes.ok) {
-          const errData = await putRes.json();
-          throw new Error(errData.message || 'GitHub API 寫入拒絕');
-        }
-
-
-        const resData = await putRes.json();
-        currentFileSha = resData.content.sha;
-        allLogs = updatedLogs;
+        const result = await commitJsonFile(DATA_FILE_PATH, updatedLogs, commitMessage, l => l.id);
+        currentFileSha = result.sha;
+        allLogs = result.data;
+        if (result.merged) localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
         syncJerseyMaps();
 
 
-        setStatusBadge(`[連線正常] 雲端已即時同步 (${currentFileSha.substring(0,7)})`, 'success');
+        setStatusBadge(`[連線正常] 雲端已即時同步 (${String(currentFileSha || '').substring(0,7)})`, 'success');
 
 
         renderAll();
@@ -7652,6 +7568,12 @@ function renderCustomChart(agg) {
     // ★★★ 依據使用者指示：徹底刪除任何模擬數據，完全 100% 依據真實場記賽事與防守記錄動態計算！
     const baselinePitchingStats = [];
 
+    // 各守備事件預設增加的出局數（覆盤編輯切換事件類別時也以此帶入）。
+    function defaultOutsForDefenseEvent(type) {
+      return type === 'DP' ? 2 : ['GO', 'FO', 'K', '界外K', 'RUNNER_OUT'].includes(type) ? 1 : 0;
+    }
+    window.defaultOutsForDefenseEvent = defaultOutsForDefenseEvent;
+
     window.getAggregatedPitcherStats = getAggregatedPitcherStats;
     function getAggregatedPitcherStats() {
       // 1. 初始化聚合字典 (以基準數據打底)
@@ -7669,7 +7591,12 @@ function renderCustomChart(agg) {
         if (s && g.date < s) return;
         if (e && g.date > e) return;
 
-        const defaultP = g.pitcherName || '盧宣嘉';
+        // 沒有記錄登板投手的比賽，不自動算到任何人頭上。
+        const defaultP = g.pitcherName || '';
+        const entry = name => pMap[name] || (pMap[name] = {
+          name, games: 0, gameIds: new Set(), outs: 0, tbf: 0, bb: 0,
+          k_swing: 0, k_foul: 0, go: 0, fo: 0, dp: 0, runner_out: 0, hits: 0, runs: 0, untrackedHalves: 0
+        });
         (g.innings || []).forEach(inn => {
           const isOurDefense = !isInningOurBat(g.ourRole, inn.topBottom);
           if (!isOurDefense) return;
@@ -7678,17 +7605,11 @@ function renderCustomChart(agg) {
           if (defEvents.length > 0) {
             defEvents.forEach(evt => {
               const pName = evt.pitcher || defaultP;
-              // 臨時球員/外援選手不進入全隊投手賽伯計量常模
-              if (isGuestPlayerName(pName)) return;
-              if (!pMap[pName]) {
-                pMap[pName] = {
-                  name: pName, games: 0, gameIds: new Set(), outs: 0, tbf: 0, bb: 0,
-                  k_swing: 0, k_foul: 0, go: 0, fo: 0, dp: 0, runner_out: 0, hits: 0, runs: 0
-                };
-              }
-              const p = pMap[pName];
+              // 未指定投手的事件不歸屬；臨時球員/外援選手不進入全隊投手賽伯計量常模
+              if (!pName || isGuestPlayerName(pName)) return;
+              const p = entry(pName);
               p.gameIds.add(g.id); // appearances = distinct games pitched
-              const defaultOuts = evt.type === 'DP' ? 2 : ['GO', 'FO', 'K', '界外K', 'RUNNER_OUT'].includes(evt.type) ? 1 : 0;
+              const defaultOuts = defaultOutsForDefenseEvent(evt.type);
               const recordedOuts = evt.outsAdded;
               p.outs += recordedOuts !== null && recordedOuts !== undefined && recordedOuts !== '' && Number.isFinite(Number(recordedOuts)) && Number(recordedOuts) >= 0 && Number(recordedOuts) <= 3 ? Number(recordedOuts) : defaultOuts;
               if (evt.type === 'GO') { p.go++; p.tbf++; }
@@ -7702,63 +7623,50 @@ function renderCustomChart(agg) {
               if (evt.runs) p.runs += evt.runs;
             });
           } else {
-            // 若該局無細分事件，至少累計局數、安打與失分
-            // Support players stay out of the team pitching norms here too.
-            if (isGuestPlayerName(defaultP)) return;
-            const p = pMap[defaultP] || (pMap[defaultP] = {
-              name: defaultP, games: 0, gameIds: new Set(), outs: 0, tbf: 0, bb: 0,
-              k_swing: 0, k_foul: 0, go: 0, fo: 0, dp: 0, runner_out: 0, hits: 0, runs: 0
-            });
+            // 該半局沒有逐筆守備事件：只記出賽，不推估出局、保送與三振
+            // （原本假設 3 出局、0 保送、0 三振，會產生 ZCR 100%、sFIP 4.50 等不存在的數字）。
+            if (!defaultP || isGuestPlayerName(defaultP)) return;
+            const p = entry(defaultP);
             p.gameIds.add(g.id);
-            p.outs += 3;
-            p.runs += (inn.runs || 0);
-            p.hits += (inn.hits || 0);
-            p.tbf += 3 + (inn.hits || 0);
+            p.untrackedHalves++;
           }
         });
       });
 
-      // 3. 計算慢速壘球專屬賽伯計量指標
+      // 3. 計算慢速壘球專屬賽伯計量指標：只用有逐筆守備事件的樣本；沒有樣本的指標為 null，畫面顯示「資料不足」。
       const list = Object.values(pMap).map(p => {
         p.games = (p.games || 0) + p.gameIds.size;
         delete p.gameIds;
+        p.untrackedHalves = p.untrackedHalves || 0;
+        const tracked = p.tbf > 0 || p.outs > 0;
         const ipFull = p.outs / 3;
-        const ipDisplay = Math.floor(p.outs / 3) + '.' + (p.outs % 3);
+        const ipDisplay = tracked ? Math.floor(p.outs / 3) + '.' + (p.outs % 3) : '—';
         const k_total = p.k_swing + p.k_foul;
         const totalBipOuts = p.go + p.fo + (p.dp * 2);
         const totalBip = totalBipOuts + p.hits;
 
         // A. 好球帶好投率 (ZCR): (TBF - BB) / TBF (衡量拒絕自爆保送能力)
-        const zcr = p.tbf > 0 ? (p.tbf - p.bb) / p.tbf : 1.0;
-
+        const zcr = p.tbf > 0 ? (p.tbf - p.bb) / p.tbf : null;
         // B. 慢壘獨立防禦率 (sFIP): (3.0*BB - 2.0*K_swing - 1.5*K_foul)/IP + 4.5
-        const sFip = ipFull > 0
-          ? ((3.0 * p.bb - 2.0 * p.k_swing - 1.5 * p.k_foul) / ipFull) + 4.5
-          : 4.50;
-
+        const sFip = ipFull > 0 ? ((3.0 * p.bb - 2.0 * p.k_swing - 1.5 * p.k_foul) / ipFull) + 4.5 : null;
         // C. 兩好球界外K誘陷率 (FKR): K_foul / K_total
-        const fkr = k_total > 0 ? p.k_foul / k_total : 0;
-
+        const fkr = k_total > 0 ? p.k_foul / k_total : null;
         // D. 場內擊球轉出局率 (BIP Out%): BIP_Outs / BIP
-        const bipOutPct = totalBip > 0 ? totalBipOuts / totalBip : 0.50;
-
+        const bipOutPct = totalBip > 0 ? totalBipOuts / totalBip : null;
         // E. 每 7 局四壞保送數 (BB/7): (BB * 21) / Outs
-        const bb7 = p.outs > 0 ? (p.bb * 21) / p.outs : 0;
-
+        const bb7 = p.outs > 0 ? (p.bb * 21) / p.outs : null;
         // F. 每 7 局實質失分 (R/7): (Runs * 21) / Outs (取代傳統 9 局 ERA)
-        const r7 = p.outs > 0 ? (p.runs * 21) / p.outs : 0;
-
+        const r7 = p.outs > 0 ? (p.runs * 21) / p.outs : null;
         // G. 滾飛出局比 (GO/AO): GO / FO
-        const goAo = p.fo > 0 ? p.go / p.fo : p.go;
-
+        const goAo = p.fo > 0 ? p.go / p.fo : (p.go > 0 ? p.go : null);
         // H. 慢壘每局被上壘率 (sWHIP): (BB + Hits) / IP
-        const sWhip = ipFull > 0 ? (p.bb + p.hits) / ipFull : 0;
-
+        const sWhip = ipFull > 0 ? (p.bb + p.hits) / ipFull : null;
         // I. 三振率 (K%): K / TBF
-        const kPct = p.tbf > 0 ? k_total / p.tbf : 0;
+        const kPct = p.tbf > 0 ? k_total / p.tbf : null;
 
         return {
           ...p,
+          tracked,
           ipFull,
           ipDisplay,
           k_total,
@@ -7774,8 +7682,8 @@ function renderCustomChart(agg) {
         };
       });
 
-      // 依局數與 sFIP 排序
-      list.sort((a, b) => b.outs - a.outs);
+      // 有守備事件樣本的投手在前（依出局數），其餘依出賽的守備半局與場次
+      list.sort((a, b) => (b.tracked - a.tracked) || (b.outs - a.outs) || (b.untrackedHalves - a.untrackedHalves) || (b.games - a.games));
       return list;
     };
 
@@ -7814,6 +7722,9 @@ function renderCustomChart(agg) {
         return;
       }
 
+      // 沒有樣本的指標顯示「—」，不顯示推估值。
+      const fmt = (value, format) => (value === null || value === undefined || !Number.isFinite(value) ? '—' : format(value));
+
       // 檢查當前選取的投手是否存在
       let currentP = pList.find(p => p.name === selectedPitcherName);
       if (!currentP) {
@@ -7827,7 +7738,7 @@ function renderCustomChart(agg) {
       if (sel) {
         sel.innerHTML = pList.map(p => `
           <option value="${p.name}" ${p.name === selectedPitcherName ? 'selected' : ''}>
-            #${NAME_TO_JERSEY[p.name] ?? ''} ${p.name} (IP: ${p.ipDisplay} 局 | sFIP: ${p.sFip.toFixed(2)})
+            #${NAME_TO_JERSEY[p.name] ?? ''} ${p.name} ${p.tracked ? `(IP: ${p.ipDisplay} 局 | sFIP: ${fmt(p.sFip, v => v.toFixed(2))})` : '(資料不足)'}
           </option>
         `).join('');
       }
@@ -7835,8 +7746,17 @@ function renderCustomChart(agg) {
         badge.innerHTML = renderAvatarElement(selectedPitcherName, 'w-9 h-9 sm:w-10 sm:h-10 text-sm ring-2 ring-teal-400 shadow');
       }
 
-      // 2. 渲染頂部 4 大慢壘投手進階核心指標看板
-      if (heroCardsContainer) {
+      // 2. 渲染頂部 4 大慢壘投手進階核心指標看板（沒有逐筆守備事件時改為「資料不足」說明）
+      const untrackedNote = currentP.untrackedHalves
+        ? `另有 ${currentP.untrackedHalves} 個守備半局沒有逐筆守備事件（出局、保送、三振），未計入指標。` : '';
+      if (heroCardsContainer && !currentP.tracked) {
+        heroCardsContainer.innerHTML = `
+          <div class="col-span-full p-6 text-center bg-slate-950/60 rounded-2xl border border-amber-800/50 space-y-2" data-pitching-no-data>
+            <div class="text-base font-bold text-amber-300">資料不足：${currentP.name} 沒有逐筆守備事件</div>
+            <div class="text-xs text-slate-400">本期出賽 ${currentP.games} 場，但 ${currentP.untrackedHalves} 個守備半局都沒有記錄出局、保送或三振，無法計算 ZCR、sFIP、FKR 等投手指標。可在「實況即時記分」記錄守備事件，或於「歷史賽事覆盤」編輯補登。</div>
+          </div>
+        `;
+      } else if (heroCardsContainer) {
         heroCardsContainer.innerHTML = `
           <!-- 卡片 1: 好球帶好投率 (ZCR) -->
           <div class="bg-slate-950 p-4 rounded-2xl border border-emerald-900/50 shadow-lg space-y-1.5 flex flex-col justify-between">
@@ -7846,13 +7766,13 @@ function renderCustomChart(agg) {
             </div>
             <div>
               <span class="font-mono text-emerald-400 font-black text-2xl tracking-tight block tabular-nums">
-                ${(currentP.zcr * 100).toFixed(1)}%
+                ${fmt(currentP.zcr, v => (v * 100).toFixed(1) + '%')}
               </span>
               <span class="text-[10px] text-slate-500 font-mono block mt-0.5">拒絕自爆保送・逼出棒對決</span>
             </div>
             <div class="pt-1.5 border-t border-slate-800 text-[10px] text-emerald-300 font-mono flex justify-between">
-              <span>每7局保送: <b>${currentP.bb7.toFixed(1)} 次</b></span>
-              <span>保送率: <b>${((currentP.bb / currentP.tbf)*100).toFixed(1)}%</b></span>
+              <span>每7局保送: <b>${fmt(currentP.bb7, v => v.toFixed(1) + ' 次')}</b></span>
+              <span>保送率: <b>${fmt(currentP.tbf ? currentP.bb / currentP.tbf : null, v => (v * 100).toFixed(1) + '%')}</b></span>
             </div>
           </div>
 
@@ -7864,13 +7784,13 @@ function renderCustomChart(agg) {
             </div>
             <div>
               <span class="font-mono text-purple-400 font-black text-2xl tracking-tight block tabular-nums">
-                ${currentP.sFip.toFixed(2)}
+                ${fmt(currentP.sFip, v => v.toFixed(2))}
               </span>
               <span class="text-[10px] text-slate-500 font-mono block mt-0.5">過濾守備失誤之純實力值</span>
             </div>
             <div class="pt-1.5 border-t border-slate-800 text-[10px] text-purple-300 font-mono flex justify-between">
               <span>基準常數: 4.50</span>
-              <span>${currentP.sFip < 3.5 ? '🔥 神級壓制' : currentP.sFip < 4.5 ? '優質先發' : '穩定吃局'}</span>
+              <span>${currentP.sFip === null ? '資料不足' : currentP.sFip < 3.5 ? '🔥 神級壓制' : currentP.sFip < 4.5 ? '優質先發' : '穩定吃局'}</span>
             </div>
           </div>
 
@@ -7882,7 +7802,7 @@ function renderCustomChart(agg) {
             </div>
             <div>
               <span class="font-mono text-amber-300 font-black text-2xl tracking-tight block tabular-nums">
-                ${(currentP.fkr * 100).toFixed(1)}%
+                ${fmt(currentP.fkr, v => (v * 100).toFixed(1) + '%')}
               </span>
               <span class="text-[10px] text-slate-500 font-mono block mt-0.5">高拋兩好球邊界誘殺神技</span>
             </div>
@@ -7900,30 +7820,34 @@ function renderCustomChart(agg) {
             </div>
             <div>
               <span class="font-mono text-sky-400 font-black text-2xl tracking-tight block tabular-nums">
-                ${(currentP.bipOutPct * 100).toFixed(1)}%
+                ${fmt(currentP.bipOutPct, v => (v * 100).toFixed(1) + '%')}
               </span>
               <span class="text-[10px] text-slate-500 font-mono block mt-0.5">弱化擊球引導守備處理</span>
             </div>
             <div class="pt-1.5 border-t border-slate-800 text-[10px] text-sky-300 font-mono flex justify-between">
-              <span>滾飛比: <b>${currentP.goAo.toFixed(2)}</b></span>
+              <span>滾飛比: <b>${fmt(currentP.goAo, v => v.toFixed(2))}</b></span>
               <span>雙殺製造: <b>${currentP.dp} 次</b></span>
             </div>
           </div>
+          ${untrackedNote ? `<p class="col-span-full text-[11px] text-amber-300/90" data-pitching-untracked>${untrackedNote}</p>` : ''}
         `;
       }
 
       // 3. 繪製出局型態分析圖 (Pitching Out Profile Chart)
-      if (countEl) countEl.textContent = `面對 ${currentP.tbf} 打席 | 投球 ${currentP.ipDisplay} 局 (${currentP.outs} 出局)`;
+      if (countEl) countEl.textContent = currentP.tracked
+        ? `面對 ${currentP.tbf} 打席 | 投球 ${currentP.ipDisplay} 局 (${currentP.outs} 出局)`
+        : `出賽 ${currentP.games} 場 | 資料不足（未記錄守備事件）`;
       if (goAoEl) {
-        const styleText = currentP.goAo > 1.5 ? '重度滾地球型 (內野封殺高、雙殺多)' : currentP.goAo > 0.9 ? '滾飛均衡型' : '高拋飛球型 (仰仗外野接殺)';
+        const styleText = currentP.goAo === null ? '資料不足' : currentP.goAo > 1.5 ? '重度滾地球型 (內野封殺高、雙殺多)' : currentP.goAo > 0.9 ? '滾飛均衡型' : '高拋飛球型 (仰仗外野接殺)';
         goAoEl.innerHTML = `
           <span>出局型態風格: <b class="text-teal-300">${styleText}</b></span>
-          <span>滾飛比 (GO/AO): <b class="text-amber-400">${currentP.goAo.toFixed(2)}</b></span>
+          <span>滾飛比 (GO/AO): <b class="text-amber-400">${fmt(currentP.goAo, v => v.toFixed(2))}</b></span>
         `;
       }
 
       const outCanvas = document.getElementById('pitcherOutProfileChart');
-      if (outCanvas && outCanvas.getContext) {
+      if (!currentP.tracked && pitcherOutProfileChartInst) { pitcherOutProfileChartInst.destroy(); pitcherOutProfileChartInst = null; }
+      if (currentP.tracked && outCanvas && outCanvas.getContext) {
         const ctx = outCanvas.getContext('2d');
         if (pitcherOutProfileChartInst) pitcherOutProfileChartInst.destroy();
         pitcherOutProfileChartInst = new Chart(ctx, {
@@ -7961,16 +7885,19 @@ function renderCustomChart(agg) {
       }
 
       // 4. 繪製慢壘投手五維能力 PR 百分位雷達 (Pitcher 5-Tool Radar)
+      // 只和同樣有守備事件樣本的投手比較；沒有樣本的投手不畫雷達。
       const radarCanvas = document.getElementById('pitcherRadarChart');
-      if (radarCanvas && radarCanvas.getContext) {
+      if (!currentP.tracked && pitcherRadarChartInst) { pitcherRadarChartInst.destroy(); pitcherRadarChartInst = null; }
+      if (currentP.tracked && radarCanvas && radarCanvas.getContext) {
         const ctx = radarCanvas.getContext('2d');
         if (pitcherRadarChartInst) pitcherRadarChartInst.destroy();
+        const trackedPitchers = pList.filter(p => p.tracked);
 
-        const prZcr = getPercentile(currentP.zcr, 'zcr', pList);
-        const prK = getPercentile(currentP.kPct, 'kPct', pList);
-        const prFkr = getPercentile(currentP.fkr, 'fkr', pList);
-        const prBip = getPercentile(currentP.bipOutPct, 'bipOutPct', pList);
-        const prIp = getPercentile(currentP.outs, 'outs', pList);
+        const prZcr = getPercentile(currentP.zcr ?? 0, 'zcr', trackedPitchers);
+        const prK = getPercentile(currentP.kPct ?? 0, 'kPct', trackedPitchers);
+        const prFkr = getPercentile(currentP.fkr ?? 0, 'fkr', trackedPitchers);
+        const prBip = getPercentile(currentP.bipOutPct ?? 0, 'bipOutPct', trackedPitchers);
+        const prIp = getPercentile(currentP.outs, 'outs', trackedPitchers);
 
         pitcherRadarChartInst = new Chart(ctx, {
           type: 'radar',
@@ -8013,27 +7940,30 @@ function renderCustomChart(agg) {
                 <span>#${NAME_TO_JERSEY[p.name] ?? ''} ${p.name}</span>
               </td>
               <td class="p-3 text-center">${p.games}</td>
-              <td class="p-3 text-center text-teal-300 font-bold">${p.ipDisplay}</td>
+              <td class="p-3 text-center text-teal-300 font-bold">${p.tracked ? p.ipDisplay : '<span class="text-amber-300 text-xs" title="沒有逐筆守備事件">資料不足</span>'}</td>
               <td class="p-3 text-center text-slate-400">${p.outs}</td>
               <td class="p-3 text-center text-slate-300">${p.tbf}</td>
-              <td class="p-3 text-center font-bold text-emerald-400">${(p.zcr * 100).toFixed(1)}%</td>
-              <td class="p-3 text-center font-bold text-purple-300">${p.sFip.toFixed(2)}</td>
-              <td class="p-3 text-center text-amber-300 font-bold">${p.bb7.toFixed(1)}</td>
-              <td class="p-3 text-center text-sky-400 font-bold">${(p.bipOutPct * 100).toFixed(1)}%</td>
-              <td class="p-3 text-center text-amber-400 font-bold">${(p.fkr * 100).toFixed(1)}%</td>
+              <td class="p-3 text-center font-bold text-emerald-400">${fmt(p.zcr, v => (v * 100).toFixed(1) + '%')}</td>
+              <td class="p-3 text-center font-bold text-purple-300">${fmt(p.sFip, v => v.toFixed(2))}</td>
+              <td class="p-3 text-center text-amber-300 font-bold">${fmt(p.bb7, v => v.toFixed(1))}</td>
+              <td class="p-3 text-center text-sky-400 font-bold">${fmt(p.bipOutPct, v => (v * 100).toFixed(1) + '%')}</td>
+              <td class="p-3 text-center text-amber-400 font-bold">${fmt(p.fkr, v => (v * 100).toFixed(1) + '%')}</td>
               <td class="p-3 text-center text-slate-300">${p.k_total} <span class="text-[9px] text-slate-500">(${p.k_swing}/${p.k_foul})</span></td>
-              <td class="p-3 text-center text-slate-300">${p.goAo.toFixed(2)}</td>
+              <td class="p-3 text-center text-slate-300">${fmt(p.goAo, v => v.toFixed(2))}</td>
               <td class="p-3 text-center text-slate-300">${p.dp}</td>
-              <td class="p-3 text-center text-rose-400 font-bold">${p.r7.toFixed(1)}</td>
+              <td class="p-3 text-center text-rose-400 font-bold">${fmt(p.r7, v => v.toFixed(1))}</td>
             </tr>
           `;
         }).join('');
       }
 
       // 6. 渲染慢壘投手戰術診斷與改善方針
-      if (advCard) {
+      if (advCard && !currentP.tracked) {
+        advCard.innerHTML = `<div class="p-3.5 rounded-xl border bg-slate-950/80 border-amber-800/50 text-amber-200 text-[11px] leading-relaxed" data-pitching-no-data>資料不足：${currentP.name} 在此期間沒有逐筆守備事件，無法產生投手診斷。記錄守備事件（出局、保送、三振、失分）後會自動產生。</div>`;
+      } else if (advCard) {
         const notes = [];
-        if (currentP.zcr >= 0.93) {
+        if (untrackedNote) notes.push({ type: 'info', title: '【部分場次未記錄守備事件】', desc: untrackedNote });
+        if (currentP.zcr !== null && currentP.zcr >= 0.93) {
           notes.push({
             type: 'success',
             title: `【極限好球帶控制】：保送壓制力卓越 (ZCR ${(currentP.zcr * 100).toFixed(1)}%)`,
@@ -8042,7 +7972,7 @@ function renderCustomChart(agg) {
         } else {
           notes.push({
             type: 'warning',
-            title: `【警戒！四壞保送偏高】：每 7 局保送達 ${currentP.bb7.toFixed(1)} 次`,
+            title: `【警戒！四壞保送偏高】：每 7 局保送達 ${fmt(currentP.bb7, v => v.toFixed(1))} 次`,
             desc: `慢速壘球中保送等同於大局的催化劑。建議練習穩定高拋放球點與落點甜蜜區，寧可讓打者擊出場內交給身後 9 位防守隊友，也絕不能輕易奉送打者免費上壘！`
           });
         }
@@ -8055,13 +7985,13 @@ function renderCustomChart(agg) {
           });
         }
 
-        if (currentP.goAo >= 1.5) {
+        if (currentP.goAo !== null && currentP.goAo >= 1.5) {
           notes.push({
             type: 'info',
             title: `【重度下沉滾地球型】：滾飛比 ${currentP.goAo.toFixed(2)}`,
             desc: `出棒多形成滾地球。戰術建議：內野二游防線（2B/SS）與自由手（SF）站位可稍微前趨封殺穿越球，並隨時準備啟動雙殺（DP）戰術！`
           });
-        } else if (currentP.goAo <= 0.8) {
+        } else if (currentP.goAo !== null && currentP.goAo <= 0.8) {
           notes.push({
             type: 'info',
             title: `【高拋深遠飛球型】：滾飛比 ${currentP.goAo.toFixed(2)}`,
@@ -8244,8 +8174,9 @@ function renderCustomChart(agg) {
     let currentScorebookSubTab = 'live'; // 'live', 'review', 'spray'
     let currentFieldTargetPos = 'P';
     let currentFieldCoords = { x: 0.50, y: 0.65 };
+    // 打擊結果不預設：記錄員必須親手點選，避免忘了選結果時被記成一壘安打。
     let currentPlayInput = window.currentPlayInput = {
-      result: '1H',
+      result: null,
       trajectory: 'grounder',
       location: 'P',
       x: 0.50,
@@ -8254,7 +8185,7 @@ function renderCustomChart(agg) {
       runsScored: 0
     };
     let currentSelectedTraj = 'grounder'; // 'grounder', 'line', 'fly', 'popup', 'none'
-    let currentSelectedOutcome = '1H';
+    let currentSelectedOutcome = null;
     let currentSelectedRbi = 0;
     let currentSelectedRuns = 0;
 
@@ -8283,44 +8214,14 @@ function renderCustomChart(agg) {
       }
 
       try {
-        const getShaRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}?ref=${GITHUB_BRANCH}&t=${Date.now()}`, {
-          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
-        });
-        if (getShaRes.ok) {
-          const shaData = await getShaRes.json();
-          currentGamesSha = shaData.sha;
-        } else {
-          currentGamesSha = null;
-        }
-
-        const base64Content = utf8ToBase64(JSON.stringify(updatedGames, null, 2));
-        const putBody = {
-          message: commitMessage,
-          content: base64Content,
-          branch: GITHUB_BRANCH
-        };
-        if (currentGamesSha) putBody.sha = currentGamesSha;
-
-        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GAMES_FILE_PATH}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(putBody)
-        });
-
-        if (!putRes.ok) {
-          const errData = await putRes.json();
-          throw new Error(errData.message || 'GitHub API 場記寫入拒絕');
-        }
-
-        const resData = await putRes.json();
-        currentGamesSha = resData.content.sha;
-        allGames = updatedGames;
+        const result = await commitJsonFile(GAMES_FILE_PATH, updatedGames, commitMessage, g => g.id);
+        currentGamesSha = result.sha;
+        allGames = result.merged ? result.data.filter(g => !isSimulatedGame(g)) : result.data;
         localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        // Games another device added or changed also feed the team logs on this device.
+        if (result.merged) syncAllGamesToTeamLogs();
 
-        setStatusBadge(`[連線正常] 場記已即時同步 (${currentGamesSha.substring(0, 7)})`, 'success');
+        setStatusBadge(`[連線正常] 場記已即時同步 (${String(currentGamesSha || '').substring(0, 7)})`, 'success');
 
         if (inningSyncBtn) {
           inningSyncBtn.innerHTML = '<span>✓</span> 本局雲端同步成功！';
@@ -8502,6 +8403,12 @@ function renderCustomChart(agg) {
       renderSetupLineupGrid();
     };
 
+    // 開賽預設登板投手：投手排名中最前面、而且在先發打線裡的人；都不在打線時留空，由記錄員選擇。
+    function pickStartingPitcher(lineup) {
+      const ranks = defenseRankings['P'] || DEFAULT_DEFENSE_RANKINGS['P'] || [];
+      return ranks.find(name => (lineup || []).includes(name)) || null;
+    }
+
     window.startNewGameFromSetup = function() {
       const date = document.getElementById('setup_game_date').value || getTaipeiDateString();
       const opponent = document.getElementById('setup_game_opponent').value.trim() || '友隊選手';
@@ -8528,7 +8435,7 @@ function renderCustomChart(agg) {
         lineup: [...cleanLineup],
         startingLineup: [...cleanLineup], // 永久鎖定先發 10/11 人名單
         substitutions: [], // 完整記錄換人歷程
-        pitcherName: '盧宣嘉',
+        pitcherName: pickStartingPitcher(cleanLineup),
         currentInning: 1,
         currentHalf: 'top', // ★★★ 棒球/壘球鐵律：不論先攻或後攻，比賽絕對皆從第 1 局「上半」開始！
         currentOuts: 0,
@@ -8755,11 +8662,11 @@ function renderCustomChart(agg) {
 
       if (!activeGame) return;
 
-      const pitcherName = activeGame.pitcherName || activeGame.lineup[0] || '盧宣嘉';
+      const pitcherName = activeGame.pitcherName || '';
       const jersey = NAME_TO_JERSEY[pitcherName] ?? '--';
 
-      if (pTitle) pTitle.textContent = `登板投手：#${jersey} ${pitcherName}`;
-      if (pAvatar) pAvatar.innerHTML = renderAvatarElement(pitcherName, 'w-14 h-14 sm:w-16 sm:h-16 text-xl sm:text-2xl ring-2 ring-sky-400/80 shadow-md');
+      if (pTitle) pTitle.textContent = pitcherName ? `登板投手：#${jersey} ${pitcherName}` : '登板投手：尚未選擇';
+      if (pAvatar) pAvatar.innerHTML = pitcherName ? renderAvatarElement(pitcherName, 'w-14 h-14 sm:w-16 sm:h-16 text-xl sm:text-2xl ring-2 ring-sky-400/80 shadow-md') : '';
 
       if (pSelect) {
         const { teamNames, guestNames } = getAllAvailablePlayerNames();
@@ -8768,6 +8675,7 @@ function renderCustomChart(agg) {
         const nonLineupGuests = guestNames.filter(n => !lineupNames.includes(n));
 
         pSelect.innerHTML = `
+          ${pitcherName ? '' : '<option value="" selected disabled>— 請選擇登板投手 —</option>'}
           <optgroup label="場上守備打線 (場內守位調換)">
             ${lineupNames.map(name => `
               <option value="${name}" ${name === pitcherName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name} (場上)</option>
@@ -8795,7 +8703,7 @@ function renderCustomChart(agg) {
     }
 
     window.changeDefensePitcher = function(newPitcherName) {
-      if (!activeGame) return;
+      if (!activeGame || !newPitcherName) return;
 
       if (newPitcherName === '__NEW_GUEST_PITCHER__') {
         const name = prompt('請輸入場下/非隊員支援投手姓名（例：張小華、外援投手）：');
@@ -8826,13 +8734,13 @@ function renderCustomChart(agg) {
 
     window.openPitcherChangeModal = function(targetPlayerName = null) {
       if (!activeGame) return;
-      const curPitcher = activeGame.pitcherName || activeGame.lineup[0] || '盧宣嘉';
+      const curPitcher = activeGame.pitcherName || '';
       const statusInfo = document.getElementById('pitcherCurrentStatusInfo');
       if (statusInfo) {
         statusInfo.innerHTML = `
           <div class="flex items-center justify-between text-slate-300">
             <span>目前登板投手：</span>
-            <span class="text-amber-400 font-bold font-mono text-sm">#${NAME_TO_JERSEY[curPitcher] ?? ''} ${curPitcher}</span>
+            <span class="text-amber-400 font-bold font-mono text-sm">${curPitcher ? `#${NAME_TO_JERSEY[curPitcher] ?? ''} ${curPitcher}` : '尚未選擇'}</span>
           </div>
           <p class="text-[11px] text-slate-400 leading-relaxed mt-1">
             慢壘允許牛棚場下隊員或非隊員外援登板救援。請確認登板投手，並決定是否同時替換場上進攻打線名額。
@@ -8961,6 +8869,13 @@ function renderCustomChart(agg) {
     window.recordDefenseEvent = function(eventType, runs = 0) {
       if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       if (!activeGame) return;
+      // 每筆守備事件都要歸屬到實際登板的投手，不自動代填。
+      if (!activeGame.pitcherName) {
+        showToast('請先在上方「登板投手」選擇投手，再記錄守備事件。', 'error');
+        return;
+      }
+      // 3 出局後只允許補記失分（得分可能晚於第三個出局才登打）；新打者與出局要先換局。
+      if (eventType !== 'RUN' && isLiveHalfInningOver()) return;
 
       const outsAdded = (eventType === 'DP') ? 2 : (['GO', 'FO', 'K', '界外K', 'RUNNER_OUT'].includes(eventType) ? 1 : 0);
       activeGame.currentOuts = Math.min(3, (activeGame.currentOuts || 0) + outsAdded);
@@ -8996,7 +8911,7 @@ function renderCustomChart(agg) {
 
       const newEvt = {
         id: 'def_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        pitcher: activeGame.pitcherName || '盧宣嘉',
+        pitcher: activeGame.pitcherName,
         type: eventType,
         runs: runs,
         outsAdded: outsAdded,
@@ -9295,7 +9210,16 @@ function renderCustomChart(agg) {
       }
     };
 
+    // 3 出局後不能再記錄新打席或出局，必須先換局（撤銷某筆紀錄後出局數會重算）。
+    function isLiveHalfInningOver() {
+      if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
+      if (!activeGame || (activeGame.currentOuts || 0) < 3) return false;
+      showToast('本半局已 3 出局，請先點「換局」再記錄；若有記錯，可先撤銷該筆紀錄。', 'error');
+      return true;
+    }
+
     window.recordQuickStrikeout = function(type = 'K') {
+      if (isLiveHalfInningOver()) return;
       currentPlayInput.result = (type === '界外K' || type === 'foul') ? '界外K' : 'K';
       currentPlayInput.trajectory = 'none';
       currentPlayInput.location = 'C';
@@ -9310,6 +9234,7 @@ function renderCustomChart(agg) {
     window.recordRunnerOut = function() {
       if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       if (!activeGame) return;
+      if (isLiveHalfInningOver()) return;
       activeGame.currentOuts = Math.min(3, (activeGame.currentOuts || 0) + 1);
 
       // 若壘上有人，優先清除跑者
@@ -9369,6 +9294,7 @@ function renderCustomChart(agg) {
     };
 
     window.recordQuickWalk = function() {
+      if (isLiveHalfInningOver()) return;
       currentPlayInput.result = 'BB';
       currentPlayInput.trajectory = 'none';
       currentPlayInput.location = 'C';
@@ -9382,6 +9308,11 @@ function renderCustomChart(agg) {
     window.submitBattedBallPlay = function() {
       if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       if (!activeGame) return;
+      if (isLiveHalfInningOver()) return;
+      if (!currentPlayInput.result) {
+        showToast('請先選擇打擊結果（安打、出局或其他），再送出此打席。', 'error');
+        return;
+      }
 
       const idx = activeGame.currentBatterIdx;
       const batterName = activeGame.lineup[idx];
@@ -9459,7 +9390,7 @@ function renderCustomChart(agg) {
 
       // 登打完成後重置打席輸入，避免上一打席狀態（例如三振/保送之捕手 C）殘留污染下一打席
       currentPlayInput = window.currentPlayInput = {
-        result: '1H',
+        result: null,
         trajectory: 'grounder',
         location: '2B',
         x: 0.60,
@@ -9468,7 +9399,7 @@ function renderCustomChart(agg) {
         runsScored: 0
       };
       updateFieldTargetDisplay();
-      selectOutcome('1H');
+      selectOutcome(null);
       selectTrajectory('grounder');
       selectRbi(0);
       selectRunsScored(0);
@@ -10317,7 +10248,7 @@ function renderCustomChart(agg) {
     function renderGameReviewEditor(game, container) {
       const { teamNames, guestNames } = getAllAvailablePlayerNames();
       const allPlayers = [...teamNames, ...guestNames];
-      const defaultPitcher = game.pitcherName || '盧宣嘉';
+      const defaultPitcher = game.pitcherName || '';
 
       const inningsHtml = (game.innings || []).map((inn, innIdx) => {
         const isOurBat = isInningOurBat(game.ourRole, inn.topBottom);
@@ -10365,11 +10296,12 @@ function renderCustomChart(agg) {
               <td class="p-2 text-center text-slate-500">${defIdx + 1}</td>
               <td class="p-2">
                 <select id="edit_def_pitcher_${innIdx}_${defIdx}" class="bg-slate-900 border border-teal-700 text-teal-300 font-bold text-xs rounded px-2 py-1">
+                  ${curPitcher ? '' : '<option value="" selected>— 未指定投手 —</option>'}
                   ${allPlayers.map(pl => `<option value="${pl}" ${pl === curPitcher ? 'selected' : ''}>#${NAME_TO_JERSEY[pl] ?? ''} ${pl}</option>`).join('')}
                 </select>
               </td>
               <td class="p-2 text-center">
-                <select id="edit_def_type_${innIdx}_${defIdx}" class="bg-slate-900 border border-slate-700 text-amber-300 font-bold text-xs rounded px-2 py-1">
+                <select id="edit_def_type_${innIdx}_${defIdx}" onchange="syncDefenseOutsInput(${innIdx}, ${defIdx}, this.value)" class="bg-slate-900 border border-slate-700 text-amber-300 font-bold text-xs rounded px-2 py-1">
                   <option value="GO" ${evt.type === 'GO' ? 'selected' : ''}>🟢 滾地刺殺 (+1 Out)</option>
                   <option value="FO" ${evt.type === 'FO' ? 'selected' : ''}>🔵 飛球接殺 (+1 Out)</option>
                   <option value="K" ${evt.type === 'K' ? 'selected' : ''}>🔴 揮空三振 (+1 Out)</option>
@@ -10382,7 +10314,7 @@ function renderCustomChart(agg) {
                 </select>
               </td>
               <td class="p-2 text-center">
-                <input type="number" id="edit_def_outs_${innIdx}_${defIdx}" value="${evt.outsAdded ?? 1}" min="0" max="2" class="w-12 bg-slate-900 border border-slate-700 text-center text-emerald-400 font-bold rounded py-1 text-xs">
+                <input type="number" id="edit_def_outs_${innIdx}_${defIdx}" value="${evt.outsAdded ?? defaultOutsForDefenseEvent(evt.type)}" min="0" max="2" class="w-12 bg-slate-900 border border-slate-700 text-center text-emerald-400 font-bold rounded py-1 text-xs">
               </td>
               <td class="p-2 text-center">
                 <input type="number" id="edit_def_runs_${innIdx}_${defIdx}" value="${evt.runs ?? 0}" min="0" max="4" class="w-12 bg-slate-900 border border-slate-700 text-center text-rose-400 font-bold rounded py-1 text-xs">
@@ -10486,7 +10418,8 @@ function renderCustomChart(agg) {
             <div>
               <label class="block text-teal-300 font-bold mb-1">先發登板投手：</label>
               <select id="editGamePitcher" class="w-full bg-slate-900 border border-teal-700 text-teal-300 font-bold rounded px-2.5 py-1.5 font-mono">
-                ${allPlayers.map(pl => `<option value="${pl}" ${pl === (game.pitcherName || '盧宣嘉') ? 'selected' : ''}>#${NAME_TO_JERSEY[pl] ?? ''} ${pl}</option>`).join('')}
+                ${game.pitcherName ? '' : '<option value="" selected>— 未記錄 —</option>'}
+                ${allPlayers.map(pl => `<option value="${pl}" ${pl === game.pitcherName ? 'selected' : ''}>#${NAME_TO_JERSEY[pl] ?? ''} ${pl}</option>`).join('')}
               </select>
             </div>
             <div>
@@ -10515,6 +10448,12 @@ function renderCustomChart(agg) {
         </div>
       `;
     }
+
+    // 覆盤編輯切換守備事件類別時，出局數改成該類別的預設值（例如滾地刺殺改成保送後出局歸 0、改成雙殺為 2），仍可再手動調整。
+    window.syncDefenseOutsInput = function(innIdx, defIdx, type) {
+      const input = document.getElementById(`edit_def_outs_${innIdx}_${defIdx}`);
+      if (input) input.value = defaultOutsForDefenseEvent(type);
+    };
 
     window.addPlayToReviewInning = function(gameId, innIdx) {
       const game = allGames.find(g => g.id === gameId);
@@ -10561,7 +10500,7 @@ function renderCustomChart(agg) {
 
       const inn = game.innings[innIdx];
       inn.defensiveEvents = inn.defensiveEvents || [];
-      const defaultP = game.pitcherName || '盧宣嘉';
+      const defaultP = game.pitcherName || '';
       inn.defensiveEvents.push({
         id: 'def_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         pitcher: defaultP,

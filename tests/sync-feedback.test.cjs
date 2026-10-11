@@ -27,7 +27,7 @@ function context(extra = {}) {
     setStatusBadge: (message, type) => statuses.push({ message, type }),
     confirm: () => true, renderAll() {}, renderLiveScorer() {}, renderGameReview() {},
     renderSelectedGameReview() {}, switchScorebookSubTab() {}, syncAllGamesToTeamLogs() {},
-    commitGamesToGitHub: async () => true,
+    commitGamesToGitHub: async () => true, rememberCloudBase() {},
     ...extra,
   };
   vm.createContext(ctx);
@@ -45,15 +45,22 @@ for (const status of [200, 403, 409, 500, 'network']) {
     const ctx = context({
       GITHUB_REPO: 'test', GITHUB_BRANCH: 'test', GUESTS_FILE_PATH: 'test',
       GITHUB_TOKEN: 'mock', currentGuestsSha: null, utf8ToBase64: value => value,
-      fetch: async () => {
+      // The upload first reads the current cloud version (an empty roster), then writes.
+      fetch: async (url, options = {}) => {
         if (status === 'network') throw new Error('offline');
-        return { ok: status === 200, status, json: async () => ({ sha: 'test', content: { sha: 'test' }, message: 'test error' }) };
+        const body = options.method === 'PUT'
+          ? { content: { sha: 'test' }, message: 'test error' }
+          : { sha: 'test', encoding: 'base64', content: Buffer.from('[]').toString('base64'), message: 'test error' };
+        return { ok: status === 200, status, json: async () => body };
       },
     });
-    Object.assign(ctx, {AbortController, setTimeout, clearTimeout});
+    Object.assign(ctx, {AbortController, setTimeout, clearTimeout, atob, TextDecoder});
     vm.runInContext(extract('async function fetchWithTimeout(', '\n    }'), ctx);
     vm.runInContext(extract('const WRITE_TIMEOUT_MS', ';'), ctx);
     vm.runInContext(extract('async function fetchWrite(', '\n    }'), ctx);
+    vm.runInContext(extract('function base64ToUtf8(', '\n    }'), ctx);
+    vm.runInContext(extract('async function fetchGitHubContent(', '\n    }'), ctx);
+    vm.runInContext(extract('// ★ 多裝置同時寫入保護：', '// ★ 多裝置同時寫入保護（結束）'), ctx);
     vm.runInContext(extract('async function commitGuestsToGitHub(', '\n    }'), ctx);
     assert.equal(await ctx.commitGuestsToGitHub([]), status === 200);
     assert.equal(ctx.statuses.at(-1).type, status === 200 ? 'success' : 'error');
@@ -261,3 +268,116 @@ for(const [name,c,key,content]of [
     assert.equal(await ctx[`load${name}FromGitHub`](),sourceName);
   });
 }
+
+// Multi-device safety: an upload never overwrites what another device saved after this page loaded.
+function mergeContext(extra = {}) {
+  const ctx = context({utf8ToBase64: value => Buffer.from(value).toString('base64'), GITHUB_REPO: 'test', GITHUB_BRANCH: 'main', GITHUB_TOKEN: 'mock', ...extra});
+  Object.assign(ctx, {AbortController, setTimeout, clearTimeout, atob, TextDecoder, JSON});
+  vm.runInContext(extract('async function fetchWithTimeout(', '\n    }'), ctx);
+  vm.runInContext(extract('const WRITE_TIMEOUT_MS', ';'), ctx);
+  vm.runInContext(extract('async function fetchWrite(', '\n    }'), ctx);
+  vm.runInContext(extract('function base64ToUtf8(', '\n    }'), ctx);
+  vm.runInContext(extract('async function fetchGitHubContent(', '\n    }'), ctx);
+  vm.runInContext(extract('// ★ 多裝置同時寫入保護：', '// ★ 多裝置同時寫入保護（結束）'), ctx);
+  return ctx;
+}
+const byId = item => item.id;
+const ids = list => list.map(x => x.id).sort().join(',');
+
+test('merge keeps the other device\'s additions and applies this device\'s additions, edits and deletions', () => {
+  const ctx = mergeContext();
+  const base = [{id: 'a', v: 1}, {id: 'b', v: 1}, {id: 'c', v: 1}];
+  const local = [{id: 'a', v: 2}, {id: 'c', v: 1}, {id: 'mine', v: 1}];   // edited a, deleted b, added mine
+  const remote = [{id: 'a', v: 1}, {id: 'b', v: 1}, {id: 'c', v: 9}, {id: 'theirs', v: 1}]; // edited c, added theirs
+  const {data, conflicts} = ctx.mergeCloudChanges(base, local, remote, byId);
+  assert.equal(ids(data), 'a,c,mine,theirs');
+  assert.equal(data.find(x => x.id === 'a').v, 2, 'this device\'s edit');
+  assert.equal(data.find(x => x.id === 'c').v, 9, 'the other device\'s edit of an item unchanged here');
+  assert.equal(conflicts, 0);
+});
+test('merge respects deletions made on the other device and counts true conflicts', () => {
+  const ctx = mergeContext();
+  const base = [{id: 'x', v: 1}, {id: 'y', v: 1}];
+  const local = [{id: 'x', v: 1}, {id: 'y', v: 2}];
+  const remote = [{id: 'y', v: 3}];                                       // they deleted x, both edited y
+  const {data, conflicts} = ctx.mergeCloudChanges(base, local, remote, byId);
+  assert.equal(ids(data), 'y');
+  assert.equal(data[0].v, 2, 'both edited: this device wins');
+  assert.equal(conflicts, 1);
+});
+test('objects (avatars, tags, defense rankings) merge key by key', () => {
+  const ctx = mergeContext();
+  const {data} = ctx.mergeCloudChanges({A: ['x'], B: ['y']}, {A: ['x', 'new'], B: ['y']}, {A: ['x'], B: ['y'], C: ['theirs']}, null);
+  assert.deepEqual(JSON.parse(JSON.stringify(data)), {A: ['x', 'new'], B: ['y'], C: ['theirs']});
+  const removed = ctx.mergeCloudChanges({A: 1, B: 1}, {B: 1}, {A: 1, B: 1, C: 1}, null).data;
+  assert.deepEqual(Object.keys(removed).sort(), ['B', 'C'], 'deleted here stays deleted, added there stays');
+});
+test('without a known base, merge only adds and overwrites (nothing counts as deleted here)', () => {
+  const ctx = mergeContext();
+  const {data} = ctx.mergeCloudChanges(null, [{id: 'a', v: 2}], [{id: 'a', v: 1}, {id: 'b', v: 1}], byId);
+  assert.equal(ids(data), 'a,b');
+  assert.equal(data.find(x => x.id === 'a').v, 2);
+});
+
+function fakeCloud(initial, {conflictsBeforeWrite = 0} = {}) {
+  const cloud = {data: initial, sha: 's0', puts: [], conflicts: conflictsBeforeWrite};
+  cloud.fetch = async (url, options = {}) => {
+    if (options.method === 'PUT') {
+      const body = JSON.parse(options.body);
+      if (cloud.conflicts > 0) { // another device writes between our read and our write
+        cloud.conflicts--; cloud.data = [...cloud.data, {id: `race${cloud.conflicts}`}]; cloud.sha += 'x';
+        return {ok: false, status: 409, json: async () => ({message: 'conflict'})};
+      }
+      if (body.sha !== cloud.sha) return {ok: false, status: 409, json: async () => ({message: 'conflict'})};
+      cloud.data = JSON.parse(Buffer.from(body.content, 'base64').toString());
+      cloud.sha = `s${cloud.puts.length + 1}`;
+      cloud.puts.push(cloud.data);
+      return {ok: true, status: 200, json: async () => ({content: {sha: cloud.sha}})};
+    }
+    return {ok: true, status: 200, json: async () => ({sha: cloud.sha, encoding: 'base64', content: Buffer.from(JSON.stringify(cloud.data)).toString('base64')})};
+  };
+  return cloud;
+}
+test('an upload with no change in the cloud sends exactly this device\'s data and shows no merge notice', async () => {
+  const cloud = fakeCloud([{id: 'a'}]);
+  const ctx = mergeContext({fetch: cloud.fetch});
+  ctx.rememberCloudBase('data/logs.json', 's0', [{id: 'a'}]);
+  const local = [{id: 'a'}, {id: 'mine'}];
+  const result = await ctx.commitJsonFile('data/logs.json', local, 'test', byId);
+  assert.equal(result.merged, false);
+  assert.equal(result.data, local, 'same array, untouched');
+  assert.equal(ids(cloud.data), 'a,mine');
+  assert.equal(ctx.messages.length, 0);
+});
+test('an upload after another device saved merges instead of overwriting', async () => {
+  const cloud = fakeCloud([{id: 'a'}, {id: 'theirs'}]);
+  cloud.sha = 's-other';
+  const ctx = mergeContext({fetch: cloud.fetch});
+  ctx.rememberCloudBase('data/logs.json', 's0', [{id: 'a'}]);
+  const result = await ctx.commitJsonFile('data/logs.json', [{id: 'a'}, {id: 'mine'}], 'test', byId);
+  assert.equal(result.merged, true);
+  assert.equal(ids(cloud.data), 'a,mine,theirs');
+  assert.ok(ctx.messages.at(-1).message.includes('合併'));
+  // The next upload starts from what was written, so it does not merge again.
+  const again = await ctx.commitJsonFile('data/logs.json', [...result.data, {id: 'later'}], 'test', byId);
+  assert.equal(again.merged, false);
+  assert.equal(ids(cloud.data), 'a,later,mine,theirs');
+});
+test('a write that loses a race (409) reads again, merges and retries', async () => {
+  const cloud = fakeCloud([{id: 'a'}], {conflictsBeforeWrite: 1});
+  const ctx = mergeContext({fetch: cloud.fetch});
+  ctx.rememberCloudBase('data/logs.json', 's0', [{id: 'a'}]);
+  const result = await ctx.commitJsonFile('data/logs.json', [{id: 'a'}, {id: 'mine'}], 'test', byId);
+  assert.equal(ids(cloud.data), 'a,mine,race0');
+  assert.equal(result.merged, true);
+});
+test('a missing file is created without a sha', async () => {
+  let putBody = null;
+  const ctx = mergeContext({fetch: async (url, options = {}) => {
+    if (options.method === 'PUT') { putBody = JSON.parse(options.body); return {ok: true, status: 201, json: async () => ({content: {sha: 'new'}})}; }
+    return {ok: false, status: 404, json: async () => ({})};
+  }});
+  const result = await ctx.commitJsonFile('data/guests.json', [{name: '外援'}], 'test', g => g.name);
+  assert.equal('sha' in putBody, false);
+  assert.equal(result.sha, 'new');
+});

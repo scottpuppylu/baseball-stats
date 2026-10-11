@@ -145,9 +145,11 @@ let externalGitHub = 0;
       assert.deepEqual(await page.evaluate(() => getAggregatedPitcherStats()), []);
       const before = await page.evaluate(() => {
         allGames = window.allGames = allGames.map((g, i) => { const c = JSON.parse(JSON.stringify(g)); c.pitcherName = i % 2 ? '田耕宇' : '盧宣嘉'; c.innings.forEach(inn => (inn.defensiveEvents || []).forEach(e => e.pitcher = c.pitcherName)); return c; });
-        return getAggregatedPitcherStats().map(p => ({name: p.name, outs: p.outs, sFip: p.sFip}));
+        return getAggregatedPitcherStats().map(p => ({name: p.name, outs: p.outs, sFip: p.sFip, tracked: p.tracked, untrackedHalves: p.untrackedHalves}));
       });
-      assert.deepEqual(before, [{name: '田耕宇', outs: 21, sFip: 4.5}, {name: '盧宣嘉', outs: 18, sFip: 4.5}]);
+      // These half-innings have no fielding events. They used to be counted as 3 outs, 0 BB, 0 K (21 / 18 outs, sFIP 4.50);
+      // since 2026/10/11 nothing is invented: the appearances count, the metrics are "資料不足" (null).
+      assert.deepEqual(before, [{name: '田耕宇', outs: 0, sFip: null, tracked: false, untrackedHalves: 7}, {name: '盧宣嘉', outs: 0, sFip: null, tracked: false, untrackedHalves: 6}]);
       const changed = await page.evaluate(async () => {
         const game = JSON.parse(JSON.stringify(allGames[0])); game.pitcherName = '盧宣嘉'; game.ourRole = '後攻'; game.innings = [{inningNum: 1, topBottom: 'top', runs: 0, hits: 0, plateAppearances: [], defensiveEvents: [{pitcher: '盧宣嘉', type: 'GO', outsAdded: 1, runs: 0}]}];
         allGames = window.allGames = [game]; selectedReviewGameId = game.id; switchMainTab('tabScorebook'); switchScorebookSubTab('review'); renderSelectedGameReview(game.id); toggleEditCurrentReviewGame();

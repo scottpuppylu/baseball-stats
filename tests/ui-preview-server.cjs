@@ -3,9 +3,12 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
 const port = Number(process.env.UI_PREVIEW_PORT || 54321);
 const stored = new Map();
+// Like GitHub: every version of a file has its own sha, and an upload must name the version it replaces.
+const shaOf = data => crypto.createHash('sha1').update(data).digest('hex');
 for (const name of ['logs', 'games', 'avatars', 'tags', 'defense', 'guests']) {
   const filename = path.join(root, 'data', `${name}.json`);
   if (fs.existsSync(filename)) stored.set(`data/${name}.json`, fs.readFileSync(filename));
@@ -46,14 +49,18 @@ http.createServer(async (req, res) => {
       if (req.method === 'PUT') {
         let body = '';
         for await (const chunk of req) body += chunk;
-        stored.set(file, Buffer.from(JSON.parse(body).content, 'base64'));
+        const put = JSON.parse(body);
+        // 422: the file exists but no sha was sent; 409: the sha is an older version (another device wrote in between).
+        if (stored.has(file) && !put.sha) { res.writeHead(422, {'Content-Type': 'application/json'}).end(JSON.stringify({message: 'sha was not supplied'})); return; }
+        if (stored.has(file) && put.sha !== shaOf(stored.get(file))) { res.writeHead(409, {'Content-Type': 'application/json'}).end(JSON.stringify({message: 'is at a newer version'})); return; }
+        stored.set(file, Buffer.from(put.content, 'base64'));
       }
       res.writeHead(200, {'Content-Type': 'application/json', 'Cache-Control': 'no-store'});
       const data = stored.get(file);
       // Like GitHub: the raw media type returns the file itself; JSON carries base64 content only up to 1 MB.
       if (req.method !== 'PUT' && /vnd\.github\.raw/.test(req.headers['x-mock-accept'] || '')) { res.end(data); return; }
       const large = data.length > (Number(process.env.UI_PREVIEW_INLINE_LIMIT) || 1024 * 1024);
-      res.end(JSON.stringify(req.method === 'PUT' ? {content:{sha:'isolated-preview-sha'}} : {sha: 'isolated-preview-sha', encoding: large ? 'none' : 'base64', content: large ? '' : data.toString('base64')}));
+      res.end(JSON.stringify(req.method === 'PUT' ? {content:{sha: shaOf(data)}} : {sha: shaOf(data), encoding: large ? 'none' : 'base64', content: large ? '' : data.toString('base64')}));
       return;
     }
     const filename = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
