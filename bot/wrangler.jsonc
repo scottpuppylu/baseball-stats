@@ -31,7 +31,7 @@
         {
           "binding": "DB",
           "database_name": "tk-aero-line-bot-staging",
-          "database_id": "REPLACE_WITH_STAGING_D1_ID",
+          "database_id": "24fa94a2-5a79-48e3-b0d7-4fd510202965",
           "migrations_dir": "migrations",
         },
       ],

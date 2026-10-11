@@ -2,6 +2,8 @@
 
 本次沿用 `bot/wrangler.jsonc` 與 `src/worker.ts`，選取 `--env staging`。Worker 名稱固定為 `tk-aero-line-group-bot-staging`；D1 名稱固定為 `tk-aero-line-bot-staging`、binding 固定為 `DB`。不得使用 `tests/wrangler-smoke.jsonc` 做遠端部署。正式網站、GitHub Pages、production Worker 均不在本次部署範圍。
 
+實際完成與未驗收狀態請看 [Staging 狀態紀錄](STAGING-STATUS.md)。既有 Staging D1 已建立，不要重複建立；Worker 因 Free CPU 限制未部署成功，擁有者選擇保留準備。
+
 本次授權：推送 `codex/line-group-bot-v1`、建立不自動合併的 PR、建立／部署獨立 Staging Worker 與 D1。正式群組啟用及主動推播另需授權。依使用者定案，既有 GitHub Token 問題不作為本次 release blocker；不調查舊 Token、不重寫歷史，也不要求撤銷才能部署。
 
 ## 最少必要設定
@@ -77,7 +79,7 @@ npx wrangler d1 execute DB --remote --config bot/wrangler.jsonc --env staging --
 
 ## 正式啟用與回滾
 
-正式啟用必須先完成以上實機验收，再由擁有者明確授權正式群組與通知。正式 Worker/D1、群組白名單、隊長 ID 要分開設定；Staging 成功不代表 production 成功。不更動正式網站部署或雲端寫入行為。
+正式啟用必須先完成以上實機驗收，再由擁有者明確授權正式群組與通知。正式 Worker/D1、群組白名單、隊長 ID 要分開設定；Staging 成功不代表 production 成功。不更動正式網站部署或雲端寫入行為。
 
 若部署版本需要退回，先保持 `ENABLE_PUSH=false`；使用 Cloudflare 前一個已驗證部署版本回滾，備份並保留 D1 綁定／報名資料，不刪 DB。若這是第一個尚未驗收的 Staging 部署，可停止 Webhook 並保留測試 DB；Git 的 `checkpoint-line-safe-baseline-v1` 是網站安全 checkpoint，**沒有 Bot Worker，不可當作可部署的 Bot 回滾版本**。真正 Worker 回滾以 deploy version ID 為準。
 
