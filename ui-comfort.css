@@ -249,6 +249,8 @@ table.ui-measure thead th img, table.ui-fold-table thead th img { display: none;
   #viewSummary[data-ui-columns="core"] td, #viewSummary[data-ui-columns="core"] th { padding: 12px 7px; }
   #viewSummary[data-ui-columns="core"] td:first-child > div { width: 28px; height: 28px; }
   #viewSummary[data-ui-columns="core"] td:first-child > span { margin-left: 6px; font-size: 12px; }
+  /* Android/Linux monospace digits are ~10% wider than Windows Consolas; slimmer number columns keep 360px phones from scrolling sideways. */
+  #viewSummary[data-ui-columns="core"] td:not(:first-child), #viewSummary[data-ui-columns="core"] th:not(:first-child) { padding-left: 5px; padding-right: 5px; }
   [id$="Modal"] { padding: 10px !important; }
   [id$="Modal"] > div { max-height: calc(100dvh - 20px); border-radius: 18px; }
   [id$="Modal"] button { min-height: 44px; }

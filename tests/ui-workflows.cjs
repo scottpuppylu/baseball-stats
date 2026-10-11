@@ -95,7 +95,7 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     // Failed finish must remain retryable after leaving and returning to the live scorer.
     await page.evaluate(() => { window.__previewFailWrites = true; });
     await click(page,'button[onclick="finishActiveGameAndSyncLogs()"]');
-    await page.waitForFunction(() => document.querySelector('#globalToastContainer')?.textContent.includes('尚未完整同步'));
+    await page.waitForFunction(() => document.querySelector('#globalToastContainer')?.textContent.includes('完賽資料尚未完整同步'));
     await tab(page,'Overview',mobile);
     await tab(page,'Scorebook',mobile);
     await click(page,'#btnScoreSubLive');
@@ -111,7 +111,8 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     await page.locator('#editGameOpponent').fill(`覆盤修改-${width}`);
     await page.evaluate(() => { window.__previewFailWrites = true; });
     await click(page,'button[onclick^="saveEditedReviewGame("]');
-    await page.waitForFunction(() => document.querySelector('#globalToastContainer')?.textContent.includes('尚未完整同步'));
+    // Wait for this save's own message: the finish-failure toast above can still be on screen (errors stay 6 s).
+    await page.waitForFunction(() => document.querySelector('#globalToastContainer')?.textContent.includes('修改資料尚未完整同步'));
     assert.ok(await page.locator('#editGameOpponent').isVisible());
     await page.evaluate(() => { window.__previewFailWrites = false; });
     await click(page,'button[onclick^="saveEditedReviewGame("]');

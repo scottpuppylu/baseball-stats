@@ -241,6 +241,17 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     for (const d of [A, B, C]) await d.context.close();
     checks.push('17-data-branch');
 
+    // ---------- CI finding: Android/Linux monospace digits are wider than Windows Consolas ----------
+    // Courier New has the same 0.6em digits as DejaVu Sans Mono / Droid Sans Mono; the overview table must still fit at 360px.
+    {
+      const {context, page} = await open(360, 740);
+      await page.addStyleTag({content: '.font-mono { font-family: "Courier New", monospace !important; }'});
+      const fit = await page.evaluate(() => ({client: viewSummary.clientWidth, scroll: viewSummary.scrollWidth}));
+      assert.ok(fit.scroll <= fit.client + 4, `overview table fits 360px with wide digits (${fit.scroll}/${fit.client})`);
+      await context.close();
+    }
+    checks.push('wide-digits-360');
+
     assert.deepEqual(errors, [], 'no pageerror or browser dialog');
     assert.equal(externalGitHub, 0, 'no real GitHub traffic');
     assert.deepEqual(hashes(), diskBefore, 'formal data files untouched');
