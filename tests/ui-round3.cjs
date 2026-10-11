@@ -214,7 +214,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     checks.push('21-csv-backup');
     await context.close();
 
-    // ---------- 17. Data on the data branch; writes from old pages on main are merged in ----------
+    // ---------- 17. Security migration: reviewed backend writes, no automatic main writes ----------
     const A = await open();
     const writes = [];
     A.page.on('request', req => { if (req.method() === 'PUT' && req.url().includes('/__mock-api/')) writes.push(JSON.parse(req.postData()).branch); });
@@ -227,19 +227,16 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     const oldPageLogs = [...mainLogs.filter(l => l.id !== removed), {id: 'log_old_page', date: '2026-10-11', tag: '舊版頁面', name: '洪銘駿', jersey: 30, pa: 2, ab: 2, h: 1, h1: 1, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0}];
     assert.equal(await cloudWrite(A.page, 'data/logs.json', oldPageLogs, 'main'), 200);
     const B = await open();
-    await B.page.waitForFunction(() => allLogs.some(l => l.id === 'log_old_page'));
-    const merged = (await cloudRead(B.page, 'data/logs.json')).data;
-    assert.ok(merged.some(l => l.id === 'log_old_page') && !merged.some(l => l.id === removed), 'the old page\'s addition and deletion reach the data branch');
-    assert.match(await lastToast(B.page), /舊版頁面/);
-    const marker = (await cloudRead(B.page, 'data/legacy-main.json')).data;
-    assert.equal(marker['data/logs.json'], (await cloudRead(B.page, 'data/logs.json', 'main')).sha, 'marker records the merged main version');
-    // Already merged: the next page does not merge again, so a later deletion on the data branch sticks.
-    await B.page.evaluate(() => deleteSingleLog('log_old_page'));
-    const C = await open();
-    await C.page.waitForTimeout(1000);
-    assert.equal(await C.page.evaluate(() => allLogs.some(l => l.id === 'log_old_page')), false, 'no second merge');
-    for (const d of [A, B, C]) await d.context.close();
-    checks.push('17-data-branch');
+    await B.page.waitForTimeout(1000);
+    assert.equal(await B.page.evaluate(() => allLogs.some(l => l.id === 'log_old_page')), false,
+      'unreviewed legacy-main data must not be silently imported');
+    const unchanged = (await cloudRead(B.page, 'data/logs.json')).data;
+    assert.ok(!unchanged.some(l => l.id === 'log_old_page') && unchanged.some(l => l.id === removed),
+      'legacy main additions and deletions do not mutate the backend source');
+    assert.deepEqual(await B.page.evaluate(() => window.__previewWrites), [], 'loading a page never performs privileged migration writes');
+    assert.equal(await B.page.evaluate(() => mergeLegacyMainWrites()), false);
+    for (const d of [A, B]) await d.context.close();
+    checks.push('17-reviewed-backend-migration');
 
     // ---------- CI finding: Android/Linux monospace digits are wider than Windows Consolas ----------
     // Courier New has the same 0.6em digits as DejaVu Sans Mono / Droid Sans Mono; the overview table must still fit at 360px.

@@ -1,0 +1,13 @@
+PRAGMA foreign_keys = ON;
+CREATE TABLE IF NOT EXISTS bot_discovery(group_id TEXT PRIMARY KEY, first_seen INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS bot_members(group_id TEXT NOT NULL,user_id TEXT NOT NULL,player_key TEXT NOT NULL,name TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('player','coach','admin')),active INTEGER NOT NULL DEFAULT 1,PRIMARY KEY(group_id,user_id),UNIQUE(group_id,player_key));
+CREATE TABLE IF NOT EXISTS bot_binding_requests(id TEXT PRIMARY KEY,group_id TEXT NOT NULL,user_id TEXT NOT NULL,player_key TEXT NOT NULL,name TEXT NOT NULL,display_name TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',at INTEGER NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS bot_pending_binding ON bot_binding_requests(group_id,user_id) WHERE status='pending';
+CREATE TABLE IF NOT EXISTS bot_flows(id TEXT PRIMARY KEY,group_id TEXT NOT NULL,user_id TEXT NOT NULL,kind TEXT NOT NULL,step TEXT NOT NULL,payload TEXT NOT NULL,version INTEGER NOT NULL DEFAULT 1,expires INTEGER NOT NULL,UNIQUE(group_id,user_id,kind));
+CREATE TABLE IF NOT EXISTS bot_matches(id TEXT PRIMARY KEY,group_id TEXT NOT NULL,starts INTEGER NOT NULL,meet INTEGER NOT NULL,deadline INTEGER NOT NULL,location TEXT NOT NULL,opponent TEXT NOT NULL,note TEXT NOT NULL,created_by TEXT NOT NULL,reminders INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS bot_attendance(match_id TEXT NOT NULL REFERENCES bot_matches(id),user_id TEXT NOT NULL,status TEXT NOT NULL CHECK(status IN ('yes','maybe','no')),updated_at INTEGER NOT NULL,event_id TEXT NOT NULL,version INTEGER NOT NULL DEFAULT 1,PRIMARY KEY(match_id,user_id));
+CREATE TABLE IF NOT EXISTS bot_lineups(id TEXT PRIMARY KEY,match_id TEXT NOT NULL REFERENCES bot_matches(id),group_id TEXT NOT NULL,payload TEXT NOT NULL,fingerprint TEXT NOT NULL,confirmed_by TEXT,created INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS bot_events(id TEXT PRIMARY KEY,group_id TEXT NOT NULL,status TEXT NOT NULL,at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS bot_limits(key TEXT PRIMARY KEY,count INTEGER NOT NULL,at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS bot_outbox(id TEXT PRIMARY KEY,match_id TEXT NOT NULL REFERENCES bot_matches(id),group_id TEXT NOT NULL,kind TEXT NOT NULL,due INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',retry_key TEXT NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,claimed_at INTEGER,reserved INTEGER NOT NULL DEFAULT 0,UNIQUE(match_id,kind));
+CREATE TABLE IF NOT EXISTS bot_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,event_id TEXT,user_id TEXT,group_id TEXT NOT NULL,action TEXT NOT NULL,target TEXT NOT NULL,at INTEGER NOT NULL);

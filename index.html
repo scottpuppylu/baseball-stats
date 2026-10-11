@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>淡江航太系壘 | 賽伯計量分析與 GitHub 雲端數據庫</title>
+  <title>淡江航太系壘 | 賽伯計量分析與 安全後端數據庫</title>
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <meta name="theme-color" content="#0b1120">
@@ -223,7 +223,7 @@
             </div>
             <div class="col-span-2 md:col-span-6 flex flex-wrap justify-end gap-2 pt-2 border-t border-slate-800/60">
               <button type="button" id="cancelAddLogBtn" class="bg-slate-800 text-slate-400 px-3 py-1.5 rounded-lg">取消</button>
-              <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg font-medium">儲存並寫入 GitHub 雲端</button>
+              <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg font-medium">儲存並寫入 安全後端</button>
             </div>
           </form>
 
@@ -252,7 +252,7 @@
             </div>
             <div class="col-span-1 md:col-span-4 flex justify-end gap-2 pt-2 border-t border-slate-800/60">
               <button type="button" id="cancelAddPlayerBtn" class="bg-slate-800 text-slate-400 px-3 py-1.5 rounded-lg">取消</button>
-              <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg font-medium">建立檔案並同步至 GitHub</button>
+              <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg font-medium">建立檔案並同步至安全後端</button>
             </div>
           </form>
 
@@ -1106,7 +1106,7 @@
                 <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">DIGITAL SCOREBOOK & SPRAY CHART</span>
                 <h2 class="text-xl font-black text-white tracking-tight">慢速壘球數位圖像化場記系統</h2>
               </div>
-              <p class="text-xs text-slate-400 mt-1">實況球場圖像記錄、球員打球落點噴流圖、歷史賽事覆盤診斷，支援每局結束 GitHub 雲端一鍵同步</p>
+              <p class="text-xs text-slate-400 mt-1">實況球場圖像記錄、球員打球落點噴流圖、歷史賽事覆盤診斷，支援每局結束 安全後端一鍵同步</p>
             </div>
             <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar bg-slate-950/80 p-1 rounded-xl border border-slate-800 shrink-0">
               <button onclick="switchScorebookSubTab('live')" id="btnScoreSubLive" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white shadow transition whitespace-nowrap">
@@ -1592,9 +1592,9 @@
                 <div>
                   <div class="flex items-center space-x-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span class="text-xs font-bold text-amber-300">防呆與 GitHub 雲端每局同步</span>
+                    <span class="text-xs font-bold text-amber-300">防呆與 安全後端每局同步</span>
                   </div>
-                  <p class="text-[11px] text-slate-400 mt-0.5">每局記完請點擊右方按鈕，即時推播本局紀錄至 GitHub 雲端資料庫（<code>data/games.json</code>），換頁刷新免擔憂！</p>
+                  <p class="text-[11px] text-slate-400 mt-0.5">每局記完請點擊右方按鈕，儲存本局紀錄至 安全後端資料庫（<code>data/games.json</code>），換頁刷新免擔憂！</p>
                 </div>
                 <div class="flex items-center space-x-2 shrink-0">
                   <button onclick="switchInningNext()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
@@ -2102,13 +2102,13 @@
               </div>
             </div>
             </section>
-      </div><!-- 守備能力手動排名彈窗 (內部教練專用：支援各守位順位 1~3 排名與 GitHub 雲端同步) -->
+      </div><!-- 守備能力手動排名彈窗 (內部教練專用：支援各守位順位 1~3 排名與 安全後端同步) -->
   <div id="defenseModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
     <div class="bg-slate-900 border border-amber-700/60 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
         <div class="flex items-center space-x-2.5">
           <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">COACH ONLY</span>
-          <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">各守位守備能力排名設定 (GitHub 雲端同步)</h3>
+          <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">各守位守備能力排名設定 (安全後端同步)</h3>
         </div>
         <button onclick="closeDefenseModal()" class="text-slate-400 hover:text-white text-2xl font-bold leading-none">&times;</button>
       </div>
@@ -2116,7 +2116,7 @@
 
       <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs text-slate-300">
         <div class="bg-amber-950/20 border border-amber-800/40 rounded-xl p-3 text-[11px] text-amber-300/90 leading-relaxed">
-          <span class="font-bold">說明：</span>為慢速壘球 10 個正規守位個別指派選手適性順位（第 1 順位為先發首選，第 2～5 順位為備選/應急）。此設定會即時推播至 GitHub 雲端資料庫（<code>data/defense.json</code>），並作為「最佳棒次推薦」指派守備位置與適性加權之依據。
+          <span class="font-bold">說明：</span>為慢速壘球 10 個正規守位個別指派選手適性順位（第 1 順位為先發首選，第 2～5 順位為備選/應急）。此設定會寫入 安全後端資料庫（<code>data/defense.json</code>），並作為「最佳棒次推薦」指派守備位置與適性加權之依據。
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="defenseRosterContainer"></div>
       </div>
@@ -2465,7 +2465,6 @@
     let activeGame = window.activeGame = readStoredJson('rebas_active_game', null);
 
 
-    const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
 
 
     const DEFAULT_JERSEY_MAP = {
@@ -2543,7 +2542,7 @@
     );
 
 
-    // 支援選手 / 非隊員名冊 (持久化於 localStorage 並與 GitHub 雲端雙向同步)
+    // 支援選手 / 非隊員名冊 (持久化於 localStorage 並與 安全後端雙向同步)
     let guestPlayers = window.guestPlayers = (function() {
       try {
         const stored = sanitizeLoadedData(JSON.parse(localStorage.getItem('rebas_guest_players')) || []);
@@ -2629,9 +2628,16 @@
     }
 
     async function fetchGitHubContent(filePath, timeoutMs = 3500, ref = DATA_BRANCH) {
+      if (ref === DATA_BRANCH && /^data\/(logs|games|avatars|tags|defense|guests)\.json$/.test(filePath)) {
+        try {
+          const response = await fetchWithTimeout(`/api/documents/${filePath.slice(5)}`, {}, timeoutMs);
+          if (response.ok) return await response.json();
+          if (response.status !== 404) throw new Error('後端資料讀取失敗');
+        } catch (error) { /* Public original source remains the read-only fallback. */ }
+      }
       const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${ref}&t=${Date.now()}`;
       const headers = { 'Accept': 'application/vnd.github.v3+json' };
-      if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
+
       const res = await fetchWithTimeout(url, { headers }, timeoutMs);
       if (!res.ok) {
         const err = new Error(`HTTP ${res.status}`);
@@ -2668,46 +2674,8 @@
     const LEGACY_MARKER_PATH = 'data/legacy-main.json';
     let legacyMergeRunning = false;
     async function mergeLegacyMainWrites() {
-      if (legacyMergeRunning) return false;
-      legacyMergeRunning = true;
-      try {
-        const keys = { [DATA_FILE_PATH]: l => l.id, [GAMES_FILE_PATH]: g => g.id, [GUESTS_FILE_PATH]: g => g.name, [AVATARS_FILE_PATH]: null, [TAGS_FILE_PATH]: null, [DEFENSE_FILE_PATH]: null };
-        const headers = { 'Accept': 'application/vnd.github.v3+json', 'Authorization': `Bearer ${GITHUB_TOKEN}` };
-        const listing = await fetchWithTimeout(`https://api.github.com/repos/${GITHUB_REPO}/contents/data?ref=${GITHUB_BRANCH}&t=${Date.now()}`, { headers }, 5000);
-        if (!listing.ok) return false;
-        const onMain = new Map((await listing.json()).filter(entry => entry && entry.type === 'file').map(entry => [entry.path, entry.sha]));
-        let marker;
-        try { marker = (await fetchGitHubContent(LEGACY_MARKER_PATH, 5000)).content || {}; } catch (err) { return false; }
-        const changed = Object.keys(keys).filter(file => onMain.has(file) && onMain.get(file) !== marker[file]);
-        if (!changed.length) return false;
-        const blob = async sha => {
-          const res = await fetchWithTimeout(`https://api.github.com/repos/${GITHUB_REPO}/git/blobs/${sha}`, { headers }, WRITE_TIMEOUT_MS);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return sanitizeLoadedData(JSON.parse(base64ToUtf8((await res.json()).content)));
-        };
-        for (const file of changed) {
-          const keyOf = keys[file];
-          const empty = keyOf ? [] : {};
-          const before = marker[file] ? await blob(marker[file]) : empty; // what main held when it was last merged
-          const after = await blob(onMain.get(file));                    // what the old page wrote since
-          let current = { data: empty, sha: null };
-          try {
-            const res = await fetchGitHubContent(file, WRITE_TIMEOUT_MS);
-            current = { data: sanitizeLoadedData(res.content), sha: res.sha };
-          } catch (err) { if (err.status !== 404) throw err; }
-          // Apply main's changes (before → after) onto the data branch, then upload against that version.
-          rememberCloudBase(file, current.sha, current.data);
-          await commitJsonFile(file, mergeCloudChanges(before, after, current.data, keyOf).data, `合併舊版頁面寫入 main 的資料：${file}`, keyOf);
-          marker = { ...marker, [file]: onMain.get(file) };
-          await commitJsonFile(LEGACY_MARKER_PATH, marker, `記錄已併入的舊版資料版本：${file}`);
-        }
-        return true;
-      } catch (err) {
-        console.warn('[legacy-main]', err);
-        return false;
-      } finally {
-        legacyMergeRunning = false;
-      }
+      // Frontend automatic migration was a privileged production write. Owner now imports reviewed data offline.
+      return false;
     }
 
     // ★ 多裝置同時寫入保護：記住本頁載入（或上次寫入）時的雲端內容與版本。寫入前若雲端已被其他裝置更新，
@@ -2772,18 +2740,16 @@
           conflicts = result.conflicts;
           merged = JSON.stringify(data) !== JSON.stringify(localData);
         }
-        const putBody = { message: commitMessage, content: utf8ToBase64(JSON.stringify(data, null, 2)), branch: DATA_BRANCH };
-        if (remoteSha) putBody.sha = remoteSha;
-        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`, {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(putBody)
+        const putRes = await fetchWrite(`/api/documents/${filePath.slice(5)}`, {
+          method: 'PUT', credentials: 'same-origin',
+          headers: { 'X-Team-Request': '1', 'Content-Type': 'application/json' },
+          body: JSON.stringify({content: data, ...(remoteSha ? {sha:remoteSha} : {})})
         });
         // 409: another device uploaded between our read and our write; read again and merge again.
         if (putRes.status === 409 && attempt < 2) continue;
         if (!putRes.ok) {
           const errData = await putRes.json().catch(() => ({}));
-          throw new Error(errData.message || `GitHub API 寫入拒絕 (HTTP ${putRes.status})`);
+          throw new Error(errData.error || errData.message || `安全後端未連線或未以管理員登入 (HTTP ${putRes.status})`);
         }
         const resData = await putRes.json();
         const sha = resData && resData.content ? resData.content.sha : null;
@@ -2828,7 +2794,7 @@
       localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
       syncJerseyMaps();
       commitGuestsToGitHub(guestPlayers, `feat: add guest player ${cleanName}`).then(success => {
-        showSyncResult(success, `支援選手 ${cleanName} 已同步至 GitHub`, '支援名冊同步失敗；已保留本機名單，請稍後重試。');
+        showSyncResult(success, `支援選手 ${cleanName} 已同步至安全後端`, '支援名冊同步失敗；已保留本機名單，請稍後重試。');
       });
       return cleanName;
     };
@@ -3361,7 +3327,7 @@
 
 
       const modalStatus = document.getElementById('defenseModalSyncStatus');
-      if (modalStatus) modalStatus.textContent = '正在寫入 GitHub 雲端...';
+      if (modalStatus) modalStatus.textContent = '正在寫入 安全後端...';
 
 
       try {
@@ -3381,7 +3347,7 @@
       } catch (err) {
         setStatusBadge(`[寫入失敗] 守備排名同步失敗: ${err.message}`, 'error');
         if (modalStatus) modalStatus.textContent = `同步失敗: ${err.message}`;
-        showToast(`守備排名寫入 GitHub 失敗：${err.message}`, 'error');
+        showToast(`守備排名寫入安全後端 失敗：${err.message}`, 'error');
         return false;
       }
     }
@@ -4671,7 +4637,7 @@ window.toggleDiagnosticsCollapse = function() {
         return true;
       } catch (err) {
         setStatusBadge(`[寫入失敗] 頭像同步失敗: ${err.message}`, 'error');
-        showToast(`頭像寫入 GitHub 失敗：${err.message}`, 'error');
+        showToast(`頭像寫入安全後端 失敗：${err.message}`, 'error');
         return false;
       }
     }
@@ -4704,7 +4670,7 @@ window.toggleDiagnosticsCollapse = function() {
         return true;
       } catch (err) {
         setStatusBadge(`[寫入失敗] 標籤同步失敗: ${err.message}`, 'error');
-        showToast(`標籤寫入 GitHub 失敗：${err.message}`, 'error');
+        showToast(`標籤寫入安全後端 失敗：${err.message}`, 'error');
         return false;
       }
     }
@@ -4797,7 +4763,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
     async function commitLogsToGitHub(updatedLogs, commitMessage = "update: sync match logs via portal") {
-      setStatusBadge('雲端資料庫：正在寫入 GitHub...', 'pending');
+      setStatusBadge('雲端資料庫：正在寫入安全後端...', 'pending');
 
 
       try {
@@ -4815,7 +4781,7 @@ window.toggleDiagnosticsCollapse = function() {
         return true;
       } catch (err) {
         setStatusBadge(`[寫入失敗] 雲端寫入失敗: ${err.message}`, 'error');
-        showToast(`寫入 GitHub 失敗：${err.message}`, 'error');
+        showToast(`寫入安全後端 失敗：${err.message}`, 'error');
         return false;
       }
     }
@@ -7329,7 +7295,7 @@ function renderCustomChart(agg) {
         renderAll();
         showSyncResult(gamesSynced && logsSynced, `已徹底刪除【${gameDesc}】比賽紀錄與全隊對應日誌！`);
       } else {
-        if (!confirm(`確認自 GitHub 雲端資料庫永久刪除此筆日誌（#${targetLog.jersey} ${targetLog.name} - ${targetLog.date}）？`)) return;
+        if (!confirm(`確認自 安全後端資料庫永久刪除此筆日誌（#${targetLog.jersey} ${targetLog.name} - ${targetLog.date}）？`)) return;
         const updated = allLogs.filter(l => l.id !== id);
         const success = await commitLogsToGitHub(updated, `delete: remove manual log ${id}`);
         showSyncResult(success, '已自雲端資料庫刪除該筆日誌', '雲端刪除失敗，該筆日誌尚未刪除，請重試。');
@@ -8288,7 +8254,7 @@ function renderCustomChart(agg) {
           inningSyncBtn.innerHTML = '<span>✕</span> 同步失敗重試';
           inningSyncBtn.disabled = false;
         }
-        showToast(`場記資料同步至 GitHub 失敗：${err.message}\n（本地 localStorage 已安全暫存，資料不會遺失！）`, 'error');
+        showToast(`場記資料同步至安全後端 失敗：${err.message}\n（本地 localStorage 已安全暫存，資料不會遺失！）`, 'error');
         return false;
       }
     }
@@ -9534,7 +9500,7 @@ function renderCustomChart(agg) {
 
     window.syncCurrentInningToCloud = async function() {
       if (!activeGame) return;
-      showToast('正在將當局比賽戰況與日誌同步至 GitHub...');
+      showToast('正在將當局比賽戰況與日誌同步至安全後端...');
 
       const existingIdx = allGames.findIndex(g => g.id === activeGame.id);
       if (existingIdx !== -1) {
@@ -10389,7 +10355,7 @@ function renderCustomChart(agg) {
               <h3 class="text-sm sm:text-base font-black text-amber-300 flex items-center gap-2">
                 <span>✏️</span> 編輯歷史賽事資訊、打席與投手守備數據
               </h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">修改賽事比分、打席與投手守備事件，儲存時將自動同步至 GitHub 並即時重算打者與投手賽伯計量指標</p>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">修改賽事比分、打席與投手守備事件，儲存時將自動同步至安全後端 並即時重算打者與投手賽伯計量指標</p>
             </div>
             <button type="button" onclick="toggleEditCurrentReviewGame()" class="text-slate-400 hover:text-white text-xs px-2.5 py-1 rounded border border-slate-700 bg-slate-900 transition">✕ 取消</button>
           </div>
@@ -10435,7 +10401,7 @@ function renderCustomChart(agg) {
           <div class="pt-3 border-t border-slate-800 flex items-center justify-end space-x-3">
             <button type="button" onclick="toggleEditCurrentReviewGame()" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 text-xs font-medium hover:bg-slate-800 transition">取消返回</button>
             <button type="button" onclick="saveEditedReviewGame('${game.id}')" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 text-xs font-black transition shadow-lg flex items-center gap-1.5">
-              <span>💾</span> 儲存修改並同步至 GitHub (自動更新全隊攻守與投手數據)
+              <span>💾</span> 儲存修改並同步至安全後端 (自動更新全隊攻守與投手數據)
             </button>
           </div>
         </div>

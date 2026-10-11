@@ -1,0 +1,50 @@
+{
+  "name": "tk-aero-line-group-bot",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "limits": { "cpu_ms": 30000 },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tk-aero-line-bot",
+      "database_id": "REPLACE_WITH_OWNER_D1_ID",
+    },
+  ],
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "vars": {
+    "ALLOWED_GROUP_IDS": "",
+    "BOT_OWNER_USER_IDS": "",
+    "ALLOW_PUBLIC_STATS": "false",
+    "ENABLE_PUSH": "false",
+    "REPLY_LIMIT_PER_MINUTE": "12",
+    "USER_COOLDOWN_MS": "1500",
+    "PUSH_LIMIT_PER_DAY": "5",
+    "MONTHLY_PUSH_RECIPIENT_LIMIT": "200",
+  },
+  "env": {
+    "staging": {
+      "name": "tk-aero-line-group-bot-staging",
+      "workers_dev": true,
+      "observability": { "enabled": true },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "tk-aero-line-bot-staging",
+          "database_id": "24fa94a2-5a79-48e3-b0d7-4fd510202965",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "vars": {
+        "ALLOWED_GROUP_IDS": "",
+        "BOT_OWNER_USER_IDS": "",
+        "ALLOW_PUBLIC_STATS": "false",
+        "ENABLE_PUSH": "false",
+        "REPLY_LIMIT_PER_MINUTE": "12",
+        "USER_COOLDOWN_MS": "1500",
+        "PUSH_LIMIT_PER_DAY": "0",
+        "MONTHLY_PUSH_RECIPIENT_LIMIT": "0",
+      },
+    },
+  },
+}

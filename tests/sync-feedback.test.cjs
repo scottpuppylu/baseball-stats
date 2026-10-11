@@ -331,12 +331,12 @@ function fakeCloud(initial, {conflictsBeforeWrite = 0} = {}) {
         return {ok: false, status: 409, json: async () => ({message: 'conflict'})};
       }
       if (body.sha !== cloud.sha) return {ok: false, status: 409, json: async () => ({message: 'conflict'})};
-      cloud.data = JSON.parse(Buffer.from(body.content, 'base64').toString());
+      cloud.data = body.content;
       cloud.sha = `s${cloud.puts.length + 1}`;
       cloud.puts.push(cloud.data);
       return {ok: true, status: 200, json: async () => ({content: {sha: cloud.sha}})};
     }
-    return {ok: true, status: 200, json: async () => ({sha: cloud.sha, encoding: 'base64', content: Buffer.from(JSON.stringify(cloud.data)).toString('base64')})};
+    return {ok: true, status: 200, json: async () => url.startsWith('/api/') ? ({sha:cloud.sha,content:cloud.data}) : ({sha: cloud.sha, encoding: 'base64', content: Buffer.from(JSON.stringify(cloud.data)).toString('base64')})};
   };
   return cloud;
 }
