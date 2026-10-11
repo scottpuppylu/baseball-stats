@@ -1,0 +1,25 @@
+{
+  "name": "tk-aero-line-group-bot",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "limits": { "cpu_ms": 30000 },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tk-aero-line-bot",
+      "database_id": "REPLACE_WITH_OWNER_D1_ID",
+    },
+  ],
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "vars": {
+    "ALLOWED_GROUP_IDS": "",
+    "BOT_OWNER_USER_IDS": "",
+    "ALLOW_PUBLIC_STATS": "false",
+    "ENABLE_PUSH": "false",
+    "REPLY_LIMIT_PER_MINUTE": "12",
+    "USER_COOLDOWN_MS": "1500",
+    "PUSH_LIMIT_PER_DAY": "5",
+    "MONTHLY_PUSH_RECIPIENT_LIMIT": "200",
+  },
+}

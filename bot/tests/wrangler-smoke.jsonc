@@ -1,0 +1,23 @@
+{
+  "name": "line-bot-local-smoke-only",
+  "main": "runtime-worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "line-bot-isolated-smoke",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+    },
+  ],
+  "vars": {
+    "LINE_CHANNEL_SECRET": "isolated-worker-secret",
+    "LINE_CHANNEL_ACCESS_TOKEN": "mock-never-network",
+    "ALLOWED_GROUP_IDS": "C11111111111111111111111111111111",
+    "BOT_OWNER_USER_IDS": "Uaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "ALLOW_PUBLIC_STATS": "true",
+    "ENABLE_PUSH": "false",
+    "USER_COOLDOWN_MS": "0",
+    "REPLY_LIMIT_PER_MINUTE": "120",
+  },
+}

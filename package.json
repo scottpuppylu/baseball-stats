@@ -4,9 +4,30 @@
   "description": "淡江航太系壘數據網站：測試工具（網站本身不需建置）",
   "scripts": {
     "test": "node tests/run-all.cjs",
-    "test:unit": "node --test tests/sync-feedback.test.cjs tests/ui-integrity.test.cjs tests/spray-archive.test.cjs tests/lineup-model.test.cjs tests/player-diagnostics.test.cjs"
+    "test:unit": "node --test tests/sync-feedback.test.cjs tests/ui-integrity.test.cjs tests/spray-archive.test.cjs tests/lineup-model.test.cjs tests/player-diagnostics.test.cjs",
+    "bot:engine": "node bot/scripts/build-engine.cjs",
+    "bot:check-engine": "node bot/scripts/build-engine.cjs --check",
+    "bot:typecheck": "tsc -p bot/tsconfig.json",
+    "bot:test": "npm run bot:check-engine && npm run bot:typecheck && tsx --test bot/tests/*.test.ts",
+    "bot:consistency": "node bot/scripts/consistency.cjs",
+    "bot:replay": "tsx bot/scripts/replay.ts",
+    "bot:mock": "tsx bot/scripts/mock.ts",
+    "bot:dev": "wrangler dev --config bot/wrangler.jsonc --local",
+    "bot:build": "wrangler deploy --dry-run --config bot/wrangler.jsonc --outdir .local/line-worker-dry-run",
+    "bot:worker-smoke": "node bot/scripts/worker-smoke.cjs",
+    "bot:security": "node bot/scripts/security-scan.cjs && npm audit"
   },
   "devDependencies": {
-    "playwright": "1.62.1"
+    "@types/node": "24.10.0",
+    "playwright": "1.62.1",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "wrangler": "4.149.0"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "11.3.0"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }
