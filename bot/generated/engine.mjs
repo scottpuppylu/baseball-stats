@@ -133,13 +133,13 @@ function getGameOrderedBatters(game) {
       if (!game) return [];
       const ordered = [];
       const addedNames = new Set();
-      
+
       const startLineup = (game.startingLineup && game.startingLineup.length > 0)
         ? game.startingLineup
         : (game.lineup || []);
-      
+
       const targetSlotsCount = Math.max(startLineup.length, (game.lineup || []).length, 10);
-      
+
       for (let s = 1; s <= targetSlotsCount; s++) {
         let starter = startLineup[s - 1] || null;
         if (!starter && game.innings) {

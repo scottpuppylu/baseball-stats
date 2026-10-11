@@ -31,7 +31,7 @@ function extract(source, name) {
   }
   visit(tree);
   if (!found) throw Error(`Missing original symbol ${name}`);
-  return found;
+  return found.replace(/^[ \t]+$/gm, "");
 }
 const names = [
   "DEFAULT_JERSEY_MAP",
@@ -106,7 +106,7 @@ fs.mkdirSync(require("node:path").join(root, "bot/generated"), {
 });
 const target = require("node:path").join(root, "bot/generated/engine.mjs");
 if (process.argv.includes("--check")) {
-  if (!fs.existsSync(target) || fs.readFileSync(target, "utf8") !== generated)
+  if (!fs.existsSync(target) || fs.readFileSync(target, "utf8").replace(/\r\n/g,"\n") !== generated)
     throw Error("Generated engine is stale; run npm run bot:engine");
 } else fs.writeFileSync(target, generated);
 console.log(
