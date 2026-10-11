@@ -39,6 +39,22 @@ window.addEventListener('error', e => window.__previewErrors.push(e.message));
 const previewFetch = window.fetch.bind(window);
 window.fetch = (input, options = {}) => {
   const url = String(input);
+  if (url.startsWith('/api/documents/')) {
+    const file = 'data/' + url.slice('/api/documents/'.length);
+    const write = options.method === 'PUT';
+    if (write) {
+      window.__previewWrites.push(file);
+      if (window.__previewFailWrites) return Promise.resolve(new Response('{}', {status:500}));
+    }
+    const data = write ? JSON.parse(options.body) : null;
+    const body = write ? JSON.stringify({branch:'data',sha:data.sha,content:btoa(unescape(encodeURIComponent(JSON.stringify(data.content))))}) : undefined;
+    return previewFetch('/__mock-api/' + file + '?ref=data', {...options,body,headers:{'Content-Type':'application/json'}}).then(async response => {
+      const payload = await response.json();
+      if (!response.ok || write) return new Response(JSON.stringify(payload), {status:response.status});
+      if (!payload.content) return new Response('{}', {status:404}); // Original large-file raw fallback still exercised.
+      return new Response(JSON.stringify({content:JSON.parse(decodeURIComponent(escape(atob(payload.content)))),sha:payload.sha}));
+    });
+  }
   if (/^https:\\/\\/(api\\.github\\.com|raw\\.githubusercontent\\.com)\\//.test(url)) {
     const parsed = new URL(url);
     let file, ref = parsed.searchParams.get('ref') || 'data', accept = (options.headers && (options.headers.Accept || options.headers.accept)) || '';
@@ -107,7 +123,7 @@ http.createServer(async (req, res) => {
     }
     let content = fs.readFileSync(filename);
     if (filename.endsWith('index.html')) {
-      content = Buffer.from(content.toString().replace(/const GITHUB_TOKEN =[^\r\n]+/, "const GITHUB_TOKEN = 'isolated-preview';").replace('<head>', '<head>' + injection));
+      content = Buffer.from(content.toString().replace('<head>', '<head>' + injection));
     }
     const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp'};
     res.writeHead(200, {'Content-Type': mime[path.extname(filename)] || 'application/octet-stream', 'Cache-Control': 'no-store'});
