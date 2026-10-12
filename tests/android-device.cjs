@@ -103,6 +103,22 @@ const visibleTab = page => page.evaluate(() => document.querySelector('[id^="pan
     await page.evaluate(() => localStorage.removeItem('rebas_active_game'));
     checks.push('rotation-background-restart');
 
+    // The on-screen keyboard does not cover the field being typed in.
+    await page.evaluate(() => switchMainTab('tabOverview'));
+    await page.evaluate(() => { document.getElementById('toggleAddLogBtn')?.click(); });
+    const field = page.locator('#addLogForm input:not([type=date]):not([type=hidden]):visible').first();
+    if (await field.count()) {
+      await field.evaluate(el => el.scrollIntoView({block: 'end'}));
+      await field.click();
+      await sleep(1500);
+      await sleep(1000);
+      const fit = await field.evaluate(el => ({focused: document.activeElement === el, top: el.getBoundingClientRect().top, bottom: el.getBoundingClientRect().bottom, view: window.visualViewport.height, name: el.name || el.id}));
+      shot('keyboard');
+      assert.ok(fit.focused && fit.top >= 0 && fit.bottom <= fit.view + 1, `field visible above the keyboard (${JSON.stringify(fit)})`);
+      adb('shell', 'input', 'keyevent', '111'); await sleep(600);
+      checks.push('keyboard');
+    }
+
     // Uploads without the secure API are refused and reported, never shown as synced.
     const write = await page.evaluate(() => commitTagsToGitHub({...playerTags}, 'android qa'));
     assert.equal(write, false);
