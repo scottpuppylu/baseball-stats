@@ -1,12 +1,29 @@
 {
   "name": "baseball-stats",
   "private": true,
-  "description": "淡江航太系壘數據網站：測試工具（網站本身不需建置）",
+  "description": "淡江航太系壘數據網站、PWA 與 Android App（網站本身不需建置）",
   "scripts": {
     "test": "node tests/run-all.cjs",
-    "test:unit": "node --test tests/sync-feedback.test.cjs tests/ui-integrity.test.cjs tests/spray-archive.test.cjs tests/lineup-model.test.cjs tests/player-diagnostics.test.cjs"
+    "test:unit": "node --test tests/*.test.cjs",
+    "test:mobile": "node --test tests/pwa.test.cjs tests/cloud-api.test.cjs tests/cloud-sync.test.cjs tests/android-project.test.cjs && node tests/run-all.cjs ui-pwa ui-mobile-comfort ui-responsive",
+    "build:web": "node scripts/build-web.mjs",
+    "cap:sync": "npm run build:web && cap sync android",
+    "build:android": "npm run cap:sync && node scripts/gradle.mjs assembleDebug",
+    "build:android:release": "npm run cap:sync && node scripts/gradle.mjs bundleRelease assembleRelease",
+    "test:android-device": "node tests/android-device.cjs"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.5.3",
     "playwright": "1.62.1"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/browser": "8.0.5",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/filesystem": "8.1.4",
+    "@capacitor/network": "8.0.1",
+    "@capacitor/share": "8.0.3",
+    "@capacitor/splash-screen": "8.0.2"
   }
 }

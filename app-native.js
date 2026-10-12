@@ -117,6 +117,21 @@
     return Share.share({title: data.title, text: data.text, files: uris, dialogTitle: '分享'});
   };
 
+  // ---------- connection ----------
+  // Android WebView does not update navigator.onLine by itself; mirror the phone's real connection so the offline
+  // notice (pwa.js) and the upload guard (cloud-sync.js) behave exactly as on the website.
+  const Network = cap.registerPlugin('Network');
+  let connected = true;
+  try { Object.defineProperty(Navigator.prototype, 'onLine', {configurable: true, get: () => connected}); } catch (e) { /* keep the browser value */ }
+  const applyStatus = status => {
+    const now = Boolean(status && status.connected);
+    if (now === connected) return;
+    connected = now;
+    window.dispatchEvent(new Event(now ? 'online' : 'offline'));
+  };
+  Network.getStatus().then(applyStatus).catch(() => {});
+  Network.addListener('networkStatusChange', applyStatus);
+
   // ---------- version ----------
   async function showVersion() {
     try {
