@@ -365,9 +365,9 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       const added=await page.evaluate(async()=>{
         const before=getFilteredLogs().length;
         const ok=await commitLogsToGitHub([...allLogs,{id:'log_qa_live_binding',date:'2026-10-10',tag:'QA',name:'簡承均',jersey:4,pa:1,ab:1,h:1,h1:1,h2:0,h3:0,hr:0,bb:0,sf:0,k:0}],'qa: live binding');
-        return {ok,delta:getFilteredLogs().length-before};
+        return {ok,delta:getFilteredLogs().length-before,status:document.getElementById('syncStatusBadge').textContent};
       });
-      assert.deepEqual(added,{ok:true,delta:1},'manual log appears without reload');
+      assert.deepEqual({ok:added.ok,delta:added.delta},{ok:true,delta:1},`manual log appears without reload (${added.status})`);
       report[width]={players:players.length,passed:true};
       await page.close();
     }

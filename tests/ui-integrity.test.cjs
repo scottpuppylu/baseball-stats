@@ -8,12 +8,16 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\n/g, '\n');
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
+// Baseline v6 (2026/10/13, mobile-app branch): security fix only. The exposed GitHub credential is removed; reads try the
+// secure API first (same content and sha), uploads go through cloud-sync.js → cloud-api/ (signed per-person session,
+// server-held credential), and the main→data legacy merge (which needed a credential and is complete) is disabled.
+// Merge, conflict retry, statistics and every renderer are unchanged. Diff and reasons: docs/MOBILE_QA.md.
 // Baseline v5 (2026/10/11): authorized data-safety fixes: uploads merge with other devices' changes instead of
 // overwriting them, no preset batting result and no recording after three outs, no invented pitching numbers or
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 const BASELINE = {
-  "script": "77c34ea179f68441912500ccaf2ddeb28e667718abfd171c1e6a7a1bf527f0bd",
+  "script": "bc86bc79a9d094123635fdf15988d0e506d68d747bf5b4ed66947ac685f820dc",
   "handlers": "546eea3ce115054a06e2235ec88125ae00285cc5d1bf8124d09ded797bf4296d",
   "idCount": 278,
   "ids": "5d7993de5e29d1b9dd92e4ce6260f6d8f850e916cc106821757b934a16bfff88"

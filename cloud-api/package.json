@@ -1,0 +1,7 @@
+{
+  "name": "baseball-stats-cloud-api",
+  "private": true,
+  "type": "module",
+  "description": "淡江航太系壘：安全寫入 API（Vercel Functions）。GitHub 憑證只存在伺服器環境變數。",
+  "engines": {"node": ">=22"}
+}

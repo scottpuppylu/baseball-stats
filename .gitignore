@@ -1,1 +1,19 @@
 node_modules/
+
+# Secrets and local settings (never commit)
+.env
+.env.*
+!.env.example
+.vercel/
+*.keystore
+*.jks
+keystore.properties
+local.properties
+
+# Build output
+www/
+android/app/build/
+android/build/
+android/.gradle/
+*.apk
+*.aab

@@ -9,6 +9,8 @@
   <meta name="theme-color" content="#0b1120">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
+  <script src="app-config.js?v=20261013-app1"></script>
+  <script src="cloud-sync.js?v=20261013-app1"></script>
   <style>
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
@@ -2465,7 +2467,7 @@
     let activeGame = window.activeGame = readStoredJson('rebas_active_game', null);
 
 
-    const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
+    // 雲端寫入改由安全後端（cloud-sync.js → cloud-api/）以個人登入驗證；網頁與 App 內不含任何 GitHub 憑證。
 
 
     const DEFAULT_JERSEY_MAP = {
@@ -2629,9 +2631,17 @@
     }
 
     async function fetchGitHubContent(filePath, timeoutMs = 3500, ref = DATA_BRANCH) {
+      // The secure API (when configured) returns the same content and version sha without the public 60-requests-per-hour limit.
+      if (window.cloudApi && ref === DATA_BRANCH) {
+        try {
+          const viaApi = await window.cloudApi.readFile(filePath, timeoutMs);
+          if (viaApi) return viaApi;
+        } catch (err) {
+          if (err && err.status === 404) throw err;
+        }
+      }
       const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${ref}&t=${Date.now()}`;
       const headers = { 'Accept': 'application/vnd.github.v3+json' };
-      if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
       const res = await fetchWithTimeout(url, { headers }, timeoutMs);
       if (!res.ok) {
         const err = new Error(`HTTP ${res.status}`);
@@ -2668,46 +2678,9 @@
     const LEGACY_MARKER_PATH = 'data/legacy-main.json';
     let legacyMergeRunning = false;
     async function mergeLegacyMainWrites() {
-      if (legacyMergeRunning) return false;
-      legacyMergeRunning = true;
-      try {
-        const keys = { [DATA_FILE_PATH]: l => l.id, [GAMES_FILE_PATH]: g => g.id, [GUESTS_FILE_PATH]: g => g.name, [AVATARS_FILE_PATH]: null, [TAGS_FILE_PATH]: null, [DEFENSE_FILE_PATH]: null };
-        const headers = { 'Accept': 'application/vnd.github.v3+json', 'Authorization': `Bearer ${GITHUB_TOKEN}` };
-        const listing = await fetchWithTimeout(`https://api.github.com/repos/${GITHUB_REPO}/contents/data?ref=${GITHUB_BRANCH}&t=${Date.now()}`, { headers }, 5000);
-        if (!listing.ok) return false;
-        const onMain = new Map((await listing.json()).filter(entry => entry && entry.type === 'file').map(entry => [entry.path, entry.sha]));
-        let marker;
-        try { marker = (await fetchGitHubContent(LEGACY_MARKER_PATH, 5000)).content || {}; } catch (err) { return false; }
-        const changed = Object.keys(keys).filter(file => onMain.has(file) && onMain.get(file) !== marker[file]);
-        if (!changed.length) return false;
-        const blob = async sha => {
-          const res = await fetchWithTimeout(`https://api.github.com/repos/${GITHUB_REPO}/git/blobs/${sha}`, { headers }, WRITE_TIMEOUT_MS);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return sanitizeLoadedData(JSON.parse(base64ToUtf8((await res.json()).content)));
-        };
-        for (const file of changed) {
-          const keyOf = keys[file];
-          const empty = keyOf ? [] : {};
-          const before = marker[file] ? await blob(marker[file]) : empty; // what main held when it was last merged
-          const after = await blob(onMain.get(file));                    // what the old page wrote since
-          let current = { data: empty, sha: null };
-          try {
-            const res = await fetchGitHubContent(file, WRITE_TIMEOUT_MS);
-            current = { data: sanitizeLoadedData(res.content), sha: res.sha };
-          } catch (err) { if (err.status !== 404) throw err; }
-          // Apply main's changes (before → after) onto the data branch, then upload against that version.
-          rememberCloudBase(file, current.sha, current.data);
-          await commitJsonFile(file, mergeCloudChanges(before, after, current.data, keyOf).data, `合併舊版頁面寫入 main 的資料：${file}`, keyOf);
-          marker = { ...marker, [file]: onMain.get(file) };
-          await commitJsonFile(LEGACY_MARKER_PATH, marker, `記錄已併入的舊版資料版本：${file}`);
-        }
-        return true;
-      } catch (err) {
-        console.warn('[legacy-main]', err);
-        return false;
-      } finally {
-        legacyMergeRunning = false;
-      }
+      // 2026/10/13：舊版頁面寫入 main 的資料已全部併入（data/legacy-main.json 與 main 的 data/ 版本完全一致）。
+      // 這個合併需要寫入權限，網頁不再持有 GitHub 憑證，因此停用；main 不再接受網頁寫入。
+      return false;
     }
 
     // ★ 多裝置同時寫入保護：記住本頁載入（或上次寫入）時的雲端內容與版本。寫入前若雲端已被其他裝置更新，
@@ -2772,18 +2745,14 @@
           conflicts = result.conflicts;
           merged = JSON.stringify(data) !== JSON.stringify(localData);
         }
-        const putBody = { message: commitMessage, content: utf8ToBase64(JSON.stringify(data, null, 2)), branch: DATA_BRANCH };
-        if (remoteSha) putBody.sha = remoteSha;
-        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`, {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(putBody)
-        });
+        // Only the secure API can write: it checks the signed-in person's role and writes data/*.json on the data branch.
+        if (!window.cloudApi) throw new Error('雲端模組未載入，資料已保存在本機');
+        const putRes = await window.cloudApi.writeFile(filePath, data, remoteSha, commitMessage, WRITE_TIMEOUT_MS);
         // 409: another device uploaded between our read and our write; read again and merge again.
         if (putRes.status === 409 && attempt < 2) continue;
         if (!putRes.ok) {
           const errData = await putRes.json().catch(() => ({}));
-          throw new Error(errData.message || `GitHub API 寫入拒絕 (HTTP ${putRes.status})`);
+          throw new Error(errData.message || `雲端寫入被拒絕 (HTTP ${putRes.status})`);
         }
         const resData = await putRes.json();
         const sha = resData && resData.content ? resData.content.sha : null;
