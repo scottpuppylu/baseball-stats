@@ -2,7 +2,9 @@
 
 球隊的成績、場記與分析網站：<https://scottpuppylu.github.io/baseball-stats/>
 
-網站是一個靜態頁面（GitHub Pages），不需要建置；資料直接讀寫 GitHub 上的 JSON 檔。
+網站是一個靜態頁面（GitHub Pages），不需要建置；資料讀取 GitHub `data` 分支上的 JSON 檔，寫入則經過需要個人登入的安全 API（`cloud-api/`），網頁內不含任何 GitHub 憑證。
+
+同一套程式也可以安裝成 App：iPhone / Android 用瀏覽器「加入主畫面」（PWA），或安裝 Android APK（`android/`，Capacitor）。安裝、建置、安全 API 設定與回滾方式見 [`docs/MOBILE_APP.md`](docs/MOBILE_APP.md)，驗收紀錄見 [`docs/MOBILE_QA.md`](docs/MOBILE_QA.md)。
 
 ## 頁面
 
@@ -22,6 +24,7 @@
 - 這些檔案存在 **`data` 分支**（2026/10/11 起）。`main` 分支只放網站程式，所以網站上新增或修改資料不會產生 `main` 的 commit，也不會重新部署網站。
 - `main` 分支裡的 `data/` 是搬遷當時的版本，只作為讀取失敗時的最後備援。搬遷前就開著的舊頁面若仍寫到 `main`，新版頁面載入時會把那些變更合併進 `data` 分支（記錄在 `data/legacy-main.json`）。
 - 多支手機同時上傳時，網站會先比對雲端版本並合併，不會覆蓋其他裝置的紀錄。
+- 寫入需以 Google 帳號登入（右上角 🔐），由 `cloud-api/` 依 Email 名單判斷 editor / admin 權限；未設定 API 時網站為唯讀，寫入會明確顯示失敗並保留本機資料。
 - 總覽頁的「⬇ 完整備份」可把目前全部資料下載成一個 JSON 檔。
 
 ## 程式結構
@@ -34,6 +37,13 @@
 | `lineup-model.js`、`lineup-recommender.js` | 計時賽棒次模型與推薦 |
 | `player-diagnostics.js` | 打擊弱點診斷 3.0 |
 | `ui-comfort.js`、`ui-comfort.css` | 版面與手機操作（導覽、表格摺疊、段落跳轉） |
+| `app-config.js` | 公開設定：安全 API 網址、Service Worker 開關 |
+| `cloud-sync.js` | 雲端讀寫轉接（安全 API、Google 登入） |
+| `pwa.js`、`sw.js`、`manifest.webmanifest` | PWA：安裝、離線、更新提示 |
+| `app-native.js` | Android App 專用：返回鍵、分享/儲存檔案、網路狀態 |
+| `vendor/` | Tailwind、Chart.js 本機副本（與原 CDN 相同版本） |
+| `cloud-api/` | 安全寫入 API（Vercel Function） |
+| `android/`、`capacitor.config.json`、`scripts/` | Android App 專案與建置腳本 |
 
 各模組透過 `index.html` 的 `siteHooks` 登記要在哪個繪製函式之後執行（`siteHooks.list()` 可看完整順序）。
 
@@ -42,8 +52,10 @@
 需要 Node.js 與已安裝的 Google Chrome：
 
 ```bash
-npm install
-npm test
+npm ci
+npm test                 # 全部測試
+npm run test:mobile      # PWA、API、Android 專案與手機版面
+npm run build:android    # 產生 Debug APK（需要 JDK 21 與 Android SDK）
 ```
 
-測試使用 `tests/fixtures/data/` 的固定資料與隔離預覽伺服器（`tests/ui-preview-server.cjs`），所有 GitHub 讀寫都導向記憶體，不會修改正式資料。每次推送到 `main` 時，GitHub Actions 也會自動執行（`.github/workflows/test.yml`）。各項修正與驗收紀錄見 [`docs/UI_QA.md`](docs/UI_QA.md)，功能清單見 [`docs/UI_FUNCTIONAL_BASELINE.md`](docs/UI_FUNCTIONAL_BASELINE.md)。
+測試使用 `tests/fixtures/data/` 的固定資料與隔離預覽伺服器（`tests/ui-preview-server.cjs`），所有 GitHub 讀寫都導向記憶體，不會修改正式資料。每次推送到 `main` 或開 PR 時，GitHub Actions 也會自動執行（`.github/workflows/test.yml`，以及建置 Debug APK 的 `android.yml`）。各項修正與驗收紀錄見 [`docs/UI_QA.md`](docs/UI_QA.md)，功能清單見 [`docs/UI_FUNCTIONAL_BASELINE.md`](docs/UI_FUNCTIONAL_BASELINE.md)。
