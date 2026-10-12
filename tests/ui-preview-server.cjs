@@ -25,7 +25,8 @@ for (const name of ['logs', 'games', 'avatars', 'tags', 'defense', 'guests']) {
 put('data', 'data/legacy-main.json', Buffer.from(JSON.stringify(Object.fromEntries([...branches.main].map(([file, data]) => [file, shaOf(data)])), null, 2)));
 
 const injection = () => `<script>
-window.BASEBALL_APP_CONFIG = {apiBase: location.origin + '/__cloud'};
+// The PWA service worker stays off unless a test opens the page with ?pwa (it would hide requests from page.route).
+window.BASEBALL_APP_CONFIG = {apiBase: location.origin + '/__cloud', serviceWorker: new URLSearchParams(location.search).has('pwa')};
 if (!new URLSearchParams(location.search).has('signedOut')) localStorage.setItem('rebas_cloud_session', ${JSON.stringify(JSON.stringify(previewSession))});
 else localStorage.removeItem('rebas_cloud_session');
 window.__previewWrites = [];
@@ -101,6 +102,7 @@ function mockGitHub(method, file, refParam, body, accept) {
   return {status: 200, body: method === 'PUT' ? {content: {sha: shaOf(data)}} : {sha: shaOf(data), encoding: large ? 'none' : 'base64', content: large ? '' : data.toString('base64')}};
 }
 const commits = [];
+let swBump = 0;
 
 // The secure API runs with throwaway preview settings; its server-side GitHub calls stay in memory.
 const apiCore = import('../cloud-api/lib/core.mjs');
@@ -148,6 +150,8 @@ http.createServer(async (req, res) => {
       return;
     }
     if (pathname === '/__preview/commits') return json(res, 200, commits);
+    // PWA update test: the next sw.js the browser fetches carries a new version, like after a deployment.
+    if (pathname === '/__preview/bump-sw') { swBump++; return json(res, 200, {swBump}); }
     // The real secure API, with its GitHub calls answered by the in-memory branches above.
     if (pathname.startsWith('/__cloud/api/')) return forwardToApi(req, res, req.url.slice('/__cloud'.length));
     // The site's own data/ folder (the last fallback) is the frozen fixture copy as well.
@@ -156,11 +160,12 @@ http.createServer(async (req, res) => {
       res.writeHead(404).end('Not found'); return;
     }
     let content = fs.readFileSync(filename);
+    if (filename.endsWith('sw.js') && swBump) content = Buffer.from(content.toString().replace(/const VERSION = '([^']+)'/, (m, v) => `const VERSION = '${v}-preview${swBump}'`));
     if (filename.endsWith('index.html')) {
       await sessionReady;
       content = Buffer.from(content.toString().replace('<head>', '<head>' + injection()));
     }
-    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp'};
+    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.webmanifest':'application/manifest+json'};
     res.writeHead(200, {'Content-Type': mime[path.extname(filename)] || 'application/octet-stream', 'Cache-Control': 'no-store'});
     res.end(content);
   } catch { res.writeHead(500).end('Preview error'); }

@@ -10,7 +10,7 @@ const {chromium} = require('playwright');
 
 const root = path.resolve(__dirname, '..');
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
-const browserTests = ['ui-integrity-browser', 'ui-workflows', 'ui-audit-fixes', 'ui-audit-fixes-2', 'ui-data-safety', 'ui-round3', 'spray-archive-browser', 'ui-insights', 'ui-lineup', 'ui-data-fixes', 'ui-review-fixes', 'ui-records', 'ui-responsive', 'ui-mobile-comfort', 'ui-avatar', 'ui-tablet']
+const browserTests = ['ui-integrity-browser', 'ui-pwa', 'ui-workflows', 'ui-audit-fixes', 'ui-audit-fixes-2', 'ui-data-safety', 'ui-round3', 'spray-archive-browser', 'ui-insights', 'ui-lineup', 'ui-data-fixes', 'ui-review-fixes', 'ui-records', 'ui-responsive', 'ui-mobile-comfort', 'ui-avatar', 'ui-tablet']
   .filter(name => fs.existsSync(path.join(__dirname, `${name}.cjs`)))
   // `node tests/run-all.cjs ui-avatar ui-tablet` runs only the named browser tests (the unit tests always run).
   .filter(name => process.argv.length <= 2 || process.argv.slice(2).includes(name));

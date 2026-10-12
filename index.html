@@ -7,10 +7,18 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <meta name="theme-color" content="#0b1120">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="航太系壘">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- Same Tailwind 3.4.17 and Chart.js 4.5.1 the page loaded from CDNs, kept locally so the PWA and Android app work offline (vendor/README.md). -->
+  <script src="vendor/tailwindcss-play-3.4.17.js"></script>
+  <script src="vendor/chart.umd-4.5.1.min.js"></script>
   <script src="app-config.js?v=20261013-app1"></script>
   <script src="cloud-sync.js?v=20261013-app1"></script>
+  <script src="pwa.js?v=20261013-app1"></script>
+  <script src="app-native.js?v=20261013-app1"></script>
   <style>
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
@@ -28,7 +36,7 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
-  <link rel="stylesheet" href="ui-comfort.css?v=20261011-round3">
+  <link rel="stylesheet" href="ui-comfort.css?v=20261013-app1">
 </head>
 <body class="bg-[#070a12] text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white overflow-x-hidden">
 
@@ -2637,7 +2645,7 @@
           const viaApi = await window.cloudApi.readFile(filePath, timeoutMs);
           if (viaApi) return viaApi;
         } catch (err) {
-          if (err && err.status === 404) throw err;
+          if (err && (err.status === 404 || err.offline)) throw err;
         }
       }
       const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${ref}&t=${Date.now()}`;

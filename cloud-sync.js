@@ -44,6 +44,10 @@
 
   // ---------- data ----------
   async function readFile(filePath, timeoutMs) {
+    if (navigator.onLine === false && FILE_RE.test(filePath)) {
+      // Said plainly instead of a raw network error; loading falls back to this device's copy.
+      throw Object.assign(new Error('目前離線，資料已保存在本機，恢復連線後請再同步'), {offline: true});
+    }
     if (!apiBase || !FILE_RE.test(filePath)) return null; // caller uses the public GitHub copy
     const res = await timed(`${apiBase}/api/data/${filePath.slice(5)}`, {headers: {Accept: 'application/json'}}, timeoutMs);
     if (!res.ok) {

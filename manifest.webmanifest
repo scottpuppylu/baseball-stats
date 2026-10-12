@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "淡江航太系壘",
+  "short_name": "航太系壘",
+  "description": "淡江航太系壘數據中心：成績、場記、打線與分析",
+  "lang": "zh-TW",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070a12",
+  "theme_color": "#0b1120",
+  "categories": ["sports"],
+  "icons": [
+    {"src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "assets/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "assets/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
