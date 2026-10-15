@@ -56,8 +56,11 @@ const normalized = text => text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').tr
       assert.equal((await page.goto(base)).status(), 200);
       await page.waitForFunction(() => window.teamRecords && !/連線同步中/.test(syncStatusBadge.textContent));
       for (const tab of ['Overview', 'Profile', 'Leaderboard', 'Records', 'Analytics', 'Compare', 'Lineup', 'Scorebook', 'Pitching', 'Glossary']) {
+        await page.evaluate(name => switchMainTab('tab' + name), tab);
+        // Table folding/layout is scheduled by ui-comfort's MutationObserver + requestAnimationFrame.
+        // Measure after it has rendered, not in the same synchronous task as switching tabs.
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
         const state = await page.evaluate(name => {
-          switchMainTab('tab' + name);
           const panel = document.getElementById('panel' + name);
           return {shown: !panel.classList.contains('hidden'), textLength: panel.innerText.length, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth};
         }, tab);
