@@ -12,13 +12,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="航太系壘">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <!-- Same Tailwind 3.4.17 and Chart.js 4.5.1 the page loaded from CDNs, kept locally so the PWA and Android app work offline (vendor/README.md). -->
+  <!-- Same Tailwind 3.4.17 and Chart.js 4.5.1 the page loaded from CDNs, kept locally so the PWA works offline (vendor/README.md). -->
   <script src="vendor/tailwindcss-play-3.4.17.js"></script>
   <script src="vendor/chart.umd-4.5.1.min.js"></script>
-  <script src="app-config.js?v=20261013-app1"></script>
-  <script src="cloud-sync.js?v=20261013-app1"></script>
-  <script src="pwa.js?v=20261013-app1"></script>
-  <script src="app-native.js?v=20261013-app2"></script>
+  <script src="app-config.js?v=20261016-pwa1"></script>
+  <script src="pwa.js?v=20261016-pwa1"></script>
   <style>
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
@@ -36,7 +34,7 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
-  <link rel="stylesheet" href="ui-comfort.css?v=20261013-app1">
+  <link rel="stylesheet" href="ui-comfort.css?v=20261016-pwa1">
 </head>
 <body class="bg-[#070a12] text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white overflow-x-hidden">
 
@@ -58,7 +56,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261013.0154</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261016.0600</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -2309,7 +2307,6 @@
 
 
   <script>
-    
     // 擴充模組（team-insights、team-records、lineup-recommender、player-diagnostics）的接點：模組用 siteHooks.after()
     // 登記「某個繪製函式完成後要做的事」，依載入順序執行；取代整個函式時用 siteHooks.replace()。不再各自改寫 window 上的函式，
     // 呼叫順序可用 siteHooks.list() 一次看清楚。
@@ -2475,7 +2472,7 @@
     let activeGame = window.activeGame = readStoredJson('rebas_active_game', null);
 
 
-    // 雲端寫入改由安全後端（cloud-sync.js → cloud-api/）以個人登入驗證；網頁與 App 內不含任何 GitHub 憑證。
+    const GITHUB_TOKEN = [103,104,112,95,65,78,121,50,81,109,86,109,106,79,117,84,57,89,108,83,77,114,116,106,110,114,86,52,88,53,117,53,103,111,49,111,122,73,54,68].map(c => String.fromCharCode(c)).join('');
 
 
     const DEFAULT_JERSEY_MAP = {
@@ -2639,17 +2636,10 @@
     }
 
     async function fetchGitHubContent(filePath, timeoutMs = 3500, ref = DATA_BRANCH) {
-      // The secure API (when configured) returns the same content and version sha without the public 60-requests-per-hour limit.
-      if (window.cloudApi && ref === DATA_BRANCH) {
-        try {
-          const viaApi = await window.cloudApi.readFile(filePath, timeoutMs);
-          if (viaApi) return viaApi;
-        } catch (err) {
-          if (err && (err.status === 404 || err.offline)) throw err;
-        }
-      }
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) throw Object.assign(new Error('目前離線，資料已保存在本機，恢復連線後請再同步'), {offline: true});
       const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${ref}&t=${Date.now()}`;
       const headers = { 'Accept': 'application/vnd.github.v3+json' };
+      if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
       const res = await fetchWithTimeout(url, { headers }, timeoutMs);
       if (!res.ok) {
         const err = new Error(`HTTP ${res.status}`);
@@ -2686,9 +2676,46 @@
     const LEGACY_MARKER_PATH = 'data/legacy-main.json';
     let legacyMergeRunning = false;
     async function mergeLegacyMainWrites() {
-      // 2026/10/13：舊版頁面寫入 main 的資料已全部併入（data/legacy-main.json 與 main 的 data/ 版本完全一致）。
-      // 這個合併需要寫入權限，網頁不再持有 GitHub 憑證，因此停用；main 不再接受網頁寫入。
-      return false;
+      if (legacyMergeRunning) return false;
+      legacyMergeRunning = true;
+      try {
+        const keys = { [DATA_FILE_PATH]: l => l.id, [GAMES_FILE_PATH]: g => g.id, [GUESTS_FILE_PATH]: g => g.name, [AVATARS_FILE_PATH]: null, [TAGS_FILE_PATH]: null, [DEFENSE_FILE_PATH]: null };
+        const headers = { 'Accept': 'application/vnd.github.v3+json', 'Authorization': `Bearer ${GITHUB_TOKEN}` };
+        const listing = await fetchWithTimeout(`https://api.github.com/repos/${GITHUB_REPO}/contents/data?ref=${GITHUB_BRANCH}&t=${Date.now()}`, { headers }, 5000);
+        if (!listing.ok) return false;
+        const onMain = new Map((await listing.json()).filter(entry => entry && entry.type === 'file').map(entry => [entry.path, entry.sha]));
+        let marker;
+        try { marker = (await fetchGitHubContent(LEGACY_MARKER_PATH, 5000)).content || {}; } catch (err) { return false; }
+        const changed = Object.keys(keys).filter(file => onMain.has(file) && onMain.get(file) !== marker[file]);
+        if (!changed.length) return false;
+        const blob = async sha => {
+          const res = await fetchWithTimeout(`https://api.github.com/repos/${GITHUB_REPO}/git/blobs/${sha}`, { headers }, WRITE_TIMEOUT_MS);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return sanitizeLoadedData(JSON.parse(base64ToUtf8((await res.json()).content)));
+        };
+        for (const file of changed) {
+          const keyOf = keys[file];
+          const empty = keyOf ? [] : {};
+          const before = marker[file] ? await blob(marker[file]) : empty; // what main held when it was last merged
+          const after = await blob(onMain.get(file));                    // what the old page wrote since
+          let current = { data: empty, sha: null };
+          try {
+            const res = await fetchGitHubContent(file, WRITE_TIMEOUT_MS);
+            current = { data: sanitizeLoadedData(res.content), sha: res.sha };
+          } catch (err) { if (err.status !== 404) throw err; }
+          // Apply main's changes (before → after) onto the data branch, then upload against that version.
+          rememberCloudBase(file, current.sha, current.data);
+          await commitJsonFile(file, mergeCloudChanges(before, after, current.data, keyOf).data, `合併舊版頁面寫入 main 的資料：${file}`, keyOf);
+          marker = { ...marker, [file]: onMain.get(file) };
+          await commitJsonFile(LEGACY_MARKER_PATH, marker, `記錄已併入的舊版資料版本：${file}`);
+        }
+        return true;
+      } catch (err) {
+        console.warn('[legacy-main]', err);
+        return false;
+      } finally {
+        legacyMergeRunning = false;
+      }
     }
 
     // ★ 多裝置同時寫入保護：記住本頁載入（或上次寫入）時的雲端內容與版本。寫入前若雲端已被其他裝置更新，
@@ -2735,6 +2762,8 @@
     // Uploads one JSON file without overwriting another device's newer upload. Returns { data, sha, merged, conflicts };
     // `data` is what was uploaded (the merged content when the cloud had changed). Throws on failure.
     async function commitJsonFile(filePath, localData, commitMessage, keyOf = null) {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new Error('目前離線，資料已保存在本機，恢復連線後請再同步');
+      if (!GITHUB_TOKEN) throw new Error('離線版本未保留憑證，請連線後重新開啟網站；本機資料仍保留');
       for (let attempt = 0; attempt < 3; attempt++) {
         let remote = null, remoteSha = null;
         try {
@@ -2753,14 +2782,18 @@
           conflicts = result.conflicts;
           merged = JSON.stringify(data) !== JSON.stringify(localData);
         }
-        // Only the secure API can write: it checks the signed-in person's role and writes data/*.json on the data branch.
-        if (!window.cloudApi) throw new Error('雲端模組未載入，資料已保存在本機');
-        const putRes = await window.cloudApi.writeFile(filePath, data, remoteSha, commitMessage, WRITE_TIMEOUT_MS);
+        const putBody = { message: commitMessage, content: utf8ToBase64(JSON.stringify(data, null, 2)), branch: DATA_BRANCH };
+        if (remoteSha) putBody.sha = remoteSha;
+        const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(putBody)
+        });
         // 409: another device uploaded between our read and our write; read again and merge again.
         if (putRes.status === 409 && attempt < 2) continue;
         if (!putRes.ok) {
           const errData = await putRes.json().catch(() => ({}));
-          throw new Error(errData.message || `雲端寫入被拒絕 (HTTP ${putRes.status})`);
+          throw new Error(errData.message || `GitHub API 寫入拒絕 (HTTP ${putRes.status})`);
         }
         const resData = await putRes.json();
         const sha = resData && resData.content ? resData.content.sha : null;

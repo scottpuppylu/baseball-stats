@@ -17,3 +17,10 @@ android/build/
 android/.gradle/
 *.apk
 *.aab
+
+# Retired native build artifacts (not part of PWA product)
+/android/
+/www/
+
+# Generated post-deployment evidence (no source or credentials)
+/outputs/pwa-release/

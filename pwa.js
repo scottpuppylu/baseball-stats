@@ -1,12 +1,8 @@
-// Installed-app behaviour shared by the website, PWA and Android app: offline/online notice, PWA update prompt and
-// install chip. The service worker is registered only for the website/PWA, never inside the Android app (its files are
-// already on the phone, and a worker there would only get in the way of app updates).
+// Website/PWA: offline/online notice, opt-in updates and installation. No native app or login dependency.
 (function () {
   'use strict';
-  const isNativeApp = Boolean(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
-  const standalone = () => isNativeApp || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   document.documentElement.classList.toggle('ui-standalone', standalone());
-  if (isNativeApp) document.documentElement.classList.add('ui-native-app');
 
   function bar(id, html, tone) {
     let el = document.getElementById(id);
@@ -23,14 +19,23 @@
   }
 
   // ---------- offline notice ----------
-  // Offline, the page shows the copy stored on this device; it says so, and cloud uploads report failure (cloud-sync.js).
-  function showConnection() {
-    if (navigator.onLine === false) {
-      bar('uiOfflineBar', '<span>⚠️ 離線中：顯示本機暫存資料，可能不是最新；雲端同步暫停（新紀錄先存在這台裝置）。</span>', 'warn');
+  // Offline, the page shows this device's data. The offline HTML cache deliberately contains no credential.
+  let connectionRecovered = false;
+  function showConnection(event) {
+    if (event && event.type === 'online') connectionRecovered = true;
+    if (event && event.type === 'offline') connectionRecovered = false;
+    // Network failure can serve the offline shell even while the browser still reports onLine=true.
+    if (navigator.onLine === false || (window.BASEBALL_OFFLINE_SHELL && !connectionRecovered)) {
+      const el = bar('uiOfflineBar', '<span>⚠️ 離線中：顯示本機暫存資料，可能不是最新；雲端同步暫停（新紀錄先存在這台裝置）。</span><button type="button" data-act="retry">重新整理數據</button>', 'warn');
+      el.querySelector('[data-act="retry"]').addEventListener('click', () => location.reload());
     } else if (document.getElementById('uiOfflineBar')) {
       const el = bar('uiOfflineBar', '<span>✓ 已恢復連線。</span><button type="button" data-act="refresh">重新整理數據</button>', 'ok');
-      el.querySelector('[data-act="refresh"]').addEventListener('click', () => { bar('uiOfflineBar', null); if (typeof window.manualRefresh === 'function') window.manualRefresh(); });
-      setTimeout(() => { if (navigator.onLine !== false) bar('uiOfflineBar', null); }, 12000);
+      el.querySelector('[data-act="refresh"]').addEventListener('click', () => {
+        if (window.BASEBALL_OFFLINE_SHELL) location.reload();
+        else { bar('uiOfflineBar', null); if (typeof window.manualRefresh === 'function') window.manualRefresh(); }
+      });
+      // Keep the reconnect action available when a credential-free offline shell needs a fresh online page.
+      if (!window.BASEBALL_OFFLINE_SHELL) setTimeout(() => { if (navigator.onLine !== false) bar('uiOfflineBar', null); }, 12000);
     }
   }
   window.addEventListener('online', showConnection);
@@ -48,11 +53,13 @@
     });
   }
   async function registerWorker() {
-    if (isNativeApp || !('serviceWorker' in navigator) || !window.isSecureContext) return;
+    if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
     // Kill switch (app-config.js serviceWorker: false): removes the worker and its cache from every visitor on next load.
     if ((window.BASEBALL_APP_CONFIG || {}).serviceWorker === false) {
-      for (const registration of await navigator.serviceWorker.getRegistrations()) await registration.unregister();
+      const scope = new URL('./', location.href).href;
+      for (const registration of await navigator.serviceWorker.getRegistrations()) if (registration.scope === scope) await registration.unregister();
       if (window.caches) for (const key of await caches.keys()) if (key.startsWith('tkaero-shell-')) await caches.delete(key);
+      window.BASEBALL_PWA_DISABLED = true;
       return;
     }
     try {

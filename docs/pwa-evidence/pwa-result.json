@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "checks": [
+    "manifest",
+    "sw-lifecycle",
+    "no-sensitive-cache",
+    "credential-free-offline-html",
+    "chromium-installability",
+    "github-pages-subpath",
+    "direct-github-write",
+    "image-file-crop-direct-write",
+    "offline-start",
+    "offline-no-fake-sync",
+    "reconnect-notice",
+    "reconnect-restores-direct-write",
+    "update-flow",
+    "active-game-survives-update",
+    "kill-switch"
+  ],
+  "installability": {
+    "installabilityErrors": []
+  },
+  "physicalAndroid": "UNVERIFIED",
+  "physicalIPhone": "UNVERIFIED"
+}

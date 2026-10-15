@@ -1,5 +1,7 @@
 # Phase 6 網站回滾草案（尚未通過 Gate-09）
 
+> **歷史紀錄／發布判定已作廢。** 2026/10/16 PWA Only 最終指令取消原生 Android 與 OAuth/Cloud API，既有 Token 風險改列 RISK_ACCEPTED。下文保留作歷史證據，不是現行設定教學或 Release Gate。現行驗收以 [PWA_RELEASE_REPORT.md](PWA_RELEASE_REPORT.md) 為準。
+
 2026/10/16：目前未部署本分支，正式站仍是 main@40f2c23，因此本次不執行回滾。
 
 已確認的基線：

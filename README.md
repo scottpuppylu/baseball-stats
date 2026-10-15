@@ -1,61 +1,35 @@
 # 淡江航太系壘 數據中心
 
-球隊的成績、場記與分析網站：<https://scottpuppylu.github.io/baseball-stats/>
+正式網站：<https://scottpuppylu.github.io/baseball-stats/>
 
-網站是 GitHub Pages 靜態頁面，資料存放在 GitHub `data` 分支。**本開發分支尚不可正式發布**：正式站仍走原本的 GitHub API 讀寫，含公開嵌入憑證的既有風險；本分支雖已移除出貨檔中的憑證，但目前寫入依賴未部署 API，尚未符合「零登入、零設定、完整雲端同步」的產品需求。證據、發布 Gate 與待決架構見 [`docs/PHASE6_REPORT.md`](docs/PHASE6_REPORT.md)。
+同一套 HTML/CSS/JavaScript 支援 Windows 瀏覽器、Android PWA 與 iPhone PWA。免登入、免註冊、免輸入 Token，直接操作原有十頁、場記、打線與資料同步；使用者電腦不需常開。網站由 GitHub Pages 託管，資料仍存在 GitHub `data` 分支，沒有額外後端、OAuth 或帳號名單。
 
-同一套程式已完成 PWA 與 Android APK（`android/`，Capacitor）的封裝工作；目前只提供受上述限制的測試版本。安裝與建置說明見 [`docs/MOBILE_APP.md`](docs/MOBILE_APP.md)，歷史驗收見 [`docs/MOBILE_QA.md`](docs/MOBILE_QA.md)，本次發布判定以 Phase 6 報告為準。
+[PWA 安裝與使用](docs/PWA_GUIDE.md) · [發布驗收](docs/PWA_RELEASE_REPORT.md) · [部署與回滾](docs/PWA_ROLLBACK.md)
 
-## 頁面
+## 功能與資料
 
-全隊總覽、球員檔案、排行榜、雙人比較、生涯紀錄、數據分析、投手分析（數據）；打線安排、比賽場記（比賽）；指標說明（參考）。比賽場記含實況記分、歷史賽事覆盤與落點噴流圖。
+全隊總覽、球員檔案、排行榜、雙人比較、生涯紀錄、戰力分析、投手分析、智慧排棒、比賽場記與指標說明。保留 10/11 棒、DH、計時賽、JSON/CSV 匯出、頭像裁切及所有原統計公式與資料格式。
 
-## 資料存放
+`data/logs.json`、`games.json`、`avatars.json`、`tags.json`、`defense.json`、`guests.json` 的 GitHub 分支與 Schema 不變。讀寫使用既有 GitHub Contents API；上傳先讀最新 SHA，再做三方合併，409 重新讀取與重試。失敗不會回報同步成功，應保留本機資料及備份後重試。正式站的「完整備份」可下載 JSON。
 
-| 檔案 | 內容 |
-| --- | --- |
-| `data/logs.json` | 打擊日誌（手動補登、選手建檔，與由場記自動產生的每場成績） |
-| `data/games.json` | 場記賽事（逐局、逐打席、守備事件） |
-| `data/avatars.json` | 球員頭像 |
-| `data/tags.json` | 球員標籤（綽號） |
-| `data/defense.json` | 各守位的能力順位（排棒依據） |
-| `data/guests.json` | 支援／外援選手名冊（第一次登記支援選手時建立） |
+PWA 只快取必要靜態檔與移除憑證的離線 HTML，不快取 GitHub/API/資料回應。離線資料可能過期，雲端寫入暫停；連線恢復後按提示重新整理數據。新版本由使用者同意後啟用，進行中的場記仍由本機儲存恢復。
 
-- 這些檔案存在 **`data` 分支**（2026/10/11 起）。`main` 分支只放網站程式，所以網站上新增或修改資料不會產生 `main` 的 commit，也不會重新部署網站。
-- `main` 分支裡的 `data/` 是搬遷當時的版本，只作為讀取失敗時的最後備援。搬遷前就開著的舊頁面若仍寫到 `main`，新版頁面載入時會把那些變更合併進 `data` 分支（記錄在 `data/legacy-main.json`）。
-- 多支手機同時上傳時，網站會先比對雲端版本並合併，不會覆蓋其他裝置的紀錄。
-- 最新產品要求：所有人免登入、免 Token 輸入、免白名單設定使用完整功能。`cloud-api/` 與 Google OAuth 是未啟用的實驗原始碼，不是本次發布必要設定；當前開發版未設定 API 時雲端寫入失敗，因此發布受阻，不可部署來取代可寫入的正式網站。
-- 總覽頁的「⬇ 完整備份」可把目前全部資料下載成一個 JSON 檔。
+## 既有風險接受
 
-## 程式結構
+**RISK_ACCEPTED，並非 SECURITY_PASS。** Product Owner 於 2026/10/16 明確選擇保留正式站現有 Token 直接讀寫模式，接受公開憑證可還原及濫用的風險。Token 值與權限不變，未輪替或撤銷；沒有把它增加到其他程式、文件、APK 或 PWA 快取。原本的字元陣列不是安全保護。GitHub 安全保護若拒絕推送／發布，必須停止，不能略過或關閉。
 
-| 檔案 | 作用 |
-| --- | --- |
-| `index.html` | 頁面與主要程式（資料讀寫、計算、各頁繪製、場記） |
-| `team-insights.js` | 逐場成績與近況、出賽率、賽後成績圖與 MVP |
-| `team-records.js` | 生涯紀錄頁與個人生涯紀錄 |
-| `lineup-model.js`、`lineup-recommender.js` | 計時賽棒次模型與推薦 |
-| `player-diagnostics.js` | 打擊弱點診斷 3.0 |
-| `ui-comfort.js`、`ui-comfort.css` | 版面與手機操作（導覽、表格摺疊、段落跳轉） |
-| `app-config.js` | 公開設定：選用實驗 API 網址、Service Worker 開關 |
-| `cloud-sync.js` | 前任雲端讀寫轉接原型，目前寫入尚未符合匿名使用需求 |
-| `pwa.js`、`sw.js`、`manifest.webmanifest` | PWA：安裝、離線、更新提示 |
-| `app-native.js` | Android App 專用：返回鍵、分享/儲存檔案、網路狀態 |
-| `vendor/` | Tailwind、Chart.js 本機副本（與原 CDN 相同版本） |
-| `cloud-api/` | 前任未採用／未部署的寫入 API 原型（Vercel Function） |
-| `android/`、`capacitor.config.json`、`scripts/` | Android App 專案與建置腳本 |
+## 開發與驗證
 
-各模組透過 `index.html` 的 `siteHooks` 登記要在哪個繪製函式之後執行（`siteHooks.list()` 可看完整順序）。
-
-## 測試
-
-需要 Node.js 與已安裝的 Google Chrome：
+網站直接由根目錄發布，不需 build。開發測試需要 Node.js 22+ 與 Google Chrome：
 
 ```bash
 npm ci
-npm test                 # 全部測試
-npm run test:mobile      # PWA、API、Android 專案與手機版面
-npm run build:android    # 產生 Debug APK（需要 JDK 21 與 Android SDK）
+npm test
+npm run test:pwa
+node scripts/pwa-release-audit.cjs
+node scripts/rollback-pwa.cjs --check
 ```
 
-測試使用 `tests/fixtures/data/` 的固定資料與隔離預覽伺服器（`tests/ui-preview-server.cjs`），所有 GitHub 讀寫都導向記憶體，不會修改正式資料。每次推送到 `main` 或開 PR 時，GitHub Actions 也會自動執行（`.github/workflows/test.yml`，以及建置 Debug APK 的 `android.yml`）。各項修正與驗收紀錄見 [`docs/UI_QA.md`](docs/UI_QA.md)，功能清單見 [`docs/UI_FUNCTIONAL_BASELINE.md`](docs/UI_FUNCTIONAL_BASELINE.md)。
+測試預覽將原憑證先移除並代換為無效測試值，所有 GitHub 請求轉到 fixtures 的記憶體模型；不會對正式 data 測試寫入。CI 只有 `.github/workflows/test.yml`，使用同一套測試，不需要 repository secret。
+
+原生 Android、Capacitor、APK/Gradle、Android CI、Release 簽章、Google OAuth、Cloud API 已取消。舊建置產物即使仍在本機，也只屬被忽略的歷史測試檔，不會進入正式程式或建置。接手成果保留於 checkpoint `8ec27b6`（tag `codex/checkpoint-phase6-before-pwa-only-20261016`）及歷史驗收文件。

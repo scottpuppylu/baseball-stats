@@ -449,13 +449,7 @@ table.ui-measure thead th img, table.ui-fold-table thead th img { display: none;
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 
-/* Secure cloud sign-in button (cloud-sync.js) */
-.ui-cloud-auth[hidden] { display: none !important; }
-.ui-cloud-auth[data-state="in"] { color: #6ee7b7; border-color: rgba(16, 185, 129, .45); }
-.ui-cloud-auth-attention { animation: ui-cloud-auth-pulse .6s ease-in-out 4; border-color: #f59e0b !important; color: #fcd34d !important; }
-@keyframes ui-cloud-auth-pulse { 50% { box-shadow: 0 0 0 3px rgba(245, 158, 11, .45); } }
-
-/* Installed app (PWA standalone / Android app): system bars, notches and app notices (pwa.js) */
+/* PWA standalone: system bars, notches and app notices (pwa.js) */
 #appHeader { padding-top: env(safe-area-inset-top); }
 html { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 .ui-app-bar { position: fixed; z-index: 90; left: 50%; transform: translateX(-50%); top: calc(8px + env(safe-area-inset-top)); width: min(640px, calc(100% - 24px));

@@ -1,4 +1,4 @@
-// Reproduce the old Android readiness race with delayed fixture reads, without touching production.
+// Delayed first PWA load: modules must not be mistaken for fully loaded cloud data.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');

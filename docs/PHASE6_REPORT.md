@@ -1,5 +1,7 @@
 # Phase 6 接手與發布驗收 — 2026/10/16（Asia/Taipei）
 
+> **歷史紀錄／發布判定已作廢。** 2026/10/16 PWA Only 最終指令取消原生 Android 與 OAuth/Cloud API，既有 Token 風險改列 RISK_ACCEPTED。下文保留作歷史證據，不是現行設定教學或 Release Gate。現行驗收以 [PWA_RELEASE_REPORT.md](PWA_RELEASE_REPORT.md) 為準。
+
 **TASK STATUS：BLOCKED。** 已完成接手查核、原站唯讀 Smoke Test、原有回歸、新增啟動競速測試、Android Debug 建置與三次全新資料驗收。未 Commit、Push、建立 PR、Merge 或部署；正式站與 data 分支保持原狀。所有測試通過的範圍不等同於已滿足產品發布條件。
 
 ## A. 實際 Git 狀態

@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">淡江航太系壘</string>
-    <string name="title_activity_main">淡江航太系壘</string>
-    <string name="package_name">io.github.scottpuppylu.baseballstats</string>
-    <string name="custom_url_scheme">io.github.scottpuppylu.baseballstats</string>
-</resources>

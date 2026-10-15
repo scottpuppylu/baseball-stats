@@ -29,19 +29,6 @@ let externalGitHub = 0;
     await page.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//, r => { externalGitHub++; return r.abort(); });
     await page.route('**/__mock-api/**', async route => {
       const req = route.request(), file = new URL(req.url()).pathname.split('/__mock-api/')[1];
-      // Since 2026/10/13 the page reads and writes through the secure API (api=1): plain JSON {content, sha} instead of GitHub's base64.
-      if (new URL(req.url()).searchParams.get('api') === '1') {
-        if (req.method() === 'PUT') {
-          const body = req.postDataJSON();
-          writes.push({file, body});
-          if (state.failPut.has(file)) return route.fulfill({status: 500, body: '{}'});
-          state.files.set(file, Buffer.from(JSON.stringify(body.content, null, 2)));
-          return route.fulfill({status: 200, contentType: 'application/json', body: '{"content":{"sha":"memory-only"}}'});
-        }
-        if (state.failGet.has(file)) return route.fulfill({status: 500, body: '{}'});
-        if (!state.files.has(file)) return route.fulfill({status: 404, body: '{}'});
-        return route.fulfill({status: 200, contentType: 'application/json', body: JSON.stringify({content: JSON.parse(state.files.get(file).toString()), sha: 'memory-only'})});
-      }
       if (req.method() === 'PUT') {
         const body = req.postDataJSON();
         writes.push({file, body});
@@ -264,7 +251,7 @@ let externalGitHub = 0;
       assert.equal(await page.evaluate(() => guestPlayers[0]?.name), '裝置支援');
       await page.evaluate(() => addGuestPlayer('記憶體支援', 88));
       await page.waitForFunction(() => document.getElementById('syncStatusBadge').textContent.includes('支援名冊已同步'));
-      const put = writes.find(w => w.file === 'data/guests.json'); assert.ok(put); assert.equal(put.body.sha, null, 'a new file is created without naming a version');
+      const put = writes.find(w => w.file === 'data/guests.json'); assert.ok(put); assert.equal('sha' in put.body, false);
       await page.reload(); await page.waitForFunction(() => window.teamRecords && !document.getElementById('syncStatusBadge').textContent.includes('連線同步中'));
       assert.ok(await page.evaluate(() => guestPlayers.some(g => g.name === '記憶體支援')));
       state.failGet.add('data/guests.json'); await page.evaluate(() => loadLogsFromGitHub());

@@ -1,6 +1,6 @@
 // Third review round (2026/10/11), isolated preview only: qualifying PA, one percentile rank, consistent thresholds and
 // per-3-out rates, safe names, hooks registry, dead code, shared spray drawing, Esc and in-page dialogs, refreshed lists,
-// readable chart labels, CSV and backup, and the data branch written only through the secure API (2026/10/13).
+// readable chart labels, CSV and backup, and the move of the data to the `data` branch (old pages writing to main).
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -32,7 +32,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
   const browser = await chromium.launch({headless: true, channel: 'chrome'});
   const errors = [];
   let externalGitHub = 0;
-  const open = async (width = 1440, height = 900, query = '') => {
+  const open = async (width = 1440, height = 900) => {
     const context = await browser.newContext({viewport: {width, height}, acceptDownloads: true, isMobile: width < 768, hasTouch: width < 768});
     await context.addInitScript(() => { window.confirm = () => true; });
     const page = await context.newPage();
@@ -40,7 +40,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     page.on('pageerror', e => errors.push(e.message));
     page.on('dialog', d => { errors.push(`unexpected browser dialog: ${d.message()}`); d.dismiss(); });
     await page.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//, r => { externalGitHub++; return r.abort(); });
-    await page.goto(url + query);
+    await page.goto(url);
     await ready(page);
     return {context, page};
   };
@@ -214,36 +214,32 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     checks.push('21-csv-backup');
     await context.close();
 
-    // ---------- 17. Writes reach the data branch only through the secure API, with a personal session ----------
+    // ---------- 17. Data on the data branch; writes from old pages on main are merged in ----------
     const A = await open();
     const writes = [];
-    A.page.on('request', req => { if (req.method() === 'PUT') { const u = new URL(req.url()); writes.push(u.pathname + u.search); } });
-    assert.equal(await A.page.locator('#uiCloudAuthBtn').innerText(), '✓ 預覽管理員', 'signed-in person is shown');
-    const commitsBefore = (await A.page.evaluate(() => fetch('/__preview/commits').then(r => r.json()))).length;
-    assert.equal(await A.page.evaluate(() => commitTagsToGitHub({...playerTags, 謝承祐: ['新版標籤']}, 'new page')), true);
-    assert.deepEqual(writes, ['/__mock-api/data/tags.json?ref=data&api=1'], 'the page writes only to the secure API (preview address)');
-    const commits = (await A.page.evaluate(() => fetch('/__preview/commits').then(r => r.json()))).slice(commitsBefore);
-    assert.deepEqual(commits.map(c => [c.branch, c.file]), [['data', 'data/tags.json']], 'the API wrote the data branch');
-    assert.match(commits[0].message, /\[via app: 預覽管理員 \(admin\)\]$/, 'commit names who saved');
-    assert.ok(JSON.stringify((await cloudRead(A.page, 'data/tags.json')).data).includes('新版標籤'));
+    A.page.on('request', req => { if (req.method() === 'PUT' && req.url().includes('/__mock-api/')) writes.push(JSON.parse(req.postData()).branch); });
+    await A.page.evaluate(() => commitTagsToGitHub({...playerTags, 謝承祐: ['新版標籤']}, 'new page'));
+    assert.deepEqual(writes, ['data'], 'the site writes to the data branch');
     assert.ok(!JSON.stringify((await cloudRead(A.page, 'data/tags.json', 'main')).data).includes('新版標籤'), 'main is not touched');
-    // The old main→data merge needed a credential in the page; it is complete and now disabled. A stray change on main
-    // (only possible with the revoked credential) is no longer pulled in by page loads.
+    // An old page (opened before the move) adds a log and deletes another on main.
     const mainLogs = (await cloudRead(A.page, 'data/logs.json', 'main')).data;
-    assert.equal(await cloudWrite(A.page, 'data/logs.json', [...mainLogs, {id: 'log_old_page', date: '2026-10-11', tag: '舊版頁面', name: '洪銘駿', jersey: 30, pa: 2, ab: 2, h: 1, h1: 1, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0}], 'main'), 200);
+    const removed = mainLogs.find(l => !String(l.id).startsWith('log_game_')).id;
+    const oldPageLogs = [...mainLogs.filter(l => l.id !== removed), {id: 'log_old_page', date: '2026-10-11', tag: '舊版頁面', name: '洪銘駿', jersey: 30, pa: 2, ab: 2, h: 1, h1: 1, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 0}];
+    assert.equal(await cloudWrite(A.page, 'data/logs.json', oldPageLogs, 'main'), 200);
     const B = await open();
-    await B.page.waitForTimeout(800);
-    assert.equal(await B.page.evaluate(() => allLogs.some(l => l.id === 'log_old_page')), false, 'no automatic merge from main');
-    assert.deepEqual(await B.page.evaluate(() => window.__previewWrites), [], 'loading a page writes nothing');
-    // Signed out: the upload is refused before any request, reported as not synced, and the sign-in button asks for attention.
-    const C = await open(1440, 900, '?signedOut');
-    assert.equal(await C.page.locator('#uiCloudAuthBtn').innerText(), '🔐 登入編輯', 'signed-out button');
-    const commitsSignedOut = (await C.page.evaluate(() => fetch('/__preview/commits').then(r => r.json()))).length;
-    assert.equal(await C.page.evaluate(() => commitTagsToGitHub({...playerTags, 謝承祐: ['未登入']}, 'signed out')), false);
-    assert.match(await C.page.evaluate(() => document.getElementById('syncStatusBadge').textContent), /寫入失敗.*登入編輯/);
-    assert.equal((await C.page.evaluate(() => fetch('/__preview/commits').then(r => r.json()))).length, commitsSignedOut, 'nothing new reached the cloud');
+    await B.page.waitForFunction(() => allLogs.some(l => l.id === 'log_old_page'));
+    const merged = (await cloudRead(B.page, 'data/logs.json')).data;
+    assert.ok(merged.some(l => l.id === 'log_old_page') && !merged.some(l => l.id === removed), 'the old page\'s addition and deletion reach the data branch');
+    assert.match(await lastToast(B.page), /舊版頁面/);
+    const marker = (await cloudRead(B.page, 'data/legacy-main.json')).data;
+    assert.equal(marker['data/logs.json'], (await cloudRead(B.page, 'data/logs.json', 'main')).sha, 'marker records the merged main version');
+    // Already merged: the next page does not merge again, so a later deletion on the data branch sticks.
+    await B.page.evaluate(() => deleteSingleLog('log_old_page'));
+    const C = await open();
+    await C.page.waitForTimeout(1000);
+    assert.equal(await C.page.evaluate(() => allLogs.some(l => l.id === 'log_old_page')), false, 'no second merge');
     for (const d of [A, B, C]) await d.context.close();
-    checks.push('17-secure-api-writes');
+    checks.push('17-data-branch');
 
     // ---------- CI finding: Android/Linux monospace digits are wider than Windows Consolas ----------
     // Courier New has the same 0.6em digits as DejaVu Sans Mono / Droid Sans Mono; the overview table must still fit at 360px.

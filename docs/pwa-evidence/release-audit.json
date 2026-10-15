@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-15T21:15:09.148Z",
+  "head": "8ec27b67d99532b206c38e2d6949e0378b026568",
+  "branch": "feature/mobile-app-pwa-android",
+  "existingCredentialUnchanged": true,
+  "acceptedRisk": "RISK_ACCEPTED",
+  "inlineBusinessIdenticalExceptOfflineGuards": true,
+  "formulaModulesUnchanged": true,
+  "additionalCredentialCopies": [],
+  "formalDataDiff": "",
+  "remoteRefs": "8fdffb297731316bbcf8b6a908033b8d6985ff38\trefs/heads/data\n40f2c23cf086c7af2e4fc0ee222d6fe7b8ae6633\trefs/heads/main",
+  "pageSha256": "b0d98bac4902f3a31ca846af1ff22ad443dbc442fc0febf68d7510266c8a4346",
+  "passed": true
+}

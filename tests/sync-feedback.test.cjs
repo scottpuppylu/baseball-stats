@@ -30,12 +30,6 @@ function context(extra = {}) {
     commitGamesToGitHub: async () => true, rememberCloudBase() {}, DATA_BRANCH: 'data',
     ...extra,
   };
-  // The page writes only through cloud-sync.js. This stand-in forwards to the test's fake cloud in the shape GitHub
-  // stores (base64 content, sha only when replacing a version), so the merge tests keep checking exactly what lands.
-  ctx.window.cloudApi = ctx.window.cloudApi || {
-    readFile: async () => null,
-    writeFile: async (file, data, sha, message) => ctx.fetch(`cloud-api/${file}`, {method: 'PUT', body: JSON.stringify({message, content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'), ...(sha ? {sha} : {})})}),
-  };
   vm.createContext(ctx);
   vm.runInContext(extract('function showSyncResult(', '\n    }'), ctx);
   // Text safety helpers used by loaders and form handlers.
@@ -52,7 +46,7 @@ for (const status of [200, 403, 409, 500, 'network']) {
   test(`guest upload reports ${status} accurately`, async () => {
     const ctx = context({
       GITHUB_REPO: 'test', GITHUB_BRANCH: 'test', GUESTS_FILE_PATH: 'test',
-      currentGuestsSha: null, utf8ToBase64: value => value,
+      GITHUB_TOKEN: 'mock', currentGuestsSha: null, utf8ToBase64: value => value,
       // The upload first reads the current cloud version (an empty roster), then writes.
       fetch: async (url, options = {}) => {
         if (status === 'network') throw new Error('offline');
@@ -188,7 +182,7 @@ test('names with quotes survive inside inline handlers', () => {
 
 test('files over 1 MB are read through the raw media type instead of failing', async () => {
   const calls = [];
-  const ctx = context({AbortController, setTimeout, clearTimeout, GITHUB_REPO: 'test', GITHUB_BRANCH: 'main',
+  const ctx = context({AbortController, setTimeout, clearTimeout, GITHUB_REPO: 'test', GITHUB_BRANCH: 'main', GITHUB_TOKEN: 'mock',
     base64ToUtf8: value => Buffer.from(value, 'base64').toString('utf8'),
     fetch: async (url, options) => {
       const accept = options.headers.Accept;
@@ -279,7 +273,7 @@ for(const [name,c,key,content]of [
 
 // Multi-device safety: an upload never overwrites what another device saved after this page loaded.
 function mergeContext(extra = {}) {
-  const ctx = context({utf8ToBase64: value => Buffer.from(value).toString('base64'), GITHUB_REPO: 'test', GITHUB_BRANCH: 'main', ...extra});
+  const ctx = context({utf8ToBase64: value => Buffer.from(value).toString('base64'), GITHUB_REPO: 'test', GITHUB_BRANCH: 'main', GITHUB_TOKEN: 'mock', ...extra});
   Object.assign(ctx, {AbortController, setTimeout, clearTimeout, atob, TextDecoder, JSON});
   vm.runInContext(extract('async function fetchWithTimeout(', '\n    }'), ctx);
   vm.runInContext(extract('const WRITE_TIMEOUT_MS', ';'), ctx);

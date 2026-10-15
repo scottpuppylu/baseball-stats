@@ -26,11 +26,11 @@ test('manifest: names, standalone display, GitHub Pages sub-path and icons', () 
 
 test('page head links the manifest, iOS home-screen settings and local copies of its libraries', () => {
   const html = read('index.html');
-  assert.match(html, /<link rel="manifest" href="manifest\.webmanifest">/);
-  assert.match(html, /apple-mobile-web-app-capable" content="yes"/);
-  assert.match(html, /apple-mobile-web-app-title" content="航太系壘"/);
-  assert.match(html, /viewport-fit=cover/);
-  assert.doesNotMatch(html, /<script src="https?:\/\//, 'no remote scripts: the app must work offline and inside the APK');
+  assert.ok(/<link rel="manifest" href="manifest\.webmanifest">/.test(html));
+  assert.ok(/apple-mobile-web-app-capable" content="yes"/.test(html));
+  assert.ok(/apple-mobile-web-app-title" content="航太系壘"/.test(html));
+  assert.ok(/viewport-fit=cover/.test(html));
+  assert.ok(!/<script src="https?:\/\//.test(html), 'PWA program dependencies are local');
   for (const file of ['vendor/tailwindcss-play-3.4.17.js', 'vendor/chart.umd-4.5.1.min.js']) assert.ok(fs.statSync(path.join(root, file)).size > 100000, file);
 });
 
@@ -56,7 +56,7 @@ function loadWorker() {
     addEventListener: (type, fn) => { handlers[type] = fn; },
     clients: {claim: async () => {}}, skipWaiting() { self.skipped = true; }
   };
-  vm.runInNewContext(read('sw.js'), {self, caches: {open: async () => ({addAll: async () => {}}), keys: async () => [], match: async () => undefined}, fetch: async () => new Response(''), URL, Request, Response});
+  vm.runInNewContext(read('sw.js'), {self, caches: {open: async () => ({addAll: async () => {}, put: async () => {}}), delete: async () => {}, keys: async () => [], match: async () => undefined}, fetch: async () => new Response('const GITHUB_TOKEN = "unit-only";'), URL, Request, Response, Headers});
   const decide = (url, {method = 'GET', mode = 'cors'} = {}) => {
     let responded = false;
     handlers.fetch({request: {url, method, mode}, respondWith: p => { responded = true; Promise.resolve(p).catch(() => {}); }});
@@ -86,6 +86,7 @@ test('service worker serves the app shell and versioned program files', () => {
   const base = 'https://scottpuppylu.github.io/baseball-stats/';
   assert.equal(decide(base, {mode: 'navigate'}), true);
   assert.equal(decide(`${base}team-insights.js?v=20261011-audit2`), true);
+  assert.equal(decide(`${base}unrelated.js`), false, 'only explicit static resources may be cached');
   assert.equal(decide(`${base}assets/logo-128.webp`), true);
 });
 
@@ -100,12 +101,39 @@ test('updates wait for the page: no automatic skipWaiting on install', () => {
   assert.equal(self.skipped, true);
 });
 
-test('no GitHub write credential in anything the website, PWA or APK ships', () => {
-  const shipped = ['index.html', 'app-config.js', 'cloud-sync.js', 'pwa.js', 'sw.js', 'ui-comfort.js', 'team-insights.js', 'team-records.js', 'lineup-model.js', 'lineup-recommender.js', 'player-diagnostics.js'];
+test('accepted legacy declaration is unchanged; no credential copies in other shipped programs', () => {
+  const {execFileSync} = require('node:child_process');
+  const main = execFileSync('git', ['show', '40f2c23:index.html'], {encoding: 'utf8', cwd: root});
+  const declaration = /const GITHUB_TOKEN = [^;\r\n]*;/g;
+  const original = main.match(declaration), current = read('index.html').match(declaration);
+  // Boolean assertion avoids printing a credential-bearing actual/expected value on failure.
+  assert.ok(original?.length === 1 && current?.length === 1 && original[0] === current[0], 'only the existing declaration may be retained (RISK_ACCEPTED)');
+  const shipped = ['app-config.js', 'pwa.js', 'sw.js', 'ui-comfort.js', 'team-insights.js', 'team-records.js', 'lineup-model.js', 'lineup-recommender.js', 'player-diagnostics.js'];
   for (const file of shipped) {
     const text = read(file);
     assert.doesNotMatch(text, /gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/, file);
-    assert.doesNotMatch(text, /GITHUB_TOKEN|GITHUB_DATA_TOKEN|GOOGLE_CLIENT_SECRET|SESSION_SECRET/, file);
+    assert.doesNotMatch(text, /GITHUB_DATA_TOKEN|GOOGLE_CLIENT_SECRET|SESSION_SECRET/, file);
     assert.doesNotMatch(text, /\[(?:\d{2,3},){20,}\d{2,3}\]\.map\(c\s*=>\s*String\.fromCharCode/, `${file}: encoded string arrays`);
   }
+});
+
+test('offline HTML strips the credential and fails closed on an unknown declaration', async () => {
+  const code = read('sw.js').match(/async function offlinePage\(response\) \{[\s\S]*?\n\}/)[0];
+  const ctx = vm.createContext({Response, Headers});
+  vm.runInContext(code, ctx);
+  const cached = await ctx.offlinePage(new Response('<script>const GITHUB_TOKEN = "test-only-value";</script>'));
+  const html = await cached.text();
+  assert.ok(!html.includes('test-only-value'));
+  assert.ok(html.includes("const GITHUB_TOKEN = ''; window.BASEBALL_OFFLINE_SHELL = true;"));
+  await assert.rejects(ctx.offlinePage(new Response('<script>unknown declaration</script>')), /refused to cache/);
+  await assert.rejects(ctx.offlinePage(new Response('const GITHUB_TOKEN = "a"; const GITHUB_TOKEN = "b";')), /refused to cache/);
+});
+
+test('PWA release has no native framework, backend, OAuth or native CI dependency', () => {
+  const pkg = JSON.parse(read('package.json'));
+  assert.ok(!Object.keys({...pkg.dependencies, ...pkg.devDependencies}).some(name => name.startsWith('@capacitor/')));
+  assert.ok(!Object.keys(pkg.scripts).some(name => /android|cap:|build:web/.test(name)));
+  assert.ok(!fs.existsSync(path.join(root, '.github/workflows/android.yml')));
+  for (const file of ['capacitor.config.json', 'cloud-sync.js', 'app-native.js', 'cloud-api/api/index.mjs']) assert.ok(!fs.existsSync(path.join(root, file)), `${file} removed from product`);
+  assert.ok(!/cloud-sync|app-native|cloudApi|apiBase|GOOGLE_CLIENT/.test(read('index.html') + read('app-config.js')));
 });
