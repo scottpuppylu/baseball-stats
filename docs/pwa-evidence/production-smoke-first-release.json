@@ -1,0 +1,207 @@
+{
+  "at": "2026-10-15T21:39:31.036Z",
+  "url": "https://scottpuppylu.github.io/baseball-stats/",
+  "expectedCommit": "480b8986f9a9d1144c8a74d9ffe90d68280ea5d7",
+  "readOnly": true,
+  "assets": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "matches": true,
+      "sha256": "5e2582d0ee47b42f7eca5c1d1a0e25fad5b3a653f6368ade4bbea42f9044a86c"
+    },
+    {
+      "file": "manifest.webmanifest",
+      "status": 200,
+      "matches": true,
+      "sha256": "328a8ac77a0c08ffc3d76eb62829af973a4013ed33d6f93d78269846be893ff6"
+    },
+    {
+      "file": "app-config.js",
+      "status": 200,
+      "matches": true,
+      "sha256": "bc36dc3769898161ee1ca5a17249e1c863da504970ea6c3e0dc4e0ce98eb2aa1"
+    },
+    {
+      "file": "pwa.js",
+      "status": 200,
+      "matches": true,
+      "sha256": "83e598d6915f661e677bbe26cf6ff3616e5e4b7b21290fda7735a7890c8fa980"
+    },
+    {
+      "file": "sw.js",
+      "status": 200,
+      "matches": true,
+      "sha256": "a9a6fa88670e7c5f861662b047e91d1a10b54db77df41a814942dc30ebee5243"
+    },
+    {
+      "file": "ui-comfort.css",
+      "status": 200,
+      "matches": true,
+      "sha256": "9f214319ada7bf5904be70700726ddb6c97f95a44734cb980fb2aaf44e6f9b54"
+    }
+  ],
+  "pages": [
+    {
+      "width": 390,
+      "tab": "Overview",
+      "shown": true,
+      "textLength": 1131,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "tab": "Profile",
+      "shown": true,
+      "textLength": 2970,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "tab": "Leaderboard",
+      "shown": true,
+      "textLength": 785,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "tab": "Records",
+      "shown": true,
+      "textLength": 2366,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "tab": "Analytics",
+      "shown": true,
+      "textLength": 2452,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "tab": "Compare",
+      "shown": true,
+      "textLength": 2510,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "tab": "Lineup",
+      "shown": true,
+      "textLength": 4955,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "tab": "Scorebook",
+      "shown": true,
+      "textLength": 1870,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "tab": "Pitching",
+      "shown": true,
+      "textLength": 468,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "tab": "Glossary",
+      "shown": true,
+      "textLength": 2315,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Overview",
+      "shown": true,
+      "textLength": 2658,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Profile",
+      "shown": true,
+      "textLength": 3225,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Leaderboard",
+      "shown": true,
+      "textLength": 1044,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Records",
+      "shown": true,
+      "textLength": 2402,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Analytics",
+      "shown": true,
+      "textLength": 3224,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Compare",
+      "shown": true,
+      "textLength": 2650,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Lineup",
+      "shown": true,
+      "textLength": 7317,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Scorebook",
+      "shown": true,
+      "textLength": 1902,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Pitching",
+      "shown": true,
+      "textLength": 698,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "tab": "Glossary",
+      "shown": true,
+      "textLength": 5456,
+      "overflow": 0
+    }
+  ],
+  "errors": [],
+  "blockedWrites": [],
+  "data": {
+    "logs": 59,
+    "games": 4,
+    "status": "[連線正常] 雲端已同步 (59 筆)"
+  },
+  "offlineCache": {
+    "safe": true,
+    "keys": [
+      "tkaero-shell-20261016-pwa1"
+    ]
+  },
+  "offlineStart": {
+    "notice": "⚠️ 離線中：顯示本機暫存資料，可能不是最新；雲端同步暫停（新紀錄先存在這台裝置）。\n重新整理數據",
+    "logs": 59
+  },
+  "remoteRefs": "8fdffb297731316bbcf8b6a908033b8d6985ff38\trefs/heads/data\n480b8986f9a9d1144c8a74d9ffe90d68280ea5d7\trefs/heads/main",
+  "physicalAndroid": "UNVERIFIED",
+  "physicalIPhone": "UNVERIFIED",
+  "passed": true
+}

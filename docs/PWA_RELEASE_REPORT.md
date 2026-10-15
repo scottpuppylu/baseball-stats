@@ -61,3 +61,12 @@
 實體 Android Chrome、iPhone Safari 的主畫面安裝、Standalone、系統 Splash／分享流程：**UNVERIFIED**。Chrome 的技術安裝條件與 manifest／iOS meta／安全區檢查不等於實機驗收。本次沒有使用 Android 模擬器充當實體手機。
 
 使用方式見 [PWA_GUIDE.md](PWA_GUIDE.md)，部署／回滾見 [PWA_ROLLBACK.md](PWA_ROLLBACK.md)。正式寫入測試、實機操作均未冒充通過；它們的未驗證狀態依最新驗收規則明確列出。
+
+
+## 首發部署與正式驗證
+
+2026/10/16（Asia/Taipei）：[PR #2](https://github.com/scottpuppylu/baseball-stats/pull/2) 已合併，首發 main commit `480b8986f9a9d1144c8a74d9ffe90d68280ea5d7`。目標提交 [CI](https://github.com/scottpuppylu/baseball-stats/actions/runs/38810040077) 成功：116 單元、18 瀏覽器組；[Pages 部署](https://github.com/scottpuppylu/baseball-stats/actions/runs/38811197219) 成功。
+
+[正式唯讀證據](pwa-evidence/production-smoke-first-release.json)：6 個發布檔案與 commit 相符、390px／1440px 各十頁（20 個檢查）通過、沒有 script error、沒有寫入嘗試。正式雲端讀取 59 筆日誌／4 場賽事；SW 快取的 HTML 已移除憑證，未快取 GitHub/data；離線啟動恢復 59 筆本機資料並顯示離線提示。data SHA 維持 `8fdffb297731316bbcf8b6a908033b8d6985ff38`。
+
+驗證工具另修正導航後立即量測的時序：原有 UI 表格摺疊由 MutationObserver／requestAnimationFrame 執行；同步量測生涯紀錄曾得到 170px，等待兩個動畫影格後為 0。只調整量測時點，仍逐頁要求 overflow <= 1，不變更網站樣式、功能或資料。本節為首發證據，後續工具／文件修正的最新 commit 與 CI 以 GitHub PR／最終 TASK REPORT 為準。
