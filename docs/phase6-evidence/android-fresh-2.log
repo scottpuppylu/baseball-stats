@@ -1,0 +1,11 @@
+PASS packaged-app
+PASS ten-pages
+PASS back-dialog-then-page
+PASS rotation-background-restart
+PASS keyboard
+PASS no-fake-sync
+PASS csv-share
+PASS json-share
+PASS photo-picker
+PASS offline-notice
+{"passed":true,"device":"sdk_gphone64_x86_64 / Android 16 (API 36)","checks":["packaged-app","ten-pages","back-dialog-then-page","rotation-background-restart","keyboard","no-fake-sync","csv-share","json-share","photo-picker","offline-notice"],"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-phase6-cold\\fresh-2"}

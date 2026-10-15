@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-15T20:37:14.670642+00:00",
+  "branch": "feature/mobile-app-pwa-android",
+  "head": "26fc05e5c63cc7de7783456b850802fd6b800aee",
+  "remoteRefs": {
+    "refs/heads/data": "8fdffb297731316bbcf8b6a908033b8d6985ff38",
+    "refs/heads/main": "40f2c23cf086c7af2e4fc0ee222d6fe7b8ae6633"
+  },
+  "startMain": "40f2c23cf086c7af2e4fc0ee222d6fe7b8ae6633",
+  "startData": "8fdffb297731316bbcf8b6a908033b8d6985ff38",
+  "remoteBranchesUnchanged": true,
+  "formalDataWorkingTreeChanges": "",
+  "formulaAndDataChangesAgainstMain": "",
+  "pages": {
+    "type": "legacy",
+    "sourceBranch": "main",
+    "path": "/",
+    "url": "https://scottpuppylu.github.io/baseball-stats/"
+  },
+  "releaseSigningConfigured": false
+}

@@ -1,5 +1,7 @@
 # 手機 App 化驗收紀錄（2026/10/13）
 
+> 歷史紀錄：其中撤銷 Token、Vercel、OAuth／白名單的待辦已被 2026/10/16 產品需求取代，不能作為要求使用者設定的依據。Phase 6 的實際結果與發布阻礙見 [PHASE6_REPORT.md](PHASE6_REPORT.md)。
+
 分支 `feature/mobile-app-pwa-android`，起點 `main@40f2c23`。所有測試都在隔離環境：固定 fixtures、記憶體中的 GitHub、真實 API 程式碼搭配測試用設定；正式 `data` 分支（`8fdffb2`）與 `main`（`40f2c23`）在整個過程中未被修改。
 
 ## 環境

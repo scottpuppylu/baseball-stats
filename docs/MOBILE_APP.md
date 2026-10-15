@@ -1,5 +1,7 @@
 # 淡江航太系壘 App（PWA 與 Android）
 
+> 2026/10/16 Phase 6 更正：產品要求零登入、零 Token 輸入、零隊員設定。以下 §1 的 OAuth/API 是前任留下的實驗方案，**未獲採用、未部署，也不是發布先決設定**；不得要求使用者完成它。正式站保持原狀，本分支的雲端寫入尚未符合需求，發布 BLOCKED。最新證據與替代架構見 [PHASE6_REPORT.md](PHASE6_REPORT.md)。
+
 同一套網頁程式有三種用法，資料、計算公式與功能完全相同：
 
 | 用法 | 來源 | 適合 |
@@ -162,8 +164,6 @@ CI：`.github/workflows/test.yml`（全部測試）與 `android.yml`（Debug APK
 
 ---
 
-## 5. 必須由擁有者處理的安全事項
+## 5. 現有憑證的處理邊界（Phase 6 更新）
 
-1. **撤銷舊 Token**：GitHub → Settings → Developer settings → Personal access tokens (classic) → 找到用於本網站的 Token（`ghp_` 開頭，2026/9/30 前後建立）→ **Delete**。不要把 Token 貼到聊天或任何地方。
-2. 檢查 GitHub → Settings → Security log，以及你帳號下所有 repository 是否有非預期的 commit（舊 Token 若為 classic `repo` 權限，可寫入你所有 repo）。
-3. Token 也存在於 Git 歷史（`51c3fd9` 起）。撤銷後即失效，不需要改寫歷史。
+現有 Token 不更換、不撤銷、不修改權限；不把值加入 APK、公開程式碼、報告或 Log。正式站與 Git 歷史的公開憑證風險仍存在，字元陣列或 Base64 都不是安全保護。本次只做唯讀權限檢查，不對正式 data 測試寫入；不得宣稱安全 Gate 已通過。前版要求撤銷 Token 的指示已由 Product Owner 明確取代。

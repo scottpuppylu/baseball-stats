@@ -10,7 +10,8 @@
     "cap:sync": "npm run build:web && cap sync android",
     "build:android": "npm run cap:sync && node scripts/gradle.mjs assembleDebug",
     "build:android:release": "npm run cap:sync && node scripts/gradle.mjs bundleRelease assembleRelease",
-    "test:android-device": "node tests/android-device.cjs"
+    "test:android-device": "node tests/android-device.cjs",
+    "test:android-cold": "node tests/android-cold-start.cjs"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.3",
