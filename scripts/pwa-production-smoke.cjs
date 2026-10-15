@@ -20,6 +20,19 @@ const normalized = text => text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').tr
   try {
     for (const width of [390, 1440]) {
       const context = await browser.newContext({viewport: {width, height: 900}});
+      // Page fetch is guarded before a worker can see the request; routing below is a second barrier.
+      await context.exposeBinding('__recordReadOnlyBlock', (_source, record) => report.blockedWrites.push(record));
+      await context.addInitScript(() => {
+        const readFetch = window.fetch.bind(window);
+        window.fetch = async (input, options = {}) => {
+          const method = String(options.method || (input && input.method) || 'GET').toUpperCase();
+          if (!['GET', 'HEAD'].includes(method)) {
+            await window.__recordReadOnlyBlock({method, path: new URL(typeof input === 'string' ? input : input.url, location.href).pathname});
+            throw new Error('Production smoke test is read-only');
+          }
+          return readFetch(input, options);
+        };
+      });
       await context.route('**/*', route => {
         const req = route.request();
         if (!['GET', 'HEAD'].includes(req.method())) {
