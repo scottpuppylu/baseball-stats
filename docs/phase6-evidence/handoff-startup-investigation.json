@@ -1,0 +1,14 @@
+{
+  "source": "C:\\Users\\User\\.claude\\projects\\C--Users-User-baseball-analytics\\fd475855-270b-4ccd-86a1-ec11aaf743dd.jsonl",
+  "finalTestCommandLine": 1341,
+  "finalFailureOutputLine": 1343,
+  "lossyPipeline": "node tests/android-device.cjs 2>&1 | tail -1 | cut -c1-300",
+  "remainingErrorOutput": "}",
+  "earlierConnectionFailureLine": 1087,
+  "earlierFailureStage": "connect -> webview.page(); websocket connected then disconnected",
+  "subsequentPassingResultsLines": [
+    1352,
+    1358
+  ],
+  "conclusion": "Final first-launch root cause cannot be recovered from the retained truncated output. The independently reproduced module/data readiness race must not be claimed as the original cause."
+}

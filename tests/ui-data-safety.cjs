@@ -42,6 +42,26 @@ const cloud = (page, file) => page.evaluate(async file => {
   // UI_SAFETY_CASES=1,2,3 runs only those sections (3 also covers 4).
   const want = id => !process.env.UI_SAFETY_CASES || process.env.UI_SAFETY_CASES.split(',').includes(id);
   try {
+    // Independent games must never alias the same merge key, even with a frozen clock / ten-second wraparound.
+    if (want('5')) {
+      const A = await device(), B = await device();
+      const create = (page, opponent, offset) => page.evaluate(({opponent, offset}) => {
+        Date.now = () => 1792098000000 + offset;
+        document.getElementById('setup_game_date').value = '2026-10-16';
+        document.getElementById('setup_game_opponent').value = opponent;
+        switchMainTab('tabScorebook'); startNewGameFromSetup();
+        return activeGame.id;
+      }, {opponent, offset});
+      const a = await create(A.page, 'Clock QA A', 0), b = await create(B.page, 'Clock QA B', 10000);
+      assert.notEqual(a, b, 'two devices starting independent games have distinct IDs');
+      assert.equal(await A.page.evaluate(() => commitGamesToGitHub([...allGames, activeGame], 'clock QA A')), true);
+      assert.equal(await B.page.evaluate(() => commitGamesToGitHub([...allGames, activeGame], 'clock QA B')), true);
+      const saved = await cloud(B.page, 'data/games.json');
+      assert.equal(saved.find(g => g.id === a)?.opponent, 'Clock QA A');
+      assert.equal(saved.find(g => g.id === b)?.opponent, 'Clock QA B');
+      await A.context.close(); await B.context.close();
+      checks.push('5-distinct-games-two-devices');
+    }
     // ---------- 2. Live scorer ----------
     if (want('2')) {
     const L = await device(390);

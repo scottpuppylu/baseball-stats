@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "device": "sdk_gphone64_x86_64 / Android 16 (API 36)",
+  "checks": [
+    "packaged-app",
+    "ten-pages",
+    "back-dialog-then-page",
+    "rotation-background-restart",
+    "keyboard",
+    "no-fake-sync",
+    "csv-share",
+    "json-share",
+    "photo-picker",
+    "image-file-crop-local-save",
+    "offline-notice"
+  ],
+  "output": "C:\\Users\\User\\AppData\\Local\\Temp\\baseball-phase6-device-final"
+}

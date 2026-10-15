@@ -1,0 +1,9 @@
+{
+  "apk": "C:\\Users\\User\\baseball-stats-mobile\\android\\app\\build\\outputs\\apk\\debug\\app-debug.apk",
+  "bytes": 8515294,
+  "sha256": "719bc60af6be6b0f4bfe1aa6b8a1e8bfe4753246ee729184db2851453e4a7c95",
+  "entriesScanned": 476,
+  "issues": [],
+  "passed": true,
+  "limits": "Checks literal original token, UTF-16, original char-array encoding, common GitHub token and private-key patterns; not a general security proof."
+}

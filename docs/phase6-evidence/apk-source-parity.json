@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "contentMismatches": [],
+  "newlineOnlyDifferences": [
+    "app-config.js"
+  ],
+  "sourceFilesChecked": 24,
+  "apkSha256": "719bc60af6be6b0f4bfe1aa6b8a1e8bfe4753246ee729184db2851453e4a7c95",
+  "note": "Checks runtime source parity ignoring LF/CRLF; generated Capacitor runtime excluded. Documentation and acceptance-script changes are not packaged."
+}

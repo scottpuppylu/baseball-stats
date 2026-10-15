@@ -1,10 +1,12 @@
 {
   "name": "baseball-stats",
   "private": true,
-  "description": "淡江航太系壘數據網站：測試工具（網站本身不需建置）",
+  "description": "淡江航太系壘數據網站與 PWA（GitHub Pages，無額外後端）",
   "scripts": {
     "test": "node tests/run-all.cjs",
-    "test:unit": "node --test tests/sync-feedback.test.cjs tests/ui-integrity.test.cjs tests/spray-archive.test.cjs tests/lineup-model.test.cjs tests/player-diagnostics.test.cjs"
+    "test:unit": "node --test tests/*.test.cjs",
+    "test:pwa": "node tests/run-all.cjs ui-pwa ui-startup ui-mobile-comfort ui-responsive",
+    "test:mobile": "npm run test:pwa"
   },
   "devDependencies": {
     "playwright": "1.62.1"

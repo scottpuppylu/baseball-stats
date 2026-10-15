@@ -1,0 +1,46 @@
+
+> test
+> node tests/run-all.cjs
+
+▶ unit tests (6 files)
+▶ ui-pwa
+▶ ui-pwa-rollback
+▶ ui-startup
+▶ ui-workflows
+▶ ui-audit-fixes
+▶ ui-audit-fixes-2
+▶ ui-data-safety
+▶ ui-round3
+▶ spray-archive-browser
+▶ ui-insights
+▶ ui-lineup
+▶ ui-data-fixes
+▶ ui-review-fixes
+▶ ui-records
+▶ ui-responsive
+▶ ui-mobile-comfort
+▶ ui-avatar
+▶ ui-tablet
+
+結果：
+✔ unit  ℹ tests 115, ℹ pass 115, ℹ fail 0
+✔ ui-pwa  {"passed":true,"checks":["manifest","sw-lifecycle","no-sensitive-cache","credential-free-offline-html","chromium-installability","github-pag
+✔ ui-pwa-rollback  {"passed":true,"checks":["prepared-baseline-page","sw-unregistered","shell-cache-cleared","local-game-preserved","ten-pages","direct-fixture
+✔ ui-startup  {"passed":true,"moduleReadyMs":1023,"dataReadyMs":3934,"early":{"pending":true,"games":0},"checks":["reproduced-module-data-race","delayed-s
+✔ ui-workflows  {"workflows":3,"checks":42,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release"}
+✔ ui-audit-fixes  {"passed":true,"checks":["complete-logs","persistent-exclusion","partial-loading","empty-recovery","consistent-sdi","full-chart-range","pitc
+✔ ui-audit-fixes-2  {"passed":true,"cases":15,"failures":[],"externalGitHub":0,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release"}
+✔ ui-data-safety  {"passed":true,"checks":["2-live-scorer","3-pitching-no-data","4-review-outs","1-two-devices"],"output":"C:\\Users\\User\\AppData\\Local\\Te
+✔ ui-round3  {"passed":true,"checks":["8-qualifying-pa","9-percentile","10-wording","12-safe-names","13-15-structure","14-spray","18-esc-dialog","19-list
+✔ spray-archive-browser  {"passed":true,"archivedGames":4,"archivedPoints":68,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release"}
+✔ ui-insights  {"passed":true,"viewports":2,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release"}
+✔ ui-lineup  {"passed":true,"viewports":2,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release"}
+✔ ui-data-fixes  {"passed":true,"seasonPa":29,"sprayAll":[19,19,3,3],"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release"}
+✔ ui-review-fixes  review fixes: expected-stats, leaderboard, glossary, pitching-games, custom-model, diamond, runner-out-undo, fc-out, opp-line-score, review-
+✔ ui-records  {"passed":true,"viewports":2,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release"}
+✔ ui-responsive  {"layouts":63,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release","externalGitHubRequests":0}
+✔ ui-mobile-comfort  {"passed":true,"chips":{"Overview":2,"Profile":6,"Leaderboard":0,"Analytics":4,"Compare":2,"Lineup":4,"Scorebook-live":0,"Scorebook-review":
+✔ ui-avatar  {"passed":4,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release"}
+✔ ui-tablet  {"passed":6,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-pwa-release"}
+
+19/19 通過；截圖與報告：C:\Users\User\AppData\Local\Temp\baseball-pwa-release

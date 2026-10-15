@@ -1,0 +1,8 @@
+▶ unit tests (9 files)
+▶ ui-startup
+
+結果：
+✔ unit  ℹ tests 142, ℹ pass 142, ℹ fail 0
+✔ ui-startup  {"passed":true,"moduleReadyMs":1678,"dataReadyMs":4360,"early":{"pending":true,"games":0},"checks":["reproduced-module-data-race","delayed-s
+
+2/2 通過；截圖與報告：C:\Users\User\AppData\Local\Temp\baseball-ui-qa

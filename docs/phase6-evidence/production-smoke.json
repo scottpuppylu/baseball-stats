@@ -1,0 +1,174 @@
+{
+  "at": "2026-10-15T20:32:59.096Z",
+  "readOnly": true,
+  "pages": [
+    {
+      "width": 390,
+      "name": "Overview",
+      "status": 200,
+      "shown": true,
+      "textLength": 1147,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "name": "Profile",
+      "status": 200,
+      "shown": true,
+      "textLength": 2986,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "name": "Leaderboard",
+      "status": 200,
+      "shown": true,
+      "textLength": 801,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "name": "Records",
+      "status": 200,
+      "shown": true,
+      "textLength": 2366,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "name": "Analytics",
+      "status": 200,
+      "shown": true,
+      "textLength": 2484,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "name": "Compare",
+      "status": 200,
+      "shown": true,
+      "textLength": 2525,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "name": "Lineup",
+      "status": 200,
+      "shown": true,
+      "textLength": 4987,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "name": "Scorebook",
+      "status": 200,
+      "shown": true,
+      "textLength": 1870,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "name": "Pitching",
+      "status": 200,
+      "shown": true,
+      "textLength": 481,
+      "overflow": 0
+    },
+    {
+      "width": 390,
+      "name": "Glossary",
+      "status": 200,
+      "shown": true,
+      "textLength": 2315,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Overview",
+      "status": 200,
+      "shown": true,
+      "textLength": 2658,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Profile",
+      "status": 200,
+      "shown": true,
+      "textLength": 3225,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Leaderboard",
+      "status": 200,
+      "shown": true,
+      "textLength": 1044,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Records",
+      "status": 200,
+      "shown": true,
+      "textLength": 2402,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Analytics",
+      "status": 200,
+      "shown": true,
+      "textLength": 3224,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Compare",
+      "status": 200,
+      "shown": true,
+      "textLength": 2650,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Lineup",
+      "status": 200,
+      "shown": true,
+      "textLength": 7317,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Scorebook",
+      "status": 200,
+      "shown": true,
+      "textLength": 1902,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Pitching",
+      "status": 200,
+      "shown": true,
+      "textLength": 698,
+      "overflow": 0
+    },
+    {
+      "width": 1440,
+      "name": "Glossary",
+      "status": 200,
+      "shown": true,
+      "textLength": 5456,
+      "overflow": 0
+    }
+  ],
+  "data": {
+    "logs": 59,
+    "games": 4,
+    "status": "[連線正常] 雲端已同步 (59 筆)"
+  },
+  "errors": [],
+  "blockedWriteAttempts": [],
+  "passed": true
+}

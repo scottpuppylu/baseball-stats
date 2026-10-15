@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "moduleReadyMs": 1678,
+  "dataReadyMs": 4360,
+  "early": {
+    "pending": true,
+    "games": 0
+  },
+  "checks": [
+    "reproduced-module-data-race",
+    "delayed-startup-completes",
+    "no-script-errors"
+  ]
+}

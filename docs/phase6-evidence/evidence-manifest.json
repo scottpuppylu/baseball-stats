@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-15T20:43:04.090533+00:00",
+  "evidenceSha256": {
+    "android-build.log": "23caf2c3c696825627ad5cdc79ecf084c20719bbd1ad5bd3e0aba21430dc0dc8",
+    "android-cold-start.json": "d905245e9055104bb38c0e65cb6ebc4f4b512e5f9071b85c73b5893d774b64ce",
+    "android-final.json": "af80763aa3beb15f1cdf574da5a5d827f419a2e437fe907bf5aa64937d871e28",
+    "android-final.log": "f9407a460b9a0fcdaf89ad4f8094be034304505278c75e4f673eefb4d9a0e43a",
+    "android-fresh-1.log": "74fbd5f8ccb25b77d77f60e1c7ac5cf2e541d57c5e973024e2fa81e687dc2867",
+    "android-fresh-2.log": "887d3b48507b931bdef91a78ffabfbf84031a827cff1af4a0462a80671d98251",
+    "android-fresh-3.log": "a2b22450fc728c4dbf7102752ea47ae8daca8bee4c2c2beacd2ee2597b5e2172",
+    "android-json-share.png": "5911697e567f90a5bebf220a63812906db363a1b9f647cf48d49dd5a05d2f9e1",
+    "android-photo-crop-webview.png": "c224143b58cd879c161e9bb43ab5879238a4008ea3fc0aeec12f8880386c4e63",
+    "android-photo-crop.png": "a47f1d489483ec7e9f9974352a689aec0dbc7bedf2ba81efacaa4513266b7d29",
+    "apk-scan.json": "4a58afca373a452eb585bca3053ea5c524d011d9e0110b5ea9d951baf90aac16",
+    "apk-source-parity.json": "973b697e7333f1d9bb3578314bef3192bbffc5720db8816b39f1789ac4a2d6ae",
+    "git-audit.json": "af3af41baea57487eeb7130d3edd013061e0ed4e048eaf2d2612ffb89a203a7f",
+    "handoff-startup-investigation.json": "096ba7bdf1c3c98bc4ca3dd319f109af332f513f3db4850092972db9f7d24d0e",
+    "production-audit.json": "544db47d984213c68d173521ee82fc9f1d4c40915989142da5adaae6de78fa68",
+    "production-smoke.json": "4e36170d261a51611d0f8c356f6740c6592757734a0e38d901727a9191d7249c",
+    "regression.log": "0d415a5fb88ba14c4f1225469c454cff2e2bf026d95610a4beed8273b1e2b3b4",
+    "startup-result.json": "d2e7b0bdd50f7c4eaebfe2fe92b9e0a68d27fdb15a81e6c06f3e7e0f981c7b23",
+    "startup-test.log": "677c4385d84691d89047b1f1232b3dfb9880b8cac6cbeccf09641004289cee05"
+  },
+  "changedSourceSha256": {
+    "README.md": "2c421863df154f766bf5b0653e64f834de5abc69820329fc4886516bd3a093d5",
+    "docs/MOBILE_APP.md": "79d07b6bcc2557c92f4a0f65efd45800baabdd53150024d0aaa5c7249251aeba",
+    "docs/MOBILE_QA.md": "16d35e745bf7e0e9ae22d739b9272647bb6c11facd67a3f53ec02ed032367769",
+    "docs/PHASE6_REPORT.md": "037cb596fa3409e42252d92aa80fef2f268e44b16a3188beecd31db818ab4d34",
+    "docs/PHASE6_ROLLBACK.md": "f30a390cd83c1098df633ff5c819162dbc92eee73852c552c9150ad2afef1f20",
+    "package.json": "7bcfe3ddf3e62a80239a9a53d62ff25f3b64740aef76e0e73c68bc2f1248b632",
+    "tests/android-device.cjs": "345d3a8d0c826b63a1e3cfed98f97d59231c2a3f27ba4a4070d28999bad9bbd3",
+    "tests/android-cold-start.cjs": "51762cd446eb3aaf7b688b954216c6a07c0a53a502f14b5013fd9ae9da4d1cdd",
+    "tests/ui-startup.cjs": "28a523bb03e610cea665e33a4d0a6273642f94fef4d8ac6057eb591400913c5e",
+    "tests/run-all.cjs": "ca3dc16734e2c5ed94e6f5a5c4a933bfdfa725bd7bac68fe8af335dad2a591a7"
+  },
+  "apkSha256": "719bc60af6be6b0f4bfe1aa6b8a1e8bfe4753246ee729184db2851453e4a7c95"
+}

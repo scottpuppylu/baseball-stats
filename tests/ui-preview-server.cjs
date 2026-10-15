@@ -25,6 +25,7 @@ for (const name of ['logs', 'games', 'avatars', 'tags', 'defense', 'guests']) {
 put('data', 'data/legacy-main.json', Buffer.from(JSON.stringify(Object.fromEntries([...branches.main].map(([file, data]) => [file, shaOf(data)])), null, 2)));
 
 const injection = `<script>
+window.BASEBALL_APP_CONFIG = {serviceWorker: new URLSearchParams(location.search).has('pwa')};
 window.__previewWrites = [];
 window.__previewFailWrites = false;
 window.__previewErrors = [];
@@ -60,10 +61,12 @@ window.fetch = (input, options = {}) => {
 };
 </script>`;
 const json = (res, status, body) => res.writeHead(status, {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}).end(JSON.stringify(body));
-http.createServer(async (req, res) => {
+let swBump = 0;
+const previewServer = http.createServer(async (req, res) => {
   try {
     const parsed = new URL(req.url, `http://localhost:${port}`);
-    const pathname = decodeURIComponent(parsed.pathname);
+    const pathname = decodeURIComponent(parsed.pathname).replace(/^\/baseball-stats(?=\/)/, '');
+    if (pathname === '/__preview/bump-sw') { swBump++; return json(res, 200, {swBump}); }
     if (pathname.startsWith('/__mock-api/')) {
       const file = pathname.slice('/__mock-api/'.length);
       if (file.startsWith('__blob/')) {
@@ -106,11 +109,22 @@ http.createServer(async (req, res) => {
       res.writeHead(404).end('Not found'); return;
     }
     let content = fs.readFileSync(filename);
+    if (filename.endsWith('sw.js') && swBump) content = Buffer.from(content.toString().replace(/const VERSION = '([^']+)'/, (m, v) => `const VERSION = '${v}-preview${swBump}'`));
     if (filename.endsWith('index.html')) {
-      content = Buffer.from(content.toString().replace(/const GITHUB_TOKEN =[^\r\n]+/, "const GITHUB_TOKEN = 'isolated-preview';").replace('<head>', '<head>' + injection));
+      const html = content.toString();
+      if ((html.match(/const GITHUB_TOKEN =[^\r\n]+/g) || []).length !== 1) throw new Error('Preview credential redaction failed');
+      content = Buffer.from(html.replace(/const GITHUB_TOKEN =[^\r\n]+/, "const GITHUB_TOKEN = 'isolated-preview';").replace('<head>', '<head>' + injection));
     }
-    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp'};
+    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.webmanifest':'application/manifest+json'};
     res.writeHead(200, {'Content-Type': mime[path.extname(filename)] || 'application/octet-stream', 'Cache-Control': 'no-store'});
     res.end(content);
-  } catch { res.writeHead(500).end('Preview error'); }
-}).listen(port, '127.0.0.1', () => console.log(`Isolated UI preview: http://127.0.0.1:${port}`));
+  } catch (error) {
+    console.error('[preview request]', error.name, error.code || 'no-code');
+    res.writeHead(500).end('Preview error');
+  }
+});
+previewServer.on('error', error => { console.error('[preview listen]', error.code); process.exitCode = 1; });
+previewServer.listen(port, '127.0.0.1', () => {
+  console.log(`Isolated UI preview: http://127.0.0.1:${port}`);
+  if (process.send) process.send({type: 'ready', port: previewServer.address().port});
+});

@@ -1,0 +1,75 @@
+{
+  "serial": "emulator-5554",
+  "runs": [
+    {
+      "run": 1,
+      "started": "2026-10-15T20:31:17.768Z",
+      "exitCode": 0,
+      "passed": true,
+      "report": {
+        "passed": true,
+        "device": "sdk_gphone64_x86_64 / Android 16 (API 36)",
+        "checks": [
+          "packaged-app",
+          "ten-pages",
+          "back-dialog-then-page",
+          "rotation-background-restart",
+          "keyboard",
+          "no-fake-sync",
+          "csv-share",
+          "json-share",
+          "photo-picker",
+          "offline-notice"
+        ],
+        "output": "C:\\Users\\User\\AppData\\Local\\Temp\\baseball-phase6-cold\\fresh-1"
+      }
+    },
+    {
+      "run": 2,
+      "started": "2026-10-15T20:32:31.329Z",
+      "exitCode": 0,
+      "passed": true,
+      "report": {
+        "passed": true,
+        "device": "sdk_gphone64_x86_64 / Android 16 (API 36)",
+        "checks": [
+          "packaged-app",
+          "ten-pages",
+          "back-dialog-then-page",
+          "rotation-background-restart",
+          "keyboard",
+          "no-fake-sync",
+          "csv-share",
+          "json-share",
+          "photo-picker",
+          "offline-notice"
+        ],
+        "output": "C:\\Users\\User\\AppData\\Local\\Temp\\baseball-phase6-cold\\fresh-2"
+      }
+    },
+    {
+      "run": 3,
+      "started": "2026-10-15T20:33:45.196Z",
+      "exitCode": 0,
+      "passed": true,
+      "report": {
+        "passed": true,
+        "device": "sdk_gphone64_x86_64 / Android 16 (API 36)",
+        "checks": [
+          "packaged-app",
+          "ten-pages",
+          "back-dialog-then-page",
+          "rotation-background-restart",
+          "keyboard",
+          "no-fake-sync",
+          "csv-share",
+          "json-share",
+          "photo-picker",
+          "offline-notice"
+        ],
+        "output": "C:\\Users\\User\\AppData\\Local\\Temp\\baseball-phase6-cold\\fresh-3"
+      }
+    }
+  ],
+  "passed": true
+}

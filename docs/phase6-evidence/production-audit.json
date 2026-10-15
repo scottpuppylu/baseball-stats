@@ -1,0 +1,76 @@
+{
+  "at": "2026-10-15T20:28:03.720Z",
+  "tokenSource": "origin/main:index.html; char-code array",
+  "tokenLength": 40,
+  "requests": [
+    {
+      "path": "repository",
+      "status": 200,
+      "private": false,
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "push": true,
+        "triage": true,
+        "pull": true
+      }
+    },
+    {
+      "path": "/contents/data?ref=data",
+      "status": 200,
+      "items": [
+        {
+          "sha": "6592d36312a7bf0bff0ea4a90d08bb53b3a96abf",
+          "path": "data/avatars.json"
+        },
+        {
+          "sha": "ddd01a96d7038789972d7bff3249788c1538b14d",
+          "path": "data/defense.json"
+        },
+        {
+          "sha": "d12cbc8642fa2ff41a83bcf57715e01c77e5e349",
+          "path": "data/games.json"
+        },
+        {
+          "sha": "64ef3c859d86ebf6378509bb9ff60977920b6d24",
+          "path": "data/legacy-main.json"
+        },
+        {
+          "sha": "dc12e9b39883db0772b824e3a205f191751eae87",
+          "path": "data/logs.json"
+        },
+        {
+          "sha": "add8fd48f5764dd39bfcd32cedb1c0dcc86b2c99",
+          "path": "data/tags.json"
+        }
+      ]
+    },
+    {
+      "path": "/commits?sha=data&per_page=3",
+      "status": 200,
+      "items": [
+        {
+          "sha": "8fdffb297731316bbcf8b6a908033b8d6985ff38",
+          "message": "feat: add nickname tag \"土撥鼠\" for 孫煜哲",
+          "date": "2026-10-12T12:39:31Z"
+        },
+        {
+          "sha": "2139d796c2e4ee0328d705c08d4ab04a27e20eaf",
+          "message": "資料改存 data 分支：記錄搬遷時 main 上的資料版本\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "date": "2026-10-11T11:39:05Z"
+        },
+        {
+          "sha": "95a64b92e6aced515b158e3d3bdd882f182c1df5",
+          "message": "fix: multi-device upload merge, live scorer guards and honest pitching stats\n\n- Uploads (logs, games, avatars, tags, defense rankings, guests) go through one\n  commitJsonFile(): if another device saved after this page loaded, this\n  device's own changes are merged into the newer cloud copy instead of\n  overwriting it; a 409 race re-reads and retries.\n- Live scorer: no preset batting result (submit needs a picked result), and no\n  new plate appearance or out after three outs until the inning is switched.\n- Pitching: half-innings without fielding events are counted as appearances\n  only; metrics with no sample show 資料不足 instead of ZCR 100% / sFIP 4.50.\n  No hard-coded default pitcher; unattributed events are not credited.\n- Review editor: changing a fielding event's type resets its outs to that\n  type's default.\n- Tests: new ui-data-safety browser suite (two devices), merge/upload unit\n  tests, GitHub-like sha checks in the preview server; integrity baseline v5.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "date": "2026-10-11T07:54:27Z"
+        }
+      ]
+    }
+  ],
+  "production": {
+    "status": 200,
+    "normalizedMatchesMain": false,
+    "sha256": "d251df9bab8abee31fc4f58fbae1853644d4d9bdba633c046eaee9330f27ec6a",
+    "matchesMainAfterBOMAndWhitespaceNormalization": true
+  }
+}
