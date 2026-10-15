@@ -24,7 +24,7 @@ const browserTests = ['ui-integrity-browser', 'ui-pwa', 'ui-pwa-rollback', 'ui-s
 const reserved = new Set();
 async function freePort() {
   for (let attempt = 0; attempt < 40; attempt++) {
-    const port = crypto.randomInt(20000, 60000);
+    const port = crypto.randomInt(20000, 30000);
     if (reserved.has(port)) continue;
     const available = await new Promise((resolve, reject) => {
       const server = net.createServer();
@@ -37,11 +37,33 @@ async function freePort() {
 }
 
 async function waitFor(url) {
+  let detail = '';
   for (let i = 0; i < 100; i++) {
-    try { if ((await fetch(url)).ok) return; } catch (error) { /* not up yet */ }
+    try {
+      const response = await fetch(url, {signal: AbortSignal.timeout(2000)});
+      if (response.ok) return;
+      detail = `HTTP ${response.status}`;
+    } catch (error) { detail = error.cause?.code || error.cause?.message || error.name; }
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-  throw new Error(`preview did not start: ${url}`);
+  throw new Error(`endpoint did not become ready: ${url} (${detail})`);
+}
+
+function startPreview(port) {
+  const child = spawn(process.execPath, [path.join('tests', 'ui-preview-server.cjs')], {
+    cwd: root, env: {...process.env, UI_PREVIEW_PORT: String(port)}, stdio: ['ignore', 'ignore', 'pipe', 'ipc']
+  });
+  let diagnostics = '';
+  child.stderr.on('data', chunk => { diagnostics = redact((diagnostics + chunk).slice(-4000)); });
+  const ready = new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`preview startup handshake timed out: ${diagnostics}`)), 10000);
+    child.once('message', message => {
+      if (message.type === 'ready' && message.port === port) { clearTimeout(timer); resolve(); }
+    });
+    child.once('error', error => { clearTimeout(timer); reject(new Error(`preview process: ${error.code}`)); });
+    child.once('exit', code => { clearTimeout(timer); reject(new Error(`preview exited ${code}: ${diagnostics}`)); });
+  });
+  return {child, ready, diagnostics: () => diagnostics};
 }
 
 function run(args, env) {
@@ -62,15 +84,16 @@ function run(args, env) {
   const unit = spawnSync(process.execPath, ['--test', ...units], {cwd: root, encoding: 'utf8'});
   unit.stdout = redact(unit.stdout);
   unit.stderr = redact(unit.stderr);
-  const summary = (unit.stdout.match(/^ℹ (tests|pass|fail) \d+$/gm) || []).join(', ');
+  const summary = (unit.stdout.match(/^(?:ℹ|#) (tests|pass|fail) \d+$/gm) || []).join(', ');
   results.push({name: 'unit', ok: unit.status === 0, detail: summary});
   if (unit.status !== 0) console.log(unit.stdout.split('\n').filter(l => /✖|Error|expected|actual/.test(l)).slice(0, 30).join('\n'));
 
   for (const name of browserTests) {
     const port = await freePort(), cdpPort = await freePort();
-    const preview = spawn(process.execPath, [path.join('tests', 'ui-preview-server.cjs')], {cwd: root, env: {...process.env, UI_PREVIEW_PORT: String(port)}, stdio: 'ignore'});
+    const preview = startPreview(port);
     let browser;
     try {
+      await preview.ready;
       await waitFor(`http://127.0.0.1:${port}/`);
       browser = await chromium.launch({channel: 'chrome', headless: true, args: [`--remote-debugging-port=${cdpPort}`]});
       await waitFor(`http://127.0.0.1:${cdpPort}/json/version`);
@@ -81,10 +104,10 @@ function run(args, env) {
       const last = text.trim().split('\n').slice(-1)[0] || '';
       results.push({name, ok: code === 0, detail: code === 0 ? last.slice(0, 140) : text.trim().split('\n').slice(-12).join('\n')});
     } catch (error) {
-      results.push({name, ok: false, detail: error.message});
+      results.push({name, ok: false, detail: redact(error.message + (preview.diagnostics() ? `\n${preview.diagnostics()}` : ''))});
     } finally {
       if (browser) await browser.close().catch(() => {});
-      preview.kill();
+      preview.child.kill();
     }
   }
 

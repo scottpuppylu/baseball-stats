@@ -10,9 +10,9 @@
 
 ## 讀寫與資料完整性
 
-直接重用原 main@40f2c23 的 inline 業務及 GitHub Contents API 程式。`fetchGitHubContent()`、`commitJsonFile()`、三方合併、SHA／409 重試、失敗回報與本機恢復維持原流程；只增加離線與無憑證離線頁的寫入保護。不需登入、註冊、輸入 Token、申請授權或新後端。
+直接重用原 main@40f2c23 的 inline 業務及 GitHub Contents API 程式。`fetchGitHubContent()`、`commitJsonFile()`、三方合併、SHA／409 重試、失敗回報與本機恢復維持原流程；增加離線／無憑證離線頁的寫入保護，並修正原站賽事 ID 只取時間末四位造成的碰撞風險。新 ID 保持 game_日期_識別碼 的字串形式，改用 128 位隨機識別碼；舊資料與舊 ID 不轉換。不需登入、註冊、輸入 Token、申請授權或新後端。
 
-`scripts/pwa-release-audit.cjs` 驗證：除上述三行離線保護，inline 業務程式與原 main 完全相同；五個統計／推薦模組及 data 檔沒有差異。Token 宣告逐字相同，沒有額外檔案副本，值與權限未變。證據：[release-audit.json](pwa-evidence/release-audit.json)。
+`scripts/pwa-release-audit.cjs` 驗證：除上述三行離線保護與一行 ID 產生修正，inline 業務程式與原 main 完全相同；五個統計／推薦模組及 data 檔沒有差異。Token 宣告逐字相同，沒有額外檔案副本，值與權限未變。證據：[release-audit.json](pwa-evidence/release-audit.json)。
 
 正式 data 基線：`8fdffb297731316bbcf8b6a908033b8d6985ff38`。所有寫入測試只使用 fixture／記憶體 GitHub，未做正式 PUT，**不宣稱完成正式端到端寫入驗收**。發布後的正式 Smoke Test 阻擋所有非 GET/HEAD。
 
@@ -24,18 +24,22 @@
 
 ## 自動化結果
 
-- `npm test`：**115/115 單元、18/18 瀏覽器測試組通過**。原生 Android／OAuth/API 測試隨已取消的產品移除；原 main 的棒球及直接同步測試恢復，沒有略過原有功能檢查。[完整紀錄](pwa-evidence/local-tests.log)
+- `npm test`：**115/115 單元、18/18 瀏覽器測試組通過**（ID 修正前的完整本機回歸）。原生 Android／OAuth/API 測試隨已取消的產品移除；原 main 的棒球及直接同步測試恢復，沒有略過原有功能檢查。[完整紀錄](pwa-evidence/local-tests.log)
 - PWA：manifest／隊徽、Chrome 安裝條件、`/baseball-stats/` 子路徑、SW 安裝接管、靜態快取、離線啟動／提示／不誤報同步、重連後直接寫入、更新同意、新版啟用、舊 cache 清除、進行中場記恢復、停用開關均通過。[PWA 結果](pwa-evidence/pwa-result.json)
 - 真實 PNG 經 file input、解碼／裁切／旋轉／重置後，使用原直接寫入程式成功存入隔離 GitHub。JSON／CSV 由原回歸測試驗證。
 - 十頁、10/11 棒與 DH、計時賽、球員／投手統計、生涯紀錄、場記及恢復、跨裝置合併／刪除／409、頭像入口、63 組 responsive layout 等回歸通過。
 - PWA 停用回滾：本站 Worker／cache 清除、localStorage 場記保留、十頁及直接 fixture 寫入通過。[回滾結果](pwa-evidence/rollback-result.json)
 - 修正測試基礎設施的受限埠問題：系統曾分配 2049，Fetch 明確回報 bad port；現改用探測過的高連接埠。沒有以重試略過失敗案例。
 
+新增 ID 碰撞回歸：固定時鐘及十秒差的 200 次建立，舊程式僅產生 1 個 ID，修正後為 200 個。最終補驗 **116/116 單元**、PWA／回滾／資料安全三組瀏覽器均通過，兩個裝置的新賽事在三方合併後均保留。[補驗紀錄](pwa-evidence/id-fix-local-tests.log)
+
+第一輪遠端 CI 第一個預覽服務未就緒，其他檢查通過；因原 runner 丟棄啟動 stderr，不能確診該次原因。已改用綁定後的 IPC 就緒握手、保留啟動錯誤與 HTTP 狀態、並避開常見客戶端暫用埠範圍，未略過測試。最新提交仍須重新通過完整遠端 CI 才能合併。
+
 ## Release Gates
 
 | AC | 本機／程式驗收 | 證據 |
 | --- | --- | --- |
-| 01 單元 | PASS | local-tests.log，115/115 |
+| 01 單元 | PASS | id-fix-local-tests.log，116/116 |
 | 02 瀏覽器回歸 | PASS | local-tests.log，18/18 |
 | 03 PWA 安裝條件／離線／更新 | PASS（自動化範圍） | pwa-result.json；實機另列 UNVERIFIED |
 | 04 電腦／手機十頁 | PASS | responsive、records、workflow 等回歸 |

@@ -9,7 +9,7 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
 // Baseline v7 (2026/10/16): restore original direct GitHub sync under explicit RISK_ACCEPTED;
-// add offline/read-only-shell guards only. Formulas, data formats, handlers and DOM IDs remain unchanged.
+// add offline/read-only-shell guards and prevent game-id collisions with random 128-bit IDs. Formulas, data formats, handlers and DOM IDs remain unchanged.
 // Historical baseline v6 (2026/10/13, mobile-app branch): security fix only. The exposed GitHub credential is removed; reads try the
 // secure API first (same content and sha), uploads go through cloud-sync.js → cloud-api/ (signed per-person session,
 // server-held credential), and the main→data legacy merge (which needed a credential and is complete) is disabled.
@@ -20,7 +20,7 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 const BASELINE = {
-  "script": "8d4b0b53c504288a274432347c060a5c56b15187927a2411e03819ad530d3959",
+  "script": "f25e42b503e37a21f892b0a02ade875cfc88394aa58c1ae67bfd46a3a46b65df",
   "handlers": "546eea3ce115054a06e2235ec88125ae00285cc5d1bf8124d09ded797bf4296d",
   "idCount": 278,
   "ids": "5d7993de5e29d1b9dd92e4ce6260f6d8f850e916cc106821757b934a16bfff88"

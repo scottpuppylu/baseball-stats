@@ -1,0 +1,12 @@
+▶ unit tests (7 files)
+▶ ui-pwa
+▶ ui-pwa-rollback
+▶ ui-data-safety
+
+結果：
+✔ unit  ℹ tests 116, ℹ pass 116, ℹ fail 0
+✔ ui-pwa  {"passed":true,"checks":["manifest","sw-lifecycle","no-sensitive-cache","credential-free-offline-html","chromium-installability","github-pag
+✔ ui-pwa-rollback  {"passed":true,"checks":["public-kill-switch","sw-unregistered","shell-cache-cleared","local-game-preserved","ten-pages","direct-fixture-wri
+✔ ui-data-safety  {"passed":true,"checks":["5-distinct-games-two-devices","2-live-scorer","3-pitching-no-data","4-review-outs","1-two-devices"],"output":"C:\\
+
+4/4 通過；截圖與報告：C:\Users\User\AppData\Local\Temp\baseball-pwa-id-fix

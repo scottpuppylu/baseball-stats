@@ -10,7 +10,7 @@
 
 全隊總覽、球員檔案、排行榜、雙人比較、生涯紀錄、戰力分析、投手分析、智慧排棒、比賽場記與指標說明。保留 10/11 棒、DH、計時賽、JSON/CSV 匯出、頭像裁切及所有原統計公式與資料格式。
 
-`data/logs.json`、`games.json`、`avatars.json`、`tags.json`、`defense.json`、`guests.json` 的 GitHub 分支與 Schema 不變。讀寫使用既有 GitHub Contents API；上傳先讀最新 SHA，再做三方合併，409 重新讀取與重試。失敗不會回報同步成功，應保留本機資料及備份後重試。正式站的「完整備份」可下載 JSON。
+`data/logs.json`、`games.json`、`avatars.json`、`tags.json`、`defense.json`、`guests.json` 的 GitHub 分支與 Schema 不變。讀寫使用既有 GitHub Contents API；上傳先讀最新 SHA，再做三方合併，409 重新讀取與重試。失敗不會回報同步成功，應保留本機資料及備份後重試。正式站的「完整備份」可下載 JSON。新建賽事改用 128 位隨機識別碼，避免原本時間末四位 ID 碰撞；既有 ID、JSON 欄位及舊資料不轉換。
 
 PWA 只快取必要靜態檔與移除憑證的離線 HTML，不快取 GitHub/API/資料回應。離線資料可能過期，雲端寫入暫停；連線恢復後按提示重新整理數據。新版本由使用者同意後啟用，進行中的場記仍由本機儲存恢復。
 

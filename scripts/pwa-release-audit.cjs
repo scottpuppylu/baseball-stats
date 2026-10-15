@@ -17,7 +17,9 @@ const guards = new Set([
   "if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new Error('目前離線，資料已保存在本機，恢復連線後請再同步');",
   "if (!GITHUB_TOKEN) throw new Error('離線版本未保留憑證，請連線後重新開啟網站；本機資料仍保留');"
 ]);
-const withoutGuards = script(html).split('\n').filter(line => !guards.has(line.trim())).join('\n');
+const originalId = "const gameId = `game_${date.replace(/-/g, '')}_${Date.now().toString().slice(-4)}`;";
+const newId = "const gameId = `game_${date.replace(/-/g, '')}_${Array.from(crypto.getRandomValues(new Uint32Array(4)), n => n.toString(16).padStart(8, '0')).join('')}`;";
+const withoutGuards = script(html).split('\n').filter(line => !guards.has(line.trim())).map(line => line.trim() === newId ? line.replace(newId, originalId) : line).join('\n');
 const modules = ['lineup-model.js', 'lineup-recommender.js', 'player-diagnostics.js', 'team-insights.js', 'team-records.js'];
 const sameModules = modules.every(file => read(file).trim() === git('show', `40f2c23:${file}`).replace(/\r\n/g, '\n').trim());
 const encoded = main.match(/const GITHUB_TOKEN = (\[[\d,\s]+\])/);
@@ -33,12 +35,12 @@ for (const file of [...files].filter(Boolean)) {
 const report = {
   at: new Date().toISOString(), head: git('rev-parse', 'HEAD'), branch: git('branch', '--show-current'),
   existingCredentialUnchanged: unchanged, acceptedRisk: 'RISK_ACCEPTED',
-  inlineBusinessIdenticalExceptOfflineGuards: withoutGuards === script(main), formulaModulesUnchanged: sameModules,
+  inlineBusinessIdenticalExceptOfflineGuardsAndIdFix: withoutGuards === script(main), formulaModulesUnchanged: sameModules,
   additionalCredentialCopies: copies, formalDataDiff: git('diff', '--name-only', '40f2c23', '--', 'data'),
   remoteRefs: git('ls-remote', 'origin', 'refs/heads/main', 'refs/heads/data'),
   pageSha256: crypto.createHash('sha256').update(fs.readFileSync(path.join(root, 'index.html'))).digest('hex')
 };
-report.passed = unchanged && report.inlineBusinessIdenticalExceptOfflineGuards && sameModules && !copies.length && !report.formalDataDiff;
+report.passed = unchanged && report.inlineBusinessIdenticalExceptOfflineGuardsAndIdFix && sameModules && !copies.length && !report.formalDataDiff;
 const out = process.env.PWA_AUDIT_OUTPUT;
 if (out) { fs.mkdirSync(path.dirname(out), {recursive: true}); fs.writeFileSync(out, JSON.stringify(report, null, 2)); }
 console.log(JSON.stringify(report, null, 2));
