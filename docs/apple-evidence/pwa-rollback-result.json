@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "deployed-config-kill-switch-with-new-hash",
+    "sw-unregistered",
+    "shell-cache-cleared",
+    "local-game-preserved",
+    "ten-pages",
+    "direct-fixture-write"
+  ]
+}

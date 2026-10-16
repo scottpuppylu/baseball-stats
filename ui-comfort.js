@@ -151,9 +151,9 @@
       if (button.dataset.page === key) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
     });
-    if (!Object.hasOwn(shortcuts, key)) more.setAttribute('aria-current', 'page');
+    if (!Object.prototype.hasOwnProperty.call(shortcuts, key)) more.setAttribute('aria-current', 'page');
     else more.removeAttribute('aria-current');
-    more.lastElementChild.textContent = Object.hasOwn(shortcuts, key) ? '更多' : title;
+    more.lastElementChild.textContent = Object.prototype.hasOwnProperty.call(shortcuts, key) ? '更多' : title;
   }
   new MutationObserver(updateNavigation).observe(navigation, { subtree: true, attributes: true, attributeFilter: ['class'] });
 

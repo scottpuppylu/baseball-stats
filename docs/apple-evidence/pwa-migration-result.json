@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "legacy": "e1fdb9d",
+  "version": "92c25e8340e00401a4dc8351",
+  "checks": [
+    "real-legacy-worker-and-client",
+    "legacy-unguarded-update-refused",
+    "no-reinstall-close-reopen",
+    "actual-game-restored",
+    "new-guard-active",
+    "legacy-cache-cleaned"
+  ]
+}

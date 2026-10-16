@@ -33,3 +33,5 @@ node scripts/rollback-pwa.cjs --check
 測試預覽將原憑證先移除並代換為無效測試值，所有 GitHub 請求轉到 fixtures 的記憶體模型；不會對正式 data 測試寫入。CI 只有 `.github/workflows/test.yml`，使用同一套測試，不需要 repository secret。
 
 原生 Android、Capacitor、APK/Gradle、Android CI、Release 簽章、Google OAuth、Cloud API 已取消。舊建置產物即使仍在本機，也只屬被忽略的歷史測試檔，不會進入正式程式或建置。接手成果保留於 checkpoint `8ec27b6`（tag `codex/checkpoint-phase6-before-pwa-only-20261016`）及歷史驗收文件。
+
+Apple 支援目標、實機待驗收清單：[APPLE_PWA_ACCEPTANCE.md](docs/APPLE_PWA_ACCEPTANCE.md)。自動版本、更新與遷移原理：[PWA_UPDATE_DESIGN.md](docs/PWA_UPDATE_DESIGN.md)。每次 main 程式發布由 CI 自動 build 與部署，不需手動改 VERSION；請勿直接發布未 build 的來源檔。

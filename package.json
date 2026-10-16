@@ -5,7 +5,9 @@
   "scripts": {
     "test": "node tests/run-all.cjs",
     "test:unit": "node --test tests/*.test.cjs",
-    "test:pwa": "node tests/run-all.cjs ui-pwa ui-startup ui-mobile-comfort ui-responsive",
+    "build:release": "node scripts/build-pwa.cjs",
+    "test:pwa": "node tests/run-all.cjs ui-pwa ui-pwa-update ui-pwa-migration ui-pwa-rollback ui-startup ui-mobile-comfort ui-responsive",
+    "test:apple": "node tests/run-all.cjs ui-apple-webkit",
     "test:mobile": "npm run test:pwa"
   },
   "devDependencies": {

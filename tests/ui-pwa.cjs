@@ -19,7 +19,7 @@ const ready = page => page.waitForFunction(() => window.teamRecords && !document
   const checks = [];
   try {
     const context = browser;
-    const page = await context.newPage();
+    let page = await context.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await context.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//, route => route.abort());
@@ -96,9 +96,11 @@ const ready = page => page.waitForFunction(() => window.teamRecords && !document
     checks.push('reconnect-restores-direct-write');
 
     // A new deployment: the update bar appears; accepting it reloads into the new version.
+    await page.waitForFunction(() => window.__pwaRegistration);
     await page.request.get(`${url}/__preview/bump-sw`);
     await page.evaluate(() => window.__pwaRegistration.update());
     await page.waitForSelector('#uiUpdateBar', {timeout: 20000});
+    const newVersion = (await (await page.request.get(`${url}/__preview/release`)).json()).version;
     const gameId = await page.evaluate(() => {
       const game = JSON.parse(JSON.stringify(allGames[0]));
       game.id = 'game_pwa_update_qa'; game.status = 'in_progress';
@@ -106,11 +108,22 @@ const ready = page => page.waitForFunction(() => window.teamRecords && !document
       return game.id;
     });
     await page.screenshot({path: path.join(output, 'pwa-update-390.png')});
-    await Promise.all([page.waitForEvent('load', {timeout: 20000}), page.click('#uiUpdateBar [data-act="update"]')]);
-    await ready(page);
+    await page.click('#uiUpdateBar [data-act="update"]');
+    assert.match(await page.locator('#uiUpdateBar').innerText(), /場記進行中/);
+    const oldVersion = await page.locator('meta[name="baseball-release"]').getAttribute('content');
+    assert.notEqual(oldVersion, newVersion, 'active game blocks forced reload');
+    // Closing and reopening is a natural worker activation, never a forced refresh during the game.
+    await page.close();
+    const reopened = await context.newPage();
+    await reopened.goto(`${url}/__preview/release`);
+    await reopened.waitForFunction(async app => !(await navigator.serviceWorker.getRegistration(app))?.waiting, appUrl);
+    await reopened.goto(`${appUrl}?pwa`);
+    await ready(reopened);
+    await reopened.waitForFunction(version => document.querySelector('meta[name="baseball-release"]').content === version, newVersion);
+    page = reopened;
     const keys = await page.evaluate(() => caches.keys());
     assert.equal(keys.length, 1, `old cache removed (${keys})`);
-    assert.match(keys[0], /-preview1$/, 'new version active');
+    assert.equal(keys[0], 'tkaero-shell-' + newVersion, 'new version active');
     assert.equal(await page.evaluate(() => activeGame?.id), gameId, 'in-progress game is restored after accepting the update');
     await page.evaluate(() => localStorage.removeItem('rebas_active_game'));
     checks.push('update-flow', 'active-game-survives-update');

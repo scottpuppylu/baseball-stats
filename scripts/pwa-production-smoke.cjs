@@ -13,6 +13,8 @@ const output = process.env.PWA_SMOKE_OUTPUT || path.join(root, 'outputs', 'pwa-r
 const expected = process.env.PWA_EXPECTED_COMMIT || 'HEAD';
 const git = (...args) => execFileSync('git', args, {cwd: root, encoding: 'utf8'}).trim();
 const normalized = text => text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').trim();
+// Build expected bytes in memory from exact Git blobs; never create another credential-bearing HTML file.
+const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['show', `${expected}:${file}`], {cwd: root}));
 (async () => {
   fs.mkdirSync(output, {recursive: true});
   const browser = await chromium.launch({channel: 'chrome', headless: true});
@@ -47,13 +49,15 @@ const normalized = text => text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').tr
         for (const file of ['index.html', 'manifest.webmanifest', 'app-config.js', 'pwa.js', 'sw.js', 'ui-comfort.css']) {
           const response = await page.request.get(base + file + '?release-check=' + Date.now());
           const body = await response.text();
-          const source = git('show', `${expected}:${file}`);
+          const source = built.files.get(file).toString();
           const matches = response.status() === 200 && normalized(body) === normalized(source);
           report.assets.push({file, status: response.status(), matches, sha256: crypto.createHash('sha256').update(body).digest('hex')});
           assert.ok(matches, `published ${file} must match the expected commit`);
         }
       }
       assert.equal((await page.goto(base)).status(), 200);
+      assert.equal(await page.locator('meta[name="baseball-release"]').getAttribute('content'), built.version);
+      report.releaseVersion = built.version;
       await page.waitForFunction(() => window.teamRecords && !/連線同步中/.test(syncStatusBadge.textContent));
       for (const tab of ['Overview', 'Profile', 'Leaderboard', 'Records', 'Analytics', 'Compare', 'Lineup', 'Scorebook', 'Pitching', 'Glossary']) {
         await page.evaluate(name => switchMainTab('tab' + name), tab);

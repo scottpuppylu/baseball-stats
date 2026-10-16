@@ -34,17 +34,12 @@ test('page head links the manifest, iOS home-screen settings and local copies of
   for (const file of ['vendor/tailwindcss-play-3.4.17.js', 'vendor/chart.umd-4.5.1.min.js']) assert.ok(fs.statSync(path.join(root, file)).size > 100000, file);
 });
 
-test('service worker pre-caches exactly the program files the page loads', () => {
-  const html = read('index.html');
-  const sw = read('sw.js');
-  const shell = vm.runInNewContext(sw.match(/const SHELL = (\[[\s\S]*?\]);/)[1]);
-  const local = [...html.matchAll(/<(?:script|link)[^>]+(?:src|href)="([^"]+)"/g)].map(m => m[1]).filter(u => !/^https?:/.test(u));
-  for (const url of local) assert.ok(shell.includes(url), `sw.js SHELL is missing ${url}`);
-  for (const url of shell) {
-    const file = url === './' ? 'index.html' : url.split('?')[0];
-    assert.ok(fs.existsSync(path.join(root, file)), `cached file exists: ${file}`);
-  }
-  assert.ok(!shell.some(u => u.startsWith('data/')), 'team data is never pre-cached');
+test('release pre-caches exactly the program files the generated page loads', () => {
+  const release = require('../scripts/build-pwa.cjs').build(file => fs.readFileSync(path.join(root, file)));
+  const html = release.files.get('index.html').toString();
+  const shell = release.release.files.map(entry => entry.url);
+  for (const m of html.matchAll(/<(?:script|link)[^>]+(?:src|href)="([^"]+)"/g)) assert.ok(shell.includes(m[1]), 'resource included');
+  assert.ok(!shell.some(url => url.startsWith('data/')));
 });
 
 // Runs sw.js with a fake worker scope and records what each request would get.
@@ -56,7 +51,8 @@ function loadWorker() {
     addEventListener: (type, fn) => { handlers[type] = fn; },
     clients: {claim: async () => {}}, skipWaiting() { self.skipped = true; }
   };
-  vm.runInNewContext(read('sw.js'), {self, caches: {open: async () => ({addAll: async () => {}, put: async () => {}}), delete: async () => {}, keys: async () => [], match: async () => undefined}, fetch: async () => new Response('const GITHUB_TOKEN = "unit-only";'), URL, Request, Response, Headers});
+  const built = require('../scripts/build-pwa.cjs').build(file => fs.readFileSync(path.join(root, file)));
+  vm.runInNewContext(built.files.get('sw.js').toString(), {self, caches: {open: async () => ({addAll: async () => {}, put: async () => {}}), delete: async () => {}, keys: async () => [], match: async () => undefined}, fetch: async () => new Response('const GITHUB_TOKEN = "unit-only";'), URL, Request, Response, Headers});
   const decide = (url, {method = 'GET', mode = 'cors'} = {}) => {
     let responded = false;
     handlers.fetch({request: {url, method, mode}, respondWith: p => { responded = true; Promise.resolve(p).catch(() => {}); }});
@@ -85,7 +81,7 @@ test('service worker serves the app shell and versioned program files', () => {
   const {decide} = loadWorker();
   const base = 'https://scottpuppylu.github.io/baseball-stats/';
   assert.equal(decide(base, {mode: 'navigate'}), true);
-  assert.equal(decide(`${base}team-insights.js?v=20261011-audit2`), true);
+  assert.equal(decide(`${base}team-insights.js`), true);
   assert.equal(decide(`${base}unrelated.js`), false, 'only explicit static resources may be cached');
   assert.equal(decide(`${base}assets/logo-128.webp`), true);
 });
@@ -98,7 +94,7 @@ test('updates wait for the page: no automatic skipWaiting on install', () => {
   waited.catch(() => {});
   assert.equal(self.skipped, undefined);
   handlers.message({data: {type: 'SKIP_WAITING'}});
-  assert.equal(self.skipped, true);
+  assert.equal(self.skipped, undefined, 'unguarded legacy update message refused');
 });
 
 test('accepted legacy declaration is unchanged; no credential copies in other shipped programs', () => {
@@ -120,7 +116,7 @@ test('accepted legacy declaration is unchanged; no credential copies in other sh
 test('offline HTML strips the credential and fails closed on an unknown declaration', async () => {
   const code = read('sw.js').match(/async function offlinePage\(response\) \{[\s\S]*?\n\}/)[0];
   const ctx = vm.createContext({Response, Headers});
-  vm.runInContext(code, ctx);
+  vm.runInContext('const declaration = /const GITHUB_TOKEN = [^;\\r\\n]*;/g;\n' + code, ctx);
   const cached = await ctx.offlinePage(new Response('<script>const GITHUB_TOKEN = "test-only-value";</script>'));
   const html = await cached.text();
   assert.ok(!html.includes('test-only-value'));
