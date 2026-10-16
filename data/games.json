@@ -680,7 +680,8 @@
         "plateAppearances": [],
         "defensiveEvents": []
       }
-    ]
+    ],
+    "excludedFromLogs": true
   },
   {
     "id": "game_20260919_3276",
