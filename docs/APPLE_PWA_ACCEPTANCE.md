@@ -18,7 +18,7 @@ Apple 主畫面設定參考 [Apple Web Applications](https://developer.apple.com
 
 `npm run test:apple` 使用 Playwright WebKit。六種視窗涵蓋手機直／橫、平板直／橫、507px 分割畫面、Mac 視窗，共 60 個頁面檢查。另測原始場記與重新開啟恢復、日期、JSON／CSV 下載、圖片解碼／裁切／旋轉、直接 GitHub fixture 成功／失敗、本機儲存隔離、離線提示與重連、Worker 在伺服器 503 時的完整快取回復。
 
-Windows Playwright WebKit 的 `setOffline(true)` 後導覽，在只有 `respondWith(new Response(...))` 的獨立最小 Worker 也會發生 internal error。因此報告獨立記錄 `offlineNavigationProbe`；此環境不能證明真正 Safari 的斷網重新開啟。Chromium 的真實斷網重新開啟另有通過測試。Linux CI 會記錄自己的 probe 結果。這不是 Apple 實機 PASS，也不是把 503 測試等同飛航模式。
+Windows Playwright WebKit 的 `setOffline(true)` 後導覽，在只有 `respondWith(new Response(...))` 的獨立最小 Worker 也會發生 internal error。因此報告獨立記錄 `offlineNavigationProbe`；此環境不能證明真正 Safari 的斷網重新開啟。Chromium 的真實斷網重新開啟另有通過測試。Linux CI 會記錄自己的 probe 結果；probe 支援時還會執行完整 App 的斷網重新開啟及場記恢復，失敗會阻擋 CI。這不是 Apple 實機 PASS，也不是把 503 測試等同飛航模式。
 
 不同 BrowserContext 的儲存隔離是自動化模型；Safari 與 Home Screen／Dock 的實際資料分區仍須實機測。沒有使用 UA／視窗模擬冒充實體 iPhone／iPad。
 

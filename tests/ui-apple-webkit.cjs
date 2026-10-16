@@ -74,6 +74,12 @@ const ready = page => page.waitForFunction(() => window.teamRecords && !/連線�
     await context.setOffline(true);
     await page.waitForFunction(()=>document.getElementById('uiOfflineBar'));
     assert.equal(await page.evaluate(()=>JSON.stringify(activeGame)),stored);
+    if (offlineNavigationProbe === 'SUPPORTED') {
+      await page.reload();
+      await page.waitForFunction(()=>window.teamRecords && window.BASEBALL_OFFLINE_SHELL);
+      assert.equal(await page.evaluate(()=>JSON.stringify(activeGame)),stored);
+      checks.push('webkit-supported-harness-full-offline-navigation');
+    }
     await context.setOffline(false);
     // Real 503 from both live endpoints exercises the worker fallback while the installed snapshot stays available.
     await page.request.get(base+'/__preview/unavailable?enabled=1');
