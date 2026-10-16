@@ -1,0 +1,50 @@
+
+> test
+> node tests/run-all.cjs
+
+▶ unit tests (8 files)
+▶ ui-pwa
+▶ ui-pwa-update
+▶ ui-apple-webkit
+▶ ui-pwa-rollback
+▶ ui-startup
+▶ ui-workflows
+▶ ui-audit-fixes
+▶ ui-audit-fixes-2
+▶ ui-data-safety
+▶ ui-round3
+▶ spray-archive-browser
+▶ ui-insights
+▶ ui-lineup
+▶ ui-data-fixes
+▶ ui-review-fixes
+▶ ui-records
+▶ ui-responsive
+▶ ui-mobile-comfort
+▶ ui-avatar
+▶ ui-tablet
+
+結果：
+✔ unit  ℹ tests 119, ℹ pass 119, ℹ fail 0
+✔ ui-pwa  {"passed":true,"checks":["manifest","sw-lifecycle","no-sensitive-cache","credential-free-offline-html","chromium-installability","github-pag
+✔ ui-pwa-update  {"passed":true,"v1":"65de01d34c1c24df5a562379","v2":"b3a92f2b352b55ea70e3bd30","v3":"7b9f8f369eae3d33e7500a62","checks":["js-css-only-auto-v
+✔ ui-apple-webkit  {"passed":true,"engine":"Playwright WebKit 26.5","offlineNavigationProbe":"HARNESS_UNAVAILABLE: page.reload: WebKit encountered an internal
+✔ ui-pwa-rollback  {"passed":true,"checks":["public-kill-switch","sw-unregistered","shell-cache-cleared","local-game-preserved","ten-pages","direct-fixture-wri
+✔ ui-startup  {"passed":true,"moduleReadyMs":983,"dataReadyMs":3872,"early":{"pending":true,"games":0},"checks":["reproduced-module-data-race","delayed-st
+✔ ui-workflows  {"workflows":3,"checks":42,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final"}
+✔ ui-audit-fixes  {"passed":true,"checks":["complete-logs","persistent-exclusion","partial-loading","empty-recovery","consistent-sdi","full-chart-range","pitc
+✔ ui-audit-fixes-2  {"passed":true,"cases":15,"failures":[],"externalGitHub":0,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final"}
+✔ ui-data-safety  {"passed":true,"checks":["5-distinct-games-two-devices","2-live-scorer","3-pitching-no-data","4-review-outs","1-two-devices"],"output":"C:\\
+✔ ui-round3  {"passed":true,"checks":["8-qualifying-pa","9-percentile","10-wording","12-safe-names","13-15-structure","14-spray","18-esc-dialog","19-list
+✔ spray-archive-browser  {"passed":true,"archivedGames":4,"archivedPoints":68,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final"}
+✔ ui-insights  {"passed":true,"viewports":2,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final"}
+✔ ui-lineup  {"passed":true,"viewports":2,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final"}
+✔ ui-data-fixes  {"passed":true,"seasonPa":29,"sprayAll":[19,19,3,3],"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final"}
+✔ ui-review-fixes  review fixes: expected-stats, leaderboard, glossary, pitching-games, custom-model, diamond, runner-out-undo, fc-out, opp-line-score, review-
+✔ ui-records  {"passed":true,"viewports":2,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final"}
+✔ ui-responsive  {"layouts":63,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final","externalGitHubRequests":0}
+✔ ui-mobile-comfort  {"passed":true,"chips":{"Overview":2,"Profile":6,"Leaderboard":0,"Analytics":4,"Compare":2,"Lineup":4,"Scorebook-live":0,"Scorebook-review":
+✔ ui-avatar  {"passed":4,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final"}
+✔ ui-tablet  {"passed":6,"output":"C:\\Users\\User\\AppData\\Local\\Temp\\baseball-apple-final"}
+
+21/21 通過；截圖與報告：C:\Users\User\AppData\Local\Temp\baseball-apple-final

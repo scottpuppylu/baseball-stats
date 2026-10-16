@@ -23,7 +23,9 @@ jobs:
       - name: Chinese fonts (layout checks measure text)
         run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
       - run: npm ci
-      # Tests use the runner's preinstalled Google Chrome (Playwright channel "chrome"); no browser download.
+      - name: WebKit runtime and system libraries
+        run: npx playwright install --with-deps webkit
+      # Chromium uses the runner's Google Chrome; Apple compatibility uses Playwright WebKit, not physical devices.
       - run: npm test
         env:
           UI_QA_OUTPUT: ${{ runner.temp }}/baseball-ui-qa
@@ -34,3 +36,31 @@ jobs:
           name: ui-qa
           path: ${{ runner.temp }}/baseball-ui-qa
           if-no-files-found: ignore
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
+      - name: Build complete release from content hashes (one original credential file)
+        run: node scripts/build-pwa.cjs --stage "${{ runner.temp }}/pwa-site"
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
+        with:
+          path: ${{ runner.temp }}/pwa-site
+      - name: Deploy tested release
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e

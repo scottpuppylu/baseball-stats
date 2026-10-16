@@ -1,6 +1,6 @@
 # GitHub Pages 發布與回滾
 
-GitHub Pages 維持既有 legacy branch deployment，來源為 `main` 的 `/`；網站不需 build。正式資料獨立位於 `data` 分支，不能透過程式回滾去 reset／覆寫它。
+GitHub Pages 使用 `test.yml` 的測試後部署工作：main 通過全部測試，才以檔案 SHA-256 產生完整發布版本，交給 Pages。仍是靜態網站，沒有額外服務。正式資料獨立位於 `data` 分支，不能透過程式回滾去 reset／覆寫它。
 
 ## 正常發布
 
@@ -36,4 +36,4 @@ node scripts/pwa-release-audit.cjs
 
 Pages 完成後，連線開啟網站確認功能、資料與 SW 清除，核對 data SHA 未變。離線裝置無法立即取得回滾，其他已開啟頁籤也可能暫時仍受舊 worker 控制，需連線後重新開啟。不要刪除使用者網站資料來換取成功。
 
-回復 PWA 時，以另一個正常版本啟用開關、更新 SW VERSION 和有變更的靜態檔 `?v=`，再執行測試與 CI。
+回復 PWA 時，以另一個正常版本啟用開關，再執行測試與 CI；版本及資源網址由 build-pwa 自動產生，不需手動修改 VERSION 或 ?v=。

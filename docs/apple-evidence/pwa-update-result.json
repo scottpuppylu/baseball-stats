@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "v1": "92c25e8340e00401a4dc8351",
+  "v2": "a0e6f2907dad873a3afdc63b",
+  "v3": "3777ce04e1f8fa68afbe5869",
+  "v4": "65f74514462932ab6decfaf1",
+  "checks": [
+    "js-css-only-auto-version",
+    "defer-reload-keeps-complete-v1",
+    "other-tab-live-game-veto",
+    "other-tab-unsaved-form-veto",
+    "confirmed-v2",
+    "old-cache-cleaned",
+    "local-records-preserved",
+    "direct-github-v2",
+    "partial-install-rejected",
+    "interrupted-update-keeps-v2-offline",
+    "foreground-update-detection",
+    "connection-dropped-during-install-keeps-v2"
+  ],
+  "physicalApple": "UNVERIFIED"
+}

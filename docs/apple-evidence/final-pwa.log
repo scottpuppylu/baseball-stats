@@ -1,0 +1,14 @@
+▶ unit tests (8 files)
+▶ ui-pwa
+▶ ui-pwa-update
+▶ ui-pwa-migration
+▶ ui-pwa-rollback
+
+結果：
+✔ unit  ℹ tests 120, ℹ pass 120, ℹ fail 0
+✔ ui-pwa  {"passed":true,"checks":["manifest","sw-lifecycle","no-sensitive-cache","credential-free-offline-html","chromium-installability","github-pag
+✔ ui-pwa-update  {"passed":true,"v1":"92c25e8340e00401a4dc8351","v2":"a0e6f2907dad873a3afdc63b","v3":"3777ce04e1f8fa68afbe5869","v4":"65f74514462932ab6decfaf
+✔ ui-pwa-migration  {"passed":true,"legacy":"e1fdb9d","version":"92c25e8340e00401a4dc8351","checks":["real-legacy-worker-and-client","legacy-unguarded-update-re
+✔ ui-pwa-rollback  {"passed":true,"checks":["deployed-config-kill-switch-with-new-hash","sw-unregistered","shell-cache-cleared","local-game-preserved","ten-pag
+
+5/5 通過；截圖與報告：C:\Users\User\AppData\Local\Temp\baseball-ui-qa

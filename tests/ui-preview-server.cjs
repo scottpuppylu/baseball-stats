@@ -25,7 +25,7 @@ for (const name of ['logs', 'games', 'avatars', 'tags', 'defense', 'guests']) {
 put('data', 'data/legacy-main.json', Buffer.from(JSON.stringify(Object.fromEntries([...branches.main].map(([file, data]) => [file, shaOf(data)])), null, 2)));
 
 const injection = `<script>
-window.BASEBALL_APP_CONFIG = {serviceWorker: new URLSearchParams(location.search).has('pwa')};
+window.BASEBALL_APP_CONFIG = new URLSearchParams(location.search).has('pwa') ? {} : {serviceWorker: false};
 window.__previewWrites = [];
 window.__previewFailWrites = false;
 window.__previewErrors = [];
@@ -62,11 +62,52 @@ window.fetch = (input, options = {}) => {
 </script>`;
 const json = (res, status, body) => res.writeHead(status, {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}).end(JSON.stringify(body));
 let swBump = 0;
+let corruptFile = '';
+let unavailable = false;
+let dropFile = '';
+let configDisabled = false;
+let legacyMode = false;
+const {build} = require('../scripts/build-pwa.cjs');
+function previewRelease() {
+  const readPreview = file => {
+    let content = fs.readFileSync(path.join(root, file));
+    if (file === 'app-config.js' && configDisabled) content = Buffer.from(content.toString().replace(/^\s*serviceWorker: true\s*$/m, '  serviceWorker: false'));
+    if (file === 'index.html') {
+      const html = content.toString();
+      if ((html.match(/const GITHUB_TOKEN =[^\r\n]+/g) || []).length !== 1) throw new Error('Preview credential redaction failed');
+      content = Buffer.from(html.replace(/const GITHUB_TOKEN =[^\r\n]+/, "const GITHUB_TOKEN = 'isolated-preview';").replace('<head>', '<head>' + injection));
+    }
+    // Simulates a JS/CSS-only deployment: no manual HTML or worker version edit.
+    if (swBump && file === 'ui-comfort.js') content = Buffer.concat([content, Buffer.from(`\nwindow.__previewRelease = ${swBump};\n`)]);
+    if (swBump && file === 'ui-comfort.css') content = Buffer.concat([content, Buffer.from(`\n:root { --preview-release: ${swBump}; }\n`)]);
+    return content;
+  };
+  const result = build(readPreview);
+  if (legacyMode) {
+    const {execFileSync} = require('node:child_process');
+    for (const file of ['sw.js', 'pwa.js']) result.files.set(file, execFileSync('git', ['show', `e1fdb9d:${file}`], {cwd: root}));
+    // Source HTML is unchanged from the installed release; the preview declaration is removed before any serving.
+    result.files.set('index.html', readPreview('index.html'));
+  }
+  return result;
+}
+let release = previewRelease();
 const previewServer = http.createServer(async (req, res) => {
   try {
     const parsed = new URL(req.url, `http://localhost:${port}`);
     const pathname = decodeURIComponent(parsed.pathname).replace(/^\/baseball-stats(?=\/)/, '');
-    if (pathname === '/__preview/bump-sw') { swBump++; return json(res, 200, {swBump}); }
+    if (pathname === '/__preview/bump-sw') { swBump++; release = previewRelease(); return json(res, 200, {swBump, version: release.version}); }
+    if (pathname === '/__preview/corrupt') { corruptFile = parsed.searchParams.get('file') || ''; return json(res, 200, {corruptFile}); }
+    if (pathname === '/__preview/release') return json(res, 200, {version: release.version});
+    if (pathname === '/__preview/config-disabled') { configDisabled = parsed.searchParams.get('enabled') === '1'; release = previewRelease(); return json(res, 200, {configDisabled}); }
+    if (pathname === '/__preview/legacy') { legacyMode = parsed.searchParams.get('enabled') === '1'; release = previewRelease(); return json(res, 200, {legacyMode, version: release.version}); }
+    if (pathname === '/__preview/unavailable') { unavailable = parsed.searchParams.get('enabled') === '1'; return json(res, 200, {unavailable}); }
+    if (pathname === '/__preview/drop') { dropFile = parsed.searchParams.get('file') || ''; return json(res, 200, {dropFile}); }
+    if (dropFile && pathname === '/' + dropFile) return req.socket.destroy();
+    // Minimal independent probe distinguishes WebKit's Windows offline-navigation harness from app behavior.
+    if (pathname === '/__webkit-probe/sw.js') return res.writeHead(200, {'Content-Type':'text/javascript','Cache-Control':'no-store'}).end("self.addEventListener('install', e => e.waitUntil(self.skipWaiting()));self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));self.addEventListener('fetch', e => e.respondWith(new Response('<!doctype html><title>offline probe</title><p>cached probe</p>', {headers:{'Content-Type':'text/html'}})));");
+    if (pathname === '/__webkit-probe/') return res.writeHead(200, {'Content-Type':'text/html'}).end('<!doctype html><title>probe</title><script>navigator.serviceWorker.register("sw.js")</script>');
+    if (unavailable && ['/index.html','/app-config.js'].includes(pathname)) return res.writeHead(503).end('Simulated server unavailable');
     if (pathname.startsWith('/__mock-api/')) {
       const file = pathname.slice('/__mock-api/'.length);
       if (file.startsWith('__blob/')) {
@@ -108,13 +149,9 @@ const previewServer = http.createServer(async (req, res) => {
     if (!(filename.startsWith(root + path.sep)) || !fs.existsSync(filename) || fs.statSync(filename).isDirectory()) {
       res.writeHead(404).end('Not found'); return;
     }
-    let content = fs.readFileSync(filename);
-    if (filename.endsWith('sw.js') && swBump) content = Buffer.from(content.toString().replace(/const VERSION = '([^']+)'/, (m, v) => `const VERSION = '${v}-preview${swBump}'`));
-    if (filename.endsWith('index.html')) {
-      const html = content.toString();
-      if ((html.match(/const GITHUB_TOKEN =[^\r\n]+/g) || []).length !== 1) throw new Error('Preview credential redaction failed');
-      content = Buffer.from(html.replace(/const GITHUB_TOKEN =[^\r\n]+/, "const GITHUB_TOKEN = 'isolated-preview';").replace('<head>', '<head>' + injection));
-    }
+    const relative = path.relative(root, filename).split(path.sep).join('/');
+    let content = release.files.get(relative) || fs.readFileSync(filename);
+    if (relative === corruptFile) content = Buffer.from('/* interrupted or stale deployment */');
     const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.webmanifest':'application/manifest+json'};
     res.writeHead(200, {'Content-Type': mime[path.extname(filename)] || 'application/octet-stream', 'Cache-Control': 'no-store'});
     res.end(content);

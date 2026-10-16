@@ -22,7 +22,8 @@ const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-q
       localStorage.setItem('rebas_active_game', JSON.stringify(game));
       return game.id;
     });
-    await page.goto(base + '?rollback');
+    await page.request.get(new URL('/__preview/config-disabled?enabled=1', base).href);
+    await page.goto(base + '?pwa');
     await page.waitForFunction(() => window.BASEBALL_PWA_DISABLED && window.teamRecords && !/連線同步中/.test(syncStatusBadge.textContent));
     assert.equal(await page.evaluate(() => navigator.serviceWorker.getRegistrations().then(r => r.length)), 0);
     assert.equal(await page.evaluate(() => caches.keys().then(r => r.length)), 0);
@@ -32,7 +33,7 @@ const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-q
     }
     assert.equal(await page.evaluate(() => commitTagsToGitHub({...playerTags}, 'rollback fixture QA')), true);
     assert.deepEqual(errors, []);
-    const report = {passed: true, checks: ['public-kill-switch', 'sw-unregistered', 'shell-cache-cleared', 'local-game-preserved', 'ten-pages', 'direct-fixture-write']};
+    const report = {passed: true, checks: ['deployed-config-kill-switch-with-new-hash', 'sw-unregistered', 'shell-cache-cleared', 'local-game-preserved', 'ten-pages', 'direct-fixture-write']};
     fs.writeFileSync(path.join(output, 'pwa-rollback-result.json'), JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report));
   } finally { await browser.close(); }

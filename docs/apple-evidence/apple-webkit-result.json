@@ -1,0 +1,61 @@
+{
+  "passed": true,
+  "engine": "Playwright WebKit 26.5",
+  "offlineNavigationProbe": "HARNESS_UNAVAILABLE: page.reload: WebKit encountered an internal error",
+  "physicalIPhone": "UNVERIFIED",
+  "physicalIPad": "UNVERIFIED",
+  "physicalMac": "UNVERIFIED",
+  "results": [
+    {
+      "width": 390,
+      "height": 844,
+      "pages": 10,
+      "passed": true
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "pages": 10,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "pages": 10,
+      "passed": true
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "pages": 10,
+      "passed": true
+    },
+    {
+      "width": 507,
+      "height": 1024,
+      "pages": 10,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "pages": 10,
+      "passed": true
+    }
+  ],
+  "checks": [
+    "date-input",
+    "real-scorebook-restore",
+    "rotation-preserves-game",
+    "json-backup-with-active-game",
+    "csv-download",
+    "image-decode-crop-rotate-write",
+    "direct-github-success-failure-keeps-game",
+    "webkit-offline-notice-preserves-game",
+    "webkit-sw-server-failure-game-recovery",
+    "reconnect",
+    "separate-context-storage-isolation-not-physical-safari"
+  ],
+  "errors": [],
+  "externalRequests": 0
+}

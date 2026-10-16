@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-16T02:31:33.388Z",
+  "head": "e1fdb9de1a231111d4e309eae9114ef2cfd70020",
+  "branch": "codex/apple-pwa-updates",
+  "existingCredentialUnchanged": true,
+  "acceptedRisk": "RISK_ACCEPTED",
+  "inlineBusinessIdenticalExceptOfflineGuardsAndIdFix": true,
+  "formulaModulesUnchanged": true,
+  "additionalCredentialCopies": [],
+  "formalDataDiff": "",
+  "remoteRefs": "8fdffb297731316bbcf8b6a908033b8d6985ff38\trefs/heads/data\ne1fdb9de1a231111d4e309eae9114ef2cfd70020\trefs/heads/main",
+  "pageSha256": "5e2582d0ee47b42f7eca5c1d1a0e25fad5b3a653f6368ade4bbea42f9044a86c",
+  "passed": true
+}
