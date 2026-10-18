@@ -8,6 +8,9 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\n/g, '\n');
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
+// Baseline v8 (2026/10/18): authorized vertical setup, live lineup card, position snapshots,
+// per-slot substitution and shared pitcher/position changes. Existing handlers remain in order;
+// five new DOM IDs are additive. Behavioral coverage: ui-scorebook-lineup and scorebook-lineup.test.
 // Baseline v7 (2026/10/16): restore original direct GitHub sync under explicit RISK_ACCEPTED;
 // add offline/read-only-shell guards and prevent game-id collisions with random 128-bit IDs. Formulas, data formats, handlers and DOM IDs remain unchanged.
 // Historical baseline v6 (2026/10/13, mobile-app branch): security fix only. The exposed GitHub credential is removed; reads try the
@@ -20,10 +23,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 const BASELINE = {
-  "script": "f25e42b503e37a21f892b0a02ade875cfc88394aa58c1ae67bfd46a3a46b65df",
+  "script": "7034a5f8d0a7a62eb453cf07c16630ebbc7950b32ebf25e70cf2ef275193ccca",
   "handlers": "546eea3ce115054a06e2235ec88125ae00285cc5d1bf8124d09ded797bf4296d",
-  "idCount": 278,
-  "ids": "5d7993de5e29d1b9dd92e4ce6260f6d8f850e916cc106821757b934a16bfff88"
+  "idCount": 283,
+  "ids": "23acbaba00aaf0aa75e4bf55a065d58e9ac30657008460369cdbc43a1e776536"
 };
 test('business script is byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];

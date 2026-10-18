@@ -46,7 +46,7 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
       const page = await context.newPage();
       page.on('pageerror', error => report.errors.push(error.message));
       if (width === 390) {
-        for (const file of ['index.html', 'manifest.webmanifest', 'app-config.js', 'pwa.js', 'sw.js', 'ui-comfort.css']) {
+        for (const file of ['index.html', 'manifest.webmanifest', 'app-config.js', 'pwa.js', 'sw.js', 'ui-comfort.css', 'scorebook-lineup.js']) {
           const response = await page.request.get(base + file + '?release-check=' + Date.now());
           const body = await response.text();
           const source = built.files.get(file).toString();
@@ -70,6 +70,20 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
         }, tab);
         report.pages.push({width, tab, ...state});
         assert.ok(state.shown && state.textLength > 20 && state.overflow <= 1, `${width}px ${tab}`);
+        if (tab === 'Scorebook') {
+          const lineup = await page.evaluate(() => ({
+            rows: document.querySelectorAll('#setupLineupGrid .lineup-row').length,
+            players: document.querySelectorAll('#setupLineupGrid .lineup-player-select').length,
+            positions: document.querySelectorAll('#setupLineupGrid .lineup-position').length,
+            fielders: document.querySelectorAll('#setupLineupField [data-position]').length,
+            liveCardPresent: !!document.getElementById('liveLineupCard')
+          }));
+          assert.ok([10,11].includes(lineup.rows));
+          assert.equal(lineup.players,lineup.rows); assert.equal(lineup.positions,lineup.rows);
+          assert.equal(lineup.fielders,10); assert.ok(lineup.liveCardPresent);
+          report.pages.at(-1).lineup = lineup;
+          await page.screenshot({path:path.join(output, `production-lineup-${width}.png`)});
+        }
       }
       if (width === 390) {
         report.data = await page.evaluate(() => ({logs: allLogs.length, games: allGames.length, status: syncStatusBadge.textContent}));

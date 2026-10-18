@@ -39,7 +39,10 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
           const walker=document.createTreeWalker(panel,NodeFilter.SHOW_TEXT);const tiny=[];
           while(walker.nextNode()){const el=walker.currentNode.parentElement;if(!walker.currentNode.textContent.trim()||!shown(el))continue;if(parseFloat(getComputedStyle(el).fontSize)<11)tiny.push(walker.currentNode.textContent.trim().slice(0,12));}
           const bar=document.querySelector('.ui-section-bar');
+          const lineupRows=[...document.querySelectorAll('#setupLineupGrid .lineup-row')].filter(shown);
+          const lineupHeight=['setupLineupGrid','setupLineupField'].reduce((sum,id)=>sum+(document.getElementById(id)?.getBoundingClientRect().height||0),0);
           return {small:targets.map(el=>`${el.tagName}:${(el.textContent||'').trim().slice(0,10)}`),zoom:fields.map(el=>el.id||el.tagName),tiny:tiny.slice(0,5),
+            lineupHeight,lineupRows:lineupRows.map(el=>el.getBoundingClientRect().height),
             overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
             chips:bar.hidden?[]:[...bar.querySelectorAll('button')].map(b=>b.textContent),
             // Sections added after the density baseline (the career records) are not part of that comparison.
@@ -78,7 +81,16 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
       // density pass (390 px heights measured on the same fixture, 2026/10/10).
       if(width===390) {
         const BEFORE={Overview:2851,Profile:6757,Leaderboard:2249,Analytics:5183,Compare:5120,Lineup:7667,'Scorebook-live':1924,'Scorebook-review':2588,Pitching:2255,Glossary:7906};
-        for(const [name,before] of Object.entries(BEFORE)) assert.ok(heights[name].total<=before*0.9,`${name}: ${heights[name].total}px vs ${before}px before`);
+        for(const [name,before] of Object.entries(BEFORE)) {
+          // 2026/10/18 explicitly replaces the compact multi-column setup with a vertical
+          // lineup and a new field. Bound that new content separately; keep the old density
+          // ceiling for every other page and the rest of the scorer.
+          const measured=heights[name].total-(name==='Scorebook-live'?heights[name].lineupHeight:0);
+          assert.ok(measured<=before*0.9,`${name}: ${measured}px vs ${before}px before (new lineup accounted separately)`);
+        }
+        assert.ok([10,11].includes(heights['Scorebook-live'].lineupRows.length));
+        assert.ok(heights['Scorebook-live'].lineupRows.every(h=>h>=88&&h<=140),'vertical lineup rows stay readable and bounded');
+        assert.ok(heights['Scorebook-live'].lineupHeight<=2000,'vertical setup plus field stays bounded');
         assert.ok(heights.Glossary.total<=BEFORE.Glossary*0.65,'glossary folds to an index');
         assert.ok(Object.values(heights).every(h=>h.header<=110),'header at most two compact rows');
         assert.ok(Object.values(heights).every(h=>h.start<=280),'content starts in the top third of the screen');

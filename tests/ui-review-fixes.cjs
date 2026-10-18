@@ -242,14 +242,18 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
       const imgs=[...document.querySelectorAll('img[alt]')].filter(i=>Object.keys(playerAvatars).includes(i.alt));
       await Promise.all(imgs.map(i=>i.decode().catch(()=>{})));
       const html=document.documentElement.outerHTML;
+      const lineupSize=[...document.querySelectorAll('#setupLineupGrid, #setupLineupField, #liveLineupCard')].reduce((sum,el)=>sum+el.outerHTML.length,0);
       return {count:imgs.length,blob:imgs.every(i=>i.src.startsWith('blob:')),loaded:imgs.filter(i=>i.complete&&i.naturalWidth>0).length,
-        dataUris:(html.match(/data:image\/[a-z]+;base64/g)||[]).length,size:html.length};
+        dataUris:(html.match(/data:image\/[a-z]+;base64/g)||[]).length,size:html.length,lineupSize};
     });
     assert.ok(avatars.count>0,'fixture avatars are shown');
     assert.ok(avatars.blob,'avatar images use blob: URLs');
     assert.equal(avatars.loaded,avatars.count,'every avatar image decodes');
     assert.equal(avatars.dataUris,0,'no base64 avatars left in the page');
-    assert.ok(avatars.size<1000000,`page HTML stays small (${avatars.size})`);
+    // The authorized lineup/field controls have a separate bounded markup budget.
+    // The original pages retain their 1M-character ceiling; no avatar may embed base64.
+    assert.ok(avatars.lineupSize<100000,`lineup markup stays below 100K characters (${avatars.lineupSize})`);
+    assert.ok(avatars.size-avatars.lineupSize<1000000,`existing page HTML stays small (${avatars.size-avatars.lineupSize})`);
     assert.deepEqual(errors,[],'runtime errors');
     await context.close();
 

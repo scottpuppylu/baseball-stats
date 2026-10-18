@@ -66,9 +66,9 @@ const cloud = (page, file) => page.evaluate(async file => {
     if (want('2')) {
     const L = await device(390);
     await L.page.evaluate(() => { switchMainTab('tabScorebook'); switchScorebookSubTab('live'); startNewGameFromSetup(); });
-    const startState = await L.page.evaluate(() => ({result: currentPlayInput.result, pitcher: activeGame.pitcherName, lineup: activeGame.lineup, ranks: defenseRankings.P}));
+    const startState = await L.page.evaluate(() => ({result: currentPlayInput.result, pitcher: activeGame.pitcherName, lineup: activeGame.lineup, positions: activeGame.lineupPositions}));
     assert.equal(startState.result, null, 'no preset result');
-    assert.equal(startState.pitcher, startState.ranks.find(n => startState.lineup.includes(n)) || null, 'starting pitcher = highest-ranked pitcher in the lineup');
+    assert.equal(startState.pitcher, startState.lineup[startState.positions.indexOf('P')], 'starting pitcher = explicitly confirmed P in setup');
     await L.page.locator('button[onclick="submitBattedBallPlay()"]').click();
     assert.equal(await L.page.evaluate(() => activeGame.innings[0].plateAppearances.length), 0, 'submit without a result records nothing');
     assert.match(await toasts(L.page), /請先選擇打擊結果/);
@@ -111,15 +111,15 @@ const cloud = (page, file) => page.evaluate(async file => {
     assert.equal(noPitcher.after, noPitcher.count);
     assert.equal(noPitcher.title, '登板投手：尚未選擇');
     assert.match(noPitcher.placeholder, /請選擇登板投手/);
-    // A lineup with no ranked pitcher starts with no pitcher at all (never a hard-coded one).
-    const noRanked = await L.page.evaluate(() => {
+    // The confirmed P can be any selected fielder, even outside the pitching rankings.
+    const selectedPitcher = await L.page.evaluate(() => {
       discardActiveGame();
       const ranked = new Set(defenseRankings.P || []);
-      const lineup = getAllAvailablePlayerNames().teamNames.filter(n => !ranked.has(n)).slice(0, isDhEnabled ? 11 : 10);
-      setupLineupList = window.setupLineupList = lineup; startNewGameFromSetup();
-      return activeGame.pitcherName;
+      const idx = setupLineupList.findIndex(n => !ranked.has(n));
+      changeSetupLineupPosition(idx, 'P'); startNewGameFromSetup();
+      return {actual: activeGame.pitcherName, expected: setupLineupList[idx]};
     });
-    assert.equal(noRanked, null);
+    assert.equal(selectedPitcher.actual, selectedPitcher.expected);
     await L.page.screenshot({path: path.join(output, '390-LiveNoPitcher.png')});
     checks.push('2-live-scorer');
     await L.context.close();

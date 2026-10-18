@@ -1199,7 +1199,9 @@
               <!-- 先發 10 或 11 棒指派選單 -->
               <div>
                 <label class="block text-xs font-bold text-slate-300 mb-2">確認今日先發打線 (依當前賽制自動適配 10 棒或 11 棒)：</label>
-                <div id="setupLineupGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs"></div>
+                <p class="lineup-help">每棒一列，守位依配置帶入，可自行調整。選擇已有人使用的球員或守位會交換兩棒的球員或守位。</p>
+                <div id="setupLineupGrid" class="lineup-list"></div>
+                <div class="lineup-field-card"><h3>先發守位圖 <small>隨上方選擇即時更新</small></h3><div id="setupLineupField"></div></div>
               </div>
 
               <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
@@ -1303,6 +1305,13 @@
                   </div>
                 </div>
               </div>
+
+              <section id="liveLineupCard" class="lineup-card" aria-label="即時歐打單">
+                <div class="lineup-card-heading"><h3>歐打單</h3><strong id="liveLineupStatus" aria-live="polite"></strong></div>
+                <p class="lineup-help">上下捲動查看全打線，直接在該棒次換人或改守位；代打沿用原守位，已記錄打席保留原打者。</p>
+                <div id="liveLineupRows" class="lineup-list"></div>
+                <details class="lineup-field-card"><summary>查看目前球場守位</summary><div id="liveLineupField"></div></details>
+              </section>
 
               <!-- 我方進攻區段 (當輪到我方打擊時顯示) -->
               <div id="liveBattingSection" class="space-y-6">
@@ -2306,6 +2315,7 @@
   <input type="file" id="hiddenAvatarInput" accept="image/*" class="hidden">
 
 
+  <script src="scorebook-lineup.js"></script>
   <script>
     // 擴充模組（team-insights、team-records、lineup-recommender、player-diagnostics）的接點：模組用 siteHooks.after()
     // 登記「某個繪製函式完成後要做的事」，依載入順序執行；取代整個函式時用 siteHooks.replace()。不再各自改寫 window 上的函式，
@@ -2906,9 +2916,10 @@
     }
 
     // 實況換人/替補選手彈窗
-    window.openSubstituteModal = function() {
-      if (!activeGame) return;
-      const idx = activeGame.currentBatterIdx;
+    window.openSubstituteModal = function(targetIdx = activeGame?.currentBatterIdx) {
+      if (!activeGame || !Number.isInteger(targetIdx) || targetIdx < 0 || targetIdx >= activeGame.lineup.length) return;
+      const idx = targetIdx;
+      substituteTarget = {gameId:activeGame.id, index:idx, name:activeGame.lineup[idx]};
       const currentName = activeGame.lineup[idx] || activeGame.lineup[0];
       const slot = idx + 1;
       const targetInfo = document.getElementById('substituteTargetInfo');
@@ -2929,13 +2940,13 @@
         const { teamNames, guestNames } = getAllAvailablePlayerNames();
         select.innerHTML = `
           <optgroup label="航太系壘隊員">
-            ${teamNames.map(name => `
+            ${teamNames.filter(name => name === currentName || !activeGame.lineup.includes(name)).map(name => `
               <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name}</option>
             `).join('')}
           </optgroup>
           ${guestNames.length > 0 ? `
             <optgroup label="非隊員 / 支援選手">
-              ${guestNames.map(name => `
+              ${guestNames.filter(name => name === currentName || !activeGame.lineup.includes(name)).map(name => `
                 <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? '0'} ${name} (支援)</option>
               `).join('')}
             </optgroup>
@@ -2950,10 +2961,12 @@
 
     window.closeSubstituteModal = function() {
       document.getElementById('substituteModal').classList.add('hidden');
+      substituteTarget = null;
     };
 
     window.confirmSubstitution = async function() {
-      if (!activeGame) return;
+      if (!activeGame || !substituteTarget) return;
+      const target = {...substituteTarget};
       const select = document.getElementById('substituteNewPlayerSelect');
       let chosenPlayer = select ? select.value : '';
       if (!chosenPlayer) return;
@@ -2962,8 +2975,15 @@
         if (!guest) return;
         chosenPlayer = guest.name;
       }
-      const idx = activeGame.currentBatterIdx;
+      if (!activeGame || activeGame.id !== target.gameId || activeGame.lineup[target.index] !== target.name) {
+        showToast('打線已變更，請重新選擇換人棒次。', 'error');
+        return;
+      }
+      const idx = target.index;
       const oldPlayer = activeGame.lineup[idx];
+      if (chosenPlayer === oldPlayer) { closeSubstituteModal(); return; }
+      if (activeGame.lineup.includes(chosenPlayer)) { showToast('此球員已在其他棒次，請選擇板凳球員。', 'error'); return; }
+      const beforeDefense = gameDefenseSnapshot();
       activeGame.substitutions = activeGame.substitutions || [];
       activeGame.substitutions.push({
         inning: activeGame.currentInning,
@@ -2974,6 +2994,8 @@
         timestamp: Date.now()
       });
       activeGame.lineup[idx] = chosenPlayer;
+      if (activeGame.lineupPositions[idx] === 'P' || activeGame.pitcherName === oldPlayer) activeGame.pitcherName = chosenPlayer;
+      saveLineupDefenseChange(beforeDefense, '代打／換人');
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
       closeSubstituteModal();
       renderLiveScorer();
@@ -3628,6 +3650,7 @@
       if (!activeGame) return;
       const targetHasDh = !activeGame.hasDh;
       if (!confirm(`確定要將此場實況比賽切換為【${targetHasDh ? '11 棒有 DH 制' : '10 棒無 DH 制'}】？`)) return;
+      const beforeDefense = gameDefenseSnapshot();
       activeGame.hasDh = targetHasDh;
       const { teamNames, guestNames } = getAllAvailablePlayerNames();
       const allNames = [...teamNames, ...guestNames];
@@ -3643,6 +3666,16 @@
         }
         activeGame.dhSlot = null;
       }
+      ensureGameLineupPositions();
+      if (targetHasDh && !activeGame.lineupPositions.includes('DH')) activeGame.lineupPositions[activeGame.lineup.length - 1] = 'DH';
+      if (!targetHasDh) {
+        const removedPosition = beforeDefense.positions[10];
+        const formerDh = beforeDefense.positions.indexOf('DH');
+        if (formerDh >= 0 && formerDh < 10 && removedPosition && removedPosition !== 'DH' && removedPosition !== 'P') {
+          activeGame.lineupPositions[formerDh] = removedPosition;
+        }
+      }
+      saveLineupDefenseChange(beforeDefense, '切換 DH');
       if (activeGame.currentBatterIdx >= activeGame.lineup.length) {
         activeGame.currentBatterIdx = 0;
       }
@@ -8370,6 +8403,7 @@ function renderCustomChart(agg) {
       if (sourceType === 'recommended') {
         const rec = calculateRecommendedLineup(agg.players);
         setupLineupList = rec.items.map(r => r.player.name);
+        setupLineupPositions = rec.items.map(r => r.posInfo?.posKey || '');
       } else {
         setupLineupList = [...customLineup];
       }
@@ -8382,18 +8416,18 @@ function renderCustomChart(agg) {
         setupLineupList = setupLineupList.slice(0, targetSize);
       }
 
+      if (sourceType !== 'recommended') suggestSetupPositions();
       renderSetupLineupGrid();
     };
 
     window.renderSetupLineupGrid = renderSetupLineupGrid;
-    function renderSetupLineupGrid() {
+    function renderSetupLineupGrid(fillMissing = true) {
       const container = document.getElementById('setupLineupGrid');
       if (!container) return;
 
       const { teamNames, guestNames } = getAllAvailablePlayerNames();
       const allNames = [...teamNames, ...guestNames];
       const targetSize = isDhEnabled ? 11 : 10;
-      const currentDh = customDhSlot || 4;
 
       while (setupLineupList.length < targetSize) {
         const unused = allNames.find(n => !setupLineupList.includes(n)) || allNames[0] || '選手';
@@ -8403,40 +8437,22 @@ function renderCustomChart(agg) {
         setupLineupList = setupLineupList.slice(0, targetSize);
       }
 
-      container.innerHTML = Array.from({ length: targetSize }, (_, i) => {
-        const slot = i + 1;
-        const currentName = setupLineupList[i] || allNames[0] || '選手';
-        const isDh = isDhEnabled && (slot === currentDh);
-        const isGuest = guestNames.includes(currentName);
-
-        return `
-          <div class="p-2.5 rounded-xl border bg-slate-900/90 ${isGuest ? 'border-purple-600/70 bg-purple-950/20' : 'border-slate-800'} space-y-1">
-            <div class="flex items-center justify-between text-[11px] font-mono">
-              <span class="font-bold ${isGuest ? 'text-purple-300' : 'text-slate-300'}">第 ${slot} 棒</span>
-              <div class="flex items-center space-x-1">
-                ${isGuest ? '<span class="text-[9px] text-purple-300 bg-purple-950 px-1 rounded border border-purple-700/60 font-bold">支援</span>' : ''}
-              </div>
-            </div>
-            <select onchange="updateSetupLineupSlot(${i}, this.value)" class="w-full bg-slate-950 border ${isGuest ? 'border-purple-700 text-purple-200' : 'border-slate-700 text-slate-100'} rounded px-1.5 py-1 text-xs focus:outline-none focus:border-amber-500 font-medium">
-              <optgroup label="航太系壘隊員">
-                ${teamNames.map(name => `
-                  <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? ''} ${name}</option>
-                `).join('')}
-              </optgroup>
-              ${guestNames.length > 0 ? `
-                <optgroup label="非隊員 / 支援選手">
-                  ${guestNames.map(name => `
-                    <option value="${name}" ${name === currentName ? 'selected' : ''}>#${NAME_TO_JERSEY[name] ?? '0'} ${name} (支援)</option>
-                  `).join('')}
-                </optgroup>
-              ` : ''}
-              <optgroup label="快捷操作">
-                <option value="__ADD_GUEST__">+ 快速新增非隊員/支援選手...</option>
-              </optgroup>
+      if (fillMissing && setupLineupPositions.length !== targetSize) prepareSetupPositions();
+      setupLineupPositions = normalizeLineupPositions(setupLineupList, setupLineupPositions, isDhEnabled);
+      container.innerHTML = setupLineupList.map((name, i) => `
+        <div class="lineup-row setup-lineup-row" data-slot="${i + 1}">
+          <div class="lineup-order"><strong>${i + 1}</strong><span>棒</span></div>
+          ${renderAvatarElement(name, 'lineup-avatar')}
+          <label class="lineup-player"><span>球員${guestNames.includes(name) ? ' · 支援' : ''}</span>
+            <select class="lineup-player-select" aria-label="第 ${i + 1} 棒球員" onchange="updateSetupLineupSlot(${i}, this.value)">
+              <optgroup label="航太系壘隊員">${teamNames.map(n => `<option value="${lineupText(n)}" ${n === name ? 'selected' : ''}>#${lineupText(NAME_TO_JERSEY[n] ?? '')} ${lineupText(n)}</option>`).join('')}</optgroup>
+              ${guestNames.length ? `<optgroup label="非隊員／支援選手">${guestNames.map(n => `<option value="${lineupText(n)}" ${n === name ? 'selected' : ''}>#${lineupText(NAME_TO_JERSEY[n] ?? '0')} ${lineupText(n)}（支援）</option>`).join('')}</optgroup>` : ''}
+              <option value="__ADD_GUEST__">+ 新增支援選手…</option>
             </select>
-          </div>
-        `;
-      }).join('');
+          </label>
+          ${lineupPositionSelect(i, setupLineupPositions[i], false, isDhEnabled)}
+        </div>`).join('');
+      renderSetupField();
     }
 
     window.updateSetupLineupSlot = async function(index, name) {
@@ -8446,11 +8462,15 @@ function renderCustomChart(agg) {
           renderSetupLineupGrid();
           return;
         }
+        const previousIndex = setupLineupList.indexOf(guest.name);
+        if (previousIndex >= 0 && previousIndex !== index) setupLineupList[previousIndex] = setupLineupList[index];
         setupLineupList[index] = guest.name;
         renderSetupLineupGrid();
         showToast(`已新增支援選手：#${guest.jersey} ${guest.name} 並指派至第 ${index + 1} 棒！`);
         return;
       }
+      const previousIndex = setupLineupList.indexOf(name);
+      if (previousIndex >= 0 && previousIndex !== index) setupLineupList[previousIndex] = setupLineupList[index];
       setupLineupList[index] = name;
       renderSetupLineupGrid();
     };
@@ -8475,6 +8495,11 @@ function renderCustomChart(agg) {
       }
 
       const cleanLineup = setupLineupList.slice(0, targetSize);
+      if (cleanLineup.length !== targetSize || cleanLineup.some(n => !n) || new Set(cleanLineup).size !== targetSize) {
+        showToast('請確認每棒都有球員，且同一球員不能重複出賽。', 'error'); return;
+      }
+      const positions = normalizeLineupPositions(cleanLineup, setupLineupPositions, isDhEnabled);
+      if (positions.some(p => !p)) { showToast('請先指定每一棒的守位，再正式開賽。', 'error'); return; }
       const gameId = `game_${date.replace(/-/g, '')}_${Array.from(crypto.getRandomValues(new Uint32Array(4)), n => n.toString(16).padStart(8, '0')).join('')}`;
 
       activeGame = {
@@ -8483,12 +8508,15 @@ function renderCustomChart(agg) {
         opponent,
         tag,
         hasDh: isDhEnabled,
-        dhSlot: isDhEnabled ? (customDhSlot || 4) : null,
+        dhSlot: isDhEnabled ? positions.indexOf('DH') + 1 : null,
+        lineupPositions: [...positions],
+        startingPositions: [...positions],
+        positionChanges: [],
         ourRole: role, // '先攻' 或 '後攻'
         lineup: [...cleanLineup],
         startingLineup: [...cleanLineup], // 永久鎖定先發 10/11 人名單
         substitutions: [], // 完整記錄換人歷程
-        pitcherName: pickStartingPitcher(cleanLineup),
+        pitcherName: cleanLineup[positions.indexOf('P')] || null,
         currentInning: 1,
         currentHalf: 'top', // ★★★ 棒球/壘球鐵律：不論先攻或後攻，比賽絕對皆從第 1 局「上半」開始！
         currentOuts: 0,
@@ -8525,6 +8553,7 @@ function renderCustomChart(agg) {
         return;
       }
 
+      renderLiveLineupCard();
       if (setupCard) setupCard.classList.add('hidden');
       if (activeContainer) activeContainer.classList.remove('hidden');
 
@@ -8647,6 +8676,7 @@ function renderCustomChart(agg) {
     }
 
     function updateLiveBatterCard() {
+      renderLiveLineupCard();
       const card = document.getElementById('liveCurrentBatterCard');
       if (!card || !activeGame) return;
 
@@ -8708,6 +8738,7 @@ function renderCustomChart(agg) {
 
     // 我方防守：更新投手資訊卡 (支援場上調換、場下板凳隊員與非隊員支援直接登板)
     function updateLivePitcherCard() {
+      renderLiveLineupCard();
       const pTitle = document.getElementById('defensePitcherNameTitle');
       const pAvatar = document.getElementById('defensePitcherAvatar');
       const pSelect = document.getElementById('defensePitcherSelect');
@@ -8767,7 +8798,9 @@ function renderCustomChart(agg) {
 
       if (isInLineup) {
         // 場上調換
-        activeGame.pitcherName = newPitcherName;
+        const beforeDefense = gameDefenseSnapshot();
+        alignLineupPitcher(newPitcherName);
+        saveLineupDefenseChange(beforeDefense, '換投');
         localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
         updateLivePitcherCard();
         showToast(`已更換登板投手為：#${NAME_TO_JERSEY[newPitcherName] ?? ''} ${newPitcherName} (場上調換)`);
@@ -8875,7 +8908,11 @@ function renderCustomChart(agg) {
       const slotSelect = document.getElementById('pitcherReplaceSlotSelect');
       const replaceSlotIdx = slotSelect ? parseInt(slotSelect.value, 10) : 0;
 
-      activeGame.pitcherName = newPitcher;
+      if (isReplace && (!Number.isInteger(replaceSlotIdx) || replaceSlotIdx < 0 || replaceSlotIdx >= activeGame.lineup.length ||
+          activeGame.lineup.some((n, i) => n === newPitcher && i !== replaceSlotIdx))) {
+        showToast('此投手已在其他棒次，請選擇只換投或正確棒次。', 'error'); return;
+      }
+      const beforeDefense = gameDefenseSnapshot();
 
       if (isReplace && !isNaN(replaceSlotIdx) && replaceSlotIdx >= 0 && replaceSlotIdx < activeGame.lineup.length) {
         const oldBatter = activeGame.lineup[replaceSlotIdx];
@@ -8894,9 +8931,10 @@ function renderCustomChart(agg) {
         showToast(`🔄 場下投手 #${NAME_TO_JERSEY[newPitcher] ?? ''} ${newPitcher} 已登板投球！`);
       }
 
+      alignLineupPitcher(newPitcher);
+      saveLineupDefenseChange(beforeDefense, '換投');
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
       if (typeof window !== 'undefined') window.activeGame = activeGame;
-
       closePitcherChangeModal();
       updateLivePitcherCard();
       updateLiveBatterCard();
@@ -9038,6 +9076,7 @@ function renderCustomChart(agg) {
     };
 
     function updateBasesAndOutsDisplay() {
+      renderLiveLineupCard();
       if (!activeGame) return;
       const outs = activeGame.currentOuts || 0;
       const o1 = document.getElementById('outLamp1');

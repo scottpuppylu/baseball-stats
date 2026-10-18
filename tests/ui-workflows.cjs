@@ -43,7 +43,7 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     await page.locator('#setup_game_opponent').fill(`隔離測試-${width}-${role}`);
     await page.locator('#setup_game_role').selectOption(role);
     await click(page,'button[onclick="loadLineupIntoGameSetup(\'custom\')"]');
-    assert.equal(await page.locator('#setupLineupGrid select').count(),dh?11:10);
+    assert.equal(await page.locator('#setupLineupGrid .lineup-player-select').count(),dh?11:10);
     await click(page,'button[onclick="startNewGameFromSetup()"]');
     let game = await state(page);
     assert.equal(game.lineup.length,dh?11:10);
@@ -55,7 +55,7 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     await click(page,'button[onclick="recordRunnerOut()"]');
     assert.equal((await state(page)).currentBatterIdx,beforeRunner.currentBatterIdx);
     await click(page,'button[onclick="openSubstituteModal()"]');
-    const replacement = await page.locator('#substituteNewPlayerSelect option').evaluateAll(options => options.find(option=>option.value && !option.value.startsWith('__')).value);
+    const replacement = await page.locator('#substituteNewPlayerSelect option').evaluateAll(options => options.find(option=>option.value && !option.selected && !option.value.startsWith('__')).value);
     await page.locator('#substituteNewPlayerSelect').selectOption(replacement);
     await click(page,'button[onclick="confirmSubstitution()"]');
     assert.equal((await state(page)).substitutions.length,1);
@@ -106,6 +106,13 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     await click(page,'button[onclick="finishActiveGameAndSyncLogs()"]');
     await page.waitForFunction(() => localStorage.getItem('rebas_active_game') === null);
     assert.equal(await page.evaluate(id=>allGames.filter(g=>g.id===id).length,gameId),1,'retry does not duplicate the game');
+    const cloudLineup = await page.evaluate(async id => {
+      const r = await fetch('/__mock-api/data/games.json?ref=data');
+      return JSON.parse(base64ToUtf8((await r.json()).content)).find(g => g.id === id);
+    }, gameId);
+    assert.deepEqual(cloudLineup.lineupPositions,game.lineupPositions,'positions survive finish and cloud retry');
+    assert.deepEqual(cloudLineup.startingPositions,game.startingPositions,'starting positions preserved');
+    assert.deepEqual(cloudLineup.positionChanges,game.positionChanges,'fielding history preserved');
     await page.locator('#reviewGameSelect').selectOption(gameId);
     await click(page,'button[onclick="toggleEditCurrentReviewGame()"]');
     await page.locator('#editGameOpponent').fill(`覆盤修改-${width}`);
