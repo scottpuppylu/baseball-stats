@@ -76,11 +76,16 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
             players: document.querySelectorAll('#setupLineupGrid .lineup-player-select').length,
             positions: document.querySelectorAll('#setupLineupGrid .lineup-position').length,
             fielders: document.querySelectorAll('#setupLineupField [data-position]').length,
-            liveCardPresent: !!document.getElementById('liveLineupCard')
+            liveCardPresent: !!document.getElementById('liveLineupCard'),
+            liveCardCollapsible: document.getElementById('liveLineupCard')?.tagName === 'DETAILS',
+            defenseFieldInDefenseSection: !!document.querySelector('#liveDefenseSection #liveDefenseFieldCard #liveLineupField'),
+            defenseFieldInputs: document.querySelectorAll('#liveDefenseFieldCard select, #liveDefenseFieldCard button, #liveDefenseFieldCard input').length
           }));
           assert.ok([10,11].includes(lineup.rows));
           assert.equal(lineup.players,lineup.rows); assert.equal(lineup.positions,lineup.rows);
           assert.equal(lineup.fielders,10); assert.ok(lineup.liveCardPresent);
+          assert.ok(lineup.liveCardCollapsible); assert.ok(lineup.defenseFieldInDefenseSection);
+          assert.equal(lineup.defenseFieldInputs,0);
           report.pages.at(-1).lineup = lineup;
           await page.screenshot({path:path.join(output, `production-lineup-${width}.png`)});
         }

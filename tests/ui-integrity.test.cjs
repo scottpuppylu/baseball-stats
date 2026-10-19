@@ -8,6 +8,8 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\n/g, '\n');
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
+// v8.1 (2026/10/19): collapsible lineup and a read-only defense field. One additive DOM ID;
+// business-script and action-handler hashes remain byte-identical to v8.
 // Baseline v8 (2026/10/18): authorized vertical setup, live lineup card, position snapshots,
 // per-slot substitution and shared pitcher/position changes. Existing handlers remain in order;
 // five new DOM IDs are additive. Behavioral coverage: ui-scorebook-lineup and scorebook-lineup.test.
@@ -25,8 +27,8 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 const BASELINE = {
   "script": "7034a5f8d0a7a62eb453cf07c16630ebbc7950b32ebf25e70cf2ef275193ccca",
   "handlers": "546eea3ce115054a06e2235ec88125ae00285cc5d1bf8124d09ded797bf4296d",
-  "idCount": 283,
-  "ids": "23acbaba00aaf0aa75e4bf55a065d58e9ac30657008460369cdbc43a1e776536"
+  "idCount": 284,
+  "ids": "0050bc32f4da3a52c25b07f7af398de66d8b504c7a34fff227f9fe678ebbc66a"
 };
 test('business script is byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];

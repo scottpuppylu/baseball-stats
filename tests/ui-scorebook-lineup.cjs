@@ -7,7 +7,12 @@ const {chromium, webkit} = require('playwright');
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
 const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const state = page => page.evaluate(() => JSON.parse(localStorage.getItem('rebas_active_game')));
-async function click(page, selector) { await page.locator(selector).first().click(); }
+async function click(page, selector) {
+  if (selector.startsWith('#liveLineupRows') && !await page.locator('#liveLineupCard').evaluate(el => el.open)) {
+    await page.locator('#liveLineupCard > summary').click();
+  }
+  await page.locator(selector).first().click();
+}
 async function newGame(page, dh, role = '先攻') {
   await page.evaluate(({dh,role}) => {
     activeGame = window.activeGame = null;
@@ -59,6 +64,16 @@ async function newGame(page, dh, role = '先攻') {
       assert.equal(game.pitcherName,game.lineup[dhIdx]);
       assert.equal(game.dhSlot,oldPitcher+1);
       assert.deepEqual(game.lineupPositions,game.startingPositions);
+      assert.equal(await page.locator('#liveLineupCard').evaluate(el => el.open),false,'lineup starts collapsed');
+      assert.equal(await page.locator('#liveLineupRows').isVisible(),false);
+      assert.ok((await page.locator('#liveLineupCard > summary').textContent()).includes('第 1 棒'));
+      await page.locator('#liveLineupCard').screenshot({path:path.join(output,`${engine}-${width}-lineup-collapsed.png`)});
+      const beforeDisclosure = JSON.stringify(await state(page));
+      await page.locator('#liveLineupCard > summary').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator('#liveLineupRows').isVisible(),true);
+      await page.locator('#liveLineupCard > summary').click();
+      assert.equal(JSON.stringify(await state(page)),beforeDisclosure,'collapse is only a display preference');
       const starters = game.startingLineup, startingPositions = game.startingPositions;
       assert.equal(await page.locator('.lineup-current').getAttribute('data-slot'),'1');
       await click(page,'button[onclick="recordQuickWalk()"]');
@@ -85,6 +100,17 @@ async function newGame(page, dh, role = '先攻') {
       assert.equal(new Set(game.lineupPositions).size,11);
       await click(page,'button[onclick="switchInningNext()"]');
       assert.ok((await page.locator('#liveLineupStatus').textContent()).includes('下次打擊'));
+      await page.locator('#liveLineupCard > summary').click();
+      assert.equal(await page.locator('#liveLineupRows').isVisible(),false);
+      assert.equal(await page.locator('#liveDefenseFieldCard').isVisible(),true,'field is independent of collapsed lineup');
+      assert.equal(await page.locator('#interactiveFieldSvg').isVisible(),false,'batting target is hidden on defense');
+      assert.equal(await page.locator('#liveLineupField [data-position]').count(),10);
+      const beforeFieldClick = JSON.stringify(await state(page));
+      const beforeInput = await page.evaluate(() => JSON.stringify(currentPlayInput));
+      await page.locator('#liveLineupField svg').click({position:{x:40,y:40}});
+      assert.equal(JSON.stringify(await state(page)),beforeFieldClick,'defense field cannot create events or change positions');
+      assert.equal(await page.evaluate(() => JSON.stringify(currentPlayInput)),beforeInput,'defense field cannot change batting input');
+      assert.equal(await page.locator('#liveLineupField select, #liveLineupField button').count(),0);
       await page.locator('#defensePitcherSelect').selectOption(game.lineup[2]);
       game = await state(page);
       assert.equal(game.lineupPositions[2],'P');
@@ -97,7 +123,11 @@ async function newGame(page, dh, role = '先攻') {
       await page.waitForFunction(() => window.LineupModel);
       await page.evaluate(() => switchMainTab('tabScorebook'));
       assert.deepEqual(await state(page),saved);
+      assert.equal(await page.locator('#liveLineupCard').evaluate(el => el.open),false,'collapsed preference survives reload');
+      assert.equal(await page.locator('#liveDefenseFieldCard').isVisible(),true);
+      await page.locator('#liveLineupCard > summary').click();
       assert.equal(await page.locator('#liveLineupRows .lineup-position').nth(2).inputValue(),'P');
+      await page.locator('#liveDefenseFieldCard').screenshot({path:path.join(output,`${engine}-${width}-defense-field.png`)});
       await page.locator('#liveLineupCard').screenshot({path:path.join(output,`${engine}-${width}-lineup-live.png`)});
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth+1);
       assert.equal(overflow,false,'no horizontal page overflow');
@@ -115,6 +145,8 @@ async function newGame(page, dh, role = '先攻') {
       assert.equal(game.lineupPositions.filter(p=>p==='DH').length,1);
       // Runner outs do not advance the highlight; undo restores the correct batter.
       await click(page,'button[onclick="switchInningNext()"]');
+      assert.equal(await page.locator('#liveDefenseFieldCard').isVisible(),false);
+      assert.equal(await page.locator('#interactiveFieldSvg').isVisible(),true,'batting target returns on offense');
       await click(page,'button[onclick="recordQuickWalk()"]');
       const beforeRunner = (await state(page)).currentBatterIdx;
       await click(page,'button[onclick="recordRunnerOut()"]');
@@ -148,6 +180,7 @@ async function newGame(page, dh, role = '先攻') {
       assert.ok(await page.locator('#liveLineupRows').evaluate(el => el.scrollTop > 0));
       await page.reload(); await page.waitForFunction(() => window.LineupModel);
       await page.evaluate(() => switchMainTab('tabScorebook'));
+      assert.equal(await page.locator('#liveLineupCard').evaluate(el => el.open),true,'expanded preference survives reload');
       assert.ok(await page.locator('#liveLineupRows').evaluate(el => el.scrollTop > 0),'restored current slot is visible');
       await click(page,'button[onclick="recordQuickWalk()"]');
       assert.equal(await page.locator('.lineup-current').getAttribute('data-slot'),'1');

@@ -503,6 +503,13 @@ html { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-ins
 .lineup-card-heading { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; }
 .lineup-card-heading h3 { font-size: 22px; font-weight: 900; color: #fef3c7; }
 .lineup-card-heading > strong { font-size: 14px; color: #fcd34d; }
+.lineup-card > summary { cursor: pointer; min-height: 44px; list-style: none; }
+.lineup-card > summary::-webkit-details-marker { display: none; }
+.lineup-card > summary:focus-visible { outline: 3px solid #38bdf8; outline-offset: 4px; border-radius: 8px; }
+.lineup-disclosure-label { color: #cbd5e1; font-size: 13px; white-space: nowrap; }
+.lineup-disclosure-label::after { content: '＋ 展開'; }
+.lineup-card[open] .lineup-disclosure-label::after { content: '− 收起'; }
+#liveDefenseFieldCard { margin-top: 0; }
 .live-lineup-row { grid-template-columns: 48px 44px minmax(0, 1fr) minmax(125px, 180px) 100px; }
 .lineup-substitute { min-height: 44px; padding: 8px; border: 1px solid #a78bfa; border-radius: 8px; background: #2e1065; color: #ede9fe; font-size: 13px; font-weight: 700; }
 .lineup-row.lineup-current { border: 3px solid #fbbf24; padding: 10px; background: #30230c; box-shadow: 0 0 0 2px #fbbf2426; }

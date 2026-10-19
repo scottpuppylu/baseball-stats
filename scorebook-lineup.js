@@ -124,6 +124,16 @@ function changeLiveLineupPosition(index, position) {
 function renderLiveLineupCard() {
   const container = document.getElementById('liveLineupRows');
   if (!container || !activeGame) return;
+  const disclosure = document.getElementById('liveLineupCard');
+  if (!disclosure.dataset.disclosureReady) {
+    // This is a display preference, never part of a scorebook or its cloud data.
+    try { disclosure.open = sessionStorage.getItem('rebas_live_lineup_expanded') === 'true'; } catch (_) { /* use collapsed default */ }
+    disclosure.addEventListener('toggle', () => {
+      try { sessionStorage.setItem('rebas_live_lineup_expanded', String(disclosure.open)); } catch (_) { /* optional UI preference */ }
+      if (disclosure.open) renderLiveLineupCard();
+    });
+    disclosure.dataset.disclosureReady = 'true';
+  }
   const positions = getGameLineupPositions();
   const batting = isInningOurBat(activeGame.ourRole, activeGame.currentHalf) && activeGame.currentOuts < 3;
   const idx = activeGame.currentBatterIdx;
