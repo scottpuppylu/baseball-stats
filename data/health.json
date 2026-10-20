@@ -33,5 +33,12 @@
     "bats": "R",
     "throws": "R",
     "birthDate": ""
+  },
+  "林楊大禎": {
+    "heightCm": null,
+    "weightKg": null,
+    "bats": "L",
+    "throws": "L",
+    "birthDate": ""
   }
 }
