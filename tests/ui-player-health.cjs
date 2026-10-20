@@ -44,13 +44,18 @@ async function save(p,bats) {
       assert.match(await bio.textContent(),/身高 178\.5 cm/);assert.match(await bio.textContent(),/體重 72\.3 kg/);
       assert.match(await bio.textContent(),/\d+ 歲/);assert.match(await bio.textContent(),/♓ 雙魚座/);
       const portrait = p.locator('#playerProfileBio div[onclick="triggerAvatarUpload()"] > :first-child');
-      const withInfo = await portrait.boundingBox();
+      // Existing hover:scale-105 is animated. Compare fixed layout dimensions, not a mid-transition transform.
+      await p.mouse.move(0,0);
+      const layoutSize = () => portrait.evaluate(el=>({width:el.offsetWidth,height:el.offsetHeight}));
+      const withInfo = await layoutSize();
+      assert.deepEqual([withInfo.width,withInfo.height],width<768 ? [120,120] : [144,144]);
       await bio.evaluate(el=>el.remove());
-      const withoutInfo = await portrait.boundingBox();
+      const withoutInfo = await layoutSize();
       assert.deepEqual([withInfo.width,withInfo.height],[withoutInfo.width,withoutInfo.height],'health info must not resize the original avatar');
       await p.evaluate(()=>renderPlayerProfile(getAnalysisAgg()));
       assert.equal(await p.locator('#playerProfileBio [data-profile-health]').count(),1,'rerender never duplicates health information');
       assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1),'profile health fits viewport');
+      await portrait.evaluate(el=>Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{}))));
       await p.locator('#playerProfileBio').screenshot({path:path.join(output,`${engine}-${width}-profile-health.png`)});
       await open(p);
       await p.reload();await ready(p);await open(p);await p.locator('[data-health-player]').selectOption(name);
