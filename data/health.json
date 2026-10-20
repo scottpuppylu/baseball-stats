@@ -82,5 +82,12 @@
     "bats": "L",
     "throws": "R",
     "birthDate": ""
+  },
+  "陳柏翰": {
+    "heightCm": null,
+    "weightKg": null,
+    "bats": "R",
+    "throws": "R",
+    "birthDate": ""
   }
 }
