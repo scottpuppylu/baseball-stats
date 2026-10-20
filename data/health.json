@@ -75,5 +75,12 @@
     "bats": "L",
     "throws": "L",
     "birthDate": ""
+  },
+  "田耕宇": {
+    "heightCm": null,
+    "weightKg": null,
+    "bats": "L",
+    "throws": "R",
+    "birthDate": ""
   }
 }
