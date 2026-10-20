@@ -68,5 +68,12 @@
     "bats": "R",
     "throws": "R",
     "birthDate": ""
+  },
+  "謝承祐": {
+    "heightCm": null,
+    "weightKg": null,
+    "bats": "L",
+    "throws": "L",
+    "birthDate": ""
   }
 }
