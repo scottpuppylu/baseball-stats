@@ -82,6 +82,13 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
           const rows = await page.locator('[data-health-roster] [data-health-name]').count();
           assert.ok(rows > 0);
           assert.equal(await page.locator('[data-health-roster] [data-roster-birthday]').count(),rows);
+          assert.equal(await page.locator('[data-health-roster] [data-roster-measurements]').count(),rows);
+          assert.equal(await page.locator('[data-health-roster] [data-roster-bats]').count(),rows);
+          const healthAvatars=await page.locator('#panelHealth .health-player-avatar').evaluateAll(photos=>photos.map(e=>[e.offsetWidth,e.offsetHeight]));
+          assert.equal(healthAvatars.length,rows+1);
+          for(const size of healthAvatars)assert.deepEqual(size,[96,96]);
+          assert.ok(await page.locator('[data-health-name]').evaluateAll(cards=>cards.every(c=>c.scrollWidth<=c.clientWidth+1)),'health roster cards fit');
+          report.pages.at(-1).healthAvatars={count:healthAvatars.length,width:96,height:96};
           report.pages.at(-1).rosterBirthdayRows = rows;
         }
         if (tab === 'Scorebook') {

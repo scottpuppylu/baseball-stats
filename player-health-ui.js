@@ -47,7 +47,7 @@
   function fill() {
     const p = PlayerHealthStore.data()[selected] || PlayerHealth.normalize();
     for (const key of ['heightCm','weightKg','bats','throws','birthDate']) form.elements[key].value = p[key] ?? '';
-    panel.querySelector('[data-health-identity]').innerHTML = renderAvatarElement(selected,'w-10 h-10 text-sm') + `<span>${esc(selected)}</span>`;
+    panel.querySelector('[data-health-identity]').innerHTML = renderAvatarElement(selected,'health-player-avatar text-3xl') + `<span>${esc(selected)}</span>`;
     birth();
   }
   function render() {
@@ -59,8 +59,19 @@
     if (!dirty) fill();
     const profiles = PlayerHealthStore.data();
     panel.querySelector('[data-health-roster]').innerHTML = names.map(n => {
-      const info = birthdayInfo(profiles[n]);
-      return `<button type="button" data-health-name="${esc(n)}" class="flex items-center justify-between gap-2 rounded-lg border border-slate-700 p-3 text-sm text-left"><span class="min-w-0"><span class="text-slate-200 block truncate">${esc(n)}</span><span data-roster-birthday class="text-xs text-slate-400 block mt-1">${info.age} · ${info.sign}</span></span><span class="text-sky-300 shrink-0">${PlayerHealth.BATS[profiles[n]?.bats || 'U']}</span></button>`;
+      const profile = profiles[n] || {};
+      const info = birthdayInfo(profile);
+      const height = profile.heightCm == null ? '身高未填寫' : `身高 ${profile.heightCm} cm`;
+      const weight = profile.weightKg == null ? '體重未填寫' : `體重 ${profile.weightKg} kg`;
+      return `<button type="button" data-health-name="${esc(n)}" class="health-roster-card rounded-lg border border-slate-700 p-3 text-sm text-left">
+        ${renderAvatarElement(n,'health-player-avatar text-3xl')}
+        <span class="health-roster-details">
+          <span class="text-slate-100 font-bold block break-words">${esc(n)}</span>
+          <span data-roster-birthday class="health-roster-facts text-xs text-slate-400"><span>${info.age}</span><span>${info.sign}</span></span>
+          <span data-roster-measurements class="health-roster-facts text-xs text-slate-300"><span>${height}</span><span>${weight}</span></span>
+          <span data-roster-bats class="text-sky-300 block mt-1">打擊慣用手：${PlayerHealth.BATS[profile.bats || 'U']}</span>
+        </span>
+      </button>`;
     }).join('');
     state();
   }

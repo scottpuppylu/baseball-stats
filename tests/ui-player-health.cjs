@@ -24,6 +24,17 @@ async function save(p,bats) {
       let external=0;await c.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//,r=>{external++;return r.abort();});
       const p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(url);await ready(p);await open(p);
       const name=await player(p);await p.locator('[data-health-player]').selectOption(name);
+      const identityPhoto=p.locator('[data-health-identity] > :first-child');
+      assert.deepEqual(await identityPhoto.evaluate(e=>[e.offsetWidth,e.offsetHeight]),[96,96],'health editor avatar is enlarged');
+      // Earlier viewport cases may have saved measurements for the first two players.
+      const missing=p.locator('[data-health-name]').filter({hasText:/身高未填寫\s*體重未填寫/}).first();
+      assert.match(await missing.locator('[data-roster-measurements]').textContent(),/身高未填寫.*體重未填寫/s);
+      const rosterLayout=await p.locator('[data-health-name]').evaluateAll(cards=>cards.map(card=>{
+        const photo=card.firstElementChild,box=card.getBoundingClientRect();
+        return {photo:[photo.offsetWidth,photo.offsetHeight],fits:card.scrollWidth<=card.clientWidth+1 && box.left>=0 && box.right<=innerWidth};
+      }));
+      assert.ok(rosterLayout.length>0);
+      for(const card of rosterLayout){assert.deepEqual(card.photo,[96,96]);assert.equal(card.fits,true,'roster card contents fit viewport');}
       assert.match(await p.locator('#panelHealth').textContent(),/公開讀取/);
       assert.equal(await p.locator('#btnTabGlossary').evaluate(e=>e.nextElementSibling.id),'btnTabHealth');
       await p.waitForFunction(()=>uiPageTitle.textContent==='球員健康資料');
@@ -38,6 +49,14 @@ async function save(p,bats) {
       assert.match(await p.locator('[data-health-birthday]').textContent(),/雙魚座/);
       const rosterBirthday = await p.locator(`[data-health-name="${name}"] [data-roster-birthday]`).textContent();
       assert.match(rosterBirthday,/\d+ 歲/);assert.match(rosterBirthday,/♓ 雙魚座/);
+      const card=p.locator(`[data-health-name="${name}"]`);
+      assert.match(await card.locator('[data-roster-measurements]').textContent(),/身高 178\.5 cm.*體重 72\.3 kg/s);
+      assert.match(await card.locator('[data-roster-bats]').textContent(),/打擊慣用手：左打/);
+      const otherName=await p.locator('[data-health-name]').evaluateAll((cards,n)=>cards.find(c=>c.dataset.healthName!==n).dataset.healthName,name);
+      await p.locator(`[data-health-name="${otherName}"] > :first-child`).click();
+      assert.equal(await p.locator('[data-health-player]').inputValue(),otherName,'clicking roster avatar chooses that player');
+      await card.click();
+      assert.equal(await p.locator('[name="heightCm"]').inputValue(),'178.5','roster card returns to saved profile');
       await p.screenshot({path:path.join(output,`${engine}-${width}-health.png`),fullPage:true});
       await p.evaluate(n=>{selectedPlayerName=n;switchMainTab('tabProfile');},name);
       const bio = p.locator('#playerProfileBio [data-profile-health]');
