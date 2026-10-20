@@ -19,7 +19,7 @@ function context(extra = {}) {
   const messages = [], statuses = [], removed = [];
   const game = { id: 'test_game', opponent: 'test', date: '2026-10-04', finalScore: { us: 1, opp: 0 }, innings: [], lineup: ['test_player'] };
   const ctx = {
-    window: {}, messages, statuses, removed, activeGame: game, allGames: [game], allLogs: [],
+    window: {}, PlayerHealth: require('../player-health.js'), PlayerHealthStore: {data:()=>({test_player:{bats:'R'},'正式隊員':{bats:'R'}})}, messages, statuses, removed, activeGame: game, allGames: [game], allLogs: [],
     selectedReviewGameId: game.id, isEditingReviewGame: true, pendingLogins: new Set(),
     document: { getElementById: () => null, querySelectorAll: () => [] },
     localStorage: { setItem() {}, removeItem: key => removed.push(key) },

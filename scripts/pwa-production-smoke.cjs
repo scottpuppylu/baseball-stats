@@ -46,7 +46,7 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
       const page = await context.newPage();
       page.on('pageerror', error => report.errors.push(error.message));
       if (width === 390) {
-        for (const file of ['index.html', 'manifest.webmanifest', 'app-config.js', 'pwa.js', 'sw.js', 'ui-comfort.css', 'scorebook-lineup.js']) {
+        for (const file of ['index.html', 'manifest.webmanifest', 'app-config.js', 'pwa.js', 'sw.js', 'ui-comfort.css', 'scorebook-lineup.js', 'player-health.js', 'player-health-store.js', 'player-health-ui.js']) {
           const response = await page.request.get(base + file + '?release-check=' + Date.now());
           const body = await response.text();
           const source = built.files.get(file).toString();
@@ -59,7 +59,7 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
       assert.equal(await page.locator('meta[name="baseball-release"]').getAttribute('content'), built.version);
       report.releaseVersion = built.version;
       await page.waitForFunction(() => window.teamRecords && !/連線同步中/.test(syncStatusBadge.textContent));
-      for (const tab of ['Overview', 'Profile', 'Leaderboard', 'Records', 'Analytics', 'Compare', 'Lineup', 'Scorebook', 'Pitching', 'Glossary']) {
+      for (const tab of ['Overview', 'Profile', 'Leaderboard', 'Records', 'Analytics', 'Compare', 'Lineup', 'Scorebook', 'Pitching', 'Glossary', 'Health']) {
         await page.evaluate(name => switchMainTab('tab' + name), tab);
         // Table folding/layout is scheduled by ui-comfort's MutationObserver + requestAnimationFrame.
         // Measure after it has rendered, not in the same synchronous task as switching tabs.

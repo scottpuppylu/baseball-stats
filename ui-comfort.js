@@ -63,7 +63,8 @@
     Scorebook: ['比賽場記', '即時記分、換人換投、賽事覆盤與落點分析。'],
     Pitching: ['投手分析', '查看投球事件、出局結構與隊內投手指標。'],
     Records: ['生涯紀錄', '生涯排行、單場與連續紀錄、里程碑與趣味紀錄。'],
-    Glossary: ['指標說明', '查閱各項數據的定義、公式與判讀方式。']
+    Glossary: ['指標說明', '查閱各項數據的定義、公式與判讀方式。'],
+    Health: ['球員健康資料', '記錄基本資料與左右打，依打擊側校正拉打／推打判定。']
   };
   const heading = document.createElement('div');
   heading.className = 'ui-page-heading';
@@ -416,7 +417,7 @@
   const NAV_GROUPS = [
     ['數據', ['Overview', 'Profile', 'Leaderboard', 'Compare', 'Records', 'Analytics', 'Pitching']],
     ['比賽', ['Lineup', 'Scorebook']],
-    ['參考', ['Glossary']]
+    ['參考', ['Glossary', 'Health']]
   ];
   function arrangeNav() {
     const want = [];

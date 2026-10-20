@@ -8,7 +8,7 @@ const {chromium} = require('playwright');
 const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
 fs.mkdirSync(output, {recursive: true});
-const pages = ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary'];
+const pages = ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary','Health'];
 const sizes = [[320,568],[390,844],[844,390],[768,1024],[1024,768],[1440,900],[1920,1080]];
 const results = [];
 let browser;

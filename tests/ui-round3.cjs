@@ -132,7 +132,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     // ---------- 13 & 15. Hooks registry, dead code ----------
     const hooks = await page.evaluate(() => siteHooks.list());
     assert.deepEqual(hooks.after.renderPlayerProfile, ['team-insights', 'team-records']);
-    assert.deepEqual(hooks.after.switchMainTab, ['team-records']);
+    assert.deepEqual(hooks.after.switchMainTab, ['player-health', 'team-records']);
     assert.deepEqual(hooks.after.renderLineupAnalysis, ['lineup-recommender']);
     assert.deepEqual(hooks.replaced, {calculateRecommendedLineup: 'lineup-recommender', renderDiagnostics: 'player-diagnostics'});
     const source = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
@@ -209,7 +209,8 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     const [backupDownload] = await Promise.all([page.waitForEvent('download'), page.click('#downloadBackupBtn')]);
     const backup = JSON.parse(fs.readFileSync(await backupDownload.path(), 'utf8'));
     assert.match(backupDownload.suggestedFilename(), /^淡江航太系壘_完整備份_\d{4}-\d{2}-\d{2}\.json$/);
-    assert.deepEqual(Object.keys(backup.files), ['data/logs.json', 'data/games.json', 'data/avatars.json', 'data/tags.json', 'data/defense.json', 'data/guests.json']);
+    assert.deepEqual(Object.keys(backup.files), ['data/logs.json', 'data/games.json', 'data/avatars.json', 'data/tags.json', 'data/defense.json', 'data/guests.json', 'data/health.json']);
+    assert.deepEqual(backup.files['data/health.json'], await page.evaluate(() => PlayerHealthStore.data()), 'backup includes all entered health fields');
     assert.equal(backup.files['data/games.json'].length, await page.evaluate(() => allGames.length));
     checks.push('21-csv-backup');
     await context.close();

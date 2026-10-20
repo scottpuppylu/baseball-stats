@@ -15,7 +15,7 @@ const shaOf = data => crypto.createHash('sha1').update(data).digest('hex');
 const branches = {data: new Map(), main: new Map()};
 const blobs = new Map();
 const put = (branch, file, data) => { branches[branch].set(file, data); blobs.set(shaOf(data), data); };
-for (const name of ['logs', 'games', 'avatars', 'tags', 'defense', 'guests']) {
+for (const name of ['logs', 'games', 'avatars', 'tags', 'defense', 'guests', 'health']) {
   const filename = path.join(fixtures, `${name}.json`);
   if (!fs.existsSync(filename)) continue;
   put('data', `data/${name}.json`, fs.readFileSync(filename));

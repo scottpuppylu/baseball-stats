@@ -8,6 +8,8 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\n/g, '\n');
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
+// v9 (2026/10/20): authorized health profiles and batting-side direction correction; three additive DOM IDs.
+// Original handlers stay identical; pure rules, isolated profile writes, retroactive rebuild, and left/right/switch UI have behavioral tests.
 // v8.1 (2026/10/19): collapsible lineup and a read-only defense field. One additive DOM ID;
 // business-script and action-handler hashes remain byte-identical to v8.
 // Baseline v8 (2026/10/18): authorized vertical setup, live lineup card, position snapshots,
@@ -25,10 +27,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 const BASELINE = {
-  "script": "7034a5f8d0a7a62eb453cf07c16630ebbc7950b32ebf25e70cf2ef275193ccca",
+  "script": "a61b73cd9bc2f81fb94abf8f7f0a4f996a2150e5188d55ea483e95053ff03467",
   "handlers": "546eea3ce115054a06e2235ec88125ae00285cc5d1bf8124d09ded797bf4296d",
-  "idCount": 284,
-  "ids": "0050bc32f4da3a52c25b07f7af398de66d8b504c7a34fff227f9fe678ebbc66a"
+  "idCount": 287,
+  "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"
 };
 test('business script is byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];

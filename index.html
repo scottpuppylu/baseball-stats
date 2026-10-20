@@ -56,7 +56,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261019.1240</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261020.1825</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -113,6 +113,7 @@
             <svg class="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
             <span>指標說明</span>
           </button>
+          <button type="button" id="btnTabHealth" class="text-slate-400 hover:text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-transparent font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0"><span aria-hidden="true">♡</span><span>球員健康資料</span></button>
         </nav>
 
 
@@ -453,7 +454,7 @@
               <div class="h-56 relative w-full">
                 <canvas id="profileSprayPolarChart"></canvas>
               </div>
-              <span class="text-[10px] text-slate-500 font-mono text-center block">拉打 (左) / 中線 (中) / 推打 (右)</span>
+              <span class="text-[10px] text-slate-500 font-mono text-center block">依打擊側判定拉／推；球場落點保持原方向</span>
             </div>
 
             <!-- 圖表 3: 真實三圍 vs Statcast 預期期望 (Actual vs. Expected) -->
@@ -1999,8 +2000,8 @@
                 </div>
                 <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1 col-span-1 sm:col-span-2">
                   <span class="font-bold text-amber-300 text-xs block">噴流落點方向 (Pull% / Center% / Oppo%)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">拉打率 (左半邊) / 中線率 (中路) / 推打率 (右半邊)</p>
-                  <p class="text-slate-400 text-[11px]">將球場三等分：左半邊三游外野為 Pull%，二游自由中外野為 Center%，一二壘右外野為 Oppo%。反映廣角推拉打能力與對手佈陣破綻。</p>
+                  <p class="font-mono text-sky-400 text-[11px]">右打：左側拉打、右側推打；左打相反；中線不變</p>
+                  <p class="text-slate-400 text-[11px]">沿用落點 x &lt; .40、.40–.60、&gt; .60 的區間。優先採該打席記錄的實際打擊側，未記錄時使用「球員健康資料」的固定左／右打設定。左右開弓與未設定者若沒有逐打席側別，不猜測方向；百分比只計已判定樣本。球場圖保持實際落點，守備建議依實際左／右落點產生。</p>
                 </div>
                 <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
                   <span class="font-bold text-white text-xs block">滾飛比 (GO / AO)</span>
@@ -2127,7 +2128,9 @@
               </div>
             </div>
             </section>
-      </div><!-- 守備能力手動排名彈窗 (內部教練專用：支援各守位順位 1~3 排名與 GitHub 雲端同步) -->
+      </div>
+      <div id="panelHealth" class="hidden space-y-6"></div>
+      <!-- 守備能力手動排名彈窗 (內部教練專用：支援各守位順位 1~3 排名與 GitHub 雲端同步) -->
   <div id="defenseModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
     <div class="bg-slate-900 border border-amber-700/60 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
@@ -2324,6 +2327,8 @@
 
 
   <script src="scorebook-lineup.js"></script>
+  <script src="player-health.js"></script>
+  <script src="player-health-store.js"></script>
   <script>
     // 擴充模組（team-insights、team-records、lineup-recommender、player-diagnostics）的接點：模組用 siteHooks.after()
     // 登記「某個繪製函式完成後要做的事」，依載入順序執行；取代整個函式時用 siteHooks.replace()。不再各自改寫 window 上的函式，
@@ -3258,6 +3263,7 @@
         tabAnalytics: document.getElementById('panelAnalytics'),
         tabCompare: document.getElementById('panelCompare'),
         tabGlossary: document.getElementById('panelGlossary'),
+        tabHealth: document.getElementById('panelHealth'),
         tabLineup: document.getElementById('panelLineup'),
         tabScorebook: document.getElementById('panelScorebook'),
         tabPitching: document.getElementById('panelPitching')
@@ -3269,6 +3275,7 @@
         tabAnalytics: document.getElementById('btnTabAnalytics'),
         tabCompare: document.getElementById('btnTabCompare'),
         tabGlossary: document.getElementById('btnTabGlossary'),
+        tabHealth: document.getElementById('btnTabHealth'),
         tabLineup: document.getElementById('btnTabLineup'),
         tabScorebook: document.getElementById('btnTabScorebook'),
         tabPitching: document.getElementById('btnTabPitching')
@@ -4809,14 +4816,14 @@ window.toggleDiagnosticsCollapse = function() {
     window.loadLogsFromGitHub = loadLogsFromGitHub;
     async function loadLogsFromGitHub() {
       setStatusBadge('雲端資料庫：連線同步中...', 'pending');
-      const names = ['頭像', '標籤', '守位', '賽事', '支援名冊', '日誌'];
+      const names = ['頭像', '標籤', '守位', '賽事', '支援名冊', '日誌', '球員健康資料'];
       const results = await Promise.allSettled([
         loadAvatarsFromGitHub(), loadTagsFromGitHub(), loadDefenseFromGitHub(),
         loadGamesFromGitHub(), loadGuestsFromGitHub(),
         loadDatabaseSource(DATA_FILE_PATH, 'rebas_logs', content => {
           if (!Array.isArray(content)) throw new Error('Invalid logs');
           allLogs = window.allLogs = content;
-        }, sha => { currentFileSha = sha; })
+        }, sha => { currentFileSha = sha; }), PlayerHealthStore.load()
       ]);
       const sources = results.map(r => r.status === 'fulfilled' ? r.value : 'failed');
       if (sources[5] === 'failed' && (!allLogs || !allLogs.length)) {
@@ -5440,9 +5447,12 @@ window.toggleDiagnosticsCollapse = function() {
         p.pu_pct = p.bip > 0 ? p.pu / p.bip : 0;
 
         // ★★★ 廣角噴流方向指標
-        p.pull_pct = p.bip > 0 ? p.pull / p.bip : 0;
-        p.cent_pct = p.bip > 0 ? p.cent / p.bip : 0;
-        p.oppo_pct = p.bip > 0 ? p.oppo / p.bip : 0;
+        p.direction_n = p.pull + p.cent + p.oppo;
+        p.direction_unknown = Math.max(0,p.bip - p.direction_n);
+        p.directionTracked = p.direction_n > 0;
+        p.pull_pct = p.direction_n > 0 ? p.pull / p.direction_n : 0;
+        p.cent_pct = p.direction_n > 0 ? p.cent / p.direction_n : 0;
+        p.oppo_pct = p.direction_n > 0 ? p.oppo / p.direction_n : 0;
 
         // ★★★ 預期數據 (xBA, xSLG, xwOBA)：分子分母都只用場記擊球樣本，安打率取自本隊各擊球型態的實際結果
         if (p.tracked) {
@@ -5551,7 +5561,7 @@ window.toggleDiagnosticsCollapse = function() {
       const realKey = isAscending ? metric.replace('_asc', '') : metric;
       // Batted-ball metrics rank only players with scorebook batted-ball types.
       const needsTracking = ['xba', 'xwoba', 'ld_pct', 'pull_pct', 'oppo_pct'].includes(realKey);
-      let filtered = agg.players.filter(p => p.pa >= minPa && (!needsTracking || p.tracked));
+      let filtered = agg.players.filter(p => p.pa >= minPa && (!needsTracking || p.tracked) && (!['pull_pct','cent_pct','oppo_pct'].includes(realKey) || p.directionTracked));
       if (needsTracking) {
         document.getElementById('leaderboardMetricCard').insertAdjacentHTML('beforeend', '<p class="text-[10px] text-amber-300">此指標只列出有場記擊球型態紀錄的球員；只有手動補登日誌者不列入排名。</p>');
       }
@@ -5802,14 +5812,16 @@ window.toggleDiagnosticsCollapse = function() {
         const valA = Number(pA[m.key]) || 0;
         const valB = Number(pB[m.key]) || 0;
         const lower = m.lowerBetter || false;
-        if (STATCAST_KEYS.includes(m.key) && (!pA.tracked || !pB.tracked)) {
+        const directionMetric = ['pull_pct','cent_pct','oppo_pct'].includes(m.key);
+        const availableA = directionMetric ? pA.directionTracked : pA.tracked, availableB = directionMetric ? pB.directionTracked : pB.tracked;
+        if (STATCAST_KEYS.includes(m.key) && (!availableA || !availableB)) {
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-slate-800/50 transition';
           tr.innerHTML = `
             <td class="p-3 font-medium text-slate-200">${m.label}</td>
-            <td class="p-3 text-center font-mono text-slate-400 tabular-nums">${pA.tracked ? m.fmt(valA) : '—'}</td>
-            <td class="p-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">無場記資料</span></td>
-            <td class="p-3 text-center font-mono text-slate-400 tabular-nums">${pB.tracked ? m.fmt(valB) : '—'}</td>
+            <td class="p-3 text-center font-mono text-slate-400 tabular-nums">${availableA ? m.fmt(valA) : '—'}</td>
+            <td class="p-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">資料不足</span></td>
+            <td class="p-3 text-center font-mono text-slate-400 tabular-nums">${availableB ? m.fmt(valB) : '—'}</td>
           `;
           tbody.appendChild(tr);
           return;
@@ -6008,23 +6020,23 @@ window.toggleDiagnosticsCollapse = function() {
 
       if (statsA) {
         statsA.innerHTML = `
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${pA.tracked ? (pA.pull_pct * 100).toFixed(0) + '%' : '—'}</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${pA.tracked ? (pA.cent_pct * 100).toFixed(0) + '%' : '—'}</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${pA.tracked ? (pA.oppo_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${pA.directionTracked ? (pA.pull_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${pA.directionTracked ? (pA.cent_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${pA.directionTracked ? (pA.oppo_pct * 100).toFixed(0) + '%' : '—'}</b></div>
           <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">平飛LD%</span><b class="text-purple-300">${pA.tracked ? (pA.ld_pct * 100).toFixed(0) + '%' : '—'}</b></div>
         `;
       }
       if (statsB) {
         statsB.innerHTML = `
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${pB.tracked ? (pB.pull_pct * 100).toFixed(0) + '%' : '—'}</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${pB.tracked ? (pB.cent_pct * 100).toFixed(0) + '%' : '—'}</b></div>
-          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${pB.tracked ? (pB.oppo_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">拉打</span><b class="text-amber-400">${pB.directionTracked ? (pB.pull_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">中線</span><b class="text-sky-400">${pB.directionTracked ? (pB.cent_pct * 100).toFixed(0) + '%' : '—'}</b></div>
+          <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">推打</span><b class="text-emerald-400">${pB.directionTracked ? (pB.oppo_pct * 100).toFixed(0) + '%' : '—'}</b></div>
           <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-slate-400 block text-[9px]">平飛LD%</span><b class="text-purple-300">${pB.tracked ? (pB.ld_pct * 100).toFixed(0) + '%' : '—'}</b></div>
         `;
       }
 
       if (summary) {
-        const sprayType = p => !p.tracked ? '無場記擊球資料' : ({ pull: '強力拉打型', oppo: '推打穿透型', balanced: '全方位廣角型' })[sprayTendency(p.pull_pct, p.oppo_pct)];
+        const sprayType = p => !p.directionTracked ? '打擊側或方向樣本待補' : ({ pull: '強力拉打型', oppo: '推打穿透型', balanced: '全方位廣角型' })[sprayTendency(p.pull_pct, p.oppo_pct)];
         const typeA = sprayType(pA);
         const typeB = sprayType(pB);
         summary.innerHTML = `
@@ -6035,9 +6047,9 @@ window.toggleDiagnosticsCollapse = function() {
             <span class="text-amber-300"><b>${pB.name}</b> (${typeB})</span>
           </div>
           <p class="text-slate-400 text-[11px] leading-relaxed">
-            【${pA.name}】：${pA.tracked ? `拉打 ${(pA.pull_pct*100).toFixed(0)}% / 推打 ${(pA.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pA.ld_pct*100).toFixed(0)}%` : '無場記擊球資料'}，每局創造得分 (RC/3出局: <b class="text-white">${pA.rc_3.toFixed(2)}</b> 分)。<br>
-            【${pB.name}】：${pB.tracked ? `拉打 ${(pB.pull_pct*100).toFixed(0)}% / 推打 ${(pB.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pB.ld_pct*100).toFixed(0)}%` : '無場記擊球資料'}，每局創造得分 (RC/3出局: <b class="text-white">${pB.rc_3.toFixed(2)}</b> 分)。
-            ${!pA.tracked || !pB.tracked ? '' : pA.pull_pct > pB.pull_pct ? `${pA.name} 具備更高拉打比率，對手容易啟動左移防守；而 ${pB.name} 展現更均衡之全場推打涵蓋面。` : `${pB.name} 具備更高拉打比率，而 ${pA.name} 展現更均衡之全場推打涵蓋面。`}
+            【${pA.name}】：${pA.directionTracked ? `拉打 ${(pA.pull_pct*100).toFixed(0)}% / 推打 ${(pA.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pA.ld_pct*100).toFixed(0)}%` : '打擊側或方向樣本待補'}，每局創造得分 (RC/3出局: <b class="text-white">${pA.rc_3.toFixed(2)}</b> 分)。<br>
+            【${pB.name}】：${pB.directionTracked ? `拉打 ${(pB.pull_pct*100).toFixed(0)}% / 推打 ${(pB.oppo_pct*100).toFixed(0)}%，平飛球率 ${(pB.ld_pct*100).toFixed(0)}%` : '打擊側或方向樣本待補'}，每局創造得分 (RC/3出局: <b class="text-white">${pB.rc_3.toFixed(2)}</b> 分)。
+            拉／推已依各打席打擊側判定；守備移位請參考球場實際左／右落點。
           </p>
         `;
       }
@@ -6125,12 +6137,10 @@ window.toggleDiagnosticsCollapse = function() {
 
       container.innerHTML = sprayDotsSvg(points, { tooltipId: 'profileSprayPointTooltip' });
 
-      let pullCount = 0, centerCount = 0, oppoCount = 0;
+      const directionStats = PlayerHealth.summarize(points,PlayerHealthStore.data());
+      let {pull:pullCount,cent:centerCount,oppo:oppoCount} = directionStats;
       let gbCount = 0, fbCount = 0, ldCount = 0, puCount = 0;
       points.forEach(p => {
-        if (p.x < 0.40) pullCount++;
-        else if (p.x <= 0.60) centerCount++;
-        else oppoCount++;
 
         if (p.trajectory === 'grounder') gbCount++;
         else if (p.trajectory === 'fly') fbCount++;
@@ -6139,9 +6149,9 @@ window.toggleDiagnosticsCollapse = function() {
       });
 
       const total = points.length;
-      const pullPct = (pullCount / total * 100).toFixed(1);
-      const centPct = (centerCount / total * 100).toFixed(1);
-      const oppoPct = (oppoCount / total * 100).toFixed(1);
+      const pullPct = (pullCount / (directionStats.known || 1) * 100).toFixed(1);
+      const centPct = (centerCount / (directionStats.known || 1) * 100).toFixed(1);
+      const oppoPct = (oppoCount / (directionStats.known || 1) * 100).toFixed(1);
       const goAo = fbCount > 0 ? (gbCount / fbCount).toFixed(2) : gbCount.toFixed(2);
 
       metricsCard.innerHTML = `
@@ -6153,18 +6163,18 @@ window.toggleDiagnosticsCollapse = function() {
           <div class="grid grid-cols-2 gap-3 text-xs">
             <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
               <span class="text-slate-400 text-[10px] block">拉打率 (Pull%)</span>
-              <span class="text-amber-400 font-mono font-black text-lg block">${pullPct}%</span>
-              <span class="text-[9px] text-slate-500">左半邊 / 三游外野</span>
+              <span class="text-amber-400 font-mono font-black text-lg block">${directionStats.known ? pullPct + '%' : '—'}</span>
+              <span class="text-[9px] text-slate-500">依本打席打擊側判定拉打方向</span>
             </div>
             <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
               <span class="text-slate-400 text-[10px] block">中線率 (Center%)</span>
-              <span class="text-sky-400 font-mono font-black text-lg block">${centPct}%</span>
+              <span class="text-sky-400 font-mono font-black text-lg block">${directionStats.known ? centPct + '%' : '—'}</span>
               <span class="text-[9px] text-slate-500">二游中路 / 自由外野</span>
             </div>
             <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
               <span class="text-slate-400 text-[10px] block">推打率 (Oppo%)</span>
-              <span class="text-emerald-400 font-mono font-black text-lg block">${oppoPct}%</span>
-              <span class="text-[9px] text-slate-500">右半邊 / 一二壘右外</span>
+              <span class="text-emerald-400 font-mono font-black text-lg block">${directionStats.known ? oppoPct + '%' : '—'}</span>
+              <span class="text-[9px] text-slate-500">依本打席打擊側判定反方向</span>
             </div>
             <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
               <span class="text-slate-400 text-[10px] block">滾飛比 (GO / AO)</span>
@@ -6174,7 +6184,7 @@ window.toggleDiagnosticsCollapse = function() {
           </div>
           <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-300 leading-relaxed">
             <span class="font-bold text-amber-300">💡 慢壘球探實戰解析：</span>
-            ${({ pull: '打者具備極高比例之強力拉打傾向，對手外野容易左移佈陣，得點圈有人時建議練習反方向推打。', oppo: '打者推打穿透力強，常擊向一二壘防線漏洞，屬全方位廣角型打者。', balanced: '擊球落點分佈非常均衡，全場無明顯防守死角。' })[sprayTendency(pullCount / total, oppoCount / total)]}
+            ${PlayerHealth.tendencyText(directionStats)}<br>${PlayerHealth.sampleText(directionStats)}
           </div>
         </div>
       `;
@@ -6435,13 +6445,13 @@ function renderPlayerProfile(agg) {
 
               <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <span class="text-[11px] text-slate-400 block font-sans font-semibold mb-0.5">廣角打擊方向 (Spray Distribution)</span>
+                  <span class="text-[11px] text-slate-400 block font-sans font-semibold mb-0.5">廣角打擊方向 (Spray Distribution)</span><span class="text-[10px] text-slate-400">已判定 ${p.direction_n} 球／待補 ${p.direction_unknown} 球</span>
                   <span class="text-slate-200">
-                    拉打: <b class="text-amber-400">${(p.pull_pct * 100).toFixed(0)}%</b> | 中線: <b class="text-sky-400">${(p.cent_pct * 100).toFixed(0)}%</b> | 推打: <b class="text-emerald-400">${(p.oppo_pct * 100).toFixed(0)}%</b>
+                    拉打: <b class="text-amber-400">${p.directionTracked ? (p.pull_pct * 100).toFixed(0) + '%' : '—'}</b> | 中線: <b class="text-sky-400">${p.directionTracked ? (p.cent_pct * 100).toFixed(0) + '%' : '—'}</b> | 推打: <b class="text-emerald-400">${p.directionTracked ? (p.oppo_pct * 100).toFixed(0) + '%' : '—'}</b>
                   </span>
                 </div>
                 <span class="text-xs px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 font-sans font-bold self-start sm:self-auto">
-                  ${({ pull: '強力拉打型', oppo: '反向推打型', balanced: '全方位廣角型' })[sprayTendency(p.pull_pct, p.oppo_pct)]}
+                  ${!p.directionTracked ? '打擊側或方向樣本待補' : ({ pull: '強力拉打型', oppo: '反向推打型', balanced: '全方位廣角型' })[sprayTendency(p.pull_pct, p.oppo_pct)]}
                 </span>
               </div>
             </div>
@@ -6562,7 +6572,7 @@ function renderPlayerProfile(agg) {
           data: {
             labels: ['拉打 (Pull)', '中線 (Center)', '推打 (Oppo)'],
             datasets: [{
-              data: p.tracked ? [p.pull_pct * 100, p.cent_pct * 100, p.oppo_pct * 100] : [0, 0, 0],
+              data: p.directionTracked ? [p.pull_pct * 100, p.cent_pct * 100, p.oppo_pct * 100] : [null, null, null],
               backgroundColor: ['rgba(245, 158, 11, 0.65)', 'rgba(56, 189, 248, 0.65)', 'rgba(52, 211, 153, 0.65)'],
               borderColor: ['#f59e0b', '#38bdf8', '#34d399'],
               borderWidth: 1.5
@@ -6940,12 +6950,10 @@ function renderTeamSpatialLab(agg) {
 
       ptsContainer.innerHTML = sprayDotsSvg(points, { scale: 0.92, opacity: 0.85, tooltipId: 'teamSpatialPointTooltip' });
 
-      let pull = 0, cent = 0, oppo = 0;
+      const directionStats = PlayerHealth.summarize(points,PlayerHealthStore.data());
+      let {pull,cent,oppo} = directionStats;
       let ld = 0, gb = 0, fb = 0, pu = 0;
       points.forEach(p => {
-        if (p.x < 0.40) pull++;
-        else if (p.x <= 0.60) cent++;
-        else oppo++;
 
         if (p.trajectory === 'line') ld++;
         else if (p.trajectory === 'grounder') gb++;
@@ -6954,23 +6962,13 @@ function renderTeamSpatialLab(agg) {
       });
 
       const total = points.length;
-      const pullPct = (pull / total * 100).toFixed(1);
-      const centPct = (cent / total * 100).toFixed(1);
-      const oppoPct = (oppo / total * 100).toFixed(1);
-      const poRatio = oppo > 0 ? (pull / oppo).toFixed(2) : (pull > 0 ? '9.99' : '1.00');
+      const pullPct = (pull / (directionStats.known || 1) * 100).toFixed(1);
+      const centPct = (cent / (directionStats.known || 1) * 100).toFixed(1);
+      const oppoPct = (oppo / (directionStats.known || 1) * 100).toFixed(1);
+      const poRatio = !directionStats.known ? '—' : oppo > 0 ? (pull / oppo).toFixed(2) : pull > 0 ? '∞' : '—';
 
-      let shiftAdvice = '';
-      let shiftClass = '';
-      if (Number(poRatio) >= 1.8) {
-        shiftAdvice = '【啟動外野極端左移防守 (Extreme Left Shift)】：該擊球樣本中拉打傾向高達 ' + pullPct + '% (拉推比 P/O ' + poRatio + ')！防守方應將右外野手內縮並向中線靠攏，自由手與中外野手全面向左外野邊線平移 10~15 步，封殺深遠拉打強襲球！';
-        shiftClass = 'bg-rose-950/40 border-rose-700/60 text-rose-300';
-      } else if (Number(poRatio) <= 0.7) {
-        shiftAdvice = '【防範反向推打與右外野邊線 (Oppo Defense)】：推打比例高達 ' + oppoPct + '%，打者擊球點放深，常攻擊一二壘防線與右外野！右外野手與右中外野手應向右邊線緊貼，封堵穿越長打。';
-        shiftClass = 'bg-sky-950/40 border-sky-700/60 text-sky-300';
-      } else {
-        shiftAdvice = '【維持標準四外野均衡覆蓋 (Standard 4-OF Spread)】：拉推比 ' + poRatio + ' 處於均衡區間 (拉 ' + pullPct + '% / 中 ' + centPct + '% / 推 ' + oppoPct + '%)，打者具備廣角推拉打能力，防守方切忌盲目佈陣，維持常規四外野扇形覆蓋。';
-        shiftClass = 'bg-emerald-950/40 border-emerald-700/60 text-emerald-300';
-      }
+      const shiftAdvice = PlayerHealth.fieldAdvice(directionStats);
+      const shiftClass = 'bg-sky-950/40 border-sky-700/60 text-sky-300';
 
       advisoryCard.innerHTML = `
         <div class="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
@@ -6982,15 +6980,15 @@ function renderTeamSpatialLab(agg) {
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
             <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
               <span class="text-slate-400 block text-[10px] font-sans">拉打佔比 (Pull%)</span>
-              <span class="text-amber-400 font-black text-sm block">${pullPct}%</span>
+              <span class="text-amber-400 font-black text-sm block">${directionStats.known ? pullPct + '%' : '—'}</span>
             </div>
             <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
               <span class="text-slate-400 block text-[10px] font-sans">中線穿透 (Cent%)</span>
-              <span class="text-sky-400 font-black text-sm block">${centPct}%</span>
+              <span class="text-sky-400 font-black text-sm block">${directionStats.known ? centPct + '%' : '—'}</span>
             </div>
             <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
               <span class="text-slate-400 block text-[10px] font-sans">推打佔比 (Oppo%)</span>
-              <span class="text-emerald-400 font-black text-sm block">${oppoPct}%</span>
+              <span class="text-emerald-400 font-black text-sm block">${directionStats.known ? oppoPct + '%' : '—'}</span>
             </div>
             <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
               <span class="text-slate-400 block text-[10px] font-sans">平飛球率 (LD%)</span>
@@ -7003,7 +7001,7 @@ function renderTeamSpatialLab(agg) {
             <span class="font-bold text-xs flex items-center gap-1.5">
               <span>🛡️</span> 慢速壘球防守佈陣戰術推演：
             </span>
-            <p class="text-[11px] leading-relaxed">${shiftAdvice}</p>
+            <p class="text-[11px] leading-relaxed">${shiftAdvice}</p><p class="text-[11px]">${PlayerHealth.sampleText(directionStats)}</p>
           </div>
 
           <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-300 space-y-1">
@@ -7032,7 +7030,7 @@ function renderCustomChart(agg) {
         zLabel.textContent = type === 'bubble' ? zLabel.dataset.originalText : `${zLabel.dataset.originalText}（僅氣泡圖使用）`;
       }
       const axisKeys = type === 'bubble' ? [xKey, yKey, zKey] : [xKey, yKey];
-      const pList = axisKeys.some(k => BATTED_BALL_KEYS.includes(k)) ? agg.players.filter(p => p.tracked) : agg.players;
+      const pList = agg.players.filter(p => (!axisKeys.some(k => BATTED_BALL_KEYS.includes(k)) || p.tracked) && (!axisKeys.some(k => ['pull_pct','cent_pct','oppo_pct'].includes(k)) || p.directionTracked));
       const cCanvas = document.getElementById('customChart'); if (!cCanvas || !cCanvas.getContext) return; const ctx = cCanvas.getContext('2d');
       // 軸與圖例用選單上的中文名稱（例如「加權得分創造 (wRC+)」），不再顯示 WRC_PLUS 這類內部代號。
       const labelOf = key => (document.querySelector(`#customXVar option[value="${key}"], #customYVar option[value="${key}"], #customZVar option[value="${key}"]`)?.textContent || key).trim();
@@ -8238,7 +8236,8 @@ function renderCustomChart(agg) {
         note: '各欄位即雲端 data/ 資料夾中同名檔案的內容；activeGame 為這台裝置上尚未完賽的比賽。',
         files: {
           'data/logs.json': allLogs, 'data/games.json': allGames, 'data/avatars.json': playerAvatars,
-          'data/tags.json': playerTags, 'data/defense.json': defenseRankings, 'data/guests.json': guestPlayers
+          'data/tags.json': playerTags, 'data/defense.json': defenseRankings, 'data/guests.json': guestPlayers,
+          'data/health.json': PlayerHealthStore.data()
         },
         activeGame: activeGame || null
       };
@@ -8721,9 +8720,14 @@ function renderCustomChart(agg) {
             <span class="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 font-black font-mono text-[10px]">#${jersey}</span>
           </div>
           <div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center flex-wrap gap-2">
               <span class="text-xs font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40">第 ${slot} 棒</span>
               <h3 class="text-base sm:text-lg font-black text-white">${batterName}</h3>
+              <label class="text-xs text-slate-300">本打席打擊側
+                <select data-live-batting-side class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs" aria-label="本打席打擊側">
+                  ${[['','依設定（'+PlayerHealth.BATS[PlayerHealthStore.data()[batterName]?.bats || 'U']+'）'],['R','本打席右打'],['L','本打席左打']].map(([value,label]) => `<option value="${value}" ${value === (currentPlayInput.battingSideBatter === batterName ? currentPlayInput.battingSide || '' : '') ? 'selected' : ''}>${label}</option>`).join('')}
+                </select>
+              </label>
             </div>
             <p class="text-xs text-slate-400 font-mono mt-0.5">
               本場打擊：<span class="text-white font-bold">${matchAb}</span> 打數 <span class="text-emerald-400 font-bold">${matchH}</span> 安打 | <span class="text-sky-400 font-bold">${matchR}</span> 得分
@@ -9404,6 +9408,10 @@ function renderCustomChart(agg) {
       else if (currentPlayInput.result === 'DP') outsAdded = 2;
       else if (currentPlayInput.result === 'SF') outsAdded = 1;
 
+      const battingSide = PlayerHealth.battingSide({batterName, battingSide:currentPlayInput.battingSideBatter === batterName ? currentPlayInput.battingSide : null},PlayerHealthStore.data());
+      if (PlayerHealthStore.data()[batterName]?.bats === 'S' && currentPlayInput.trajectory !== 'none' && !battingSide) {
+        showToast('左右開弓者請先選擇本打席左打或右打','error'); return;
+      }
       activeGame.currentOuts = Math.min(3, (activeGame.currentOuts || 0) + outsAdded);
       activeGame.finalScore.us += currentPlayInput.runsScored;
 
@@ -9425,6 +9433,7 @@ function renderCustomChart(agg) {
         slot,
         result: currentPlayInput.result,
         trajectory: currentPlayInput.trajectory,
+        ...(battingSide ? {battingSide} : {}),
         location: currentPlayInput.location,
         x: currentPlayInput.x,
         y: currentPlayInput.y,
@@ -9723,11 +9732,8 @@ function renderCustomChart(agg) {
               else if (pa.trajectory === 'fly') p.fb++;
               else if (pa.trajectory === 'popup') p.pu++;
 
-              if (pa.x !== undefined && pa.x !== null) {
-                if (pa.x < 0.40) p.pull++;
-                else if (pa.x <= 0.60) p.cent++;
-                else p.oppo++;
-              }
+              const direction = PlayerHealth.direction(pa, PlayerHealthStore.data());
+              if (direction) p[direction]++;
             }
           }
         });
@@ -10313,6 +10319,9 @@ function renderCustomChart(agg) {
               <select id="edit_play_batter_${innIdx}_${playIdx}" class="bg-slate-900 border border-slate-700 text-white text-xs rounded px-2 py-1">
                 ${allPlayers.map(pl => `<option value="${pl}" ${pl === p.batterName ? 'selected' : ''}>#${NAME_TO_JERSEY[pl] ?? ''} ${pl}</option>`).join('')}
               </select>
+              <select id="edit_play_side_${innIdx}_${playIdx}" aria-label="打席打擊側" class="bg-slate-900 border border-slate-700 text-white text-xs rounded px-2 py-1 mt-1">
+                ${[['','依球員設定'],['R','右打'],['L','左打']].map(([v,label]) => `<option value="${v}" ${v === (p.battingSide || '') ? 'selected' : ''}>${label}</option>`).join('')}
+              </select>
             </td>
             <td class="p-2 text-center">
               <select id="edit_play_res_${innIdx}_${playIdx}" class="bg-slate-900 border border-slate-700 text-amber-300 font-bold text-xs rounded px-2 py-1">
@@ -10599,12 +10608,14 @@ function renderCustomChart(agg) {
         if (isOurBat) {
           (inn.plateAppearances || []).forEach((p, playIdx) => {
             const bSel = document.getElementById(`edit_play_batter_${innIdx}_${playIdx}`);
+            const sideSel = document.getElementById(`edit_play_side_${innIdx}_${playIdx}`);
             const rSel = document.getElementById(`edit_play_res_${innIdx}_${playIdx}`);
             const tSel = document.getElementById(`edit_play_traj_${innIdx}_${playIdx}`);
             const lSel = document.getElementById(`edit_play_loc_${innIdx}_${playIdx}`);
             const rInput = document.getElementById(`edit_play_r_${innIdx}_${playIdx}`);
 
             if (bSel) p.batterName = bSel.value;
+            if (sideSel) { if (['R','L'].includes(sideSel.value)) p.battingSide = sideSel.value; else delete p.battingSide; }
             if (rSel) p.result = rSel.value;
             if (tSel) p.trajectory = tSel.value;
             if (lSel && lSel.value) p.location = lSel.value; // the no-location option keeps the original value
@@ -10709,13 +10720,11 @@ function renderCustomChart(agg) {
 
       // 計算 5 大方向與球型統計
       const totalBatted = points.length;
-      let pullCount = 0, centerCount = 0, oppoCount = 0;
+      const directionStats = PlayerHealth.summarize(points,PlayerHealthStore.data());
+      let {pull:pullCount,cent:centerCount,oppo:oppoCount} = directionStats;
       let gbCount = 0, fbCount = 0, ldCount = 0, popCount = 0;
 
       points.forEach(p => {
-        if (p.x < 0.40) pullCount++;
-        else if (p.x <= 0.60) centerCount++;
-        else oppoCount++;
 
         if (p.trajectory === 'grounder') gbCount++;
         else if (p.trajectory === 'fly') fbCount++;
@@ -10723,9 +10732,9 @@ function renderCustomChart(agg) {
         else if (p.trajectory === 'popup') popCount++;
       });
 
-      const pullPct = totalBatted > 0 ? (pullCount / totalBatted * 100).toFixed(1) : '0.0';
-      const centerPct = totalBatted > 0 ? (centerCount / totalBatted * 100).toFixed(1) : '0.0';
-      const oppoPct = totalBatted > 0 ? (oppoCount / totalBatted * 100).toFixed(1) : '0.0';
+      const pullPct = totalBatted > 0 ? (pullCount / (directionStats.known || 1) * 100).toFixed(1) : '0.0';
+      const centerPct = totalBatted > 0 ? (centerCount / (directionStats.known || 1) * 100).toFixed(1) : '0.0';
+      const oppoPct = totalBatted > 0 ? (oppoCount / (directionStats.known || 1) * 100).toFixed(1) : '0.0';
       const gbPct = totalBatted > 0 ? (gbCount / totalBatted * 100).toFixed(1) : '0.0';
       const fbPct = totalBatted > 0 ? (fbCount / totalBatted * 100).toFixed(1) : '0.0';
       const goAo = fbCount > 0 ? (gbCount / fbCount).toFixed(2) : gbCount.toFixed(2);
@@ -10738,18 +10747,18 @@ function renderCustomChart(agg) {
         <div class="grid grid-cols-2 gap-3 text-xs">
           <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
             <span class="text-slate-400 text-[10px] block">拉打率 (Pull%)</span>
-            <span class="text-amber-400 font-mono font-black text-lg block">${pullPct}%</span>
-            <span class="text-[9px] text-slate-500">左半邊 / 三游外野落點</span>
+            <span class="text-amber-400 font-mono font-black text-lg block">${directionStats.known ? pullPct + '%' : '—'}</span>
+            <span class="text-[9px] text-slate-500">依本打席打擊側判定拉打方向</span>
           </div>
           <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
             <span class="text-slate-400 text-[10px] block">中線率 (Center%)</span>
-            <span class="text-sky-400 font-mono font-black text-lg block">${centerPct}%</span>
+            <span class="text-sky-400 font-mono font-black text-lg block">${directionStats.known ? centerPct + '%' : '—'}</span>
             <span class="text-[9px] text-slate-500">二游中線 / 自由中外野</span>
           </div>
           <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
             <span class="text-slate-400 text-[10px] block">推打率 (Oppo%)</span>
-            <span class="text-emerald-400 font-mono font-black text-lg block">${oppoPct}%</span>
-            <span class="text-[9px] text-slate-500">右半邊 / 一二壘右外野</span>
+            <span class="text-emerald-400 font-mono font-black text-lg block">${directionStats.known ? oppoPct + '%' : '—'}</span>
+            <span class="text-[9px] text-slate-500">依本打席打擊側判定反方向</span>
           </div>
           <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1">
             <span class="text-slate-400 text-[10px] block">滾飛比 (GO / AO)</span>
@@ -10759,7 +10768,7 @@ function renderCustomChart(agg) {
         </div>
         <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-300 leading-relaxed">
           <span class="font-bold text-amber-300">💡 慢壘球探實戰解讀：</span>
-          ${totalBatted === 0 ? '尚無擊球落點。' : ({ pull: '打者具備極高比例之拉打傾向，對手外野容易左移佈陣，建議練習反方向推打。', oppo: '打者推打穿透力強，常擊向右半邊防線漏洞，屬全方位廣角型打者。', balanced: '擊球落點分佈非常均衡，具備全場無死角破壞力。' })[sprayTendency(pullCount / totalBatted, oppoCount / totalBatted)]}
+            ${PlayerHealth.tendencyText(directionStats)}<br>${PlayerHealth.sampleText(directionStats)}
         </div>
       `;
     }
@@ -10812,6 +10821,7 @@ function renderCustomChart(agg) {
   
     </script>
   <script src="ui-comfort.js?v=20261011-audit2"></script>
+  <script src="player-health-ui.js"></script>
   <script src="team-insights.js?v=20261011-audit2"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
   <script src="lineup-recommender.js?v=20261011-auditfixes"></script>

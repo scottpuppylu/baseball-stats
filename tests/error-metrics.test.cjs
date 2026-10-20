@@ -20,7 +20,7 @@ function sample(result, trajectory = 'grounder') {
     play('A',result,trajectory),play('A','1H'),play('A','BB','none'),play('A','K','none'),
     play('B','1H'),play('B','2H','line'),play('B','FO','fly'),play('B','GO')
   ]}]};
-  const c = vm.createContext({allGames:[game],NAME_TO_JERSEY:{A:1,B:2},isGuestPlayerName:()=>false,isSimulatedGame:()=>false,
+  const c = vm.createContext({PlayerHealth:require('../player-health.js'),PlayerHealthStore:{data:()=>({A:{bats:'R'},B:{bats:'R'}})},allGames:[game],NAME_TO_JERSEY:{A:1,B:2},isGuestPlayerName:()=>false,isSimulatedGame:()=>false,
     isRunnerOutPlay:p=>['RUNNER_OUT','OUT'].includes(p.result)||p.isRunnerOut===true,
     getGameAllBatters:g=>g.lineup,XSTAT_DEFAULTS:{line:{hit:.68,tb:.95},grounder:{hit:.28,tb:.30},fly:{hit:.38,tb:.75},popup:{hit:.02,tb:.02}}});
   for (const name of ['buildGameLogs','getBattedBallRates','getAggregatedStats']) vm.runInContext(extract(name),c);

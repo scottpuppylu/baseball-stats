@@ -143,7 +143,7 @@
     }
 
     // 6. Direction.
-    if (bip >= 5) {
+    if ((p.direction_n ?? bip) >= 5 && p.directionTracked !== false) {
       if ((p.pull_pct || 0) >= 0.75) insights.push({title: `幾乎都往拉打方向（${pct(p.pull_pct)}）`, text: (p.gb || 0) / bip >= 0.4
         ? '拉打又多滾地，守備可以整體往拉打側站位。練習把外角球推向中間與反方向，讓守備不能偏站。'
         : '方向集中，對手容易針對站位。拉打本身沒問題，但加入中間方向能讓防守無法偏移。'});
