@@ -103,5 +103,12 @@
     "bats": "R",
     "throws": "R",
     "birthDate": ""
+  },
+  "楊喬豐": {
+    "heightCm": null,
+    "weightKg": null,
+    "bats": "L",
+    "throws": "R",
+    "birthDate": ""
   }
 }
