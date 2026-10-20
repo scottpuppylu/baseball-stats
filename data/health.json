@@ -40,5 +40,12 @@
     "bats": "L",
     "throws": "L",
     "birthDate": ""
+  },
+  "洪銘駿": {
+    "heightCm": null,
+    "weightKg": null,
+    "bats": "R",
+    "throws": "R",
+    "birthDate": ""
   }
 }
