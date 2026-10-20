@@ -77,11 +77,11 @@
     "birthDate": ""
   },
   "田耕宇": {
-    "heightCm": null,
-    "weightKg": null,
+    "heightCm": 175,
+    "weightKg": 75,
     "bats": "L",
     "throws": "R",
-    "birthDate": ""
+    "birthDate": "2005-07-20"
   },
   "陳柏翰": {
     "heightCm": null,
