@@ -96,5 +96,12 @@
     "bats": "R",
     "throws": "R",
     "birthDate": ""
+  },
+  "林志豪": {
+    "heightCm": null,
+    "weightKg": null,
+    "bats": "R",
+    "throws": "R",
+    "birthDate": ""
   }
 }
