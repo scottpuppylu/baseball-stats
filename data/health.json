@@ -12,5 +12,12 @@
     "bats": "R",
     "throws": "R",
     "birthDate": "2007-06-15"
+  },
+  "劉憬翰": {
+    "heightCm": null,
+    "weightKg": null,
+    "bats": "R",
+    "throws": "R",
+    "birthDate": ""
   }
 }
