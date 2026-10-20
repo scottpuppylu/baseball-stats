@@ -104,7 +104,7 @@
     const values = [profile.heightCm == null ? '身高未填寫' : `身高 ${profile.heightCm} cm`, profile.weightKg == null ? '體重未填寫' : `體重 ${profile.weightKg} kg`, info.age, info.sign];
     block.innerHTML = values.map(value => `<span class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1">${esc(value)}</span>`).join('');
     column.querySelector('[data-profile-health]')?.remove();
-    column.insertBefore(block,column.querySelector(':scope > .pt-1'));
+    column.append(block);
   }
   siteHooks.after('renderPlayerProfile','player-health',renderProfileHealth);
   siteHooks.after('switchMainTab','player-health',tab => {if(tab==='tabHealth') render();});

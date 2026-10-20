@@ -16,9 +16,10 @@ fs.mkdirSync(output,{recursive:true});
         await context.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//,route=>route.abort());
         const page=await context.newPage();
         await page.goto(process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321');
-        await page.waitForFunction(()=>document.getElementById('uiPageTitle') && Array.isArray(window.__previewWrites));
+        await page.waitForFunction(()=>window.teamRecords && PlayerHealthStore.status().ready && !document.getElementById('syncStatusBadge').textContent.includes('連線同步中'));
         if(width<768) await page.locator('#uiMoreNavigation').click();
         await page.locator('#btnTabProfile').click();
+        assert.equal(await page.getByRole('button',{name:'更換選手照片',exact:true}).count(),0,'redundant photo button is removed');
         const portrait=page.locator('#playerProfileBio div[onclick="triggerAvatarUpload()"]');
         await portrait.scrollIntoViewIfNeeded();
         const photo=await portrait.locator(':scope > :first-child').boundingBox();
@@ -34,8 +35,9 @@ fs.mkdirSync(output,{recursive:true});
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'page must not overflow');
         await page.screenshot({path:path.join(output,`${width}-Avatar.png`)});
         const chooser=page.waitForEvent('filechooser');
-        await portrait.locator(':scope > :last-child').click();
-        assert.equal((await chooser).isMultiple(),false,'camera still opens original upload control');
+        // Desktop's existing hover overlay covers the image but is inside this clickable avatar wrapper.
+        await portrait.click({position:{x:photo.width/2,y:photo.height/2}});
+        assert.equal((await chooser).isMultiple(),false,'clicking the avatar still opens original upload control');
         assert.deepEqual(await page.evaluate(()=>window.__previewWrites),[],'inspection must not write data');
         results.push({width,height,photo,camera,uploadAccessible:true});
       } finally {await context.close();}

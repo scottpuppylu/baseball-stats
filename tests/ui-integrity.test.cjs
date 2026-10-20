@@ -8,6 +8,8 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\n/g, '\n');
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 
+// v9.1 (2026/10/20): user-requested removal of the redundant photo button and its one upload handler.
+// Avatar markup, sizing, cropper and direct photo upload remain unchanged; ui-avatar verifies the retained path.
 // v9 (2026/10/20): authorized health profiles and batting-side direction correction; three additive DOM IDs.
 // Original handlers stay identical; pure rules, isolated profile writes, retroactive rebuild, and left/right/switch UI have behavioral tests.
 // v8.1 (2026/10/19): collapsible lineup and a read-only defense field. One additive DOM ID;
@@ -27,8 +29,8 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 const BASELINE = {
-  "script": "a61b73cd9bc2f81fb94abf8f7f0a4f996a2150e5188d55ea483e95053ff03467",
-  "handlers": "546eea3ce115054a06e2235ec88125ae00285cc5d1bf8124d09ded797bf4296d",
+  "script": "54814d23e35b749e4be135abd9fb8c02c1cee589634f5c5ee9007d4f80274700",
+  "handlers": "0528cb136b3834a2318417e68ff7eb16d854422d202a43cc815eef56681bb219",
   "idCount": 287,
   "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"
 };

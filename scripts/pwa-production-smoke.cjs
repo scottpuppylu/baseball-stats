@@ -71,6 +71,7 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
         report.pages.push({width, tab, ...state});
         assert.ok(state.shown && state.textLength > 20 && state.overflow <= 1, `${width}px ${tab}`);
         if (tab === 'Profile') {
+          assert.equal(await page.getByRole('button',{name:'更換選手照片',exact:true}).count(),0);
           assert.equal(await page.locator('#playerProfileBio [data-profile-health] span').count(),4);
           const photo = await page.locator('#playerProfileBio div[onclick="triggerAvatarUpload()"] > :first-child').boundingBox();
           const size = width < 768 ? 120 : 144;
