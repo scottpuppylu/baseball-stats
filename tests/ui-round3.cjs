@@ -131,7 +131,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
 
     // ---------- 13 & 15. Hooks registry, dead code ----------
     const hooks = await page.evaluate(() => siteHooks.list());
-    assert.deepEqual(hooks.after.renderPlayerProfile, ['team-insights', 'team-records']);
+    assert.deepEqual(hooks.after.renderPlayerProfile, ['player-health', 'team-insights', 'team-records']);
     assert.deepEqual(hooks.after.switchMainTab, ['player-health', 'team-records']);
     assert.deepEqual(hooks.after.renderLineupAnalysis, ['lineup-recommender']);
     assert.deepEqual(hooks.replaced, {calculateRecommendedLineup: 'lineup-recommender', renderDiagnostics: 'player-diagnostics'});

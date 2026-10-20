@@ -24,6 +24,7 @@ fs.mkdirSync(output,{recursive:true});
         const photo=await portrait.locator(':scope > :first-child').boundingBox();
         const camera=await portrait.locator(':scope > :last-child').boundingBox();
         assert.ok(photo.width>=120 && photo.height>=120,'portrait should be large enough to recognize');
+        assert.deepEqual([photo.width,photo.height],width<768 ? [120,120] : [144,144],'preserve the approved avatar dimensions');
         if(width<768) {
           // Beside or below the photo, never on top of it.
           assert.ok(camera.x>=photo.x+photo.width||camera.y>=photo.y+photo.height,'camera must not overlap portrait');

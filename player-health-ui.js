@@ -2,6 +2,12 @@
   const panel = document.getElementById('panelHealth');
   let selected = '', dirty = false;
   const esc = value => String(value ?? '').replace(/[&<>"']/g,c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const zodiacIcons = {'牡羊座':'♈','金牛座':'♉','雙子座':'♊','巨蟹座':'♋','獅子座':'♌','處女座':'♍','天秤座':'♎','天蠍座':'♏','射手座':'♐','摩羯座':'♑','水瓶座':'♒','雙魚座':'♓'};
+  function birthdayInfo(profile = {}) {
+    const age = PlayerHealth.age(profile.birthDate || '');
+    const sign = PlayerHealth.zodiac(profile.birthDate || '');
+    return {age:age === null ? '年齡未填寫' : `${age} 歲`, sign:sign ? `${zodiacIcons[sign]} ${sign}` : '星座未填寫'};
+  }
   const inputClass = 'w-full min-w-0 bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm';
   panel.innerHTML = `<section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4">
     <h2 class="text-xl text-white font-black">球員健康資料</h2>
@@ -35,7 +41,8 @@
   }
   function birth() {
     const date = form.elements.birthDate.value;
-    panel.querySelector('[data-health-birthday]').textContent = PlayerHealth.validBirthDate(date) ? `${PlayerHealth.age(date)} 歲 · ${PlayerHealth.zodiac(date)}（一般日期區間，僅供趣味註記）` : '年齡與星座：未填寫';
+    const info = birthdayInfo({birthDate:date});
+    panel.querySelector('[data-health-birthday]').textContent = PlayerHealth.validBirthDate(date) ? `${info.age} · ${info.sign}（一般日期區間，僅供趣味註記）` : '年齡與星座：未填寫';
   }
   function fill() {
     const p = PlayerHealthStore.data()[selected] || PlayerHealth.normalize();
@@ -51,7 +58,10 @@
     picker.value = selected;
     if (!dirty) fill();
     const profiles = PlayerHealthStore.data();
-    panel.querySelector('[data-health-roster]').innerHTML = names.map(n => `<button type="button" data-health-name="${esc(n)}" class="flex items-center justify-between gap-2 rounded-lg border border-slate-700 p-3 text-sm text-left"><span class="text-slate-200 truncate">${esc(n)}</span><span class="text-sky-300 shrink-0">${PlayerHealth.BATS[profiles[n]?.bats || 'U']}</span></button>`).join('');
+    panel.querySelector('[data-health-roster]').innerHTML = names.map(n => {
+      const info = birthdayInfo(profiles[n]);
+      return `<button type="button" data-health-name="${esc(n)}" class="flex items-center justify-between gap-2 rounded-lg border border-slate-700 p-3 text-sm text-left"><span class="min-w-0"><span class="text-slate-200 block truncate">${esc(n)}</span><span data-roster-birthday class="text-xs text-slate-400 block mt-1">${info.age} · ${info.sign}</span></span><span class="text-sky-300 shrink-0">${PlayerHealth.BATS[profiles[n]?.bats || 'U']}</span></button>`;
+    }).join('');
     state();
   }
   function choose(name) {
@@ -82,8 +92,24 @@
     currentPlayInput.battingSideBatter = activeGame.lineup[activeGame.currentBatterIdx];
   });
   document.getElementById('btnTabHealth').addEventListener('click',() => switchMainTab('tabHealth'));
+  function renderProfileHealth(agg) {
+    const player = agg.players.find(p => p.name === selectedPlayerName);
+    const column = document.querySelector('#playerProfileBio .flex-1.min-w-0.space-y-2');
+    if (!player || !column) return;
+    const profile = PlayerHealthStore.data()[player.name] || {};
+    const info = birthdayInfo(profile);
+    const block = document.createElement('div');
+    block.dataset.profileHealth = '';
+    block.className = 'flex flex-wrap items-center gap-1.5 text-xs text-slate-300';
+    const values = [profile.heightCm == null ? '身高未填寫' : `身高 ${profile.heightCm} cm`, profile.weightKg == null ? '體重未填寫' : `體重 ${profile.weightKg} kg`, info.age, info.sign];
+    block.innerHTML = values.map(value => `<span class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1">${esc(value)}</span>`).join('');
+    column.querySelector('[data-profile-health]')?.remove();
+    column.insertBefore(block,column.querySelector(':scope > .pt-1'));
+  }
+  siteHooks.after('renderPlayerProfile','player-health',renderProfileHealth);
   siteHooks.after('switchMainTab','player-health',tab => {if(tab==='tabHealth') render();});
   siteHooks.after('renderAll','player-health',() => {if(!panel.classList.contains('hidden')) render();});
   window.addEventListener('player-health-status',state);
   render();
+  renderProfileHealth(getAnalysisAgg());
 })();

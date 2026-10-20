@@ -70,6 +70,19 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
         }, tab);
         report.pages.push({width, tab, ...state});
         assert.ok(state.shown && state.textLength > 20 && state.overflow <= 1, `${width}px ${tab}`);
+        if (tab === 'Profile') {
+          assert.equal(await page.locator('#playerProfileBio [data-profile-health] span').count(),4);
+          const photo = await page.locator('#playerProfileBio div[onclick="triggerAvatarUpload()"] > :first-child').boundingBox();
+          const size = width < 768 ? 120 : 144;
+          assert.deepEqual([photo.width,photo.height],[size,size],'production avatar dimensions remain unchanged');
+          report.pages.at(-1).profileHealth = {fields:4,avatarWidth:photo.width,avatarHeight:photo.height};
+        }
+        if (tab === 'Health') {
+          const rows = await page.locator('[data-health-roster] [data-health-name]').count();
+          assert.ok(rows > 0);
+          assert.equal(await page.locator('[data-health-roster] [data-roster-birthday]').count(),rows);
+          report.pages.at(-1).rosterBirthdayRows = rows;
+        }
         if (tab === 'Scorebook') {
           const lineup = await page.evaluate(() => ({
             rows: document.querySelectorAll('#setupLineupGrid .lineup-row').length,

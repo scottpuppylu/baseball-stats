@@ -36,7 +36,23 @@ async function save(p,bats) {
       const cloud=await p.evaluate(async()=> (await fetchGitHubContent('data/health.json')).content);
       assert.equal(cloud[name].heightCm,178.5);assert.equal(cloud[name].weightKg,72.3);assert.equal(cloud[name].birthDate,'2004-02-29');
       assert.match(await p.locator('[data-health-birthday]').textContent(),/雙魚座/);
+      const rosterBirthday = await p.locator(`[data-health-name="${name}"] [data-roster-birthday]`).textContent();
+      assert.match(rosterBirthday,/\d+ 歲/);assert.match(rosterBirthday,/♓ 雙魚座/);
       await p.screenshot({path:path.join(output,`${engine}-${width}-health.png`),fullPage:true});
+      await p.evaluate(n=>{selectedPlayerName=n;switchMainTab('tabProfile');},name);
+      const bio = p.locator('#playerProfileBio [data-profile-health]');
+      assert.match(await bio.textContent(),/身高 178\.5 cm/);assert.match(await bio.textContent(),/體重 72\.3 kg/);
+      assert.match(await bio.textContent(),/\d+ 歲/);assert.match(await bio.textContent(),/♓ 雙魚座/);
+      const portrait = p.locator('#playerProfileBio div[onclick="triggerAvatarUpload()"] > :first-child');
+      const withInfo = await portrait.boundingBox();
+      await bio.evaluate(el=>el.remove());
+      const withoutInfo = await portrait.boundingBox();
+      assert.deepEqual([withInfo.width,withInfo.height],[withoutInfo.width,withoutInfo.height],'health info must not resize the original avatar');
+      await p.evaluate(()=>renderPlayerProfile(getAnalysisAgg()));
+      assert.equal(await p.locator('#playerProfileBio [data-profile-health]').count(),1,'rerender never duplicates health information');
+      assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1),'profile health fits viewport');
+      await p.locator('#playerProfileBio').screenshot({path:path.join(output,`${engine}-${width}-profile-health.png`)});
+      await open(p);
       await p.reload();await ready(p);await open(p);await p.locator('[data-health-player]').selectOption(name);
       assert.equal(await p.locator('[name="heightCm"]').inputValue(),'178.5');assert.equal(await p.locator('[name="bats"]').inputValue(),'L');
       // Unknown sides show missing values instead of classifying everyone as right handed.
