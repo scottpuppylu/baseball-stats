@@ -8,11 +8,17 @@
     const sign = PlayerHealth.zodiac(profile.birthDate || '');
     return {age:age === null ? '年齡未填寫' : `${age} 歲`, sign:sign ? `${zodiacIcons[sign]} ${sign}` : '星座未填寫'};
   }
+  const THROWS = {R:'右投',L:'左投',B:'雙投'};
+  // Batting side is the only field the statistics use, so an unset one is called out.
+  function handedness(profile = {}) {
+    const bats = ['R','L','S'].includes(profile.bats) ? PlayerHealth.BATS[profile.bats] : '';
+    if (!bats) return {text:'打擊側未設定', missing:true};
+    return {text:THROWS[profile.throws] ? `${THROWS[profile.throws]}・${bats}` : bats, missing:false};
+  }
   const inputClass = 'w-full min-w-0 bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm';
   panel.innerHTML = `<section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4">
-    <h2 class="text-xl text-white font-black">球員健康資料</h2>
-    <p class="text-sm text-slate-400">記錄身高、體重、生日與慣用側。目前僅打擊側用於拉／推判定；其餘資料不納入能力、健康或戰術評分。</p>
-    <p class="text-xs text-amber-300">資料沿用公開雲端同步，所有填寫內容皆可被公開讀取。各欄位可留空。</p>
+    <h2 class="text-xl text-white font-black">編輯球員資料</h2>
+    <p class="text-sm text-slate-400">打擊慣用側用來判定拉打／推打；其他欄位僅作紀錄，可留空。</p>
     <label class="block text-sm text-slate-300">球員<select data-health-player class="${inputClass} mt-1"></select></label>
     <div data-health-identity class="flex items-center gap-3 text-white font-bold"></div>
     <form data-health-form class="space-y-4">
@@ -24,11 +30,11 @@
         <label class="block text-sm text-slate-300">出生年月日<input name="birthDate" type="date" min="1900-01-01" max="${PlayerHealth.today()}" class="${inputClass} mt-1"></label>
         <div class="text-sm text-slate-300 self-end pb-2" data-health-birthday></div>
       </div>
-      <p class="text-xs text-slate-400">未記錄打席側別的舊紀錄，依目前固定左／右打設定重算；左右開弓者請在場記或歷史編輯中指定每個打席的實際側。落點本身不鏡射。</p>
+      <p class="text-xs text-slate-400">修改打擊側後，未個別指定側別的打席會立即重算；左右開弓者請在場記或歷史編輯指定每個打席的實際側。</p>
       <div class="flex flex-wrap gap-2"><button type="submit" class="bg-sky-600 text-white font-bold px-4 py-2 rounded-lg text-sm">儲存並同步</button><button type="button" data-health-reset class="bg-slate-800 text-slate-200 px-4 py-2 rounded-lg text-sm">還原未儲存輸入</button><button type="button" data-health-retry class="bg-amber-700 text-white px-4 py-2 rounded-lg text-sm hidden">重試待同步資料</button></div>
       <p data-health-status role="status" aria-live="polite" class="text-sm text-amber-300"></p>
     </form>
-  </section><section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-3"><h3 class="font-bold text-slate-100">名冊打擊側</h3><p class="text-xs text-slate-400">點選球員即可編輯，不受統計日期篩選影響。</p><div data-health-roster class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div></section>`;
+  </section><section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-3"><h3 class="font-bold text-slate-100">球員名冊</h3><p data-health-summary class="text-sm"></p><div data-health-roster class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div></section>`;
   const form = panel.querySelector('form'), picker = panel.querySelector('[data-health-player]');
   const status = panel.querySelector('[data-health-status]');
   function state() {
@@ -54,22 +60,27 @@
     const roster = getAllAvailablePlayerNames();
     const names = [...new Set([...roster.teamNames,...roster.guestNames])];
     if (!names.includes(selected)) selected = names[0] || '';
+    const profiles = PlayerHealthStore.data();
+    const unset = names.filter(n => handedness(profiles[n]).missing).length;
+    const summary = panel.querySelector('[data-health-summary]');
+    summary.className = `text-sm ${unset ? 'text-amber-300' : 'text-emerald-300'}`;
+    summary.textContent = `打擊側已設定 ${names.length - unset}／${names.length} 位${unset ? `，${unset} 位未設定的球員不計入拉打／推打` : ''}。點選球員即可編輯。`;
     picker.innerHTML = names.map(n => `<option value="${esc(n)}">${esc(n)}${roster.guestNames.includes(n) ? '（支援）' : ''}</option>`).join('');
     picker.value = selected;
     if (!dirty) fill();
-    const profiles = PlayerHealthStore.data();
     panel.querySelector('[data-health-roster]').innerHTML = names.map(n => {
       const profile = profiles[n] || {};
       const info = birthdayInfo(profile);
       const height = profile.heightCm == null ? '身高未填寫' : `身高 ${profile.heightCm} cm`;
       const weight = profile.weightKg == null ? '體重未填寫' : `體重 ${profile.weightKg} kg`;
-      return `<button type="button" data-health-name="${esc(n)}" class="health-roster-card rounded-lg border border-slate-700 p-3 text-sm text-left">
+      const hand = handedness(profile);
+      return `<button type="button" data-health-name="${esc(n)}" aria-pressed="${n === selected}" class="health-roster-card rounded-lg border ${n === selected ? 'border-sky-400 bg-sky-950/40' : 'border-slate-700'} p-3 text-sm text-left">
         ${renderAvatarElement(n,'health-player-avatar text-3xl')}
         <span class="health-roster-details">
           <span class="text-slate-100 font-bold block break-words">${esc(n)}</span>
           <span data-roster-birthday class="health-roster-facts text-xs text-slate-400"><span>${info.age}</span><span>${info.sign}</span></span>
           <span data-roster-measurements class="health-roster-facts text-xs text-slate-300"><span>${height}</span><span>${weight}</span></span>
-          <span data-roster-bats class="text-sky-300 block mt-1">打擊慣用手：${PlayerHealth.BATS[profile.bats || 'U']}</span>
+          <span data-roster-bats class="${hand.missing ? 'text-amber-300' : 'text-sky-300'} block mt-1">${hand.text}</span>
         </span>
       </button>`;
     }).join('');
@@ -77,10 +88,25 @@
   }
   function choose(name) {
     if (dirty && name !== selected) { picker.value = selected; showToast('請先儲存或還原目前輸入，再切換球員','warning'); return; }
-    selected = name; picker.value = name; fill(); state();
+    selected = name; picker.value = name; fill(); markSelected(); state();
+  }
+  function markSelected() {
+    panel.querySelectorAll('[data-health-name]').forEach(card => {
+      const on = card.dataset.healthName === selected;
+      card.setAttribute('aria-pressed',String(on));
+      card.classList.toggle('border-sky-400',on); card.classList.toggle('bg-sky-950/40',on); card.classList.toggle('border-slate-700',!on);
+    });
   }
   picker.addEventListener('change',() => choose(picker.value));
-  panel.addEventListener('click',e => { const b=e.target.closest('[data-health-name]'); if (b) choose(b.dataset.healthName); });
+  panel.addEventListener('click',e => {
+    const b = e.target.closest('[data-health-name]'); if (!b) return;
+    const before = selected;
+    choose(b.dataset.healthName);
+    // The roster sits below the form; bring the form into view so the tap visibly opens that player.
+    const identity = panel.querySelector('[data-health-identity]');
+    const top = identity.getBoundingClientRect().top, header = document.querySelector('header')?.getBoundingClientRect().bottom || 0;
+    if (selected !== before && (top < header || top > innerHeight)) identity.scrollIntoView({block:'center',behavior:'smooth'});
+  });
   form.addEventListener('input',() => {dirty=true; birth(); state();});
   form.addEventListener('change',() => {dirty=true; birth(); state();});
   panel.querySelector('[data-health-reset]').addEventListener('click',() => {dirty=false; fill(); state();});
@@ -112,7 +138,7 @@
     const block = document.createElement('div');
     block.dataset.profileHealth = '';
     block.className = 'flex flex-wrap items-center gap-1.5 text-xs text-slate-300';
-    const values = [profile.heightCm == null ? '身高未填寫' : `身高 ${profile.heightCm} cm`, profile.weightKg == null ? '體重未填寫' : `體重 ${profile.weightKg} kg`, info.age, info.sign];
+    const values = [handedness(profile).text, profile.heightCm == null ? '身高未填寫' : `身高 ${profile.heightCm} cm`, profile.weightKg == null ? '體重未填寫' : `體重 ${profile.weightKg} kg`, info.age, info.sign];
     block.innerHTML = values.map(value => `<span class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1">${esc(value)}</span>`).join('');
     column.querySelector('[data-profile-health]')?.remove();
     column.append(block);

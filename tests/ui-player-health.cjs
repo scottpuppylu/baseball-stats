@@ -35,7 +35,8 @@ async function save(p,bats) {
       }));
       assert.ok(rosterLayout.length>0);
       for(const card of rosterLayout){assert.deepEqual(card.photo,[96,96]);assert.equal(card.fits,true,'roster card contents fit viewport');}
-      assert.match(await p.locator('#panelHealth').textContent(),/公開讀取/);
+      assert.ok(!/公開讀取/.test(await p.locator('#panelHealth').textContent()),'no public-read notice');
+      assert.match(await p.locator('[data-health-summary]').textContent(),/打擊側已設定 \d+／\d+ 位/);
       assert.equal(await p.locator('#btnTabGlossary').evaluate(e=>e.nextElementSibling.id),'btnTabHealth');
       await p.waitForFunction(()=>uiPageTitle.textContent==='球員健康資料');
       await p.locator('[name="heightCm"]').fill('178.5');await p.locator('[name="weightKg"]').fill('72.3');
@@ -51,12 +52,14 @@ async function save(p,bats) {
       assert.match(rosterBirthday,/\d+ 歲/);assert.match(rosterBirthday,/♓ 雙魚座/);
       const card=p.locator(`[data-health-name="${name}"]`);
       assert.match(await card.locator('[data-roster-measurements]').textContent(),/身高 178\.5 cm.*體重 72\.3 kg/s);
-      assert.match(await card.locator('[data-roster-bats]').textContent(),/打擊慣用手：左打/);
+      assert.match(await card.locator('[data-roster-bats]').textContent(),/右投・左打/);
       const otherName=await p.locator('[data-health-name]').evaluateAll((cards,n)=>cards.find(c=>c.dataset.healthName!==n).dataset.healthName,name);
       await p.locator(`[data-health-name="${otherName}"] > :first-child`).click();
       assert.equal(await p.locator('[data-health-player]').inputValue(),otherName,'clicking roster avatar chooses that player');
       await card.click();
       assert.equal(await p.locator('[name="heightCm"]').inputValue(),'178.5','roster card returns to saved profile');
+      assert.equal(await card.getAttribute('aria-pressed'),'true','selected roster card is highlighted');
+      await p.waitForFunction(()=>{const r=document.querySelector('[data-health-identity]').getBoundingClientRect();const h=document.querySelector('header')?.getBoundingClientRect().bottom||0;return r.top>=h-1&&r.bottom<=innerHeight;},null,{timeout:3000}); // tapping a roster card shows the form below the sticky header
       await p.screenshot({path:path.join(output,`${engine}-${width}-health.png`),fullPage:true});
       await p.evaluate(n=>{selectedPlayerName=n;switchMainTab('tabProfile');},name);
       const bio = p.locator('#playerProfileBio [data-profile-health]');
@@ -101,6 +104,9 @@ async function save(p,bats) {
       await p.locator('button[onclick="submitBattedBallPlay()"]').click();
       const pa=await p.evaluate(()=>activeGame.innings[0].plateAppearances[0]);assert.equal(pa.battingSide,'L');
       assert.equal(await p.locator('[data-live-batting-side]').inputValue(),'','override does not leak to next batter');
+      // A fixed-side batter without a per-PA choice stores no side, so correcting the setting later re-corrects the play.
+      await p.evaluate(()=>{selectFieldPosition('LF');selectTrajectory('fly');selectOutcome('FO');submitBattedBallPlay();});
+      assert.equal(await p.evaluate(()=>'battingSide' in activeGame.innings[0].plateAppearances[1]),false);
       // Review side is editable and read by the shared form reader.
       const review=await p.evaluate(()=>{const g=JSON.parse(JSON.stringify(activeGame));allGames.push(g);selectedReviewGameId=g.id;isEditingReviewGame=true;renderSelectedGameReview(g.id);const s=document.getElementById('edit_play_side_0_0');s.value='R';applyReviewFormToGame(g);return {side:g.innings[0].plateAppearances[0].battingSide,direction:buildGameLogs(g)[0]};});
       assert.equal(review.side,'R');

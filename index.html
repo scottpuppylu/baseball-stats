@@ -56,7 +56,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261021.0003</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261021.1003</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -8718,8 +8718,8 @@ function renderCustomChart(agg) {
               <span class="text-xs font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40">第 ${slot} 棒</span>
               <h3 class="text-base sm:text-lg font-black text-white">${batterName}</h3>
               <label class="text-xs text-slate-300">本打席打擊側
-                <select data-live-batting-side class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs" aria-label="本打席打擊側">
-                  ${[['','依設定（'+PlayerHealth.BATS[PlayerHealthStore.data()[batterName]?.bats || 'U']+'）'],['R','本打席右打'],['L','本打席左打']].map(([value,label]) => `<option value="${value}" ${value === (currentPlayInput.battingSideBatter === batterName ? currentPlayInput.battingSide || '' : '') ? 'selected' : ''}>${label}</option>`).join('')}
+                <select data-live-batting-side class="bg-slate-950 border ${PlayerHealthStore.data()[batterName]?.bats === 'S' ? 'border-amber-500' : 'border-slate-700'} rounded px-2 py-1 text-xs" aria-label="本打席打擊側">
+                  ${[['',PlayerHealthStore.data()[batterName]?.bats === 'S' ? '左右開弓：請選本打席側' : '依設定（'+PlayerHealth.BATS[PlayerHealthStore.data()[batterName]?.bats || 'U']+'）'],['R','本打席右打'],['L','本打席左打']].map(([value,label]) => `<option value="${value}" ${value === (currentPlayInput.battingSideBatter === batterName ? currentPlayInput.battingSide || '' : '') ? 'selected' : ''}>${label}</option>`).join('')}
                 </select>
               </label>
             </div>
@@ -9402,7 +9402,8 @@ function renderCustomChart(agg) {
       else if (currentPlayInput.result === 'DP') outsAdded = 2;
       else if (currentPlayInput.result === 'SF') outsAdded = 1;
 
-      const battingSide = PlayerHealth.battingSide({batterName, battingSide:currentPlayInput.battingSideBatter === batterName ? currentPlayInput.battingSide : null},PlayerHealthStore.data());
+      // Store only a side the scorer chose for this PA; otherwise the player's setting applies, so correcting it later re-corrects the play.
+      const battingSide = currentPlayInput.battingSideBatter === batterName && ['R','L'].includes(currentPlayInput.battingSide) ? currentPlayInput.battingSide : null;
       if (PlayerHealthStore.data()[batterName]?.bats === 'S' && currentPlayInput.trajectory !== 'none' && !battingSide) {
         showToast('左右開弓者請先選擇本打席左打或右打','error'); return;
       }

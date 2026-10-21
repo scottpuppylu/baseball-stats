@@ -52,3 +52,29 @@ test('a missing new cloud file is optional and never creates a file during load'
   vm.createContext(c);vm.runInContext(fs.readFileSync(require.resolve('../player-health-store.js'),'utf8'),c);
   assert.equal(await c.window.PlayerHealthStore.load(),'missing');assert.equal(writes,0);
 });
+test('a save while running on a stale cache uploads only this device\'s edits',async () => {
+  const stale={Other:{bats:'R',heightCm:170}};
+  const cache=new Map([['rebas_player_health',JSON.stringify(stale)]]), uploads=[];
+  const c={PlayerHealth:H,Event:class{},window:{dispatchEvent(){}},localStorage:{getItem:k=>cache.get(k),setItem:(k,v)=>cache.set(k,v),removeItem:k=>cache.delete(k)},
+    fetchGitHubContent:async()=>{throw new Error('timeout');},rememberCloudBase(){},setStatusBadge(){},syncAllGamesToTeamLogs(){},renderAll(){},
+    commitJsonFile:async(file,data)=>{uploads.push(JSON.parse(JSON.stringify(data)));return {data:{Other:{bats:'L',heightCm:182},...data},sha:'v2'};}};
+  vm.createContext(c);vm.runInContext(fs.readFileSync(require.resolve('../player-health-store.js'),'utf8'),c);
+  const S=c.window.PlayerHealthStore;
+  assert.equal(await S.load(),'cache');
+  await S.save('Mine',{bats:'L'});
+  assert.deepEqual(Object.keys(uploads[0]),['Mine'],'the stale cached profile of another player is not uploaded');
+  assert.equal(S.data().Other.heightCm,182,'the newer cloud profile is kept');
+  await S.save('Mine',{bats:'R'});
+  assert.deepEqual(Object.keys(uploads[1]).sort(),['Mine','Other'],'after a write the merge base is known, so the full file is sent');
+});
+test('loading during a save waits for it instead of reporting the cache',async () => {
+  let release, reads=0;
+  const c={PlayerHealth:H,Event:class{},window:{dispatchEvent(){}},localStorage:{getItem:()=>null,setItem(){},removeItem(){}},
+    fetchGitHubContent:async()=>{reads++;return {content:{A:{bats:'R'}},sha:'v'+reads};},rememberCloudBase(){},setStatusBadge(){},syncAllGamesToTeamLogs(){},renderAll(){},
+    commitJsonFile:(file,data)=>new Promise(r=>{release=()=>r({data,sha:'w'});})};
+  vm.createContext(c);vm.runInContext(fs.readFileSync(require.resolve('../player-health-store.js'),'utf8'),c);
+  const S=c.window.PlayerHealthStore;await S.load();
+  const saving=S.save('B',{bats:'L'});const loading=S.load();
+  await new Promise(r=>setTimeout(r,0));release();await saving;
+  assert.equal(await loading,'cloud');assert.equal(reads,2);
+});

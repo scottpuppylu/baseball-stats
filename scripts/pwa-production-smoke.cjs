@@ -72,11 +72,11 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
         assert.ok(state.shown && state.textLength > 20 && state.overflow <= 1, `${width}px ${tab}`);
         if (tab === 'Profile') {
           assert.equal(await page.getByRole('button',{name:'更換選手照片',exact:true}).count(),0);
-          assert.equal(await page.locator('#playerProfileBio [data-profile-health] span').count(),4);
+          assert.equal(await page.locator('#playerProfileBio [data-profile-health] span').count(),5);
           const photo = await page.locator('#playerProfileBio div[onclick="triggerAvatarUpload()"] > :first-child').boundingBox();
           const size = width < 768 ? 120 : 144;
           assert.deepEqual([photo.width,photo.height],[size,size],'production avatar dimensions remain unchanged');
-          report.pages.at(-1).profileHealth = {fields:4,avatarWidth:photo.width,avatarHeight:photo.height};
+          report.pages.at(-1).profileHealth = {fields:5,avatarWidth:photo.width,avatarHeight:photo.height};
         }
         if (tab === 'Health') {
           const rows = await page.locator('[data-health-roster] [data-health-name]').count();
