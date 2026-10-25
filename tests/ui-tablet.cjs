@@ -62,7 +62,12 @@ fs.mkdirSync(output,{recursive:true});
           assert.equal(await drawer.isVisible(),false,'desktop retains full sidebar');
           assert.ok(await page.locator('#mainNavigation').isVisible());
           const title=await page.evaluate(()=>{const s=getComputedStyle(document.getElementById('mainNavigation'),'::before');return {content:s.content,size:s.backgroundSize};});
-          assert.deepEqual(title,{content:'"淡江航太系壘"',size:'112px 112px'},'desktop sidebar shows the large badge');
+          // Flight design (2026/10/25): floating glass sidebar with a 68px badge above the Mincho team name.
+          assert.deepEqual(title,{content:'"淡江航太系壘"',size:'68px 68px'},'desktop sidebar shows the team badge');
+          assert.ok(await page.locator('.fl-side-foot #syncStatusBadge').isVisible(),'cloud status lives in the sidebar footer');
+          assert.ok(await page.locator('.fl-side-foot').getByText(/^v\d{6}\.\d{4}$/).isVisible(),'version shown in the sidebar footer');
+          const bar=await page.locator('#appHeader').boundingBox();
+          assert.ok(bar.height<=80,`desktop command bar stays on one line (${bar.height})`);
         }
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'page must not overflow');
         assert.deepEqual(errors,[]);

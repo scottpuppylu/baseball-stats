@@ -33,6 +33,13 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Source Han (Noto Sans TC / Noto Serif TC, SIL OFL 1.1) subset to the site's 1,333 characters by scripts/build-fonts.py.
+   Gothic for reading, Mincho for titles: the quiet precision of Japanese editorial typesetting. Other characters fall back to the system font. */
+@font-face { font-family: "TK Gothic"; src: url("vendor/fonts/tk-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "TK Gothic"; src: url("vendor/fonts/tk-sans-500.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
+@font-face { font-family: "TK Gothic"; src: url("vendor/fonts/tk-sans-700.woff2") format("woff2"); font-weight: 700 900; font-display: swap; }
+@font-face { font-family: "TK Mincho"; src: url("vendor/fonts/tk-serif-600.woff2") format("woff2"); font-weight: 400 900; font-display: swap; }
+
 html.ui-flight {
   color-scheme: dark;
   /* Surfaces: lifted near-black, never pure black (pure black + pure white smears in sunlight). */
@@ -75,7 +82,8 @@ html.ui-flight {
   --fl-r-xl: 24px;
   --fl-ease: cubic-bezier(.2, .8, .2, 1);
   --fl-spring: cubic-bezier(.34, 1.4, .64, 1);
-  --fl-font: "Inter Flight", -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
+  --fl-font: "Inter Flight", "TK Gothic", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
+  --fl-mincho: "Inter Flight", "TK Mincho", "Noto Serif TC", "Songti TC", "PMingLiU", serif;
   --ui-bg: var(--fl-bg);
   --ui-surface: var(--fl-card);
   --ui-line: var(--fl-line-2);
@@ -85,8 +93,13 @@ html.ui-flight {
 
 /* ---------- Canvas and type ---------- */
 html.ui-flight body {
+  /* Deep-space canvas: two sparse star layers and a faint planet-horizon glow. Behind opaque cards, so text contrast is unaffected. */
   background:
-    radial-gradient(1200px 600px at 78% -12%, rgba(124, 192, 255, .07), transparent 60%),
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, .5), transparent 60%) 0 0 / 340px 340px,
+    radial-gradient(1px 1px at 68% 42%, rgba(255, 255, 255, .35), transparent 60%) 0 0 / 340px 340px,
+    radial-gradient(1.2px 1.2px at 38% 76%, rgba(200, 220, 255, .4), transparent 60%) 0 0 / 520px 520px,
+    radial-gradient(1px 1px at 86% 8%, rgba(255, 255, 255, .3), transparent 60%) 0 0 / 520px 520px,
+    radial-gradient(140% 70% at 70% -32%, rgba(124, 192, 255, .1), rgba(124, 192, 255, .025) 45%, transparent 62%),
     radial-gradient(900px 500px at -10% 110%, rgba(255, 196, 140, .04), transparent 60%),
     var(--fl-bg) !important;
   background-attachment: fixed !important;
@@ -105,7 +118,18 @@ html.ui-flight .font-black { font-weight: 700; }
 html.ui-flight .font-extrabold { font-weight: 700; }
 html.ui-flight .font-bold { font-weight: 600; }
 html.ui-flight .font-semibold { font-weight: 600; }
-html.ui-flight h1, html.ui-flight h2, html.ui-flight h3 { letter-spacing: -.015em; }
+/* Japanese-style typesetting: titles in Mincho with open spacing and proportional punctuation (palt);
+   body text in Gothic with a little tracking and generous leading. Latin and digits stay Inter. */
+html.ui-flight body { line-height: 1.7; }
+html.ui-flight h1, html.ui-flight h2, html.ui-flight h3,
+html.ui-flight .ui-page-heading h1, html.ui-flight [id$="Modal"] h3 {
+  font-family: var(--fl-mincho);
+  font-feature-settings: "palt" 1;
+  letter-spacing: .06em;
+  font-weight: 600 !important;
+}
+html.ui-flight h4, html.ui-flight label, html.ui-flight th { font-feature-settings: "palt" 1; letter-spacing: .03em; }
+html.ui-flight p, html.ui-flight li { letter-spacing: .025em; }
 /* Small text is the first to vanish in sunlight: nothing below 11.5px, and a touch more weight. */
 html.ui-flight .text-\[9px\] { font-size: 11px; font-weight: 500; }
 html.ui-flight .text-\[10px\] { font-size: 11.5px; font-weight: 500; }
@@ -169,8 +193,12 @@ html.ui-flight .shadow-lg, html.ui-flight .shadow-xl, html.ui-flight .shadow-2xl
 html.ui-flight main section,
 html.ui-flight main > div > section,
 html.ui-flight #teamSummaryCards > div {
-  background: linear-gradient(180deg, rgba(255, 255, 255, .028), rgba(255, 255, 255, .008)), var(--fl-card) !important;
-  border: 1px solid var(--fl-line) !important;
+  /* Liquid edge: the same light-bending hairline as the controls, very faint at card scale. */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .006) 40%) padding-box,
+    linear-gradient(var(--fl-card), var(--fl-card)) padding-box,
+    linear-gradient(160deg, rgba(255, 255, 255, .2), rgba(160, 200, 255, .08) 25%, rgba(255, 255, 255, .04) 55%, rgba(255, 205, 160, .07) 85%, rgba(255, 255, 255, .12)) border-box !important;
+  border: 1px solid transparent !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 22px 44px -30px rgba(0, 0, 0, .9) !important;
 }
 html.ui-flight main section section { background: var(--fl-bg-2) !important; box-shadow: none !important; }
@@ -180,11 +208,11 @@ html.ui-flight #teamSummaryCards [class*="text-xs"]:first-child { letter-spacing
 
 /* Page heading: big, quiet, no coloured bar. */
 html.ui-flight .ui-page-heading::before { width: 2px; height: 30px; margin-top: 7px; border-radius: 2px; background: linear-gradient(180deg, var(--fl-accent), rgba(124, 192, 255, 0)); }
-html.ui-flight .ui-page-heading h1 { font-size: 28px; font-weight: 680; letter-spacing: -.025em; color: var(--fl-ink); }
+html.ui-flight .ui-page-heading h1 { font-size: 30px; line-height: 1.25; letter-spacing: .08em; color: var(--fl-ink); }
 html.ui-flight .ui-page-heading p { color: var(--fl-ink-2); font-size: 13.5px; }
 
 /* ---------- Header and navigation (glass) ---------- */
-/* No backdrop-filter on the header: it would trap the fixed sidebar/drawer that lives inside it. */
+/* Header glass: ui-theme.js moves the navigation out of the header first, so a backdrop-filter here can no longer trap it. */
 html.ui-flight #appHeader {
   background: linear-gradient(180deg, rgba(18, 20, 25, .97), rgba(12, 14, 18, .95)) !important;
   border-bottom: 1px solid var(--fl-line) !important;
@@ -207,13 +235,7 @@ html.ui-flight .tab-active {
 }
 html.ui-flight #mainNavigation > button.tab-active svg { color: var(--fl-accent) !important; }
 html.ui-flight #mainNavigation::before, html.ui-flight #mainNavigation::after { letter-spacing: .02em; }
-html.ui-flight .ui-mobile-nav {
-  background: rgba(14, 16, 20, .74) !important;
-  -webkit-backdrop-filter: var(--fl-blur);
-  backdrop-filter: var(--fl-blur);
-  border-top: 1px solid var(--fl-line-2) !important;
-  box-shadow: 0 -12px 30px -18px rgba(0, 0, 0, .9);
-}
+/* .ui-mobile-nav glass: see LAYOUT below. */
 html.ui-flight .ui-mobile-nav button { color: var(--fl-ink-2); border-radius: 14px; font-weight: 560; }
 html.ui-flight .ui-mobile-nav button[aria-current="page"],
 html.ui-flight .ui-mobile-nav button[aria-expanded="true"] {
@@ -283,14 +305,12 @@ html.ui-flight .ui-pressed {
   filter: brightness(1.18);
   transition-duration: .08s;
 }
-html.ui-flight .ui-press-layer { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; z-index: 0; }
-html.ui-flight .ui-press-ripple {
-  position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, .42) 0%, rgba(255, 255, 255, .16) 45%, rgba(255, 255, 255, 0) 70%);
-  transform: scale(0); opacity: 1;
-  animation: fl-ripple .55s var(--fl-ease) forwards;
+html.ui-flight #flRipple { position: fixed; left: 0; top: 0; width: 0; height: 0; overflow: hidden; pointer-events: none; z-index: 2147483000; opacity: 0; }
+html.ui-flight #flRipple::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle closest-side, rgba(255, 255, 255, .42), rgba(255, 255, 255, .16) 55%, rgba(255, 255, 255, 0)) no-repeat;
+  background-size: 0 0;
 }
-@keyframes fl-ripple { to { transform: scale(var(--fl-ripple-scale, 14)); opacity: 0; } }
 html.ui-flight button:disabled, html.ui-flight button[disabled] { opacity: .45; filter: saturate(.4); cursor: not-allowed; }
 
 /* ---------- Bars from ui-comfort (section jump, compact toolbar, back-to-top, sticky columns) ---------- */
@@ -388,7 +408,7 @@ html.ui-flight [class*="ring-sky-"] { --tw-ring-color: rgba(124, 192, 255, .55);
 /* ---------- Accessibility and preferences ---------- */
 @media (prefers-reduced-motion: reduce) {
   html.ui-flight button:active:not(:disabled), html.ui-flight .ui-pressed { transform: none; }
-  html.ui-flight .ui-press-ripple { display: none; }
+  html.ui-flight #flRipple { display: none; }
 }
 /* Strong light / "increase contrast": lighter secondary ink, firmer edges, no translucency. */
 @media (prefers-contrast: more) {
@@ -398,4 +418,178 @@ html.ui-flight [class*="ring-sky-"] { --tw-ring-color: rgba(124, 192, 255, .55);
 }
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   html.ui-flight #appHeader, html.ui-flight .ui-mobile-nav { background: #121418 !important; }
+}
+
+/* =====================================================================================================
+   LAYOUT — per device. ui-theme.js moves #mainNavigation out of the header (same element, same buttons),
+   so the header and the sidebar can both be real liquid glass without trapping each other.
+   ===================================================================================================== */
+html.ui-flight {
+  --fl-liquid: linear-gradient(180deg, rgba(30, 34, 42, .58), rgba(18, 21, 27, .66));
+  --fl-liquid-edge: linear-gradient(160deg, rgba(255, 255, 255, .34), rgba(160, 200, 255, .14) 22%, rgba(255, 255, 255, .05) 50%, rgba(255, 205, 160, .12) 82%, rgba(255, 255, 255, .22));
+  --fl-liquid-blur: blur(28px) saturate(175%) brightness(1.04);
+  --fl-liquid-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 0 0 .5px rgba(255, 255, 255, .04), 0 30px 60px -28px rgba(0, 0, 0, .9);
+}
+/* Navigation group labels (數據 / 比賽 / 參考): mission-panel captions. */
+html.ui-flight .ui-nav-group { color: var(--fl-ink-3) !important; font-size: 11px !important; font-weight: 600; letter-spacing: .32em !important; padding: 14px 12px 4px !important; }
+html.ui-flight #mainNavigation > button > svg { opacity: .9; }
+html.ui-flight .fl-side-foot { display: none; }
+html.ui-flight .ui-mobile-nav {
+  background: linear-gradient(180deg, rgba(34, 38, 47, .62), rgba(18, 21, 27, .72)) padding-box,
+    linear-gradient(160deg, rgba(255, 255, 255, .36), rgba(160, 200, 255, .14) 25%, rgba(255, 255, 255, .05) 55%, rgba(255, 205, 160, .12) 85%, rgba(255, 255, 255, .24)) border-box !important;
+  border: 1px solid transparent !important;
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 18px 40px -16px rgba(0, 0, 0, .9);
+}
+
+/* ---------- Desktop with a mouse (>=1280px): floating glass sidebar + one-line command bar ---------- */
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  html.ui-flight body { padding-left: 272px !important; }
+  html.ui-flight #mainNavigation {
+    display: flex !important; position: fixed; z-index: 60;
+    left: 14px; top: 14px; bottom: 14px; right: auto; width: 244px; max-width: 244px; height: auto; max-height: none;
+    flex-direction: column; align-items: stretch; gap: 3px; padding: 20px 12px 14px !important; margin: 0;
+    overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+    border-radius: 30px !important;
+    background: var(--fl-liquid) padding-box, var(--fl-liquid-edge) border-box !important;
+    border: 1px solid transparent !important;
+    box-shadow: var(--fl-liquid-shadow);
+    -webkit-backdrop-filter: var(--fl-liquid-blur); backdrop-filter: var(--fl-liquid-blur);
+  }
+  html.ui-flight #mainNavigation::-webkit-scrollbar { display: none; }
+  html.ui-flight #mainNavigation::before {
+    content: '淡江航太系壘'; display: block; flex: 0 0 auto;
+    padding: 82px 8px 16px; margin-bottom: 6px; text-align: center;
+    font-family: var(--fl-mincho); font-weight: 600; font-size: 19px; letter-spacing: .16em; color: var(--fl-ink);
+    background: url('assets/logo-256.webp') no-repeat center 4px / 68px 68px;
+    border-bottom: 1px solid var(--fl-line);
+  }
+  html.ui-flight #mainNavigation::after { content: none !important; }
+  html.ui-flight #mainNavigation > .ui-drawer-close { display: none !important; }
+  html.ui-flight #mainNavigation > button {
+    min-height: 44px; margin: 0; padding: 10px 12px; gap: 12px; justify-content: flex-start; text-align: left;
+    font-size: 14px; letter-spacing: .06em; white-space: normal; border-radius: 14px;
+  }
+  html.ui-flight #mainNavigation > button svg { width: 18px; height: 18px; }
+  html.ui-flight .fl-side-foot {
+    display: flex; flex-direction: column; gap: 6px; order: 99; margin-top: auto; padding: 16px 10px 4px;
+    border-top: 1px solid var(--fl-line); color: var(--fl-ink-3); font-size: 11.5px;
+  }
+  html.ui-flight .fl-side-foot::before { content: 'TKU AEROSPACE · SOFTBALL'; font-family: "Inter Flight", var(--fl-font); font-size: 10px; letter-spacing: .22em; white-space: nowrap; color: var(--fl-ink-3); }
+  html.ui-flight .fl-side-foot > span { display: inline-flex !important; width: fit-content; }
+  html.ui-flight .ui-nav-backdrop, html.ui-flight body.ui-nav-open .ui-nav-backdrop { display: none !important; }
+  html.ui-flight .ui-compact-toolbar { display: none !important; }
+  html.ui-flight .ui-header-brand { display: none !important; }
+
+  /* Header: a floating glass command bar — date range on the left, status and actions on the right. */
+  html.ui-flight #appHeader {
+    position: sticky; top: 14px; margin: 14px 14px 0 0; border-radius: 24px;
+    background: var(--fl-liquid) padding-box, var(--fl-liquid-edge) border-box !important;
+    border: 1px solid transparent !important;
+    box-shadow: var(--fl-liquid-shadow);
+    -webkit-backdrop-filter: var(--fl-liquid-blur); backdrop-filter: var(--fl-liquid-blur);
+  }
+  html.ui-flight #appHeader > div { max-width: none; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; padding: 10px 14px !important; }
+  html.ui-flight #appHeader > div > div:first-child,
+  html.ui-flight #appHeader > div > div:nth-child(2) { display: contents !important; }
+  html.ui-flight #appHeader .ui-date-controls { order: 1; display: flex !important; flex-wrap: nowrap; gap: 6px; padding: 0; overflow: visible; }
+  html.ui-flight #appHeader .ui-date-controls > div { flex-wrap: nowrap; gap: 6px; margin: 0; }
+  html.ui-flight #appHeader > div > div:first-child > div:last-child { order: 2; margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; overflow: visible; max-width: none; }
+  html.ui-flight #appHeader > div > div:first-child > div:last-child > * { margin: 0 !important; }
+  html.ui-flight #appHeader .ui-date-toggle { display: none !important; }
+  html.ui-flight #appHeader button { min-height: 38px; padding: 7px 13px; font-size: 13px; border-radius: 12px; }
+  html.ui-flight #appHeader .ui-date-controls > div > button { min-height: 34px; padding: 5px 11px; border-radius: 999px; }
+  html.ui-flight #appHeader input[type="date"] { min-height: 38px; padding: 6px 10px; font-size: 13px; }
+  html.ui-flight .fl-side-foot #syncStatusBadge { display: block !important; max-width: 100% !important; white-space: normal; overflow-wrap: anywhere; padding: 8px 10px; border-radius: 12px; background: rgba(255, 255, 255, .035); border: 1px solid var(--fl-line); color: var(--fl-ink-2) !important; font-size: 12px; line-height: 1.5; cursor: pointer; }
+  html.ui-flight #appWorkspace { max-width: 1520px; padding: 26px 30px 48px 16px !important; }
+  html.ui-flight .ui-page-heading { margin-bottom: 26px; }
+}
+@media (min-width: 1280px) and (max-width: 1439px) and (hover: hover) and (pointer: fine) {
+  html.ui-flight #appHeader > div { gap: 8px 10px; padding: 9px 12px !important; }
+  html.ui-flight #appHeader button { padding: 6px 10px; font-size: 12.5px; }
+  html.ui-flight #appHeader .ui-date-controls > div > button { padding: 4px 9px; }
+  html.ui-flight #appHeader input[type="date"] { width: 128px; padding: 6px 8px; font-size: 12.5px; }
+}
+/* KPI cards: six across only when there is room; otherwise three across (values were being cut off on tablets). */
+@media (min-width: 768px) and (max-width: 1439px) {
+  html.ui-flight #teamSummaryCards { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+
+/* ---------- Tablets (touch, any width) and narrow laptops: full-width content, the drawer for every page,
+   and a floating glass tab bar within thumb reach (an earlier round required tablets to keep the full content width). ---------- */
+@media (min-width: 768px) and (max-width: 1279px), (min-width: 768px) and (pointer: coarse) {
+  html.ui-flight body { padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important; }
+  html.ui-flight .ui-mobile-nav {
+    display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px;
+    position: fixed; z-index: 70; left: 50%; right: auto; transform: translateX(-50%);
+    bottom: calc(16px + env(safe-area-inset-bottom)); width: min(580px, calc(100% - 48px)); padding: 7px;
+    border-radius: 28px;
+  }
+  html.ui-flight .ui-mobile-nav button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 56px; font-size: 12.5px; letter-spacing: .08em; }
+  html.ui-flight .ui-mobile-nav svg { width: 21px; height: 21px; }
+  html.ui-flight #appHeader { border-radius: 0 0 24px 24px; -webkit-backdrop-filter: var(--fl-liquid-blur); backdrop-filter: var(--fl-liquid-blur); background: var(--fl-liquid) !important; }
+  html.ui-flight #mainNavigation { top: 12px !important; bottom: 12px !important; left: 12px !important; height: auto !important; max-height: none !important; border-radius: 28px !important; }
+  html.ui-flight .ui-mobile-nav { transition: opacity .2s var(--fl-ease), transform .25s var(--fl-ease); }
+  html.ui-flight body.ui-nav-open .ui-mobile-nav { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(16px); }
+}
+
+/* ---------- Drawer (tablets) and the "更多" sheet (phone): liquid glass panel ---------- */
+@media (max-width: 1279px), (pointer: coarse) {
+  html.ui-flight #mainNavigation {
+    background: var(--fl-liquid) padding-box, var(--fl-liquid-edge) border-box !important;
+    border: 1px solid transparent !important;
+    box-shadow: var(--fl-liquid-shadow);
+    -webkit-backdrop-filter: var(--fl-liquid-blur); backdrop-filter: var(--fl-liquid-blur);
+  }
+  html.ui-flight #mainNavigation::before { font-family: var(--fl-mincho); letter-spacing: .12em; font-weight: 600 !important; }
+  html.ui-flight .ui-nav-backdrop { background: rgba(4, 5, 8, .5) !important; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+}
+
+/* ---------- Phone (<768px): floating capsule tab bar ---------- */
+@media (max-width: 767px) {
+  html.ui-flight body { padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important; }
+  html.ui-flight .ui-mobile-nav {
+    left: 10px !important; right: 10px !important; bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+    padding: 6px !important; border-radius: 26px !important;
+  }
+  html.ui-flight .ui-mobile-nav button { letter-spacing: .06em; }
+  html.ui-flight #mainNavigation { border-radius: 28px 28px 0 0 !important; }
+  html.ui-flight #appHeader { border-radius: 0 0 22px 22px; }
+  html.ui-flight .ui-page-heading h1 { font-size: 26px; }
+}
+
+/* Dense scorer rows keep the original leading (the scorer reads them mid-game). */
+html.ui-flight .lineup-row { line-height: 1.4; }
+
+/* Tailwind slate gradient stops were navy (#020617 / #0f172a); bring them onto the neutral Flight surfaces. */
+html.ui-flight [class*="from-slate-9"], html.ui-flight [class*="from-slate-8"] { --tw-gradient-from: #121419 var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(18 20 25 / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+html.ui-flight [class*="via-slate-950"] { --tw-gradient-to: rgb(12 13 17 / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), rgb(12 13 17 / .82) var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+html.ui-flight [class*="via-slate-900"] { --tw-gradient-to: rgb(18 20 25 / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), #121419 var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+html.ui-flight .to-slate-950 { --tw-gradient-to: #0c0d11 var(--tw-gradient-to-position) !important; }
+html.ui-flight .to-slate-900 { --tw-gradient-to: #121419 var(--tw-gradient-to-position) !important; }
+
+/* Hover (mouse only): a quiet lift of light, never a jump. Selected states glide between looks. */
+@media (hover: hover) and (pointer: fine) {
+  html.ui-flight button:hover:not(:disabled) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), 0 1px 1px rgba(0, 0, 0, .5), 0 12px 26px -14px rgba(0, 0, 0, .85); }
+  html.ui-flight #mainNavigation > button:hover:not(.tab-active) { background: rgba(255, 255, 255, .06) !important; }
+}
+html.ui-flight #mainNavigation > button, html.ui-flight .ui-mobile-nav button, html.ui-flight .ui-section-bar button { transition: transform .3s var(--fl-spring), background-color .25s var(--fl-ease), color .25s var(--fl-ease), box-shadow .3s var(--fl-ease); }
+html.ui-flight select, html.ui-flight input[type="date"] { transition: border-color .2s var(--fl-ease), box-shadow .25s var(--fl-ease), transform .2s var(--fl-spring); }
+html.ui-flight select:active, html.ui-flight input[type="date"]:active { transform: scale(.985); }
+html.ui-flight details > summary { transition: color .2s var(--fl-ease); }
+html.ui-flight details[open] > summary ~ * { animation: fl-fade .32s var(--fl-ease); }
+@keyframes fl-fade { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: none; } }
+@media (prefers-reduced-motion: reduce) { html.ui-flight details[open] > summary ~ * { animation: none; } }
+
+/* Eyebrow labels stay on one line (they were stacking word by word on tablets). */
+html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"] { white-space: nowrap; flex-shrink: 0; }
+/* Attendance cards: names were cut off at 7 columns on tablets; columns now follow the available width. */
+@media (min-width: 768px) {
+  html.ui-flight #attendanceGrid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important; }
+}
+/* Below desktop width the eyebrow sits above its title instead of squeezing it. */
+@media (max-width: 1279px) {
+  html.ui-flight :has(> span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"]) { flex-wrap: wrap; row-gap: 6px; }
+  html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"] { flex-basis: 100%; margin-left: 0 !important; }
 }

@@ -35,7 +35,9 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
       const img=document.querySelector('.ui-team-logo');
       await img.decode().catch(()=>{});
       const ok=async href=>{const r=await fetch(href);return r.ok&&/^image\//.test(r.headers.get('content-type')||'');};
-      return {header:img.naturalWidth>0&&img.getBoundingClientRect().width>0,
+      // Flight design (2026/10/25): on a desktop with a mouse the badge moves from the header into the glass sidebar.
+      const sidebarBadge=getComputedStyle(document.getElementById('mainNavigation'),'::before').backgroundImage.includes('logo-256.webp')&&document.getElementById('mainNavigation').getBoundingClientRect().width>0;
+      return {header:img.naturalWidth>0&&(img.getBoundingClientRect().width>0||sidebarBadge),
         icon:await ok(document.querySelector('link[rel="icon"]').href),touch:await ok(document.querySelector('link[rel="apple-touch-icon"]').href),
         sidebar:getComputedStyle(document.getElementById('mainNavigation'),'::before').backgroundImage.includes('logo-256.webp'),
         sidebarFile:await ok('assets/logo-128.webp'),imageFile:await ok('assets/logo-256.webp')};
