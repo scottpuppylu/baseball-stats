@@ -14,7 +14,7 @@ const redact = value => String(value).replace(/const GITHUB_TOKEN = [^;]*;/g, 'c
 
 const root = path.resolve(__dirname, '..');
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
-const browserTests = ['ui-local-cache', 'ui-player-health', 'ui-scorebook-lineup', 'ui-integrity-browser', 'ui-pwa', 'ui-pwa-update', 'ui-pwa-migration', 'ui-apple-webkit', 'ui-pwa-rollback', 'ui-startup', 'ui-workflows', 'ui-audit-fixes', 'ui-audit-fixes-2', 'ui-data-safety', 'ui-round3', 'spray-archive-browser', 'ui-insights', 'ui-lineup', 'ui-data-fixes', 'ui-review-fixes', 'ui-records', 'ui-responsive', 'ui-mobile-comfort', 'ui-avatar', 'ui-tablet']
+const browserTests = ['ui-changelog', 'ui-local-cache', 'ui-player-health', 'ui-scorebook-lineup', 'ui-integrity-browser', 'ui-pwa', 'ui-pwa-update', 'ui-pwa-migration', 'ui-apple-webkit', 'ui-pwa-rollback', 'ui-startup', 'ui-workflows', 'ui-audit-fixes', 'ui-audit-fixes-2', 'ui-data-safety', 'ui-round3', 'spray-archive-browser', 'ui-insights', 'ui-lineup', 'ui-data-fixes', 'ui-review-fixes', 'ui-records', 'ui-responsive', 'ui-mobile-comfort', 'ui-avatar', 'ui-tablet']
   .filter(name => fs.existsSync(path.join(__dirname, `${name}.cjs`)))
   // `node tests/run-all.cjs ui-avatar ui-tablet` runs only the named browser tests (the unit tests always run).
   .filter(name => process.argv.length <= 2 || process.argv.slice(2).includes(name));
