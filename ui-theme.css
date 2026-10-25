@@ -1,0 +1,401 @@
+/* ui-theme.css — "Flight" visual system. Presentation only: no IDs, handlers, data or statistics change.
+   Base: SpaceX-like near-black, quiet type and hairlines. Controls: Apple-style glass with a faint refractive edge.
+   Legibility: every text colour keeps at least 6:1 against its surface (sunlight on a phone), without pure-white glare.
+   Everything is scoped to html.ui-flight; removing that class from <html> restores the previous look. */
+
+/* Inter (SIL OFL 1.1, vendor/fonts) — Latin letters and digits only; Chinese uses the system font (PingFang TC / Noto Sans TC / JhengHei). */
+@font-face {
+  font-family: "Inter Flight";
+  src: url("vendor/fonts/inter-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter Flight";
+  src: url("vendor/fonts/inter-latin-500.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter Flight";
+  src: url("vendor/fonts/inter-latin-600.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter Flight";
+  src: url("vendor/fonts/inter-latin-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+html.ui-flight {
+  color-scheme: dark;
+  /* Surfaces: lifted near-black, never pure black (pure black + pure white smears in sunlight). */
+  --fl-bg: #0a0b0e;
+  --fl-bg-2: #0f1115;
+  --fl-card: #121419;
+  --fl-card-2: #171a20;
+  --fl-well: #08090c;
+  --fl-raise: #1d2128;
+  /* Ink: primary 15:1, secondary 9:1, tertiary 6.3:1 on --fl-bg. */
+  --fl-ink: #e8ebf0;
+  --fl-ink-2: #b4bcc8;
+  --fl-ink-3: #8e98a6;
+  --fl-ink-soft: #d2d8e0;
+  /* Lines */
+  --fl-line: rgba(255, 255, 255, .085);
+  --fl-line-2: rgba(255, 255, 255, .13);
+  --fl-line-3: rgba(255, 255, 255, .2);
+  /* One cool accent; data hues desaturated but bright enough for small text in daylight. */
+  --fl-accent: #7cc0ff;
+  --fl-accent-strong: #a7d4ff;
+  --fl-green: #6fdba6;
+  --fl-red: #ff8b8b;
+  --fl-amber: #f3c766;
+  --fl-violet: #bca7ff;
+  --fl-teal: #6fd8cf;
+  /* Glass */
+  /* Clear glass: a faint fill, a bright specular top half, and a thin edge that bends light (cool top-left, warm bottom-right). */
+  --fl-glass: linear-gradient(180deg, rgba(255, 255, 255, .085) 0%, rgba(255, 255, 255, .035) 48%, rgba(255, 255, 255, .02) 52%, rgba(255, 255, 255, .045) 100%);
+  --fl-glass-hover: linear-gradient(180deg, rgba(255, 255, 255, .12) 0%, rgba(255, 255, 255, .055) 48%, rgba(255, 255, 255, .035) 52%, rgba(255, 255, 255, .065) 100%);
+  --fl-edge: linear-gradient(160deg, rgba(255, 255, 255, .5), rgba(160, 200, 255, .22) 22%, rgba(255, 255, 255, .06) 45%, rgba(255, 255, 255, .04) 60%, rgba(255, 205, 160, .2) 85%, rgba(255, 255, 255, .3));
+  /* Opaque base under the glass fill, so the refractive edge only shows as a hairline (border-box paints under padding too). */
+  --fl-glass-base: linear-gradient(180deg, #1a1d23, #14171c);
+  --fl-glass-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), inset 0 -1px 0 rgba(255, 255, 255, .04), 0 1px 1px rgba(0, 0, 0, .5), 0 8px 20px -12px rgba(0, 0, 0, .75);
+  --fl-blur: blur(18px) saturate(165%);
+  /* Shape and motion */
+  --fl-r-sm: 9px;
+  --fl-r: 12px;
+  --fl-r-lg: 18px;
+  --fl-r-xl: 24px;
+  --fl-ease: cubic-bezier(.2, .8, .2, 1);
+  --fl-spring: cubic-bezier(.34, 1.4, .64, 1);
+  --fl-font: "Inter Flight", -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
+  --ui-bg: var(--fl-bg);
+  --ui-surface: var(--fl-card);
+  --ui-line: var(--fl-line-2);
+  --ui-muted: var(--fl-ink-2);
+  --ui-accent: var(--fl-accent);
+}
+
+/* ---------- Canvas and type ---------- */
+html.ui-flight body {
+  background:
+    radial-gradient(1200px 600px at 78% -12%, rgba(124, 192, 255, .07), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(255, 196, 140, .04), transparent 60%),
+    var(--fl-bg) !important;
+  background-attachment: fixed !important;
+  color: var(--fl-ink);
+  font-family: var(--fl-font);
+  font-feature-settings: "cv11", "ss01", "tnum" 0;
+  letter-spacing: .005em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+html.ui-flight .font-sans, html.ui-flight .font-mono { font-family: var(--fl-font); }
+/* Numbers line up like a flight display: tabular, never monospace "terminal" text. */
+html.ui-flight .font-mono, html.ui-flight .tabular-nums, html.ui-flight table, html.ui-flight [class*="text-2xl"], html.ui-flight [class*="text-3xl"] { font-variant-numeric: tabular-nums; }
+html.ui-flight .font-mono { letter-spacing: .01em; }
+html.ui-flight .font-black { font-weight: 700; }
+html.ui-flight .font-extrabold { font-weight: 700; }
+html.ui-flight .font-bold { font-weight: 600; }
+html.ui-flight .font-semibold { font-weight: 600; }
+html.ui-flight h1, html.ui-flight h2, html.ui-flight h3 { letter-spacing: -.015em; }
+/* Small text is the first to vanish in sunlight: nothing below 11.5px, and a touch more weight. */
+html.ui-flight .text-\[9px\] { font-size: 11px; font-weight: 500; }
+html.ui-flight .text-\[10px\] { font-size: 11.5px; font-weight: 500; }
+html.ui-flight .text-\[11px\] { font-size: 12px; font-weight: 500; }
+html.ui-flight .text-xs { font-weight: 500; }
+html.ui-flight .uppercase, html.ui-flight .tracking-wider, html.ui-flight .tracking-widest { letter-spacing: .12em; }
+/* Gradient-painted text reads as decoration and loses contrast; use solid ink. */
+html.ui-flight .bg-clip-text { background: none !important; -webkit-text-fill-color: currentColor; color: var(--fl-ink) !important; }
+html.ui-flight .animate-pulse { animation: none; }
+
+/* ---------- Colour remap (Tailwind slate → Flight) ---------- */
+html.ui-flight .text-white { color: var(--fl-ink); }
+html.ui-flight .text-slate-100, html.ui-flight .text-slate-200 { color: var(--fl-ink); }
+html.ui-flight .text-slate-300 { color: var(--fl-ink-soft); }
+html.ui-flight .text-slate-400 { color: var(--fl-ink-2); }
+html.ui-flight .text-slate-500, html.ui-flight main .text-slate-500, html.ui-flight .text-slate-600 { color: var(--fl-ink-3); }
+html.ui-flight .text-sky-200, html.ui-flight .text-sky-300 { color: var(--fl-accent-strong); }
+html.ui-flight .text-sky-400, html.ui-flight .text-cyan-400 { color: var(--fl-accent); }
+html.ui-flight .text-emerald-200, html.ui-flight .text-emerald-300, html.ui-flight .text-emerald-400 { color: var(--fl-green); }
+html.ui-flight .text-rose-200, html.ui-flight .text-rose-300, html.ui-flight .text-rose-400, html.ui-flight .text-red-400 { color: var(--fl-red); }
+html.ui-flight .text-amber-200, html.ui-flight .text-amber-300, html.ui-flight .text-amber-400, html.ui-flight .text-yellow-400 { color: var(--fl-amber); }
+html.ui-flight [class*="text-amber-300/"] { color: var(--fl-amber); }
+html.ui-flight .text-purple-200, html.ui-flight .text-purple-300, html.ui-flight .text-purple-400, html.ui-flight .text-indigo-300, html.ui-flight .text-indigo-400, html.ui-flight .text-violet-300 { color: var(--fl-violet); }
+html.ui-flight .text-teal-300, html.ui-flight .text-teal-400 { color: var(--fl-teal); }
+
+html.ui-flight .bg-\[\#070a12\] { background-color: transparent; }
+html.ui-flight .bg-slate-950, html.ui-flight [class*="bg-slate-950/"] { background-color: var(--fl-well); }
+html.ui-flight .bg-slate-900, html.ui-flight [class*="bg-slate-900/"] { background-color: var(--fl-card); }
+html.ui-flight .bg-slate-800, html.ui-flight [class*="bg-slate-800/"] { background-color: var(--fl-card-2); }
+html.ui-flight .bg-slate-700, html.ui-flight [class*="bg-slate-700/"] { background-color: var(--fl-raise); }
+html.ui-flight .border-slate-800, html.ui-flight [class*="border-slate-800/"] { border-color: var(--fl-line); }
+html.ui-flight .border-slate-700, html.ui-flight [class*="border-slate-700/"] { border-color: var(--fl-line-2); }
+html.ui-flight .border-slate-600 { border-color: var(--fl-line-3); }
+html.ui-flight .divide-slate-800 > * + * { border-color: var(--fl-line); }
+html.ui-flight .ring-slate-700 { --tw-ring-color: var(--fl-line-2); }
+
+/* Tinted wells keep their meaning but lose the neon. */
+html.ui-flight [class*="bg-amber-950/"], html.ui-flight [class*="bg-amber-500/1"], html.ui-flight [class*="bg-amber-500/2"] { background-color: rgba(243, 199, 102, .075); }
+html.ui-flight [class*="bg-emerald-950/"], html.ui-flight [class*="bg-emerald-500/1"], html.ui-flight [class*="bg-emerald-500/2"] { background-color: rgba(111, 219, 166, .075); }
+html.ui-flight [class*="bg-rose-950/"], html.ui-flight [class*="bg-rose-900/"], html.ui-flight [class*="bg-rose-500/2"] { background-color: rgba(255, 139, 139, .085); }
+html.ui-flight [class*="bg-sky-950/"], html.ui-flight [class*="bg-sky-500/1"], html.ui-flight [class*="bg-sky-500/2"] { background-color: rgba(124, 192, 255, .075); }
+html.ui-flight [class*="bg-purple-950/"], html.ui-flight [class*="bg-purple-500/1"], html.ui-flight [class*="bg-indigo-500/1"] { background-color: rgba(188, 167, 255, .075); }
+html.ui-flight [class*="border-amber-"] { border-color: rgba(243, 199, 102, .32); }
+html.ui-flight [class*="border-emerald-"] { border-color: rgba(111, 219, 166, .32); }
+html.ui-flight [class*="border-rose-"] { border-color: rgba(255, 139, 139, .34); }
+html.ui-flight [class*="border-sky-"] { border-color: rgba(124, 192, 255, .34); }
+html.ui-flight [class*="border-purple-"], html.ui-flight [class*="border-indigo-"] { border-color: rgba(188, 167, 255, .32); }
+html.ui-flight [class*="border-teal-"] { border-color: rgba(111, 216, 207, .32); }
+
+/* ---------- Shape ---------- */
+html.ui-flight .rounded-md { border-radius: var(--fl-r-sm); }
+html.ui-flight .rounded-lg { border-radius: 11px; }
+html.ui-flight .rounded-xl { border-radius: 14px; }
+html.ui-flight .rounded-2xl { border-radius: var(--fl-r-lg); }
+html.ui-flight .rounded-3xl { border-radius: var(--fl-r-xl); }
+/* Soft, low shadows instead of glows. */
+html.ui-flight .shadow-sm, html.ui-flight .shadow, html.ui-flight .shadow-md { box-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+html.ui-flight .shadow-lg, html.ui-flight .shadow-xl, html.ui-flight .shadow-2xl { box-shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 18px 40px -22px rgba(0, 0, 0, .85); }
+
+/* ---------- Cards and sections ---------- */
+html.ui-flight main section,
+html.ui-flight main > div > section,
+html.ui-flight #teamSummaryCards > div {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .028), rgba(255, 255, 255, .008)), var(--fl-card) !important;
+  border: 1px solid var(--fl-line) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 22px 44px -30px rgba(0, 0, 0, .9) !important;
+}
+html.ui-flight main section section { background: var(--fl-bg-2) !important; box-shadow: none !important; }
+html.ui-flight #teamSummaryCards > div { border-radius: var(--fl-r-lg); }
+html.ui-flight #teamSummaryCards > div > div:first-child,
+html.ui-flight #teamSummaryCards [class*="text-xs"]:first-child { letter-spacing: .04em; color: var(--fl-ink-2); }
+
+/* Page heading: big, quiet, no coloured bar. */
+html.ui-flight .ui-page-heading::before { width: 2px; height: 30px; margin-top: 7px; border-radius: 2px; background: linear-gradient(180deg, var(--fl-accent), rgba(124, 192, 255, 0)); }
+html.ui-flight .ui-page-heading h1 { font-size: 28px; font-weight: 680; letter-spacing: -.025em; color: var(--fl-ink); }
+html.ui-flight .ui-page-heading p { color: var(--fl-ink-2); font-size: 13.5px; }
+
+/* ---------- Header and navigation (glass) ---------- */
+/* No backdrop-filter on the header: it would trap the fixed sidebar/drawer that lives inside it. */
+html.ui-flight #appHeader {
+  background: linear-gradient(180deg, rgba(18, 20, 25, .97), rgba(12, 14, 18, .95)) !important;
+  border-bottom: 1px solid var(--fl-line) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .03);
+}
+html.ui-flight .ui-team-logo { box-shadow: 0 0 0 1px var(--fl-line-2), 0 6px 16px -6px rgba(0, 0, 0, .8); }
+html.ui-flight #syncStatusBadge { font-family: var(--fl-font); letter-spacing: .01em; }
+html.ui-flight #mainNavigation {
+  background: rgba(255, 255, 255, .025) !important;
+  border-color: var(--fl-line) !important;
+}
+html.ui-flight #mainNavigation > button { color: var(--fl-ink-2); border-radius: 11px; font-weight: 560; }
+html.ui-flight #mainNavigation > button:hover { color: var(--fl-ink); background: rgba(255, 255, 255, .05); }
+html.ui-flight #mainNavigation > button.tab-active,
+html.ui-flight .tab-active {
+  color: var(--fl-ink) !important;
+  background: var(--fl-glass) padding-box, var(--fl-glass-base) padding-box, var(--fl-edge) border-box !important;
+  border: 1px solid transparent !important;
+  box-shadow: var(--fl-glass-shadow) !important;
+}
+html.ui-flight #mainNavigation > button.tab-active svg { color: var(--fl-accent) !important; }
+html.ui-flight #mainNavigation::before, html.ui-flight #mainNavigation::after { letter-spacing: .02em; }
+html.ui-flight .ui-mobile-nav {
+  background: rgba(14, 16, 20, .74) !important;
+  -webkit-backdrop-filter: var(--fl-blur);
+  backdrop-filter: var(--fl-blur);
+  border-top: 1px solid var(--fl-line-2) !important;
+  box-shadow: 0 -12px 30px -18px rgba(0, 0, 0, .9);
+}
+html.ui-flight .ui-mobile-nav button { color: var(--fl-ink-2); border-radius: 14px; font-weight: 560; }
+html.ui-flight .ui-mobile-nav button[aria-current="page"],
+html.ui-flight .ui-mobile-nav button[aria-expanded="true"] {
+  color: var(--fl-ink);
+  background: var(--fl-glass) padding-box, var(--fl-glass-base) padding-box, var(--fl-edge) border-box;
+  border: 1px solid transparent;
+  box-shadow: var(--fl-glass-shadow);
+}
+html.ui-flight .ui-mobile-nav button[aria-current="page"] svg { color: var(--fl-accent); }
+
+/* ---------- Buttons: glass, tinted glass, and press feedback ---------- */
+html.ui-flight button,
+html.ui-flight [role="button"],
+html.ui-flight a.inline-flex,
+html.ui-flight label.cursor-pointer {
+  transition: transform .22s var(--fl-spring), background-color .2s var(--fl-ease), border-color .2s var(--fl-ease), box-shadow .22s var(--fl-ease), filter .2s var(--fl-ease), color .2s var(--fl-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+/* Neutral controls become glass. */
+html.ui-flight button[class*="bg-slate-"],
+html.ui-flight .ui-glass {
+  color: var(--fl-ink-soft);
+  background: var(--fl-glass) padding-box, var(--fl-glass-base) padding-box, var(--fl-edge) border-box !important;
+  border: 1px solid transparent !important;
+  box-shadow: var(--fl-glass-shadow);
+  -webkit-backdrop-filter: var(--fl-blur);
+  backdrop-filter: var(--fl-blur);
+}
+html.ui-flight button[class*="bg-slate-"]:hover { background: var(--fl-glass-hover) padding-box, var(--fl-glass-base) padding-box, var(--fl-edge) border-box !important; color: var(--fl-ink); }
+/* Coloured actions become tinted glass: the colour stays recognisable, the text stays light and readable. */
+html.ui-flight button[class*="bg-sky-"], html.ui-flight button[class*="bg-blue-"], html.ui-flight button[class*="from-sky-"] { --fl-tint: 124, 192, 255; }
+html.ui-flight button[class*="bg-emerald-"], html.ui-flight button[class*="bg-green-"], html.ui-flight button[class*="from-emerald-"] { --fl-tint: 111, 219, 166; }
+html.ui-flight button[class*="bg-indigo-"], html.ui-flight button[class*="bg-purple-"], html.ui-flight button[class*="bg-violet-"], html.ui-flight button[class*="from-indigo-"], html.ui-flight button[class*="from-purple-"] { --fl-tint: 188, 167, 255; }
+html.ui-flight button[class*="bg-amber-"], html.ui-flight button[class*="bg-orange-"], html.ui-flight button[class*="bg-yellow-"], html.ui-flight button[class*="from-amber-"] { --fl-tint: 243, 199, 102; }
+html.ui-flight button[class*="bg-rose-"], html.ui-flight button[class*="bg-red-"], html.ui-flight button[class*="from-rose-"] { --fl-tint: 255, 139, 139; }
+html.ui-flight button[class*="bg-teal-"], html.ui-flight button[class*="bg-cyan-"] { --fl-tint: 111, 216, 207; }
+html.ui-flight button[class*="bg-sky-"], html.ui-flight button[class*="bg-blue-"], html.ui-flight button[class*="bg-emerald-"], html.ui-flight button[class*="bg-green-"],
+html.ui-flight button[class*="bg-indigo-"], html.ui-flight button[class*="bg-purple-"], html.ui-flight button[class*="bg-violet-"], html.ui-flight button[class*="bg-amber-"], html.ui-flight button[class*="bg-orange-"],
+html.ui-flight button[class*="bg-yellow-"], html.ui-flight button[class*="bg-rose-"], html.ui-flight button[class*="bg-red-"], html.ui-flight button[class*="bg-teal-"], html.ui-flight button[class*="bg-cyan-"], html.ui-flight button[class*="bg-gradient-"] {
+  color: rgb(var(--fl-tint, 232, 235, 240)) !important;
+  background:
+    var(--fl-glass) padding-box,
+    linear-gradient(180deg, rgba(var(--fl-tint, 255, 255, 255), .1), rgba(var(--fl-tint, 255, 255, 255), .04)) padding-box,
+    var(--fl-glass-base) padding-box,
+    linear-gradient(160deg, rgba(255, 255, 255, .5), rgba(var(--fl-tint, 255, 255, 255), .6) 26%, rgba(var(--fl-tint, 255, 255, 255), .14) 58%, rgba(var(--fl-tint, 255, 255, 255), .38)) border-box !important;
+  border: 1px solid transparent !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 1px 1px rgba(0, 0, 0, .5), 0 10px 24px -14px rgba(var(--fl-tint, 0, 0, 0), .7);
+  -webkit-backdrop-filter: var(--fl-blur);
+  backdrop-filter: var(--fl-blur);
+}
+/* Solid primary actions (-500/-600) read as the main action: near-white label over the tint. */
+html.ui-flight button:is([class~="bg-sky-500"], [class~="bg-blue-500"], [class~="bg-emerald-500"], [class~="bg-green-500"], [class~="bg-indigo-500"], [class~="bg-purple-500"], [class~="bg-violet-500"], [class~="bg-amber-500"], [class~="bg-orange-500"], [class~="bg-yellow-500"], [class~="bg-rose-500"], [class~="bg-red-500"], [class~="bg-teal-500"], [class~="bg-cyan-500"], [class~="bg-sky-600"], [class~="bg-blue-600"], [class~="bg-emerald-600"], [class~="bg-green-600"], [class~="bg-indigo-600"], [class~="bg-purple-600"], [class~="bg-violet-600"], [class~="bg-amber-600"], [class~="bg-orange-600"], [class~="bg-yellow-600"], [class~="bg-rose-600"], [class~="bg-red-600"], [class~="bg-teal-600"], [class~="bg-cyan-600"], [class~="bg-sky-700"], [class~="bg-blue-700"], [class~="bg-emerald-700"], [class~="bg-green-700"], [class~="bg-indigo-700"], [class~="bg-purple-700"], [class~="bg-violet-700"], [class~="bg-amber-700"], [class~="bg-orange-700"], [class~="bg-yellow-700"], [class~="bg-rose-700"], [class~="bg-red-700"], [class~="bg-teal-700"], [class~="bg-cyan-700"], [class*="bg-gradient-"]) { color: #f5f7fa !important; text-shadow: 0 1px 1px rgba(0, 0, 0, .35); }
+html.ui-flight button:is([class~="bg-sky-500"], [class~="bg-blue-500"], [class~="bg-emerald-500"], [class~="bg-green-500"], [class~="bg-indigo-500"], [class~="bg-purple-500"], [class~="bg-violet-500"], [class~="bg-amber-500"], [class~="bg-orange-500"], [class~="bg-yellow-500"], [class~="bg-rose-500"], [class~="bg-red-500"], [class~="bg-teal-500"], [class~="bg-cyan-500"], [class~="bg-sky-600"], [class~="bg-blue-600"], [class~="bg-emerald-600"], [class~="bg-green-600"], [class~="bg-indigo-600"], [class~="bg-purple-600"], [class~="bg-violet-600"], [class~="bg-amber-600"], [class~="bg-orange-600"], [class~="bg-yellow-600"], [class~="bg-rose-600"], [class~="bg-red-600"], [class~="bg-teal-600"], [class~="bg-cyan-600"], [class~="bg-sky-700"], [class~="bg-blue-700"], [class~="bg-emerald-700"], [class~="bg-green-700"], [class~="bg-indigo-700"], [class~="bg-purple-700"], [class~="bg-violet-700"], [class~="bg-amber-700"], [class~="bg-orange-700"], [class~="bg-yellow-700"], [class~="bg-rose-700"], [class~="bg-red-700"], [class~="bg-teal-700"], [class~="bg-cyan-700"], [class*="bg-gradient-"]) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, .03) 50%, rgba(255, 255, 255, 0) 51%) padding-box,
+    linear-gradient(180deg, rgba(var(--fl-tint, 255, 255, 255), .34), rgba(var(--fl-tint, 255, 255, 255), .2)) padding-box,
+    var(--fl-glass-base) padding-box,
+    linear-gradient(160deg, rgba(255, 255, 255, .6), rgba(var(--fl-tint, 255, 255, 255), .7) 30%, rgba(var(--fl-tint, 255, 255, 255), .3) 70%, rgba(255, 255, 255, .35)) border-box !important;
+}
+html.ui-flight button[class*="bg-"]:hover:not(:disabled) { filter: brightness(1.08) saturate(1.05); }
+/* Press: compress, brighten, and let ui-theme.js add the light-catch ripple. */
+html.ui-flight button:active:not(:disabled),
+html.ui-flight button[class*="bg-"]:active:not(:disabled),
+html.ui-flight [role="button"]:active,
+html.ui-flight .ui-pressed {
+  transform: scale(.955);
+  filter: brightness(1.18);
+  transition-duration: .08s;
+}
+html.ui-flight .ui-press-layer { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; z-index: 0; }
+html.ui-flight .ui-press-ripple {
+  position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, .42) 0%, rgba(255, 255, 255, .16) 45%, rgba(255, 255, 255, 0) 70%);
+  transform: scale(0); opacity: 1;
+  animation: fl-ripple .55s var(--fl-ease) forwards;
+}
+@keyframes fl-ripple { to { transform: scale(var(--fl-ripple-scale, 14)); opacity: 0; } }
+html.ui-flight button:disabled, html.ui-flight button[disabled] { opacity: .45; filter: saturate(.4); cursor: not-allowed; }
+
+/* ---------- Bars from ui-comfort (section jump, compact toolbar, back-to-top, sticky columns) ---------- */
+html.ui-flight .ui-section-bar { background: rgba(10, 11, 14, .82) !important; border-bottom: 1px solid var(--fl-line) !important; -webkit-backdrop-filter: var(--fl-blur); backdrop-filter: var(--fl-blur); }
+html.ui-flight .ui-section-bar button, html.ui-flight .ui-compact-toolbar button, html.ui-flight .ui-date-toggle {
+  color: var(--fl-ink-soft) !important;
+  background: var(--fl-glass) padding-box, var(--fl-glass-base) padding-box, var(--fl-edge) border-box !important;
+  border: 1px solid transparent !important;
+  box-shadow: var(--fl-glass-shadow);
+}
+html.ui-flight .ui-section-bar button[aria-current="true"] {
+  color: #f5f7fa !important; font-weight: 640;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .02) 50%, rgba(255, 255, 255, 0) 51%) padding-box, linear-gradient(180deg, rgba(124, 192, 255, .34), rgba(124, 192, 255, .2)) padding-box, var(--fl-glass-base) padding-box, linear-gradient(160deg, rgba(255, 255, 255, .6), rgba(124, 192, 255, .7) 35%, rgba(124, 192, 255, .25)) border-box !important;
+}
+html.ui-flight .ui-back-top { color: var(--fl-ink) !important; background: var(--fl-glass) padding-box, var(--fl-glass-base) padding-box, var(--fl-edge) border-box !important; border: 1px solid transparent !important; box-shadow: var(--fl-glass-shadow) !important; -webkit-backdrop-filter: var(--fl-blur); backdrop-filter: var(--fl-blur); }
+html.ui-flight .ui-sticky-cols tr > :first-child, html.ui-flight .ui-sticky-two tr > :nth-child(2) { background-color: #111317 !important; box-shadow: 1px 0 0 var(--fl-line-2) !important; }
+html.ui-flight .ui-column-toolbar select { background-color: var(--fl-well) !important; border-color: var(--fl-line-2) !important; }
+/* The cloud status pill: a quiet instrument readout, not a neon badge. */
+html.ui-flight #appHeader span.rounded-full[class*="bg-emerald-"] { background: rgba(255, 255, 255, .04) !important; border-color: var(--fl-line-2) !important; color: var(--fl-ink-2) !important; letter-spacing: .16em; font-weight: 600; }
+html.ui-flight #appHeader span.rounded-full[class*="bg-emerald-"] > span { background: var(--fl-green); box-shadow: 0 0 0 3px rgba(111, 219, 166, .18); }
+
+/* English section tags ("LEADERBOARD", "ROSTER FILTER" …): quiet mission-style eyebrows instead of neon pills. */
+html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"] {
+  background: none !important; border: 0 !important; border-radius: 0; padding: 0 0 0 10px !important;
+  font-size: 11px; font-weight: 640; letter-spacing: .2em; line-height: 1.2;
+  position: relative; box-shadow: none !important;
+}
+html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"]::before {
+  content: ''; position: absolute; left: 0; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 1px; background: currentColor; opacity: .9;
+}
+
+/* ---------- Inputs ---------- */
+html.ui-flight input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+html.ui-flight select,
+html.ui-flight textarea {
+  background-color: var(--fl-well) !important;
+  border: 1px solid var(--fl-line-2) !important;
+  color: var(--fl-ink) !important;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .5);
+  transition: border-color .2s var(--fl-ease), box-shadow .2s var(--fl-ease);
+}
+html.ui-flight input::placeholder, html.ui-flight textarea::placeholder { color: var(--fl-ink-3); opacity: 1; }
+html.ui-flight input:focus, html.ui-flight select:focus, html.ui-flight textarea:focus {
+  outline: none !important;
+  border-color: rgba(124, 192, 255, .7) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .5), 0 0 0 3px rgba(124, 192, 255, .2) !important;
+}
+html.ui-flight :focus-visible { outline: 2px solid var(--fl-accent) !important; outline-offset: 3px; }
+html.ui-flight input[type="checkbox"], html.ui-flight input[type="radio"] { accent-color: var(--fl-accent); }
+html.ui-flight select option { background: var(--fl-card-2); color: var(--fl-ink); }
+
+/* ---------- Tables ---------- */
+html.ui-flight .ui-table-scroll { border-color: var(--fl-line) !important; scrollbar-color: #3a414c transparent; }
+html.ui-flight .ui-table-scroll::-webkit-scrollbar-thumb { background: #3a414c; border-color: var(--fl-card); }
+html.ui-flight .ui-table-scroll th, html.ui-flight table thead th {
+  background: #14171c !important;
+  color: var(--fl-ink-2) !important;
+  font-weight: 600;
+  letter-spacing: .06em;
+  border-bottom: 1px solid var(--fl-line-2);
+}
+html.ui-flight .ui-table-scroll tbody tr:nth-child(even) { background-color: rgba(255, 255, 255, .022); }
+html.ui-flight .ui-table-scroll tbody tr:hover { background-color: rgba(124, 192, 255, .06); }
+html.ui-flight .ui-table-scroll tr > :first-child { background-color: #111317 !important; box-shadow: 1px 0 0 var(--fl-line-2) !important; }
+html.ui-flight .ui-table-scroll tbody tr:nth-child(even) > :first-child { background-color: #141619 !important; }
+html.ui-flight .ui-table-scroll thead tr > :first-child { background-color: #14171c !important; }
+html.ui-flight td, html.ui-flight th { border-color: var(--fl-line); }
+
+/* ---------- Dialogs, toasts, notices ---------- */
+html.ui-flight [class*="bg-black/"] { background-color: rgba(4, 5, 7, .62) !important; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+html.ui-flight [class*="bg-black/"] > div {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02)), rgba(20, 22, 27, .9) !important;
+  border: 1px solid var(--fl-line-2) !important;
+  border-radius: var(--fl-r-xl);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 40px 80px -30px rgba(0, 0, 0, .95) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(160%);
+  backdrop-filter: blur(30px) saturate(160%);
+}
+html.ui-flight #globalToastContainer > * {
+  background: rgba(24, 27, 33, .86) !important;
+  -webkit-backdrop-filter: var(--fl-blur);
+  backdrop-filter: var(--fl-blur);
+  border: 1px solid var(--fl-line-2) !important;
+  border-radius: 16px !important;
+  color: var(--fl-ink) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 18px 40px -16px rgba(0, 0, 0, .9) !important;
+}
+html.ui-flight .ui-app-bar { border-radius: 16px; -webkit-backdrop-filter: var(--fl-blur); backdrop-filter: var(--fl-blur); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 14px 34px -14px rgba(0, 0, 0, .9); }
+
+/* Avatars: a thin glass ring instead of a thick blue border. */
+html.ui-flight img.rounded-full { box-shadow: 0 0 0 1px var(--fl-line-3), 0 4px 12px -4px rgba(0, 0, 0, .8); }
+html.ui-flight [class*="ring-sky-"] { --tw-ring-color: rgba(124, 192, 255, .55); }
+
+/* ---------- Accessibility and preferences ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html.ui-flight button:active:not(:disabled), html.ui-flight .ui-pressed { transform: none; }
+  html.ui-flight .ui-press-ripple { display: none; }
+}
+/* Strong light / "increase contrast": lighter secondary ink, firmer edges, no translucency. */
+@media (prefers-contrast: more) {
+  html.ui-flight { --fl-ink-2: #d0d6de; --fl-ink-3: #b0b9c5; --fl-line: rgba(255, 255, 255, .18); --fl-line-2: rgba(255, 255, 255, .26); }
+  html.ui-flight #appHeader, html.ui-flight .ui-mobile-nav { background: #121418 !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html.ui-flight button { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  html.ui-flight #appHeader, html.ui-flight .ui-mobile-nav { background: #121418 !important; }
+}

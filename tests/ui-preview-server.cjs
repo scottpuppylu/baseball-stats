@@ -152,7 +152,7 @@ const previewServer = http.createServer(async (req, res) => {
     const relative = path.relative(root, filename).split(path.sep).join('/');
     let content = release.files.get(relative) || fs.readFileSync(filename);
     if (relative === corruptFile) content = Buffer.from('/* interrupted or stale deployment */');
-    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.webmanifest':'application/manifest+json'};
+    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.woff2':'font/woff2', '.webmanifest':'application/manifest+json'};
     res.writeHead(200, {'Content-Type': mime[path.extname(filename)] || 'application/octet-stream', 'Cache-Control': 'no-store'});
     res.end(content);
   } catch (error) {
