@@ -876,20 +876,6 @@ html.ui-flight .fl-side-brand { display: none !important; }
   html.ui-flight #mainNavigation > .fl-side-brand img { width: 68px; height: 68px; border-radius: 50%; box-shadow: 0 0 0 1px var(--fl-line-2), 0 8px 20px -8px rgba(0, 0, 0, .8); }
 }
 
-/* ---------- Player profile: HD background behind the deep profile, glass cards over it ---------- */
-html.ui-flight #panelProfile > section:first-child {
-  background: linear-gradient(180deg, rgba(10, 11, 14, .25), rgba(10, 11, 14, .35) 45%, rgba(10, 11, 14, .78)), url('assets/bg-profile.webp') center bottom / cover no-repeat, #0a0b0e !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 30px 60px -36px rgba(0, 0, 0, .9) !important;
-}
-html.ui-flight #panelProfile > section:first-child :is(#playerProfileBio, #playerProfileCard > div) {
-  background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02)), rgba(14, 16, 21, .66) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09), inset 0 1px 0 rgba(255, 255, 255, .1);
-}
-@media (max-width: 767px) {
-  html.ui-flight #panelProfile > section:first-child { background: linear-gradient(180deg, rgba(10, 11, 14, .2), rgba(10, 11, 14, .4) 40%, rgba(10, 11, 14, .8)), url('assets/bg-profile-portrait.webp') center top / cover no-repeat, #0a0b0e !important; }
-}
-
 /* ---------- Touch preview card for chart points ---------- */
 html.ui-flight .fl-point-chip {
   position: fixed; z-index: 90; display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 14px; border-radius: 999px;
@@ -1037,3 +1023,72 @@ html.ui-flight #flTools {
 }
 html.ui-flight .fl-tools-backdrop { background: rgba(4, 5, 8, .55) !important; -webkit-backdrop-filter: blur(6px) saturate(120%) !important; backdrop-filter: blur(6px) saturate(120%) !important; }
 html.ui-flight .fl-point-chip { --fl-lens-defocus: 4; }
+
+/* ---------- Boot: no flash of the old layout on reload (boot.js adds the class, ui-app.js removes it) ---------- */
+html.fl-booting body > * { visibility: hidden !important; }
+html.fl-booting body::after {
+  content: ''; position: fixed; inset: 0; z-index: 2147483600; pointer-events: none;
+  background: url('assets/logo-256.webp') center 42% / 92px 92px no-repeat, linear-gradient(180deg, rgba(8, 9, 12, .2), rgba(8, 9, 12, .65)), url('assets/bg-orbit.webp') center 68% / cover no-repeat, #07080b;
+}
+@media (orientation: portrait) { html.fl-booting body::after { background: url('assets/logo-256.webp') center 40% / 92px 92px no-repeat, linear-gradient(180deg, rgba(8, 9, 12, .2), rgba(8, 9, 12, .65)), url('assets/bg-orbit-portrait.webp') center 60% / cover no-repeat, #07080b; } }
+
+/* ---------- Page scenes (2026/10/26): every page except 場記 sits on its own space scene (scripts/build-backgrounds.py),
+   a fixed full-screen layer that fades in on page change; content panels are liquid glass over it. Portrait crops for phones
+   and portrait tablets. Home keeps its hero; 場記 stays plain so nothing competes with live scoring. ---------- */
+html.ui-flight body[data-page]::before { content: none; }
+html.ui-flight body[data-page="Overview"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-overview.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-overview .8s var(--fl-ease) both; }
+@keyframes fl-scene-overview { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Analytics"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-analytics.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-analytics .8s var(--fl-ease) both; }
+@keyframes fl-scene-analytics { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Pitching"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-pitching.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-pitching .8s var(--fl-ease) both; }
+@keyframes fl-scene-pitching { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Records"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-records.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-records .8s var(--fl-ease) both; }
+@keyframes fl-scene-records { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Leaderboard"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-leaderboard.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-leaderboard .8s var(--fl-ease) both; }
+@keyframes fl-scene-leaderboard { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Compare"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-compare.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-compare .8s var(--fl-ease) both; }
+@keyframes fl-scene-compare { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Health"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-health.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-health .8s var(--fl-ease) both; }
+@keyframes fl-scene-health { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Lineup"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-lineup.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-lineup .8s var(--fl-ease) both; }
+@keyframes fl-scene-lineup { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Glossary"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-glossary.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-glossary .8s var(--fl-ease) both; }
+@keyframes fl-scene-glossary { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Changelog"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-changelog.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-changelog .8s var(--fl-ease) both; }
+@keyframes fl-scene-changelog { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+html.ui-flight body[data-page="Profile"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-profile.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-profile .8s var(--fl-ease) both; }
+@keyframes fl-scene-profile { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+@media (orientation: portrait) {
+  html.ui-flight body[data-page="Overview"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-overview-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Analytics"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-analytics-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Pitching"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-pitching-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Records"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-records-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Leaderboard"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-leaderboard-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Compare"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-compare-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Health"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-health-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Lineup"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-lineup-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Glossary"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-glossary-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Changelog"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-changelog-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Profile"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-profile-portrait.webp") center / cover no-repeat, #0a0b0e; }
+}
+@media (prefers-reduced-motion: reduce) { html.ui-flight body[data-page]::before { animation: none !important; } }
+/* Liquid-glass panels: depth-of-field defocus of the scene, a light-catching rim, and (ui-app.js) refraction for panels up
+   to a sensible size. A ~62% dark floor keeps every number clear even over the bright parts of a scene. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section:not(.grid), html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section.grid > div, html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #teamSummaryCards > div {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .012) 40%, rgba(255, 255, 255, .02)) padding-box,
+    linear-gradient(rgba(12, 14, 18, .62), rgba(12, 14, 18, .62)) padding-box,
+    linear-gradient(155deg, rgba(255, 255, 255, .32), rgba(170, 205, 255, .12) 25%, rgba(255, 255, 255, .04) 55%, rgba(255, 210, 170, .1) 82%, rgba(255, 255, 255, .22)) border-box !important;
+  border: 1px solid transparent !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 30px 60px -36px rgba(0, 0, 0, .9) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(150%) brightness(.8); backdrop-filter: blur(18px) saturate(150%) brightness(.8);
+  --fl-lens-defocus: 7; --fl-lens-tone: saturate(150%) brightness(.8); --fl-lens-gate: 1;
+}
+/* Cards nested inside a glass panel: light tints, so the panel reads as one sheet of glass and the data stays crisp. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]):not(button):not(input):not(select):not(textarea) {
+  background-color: rgba(255, 255, 255, .035) !important; background-image: none !important;
+}
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section section { background: rgba(255, 255, 255, .03) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr:nth-child(odd) { background-color: rgba(255, 255, 255, .02); }
+@media (prefers-contrast: more) {
+  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section:not(.grid), html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section.grid > div, html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #teamSummaryCards > div { background: #15181d !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}

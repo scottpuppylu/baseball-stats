@@ -132,7 +132,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     // ---------- 13 & 15. Hooks registry, dead code ----------
     const hooks = await page.evaluate(() => siteHooks.list());
     assert.deepEqual(hooks.after.renderPlayerProfile, ['player-health', 'team-insights', 'team-records']);
-    assert.deepEqual(hooks.after.switchMainTab, ['player-health', 'team-records', 'ui-app', 'ui-app', 'ui-app-tools', 'ui-app', 'ui-app-chip']); // ui-app: Home, 版本紀錄, tools panel, back button, chart card
+    assert.deepEqual(hooks.after.switchMainTab, ['player-health', 'team-records', 'ui-app', 'ui-app', 'ui-app-tools', 'ui-app', 'ui-app-chip', 'ui-app-lens']); // ui-app: Home, 版本紀錄, tools panel, back button, chart card
     assert.deepEqual(hooks.after.renderLineupAnalysis, ['lineup-recommender']);
     assert.deepEqual(hooks.replaced, {calculateRecommendedLineup: 'lineup-recommender', renderDiagnostics: 'player-diagnostics'});
     const source = fs.readFileSync(path.join(root, 'index.html'), 'utf8');

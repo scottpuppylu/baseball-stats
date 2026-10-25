@@ -246,7 +246,7 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
       const html=document.documentElement.outerHTML;
       const lineupSize=[...document.querySelectorAll('#setupLineupGrid, #setupLineupField, #liveLineupCard')].reduce((sum,el)=>sum+el.outerHTML.length,0);
       // App shell (2026/10/26): top bar, tools panel, tab bar, segmented control and sidebar badge have their own budget too.
-      const shellSize=[...document.querySelectorAll('#flTopbar, #flTools, .ui-mobile-nav, .fl-subnav, .fl-side-brand, #panelHome, #panelChangelog')].reduce((sum,el)=>sum+el.outerHTML.length,0);
+      const shellSize=[...document.querySelectorAll('#flTopbar, #flTools, .ui-mobile-nav, .fl-subnav, .fl-side-brand, #panelHome, #panelChangelog, svg:has(> filter[id^="flLens"])')].reduce((sum,el)=>sum+el.outerHTML.length,0);
       return {count:imgs.length,blob:imgs.every(i=>i.src.startsWith('blob:')),loaded:imgs.filter(i=>i.complete&&i.naturalWidth>0).length,
         dataUris:(html.match(/data:image\/[a-z]+;base64/g)||[]).length,size:html.length,lineupSize,shellSize};
     });
@@ -257,7 +257,7 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
     // The authorized lineup/field controls have a separate bounded markup budget.
     // The original pages retain their 1M-character ceiling; no avatar may embed base64.
     assert.ok(avatars.lineupSize<100000,`lineup markup stays below 100K characters (${avatars.lineupSize})`);
-    assert.ok(avatars.shellSize<40000,`app shell markup stays below 40K characters (${avatars.shellSize})`);
+    assert.ok(avatars.shellSize<60000,`app shell markup (incl. refraction lens filters) stays below 60K characters (${avatars.shellSize})`);
     assert.ok(avatars.size-avatars.lineupSize-avatars.shellSize<1000000,`existing page HTML stays small (${avatars.size-avatars.lineupSize-avatars.shellSize})`);
     assert.deepEqual(errors,[],'runtime errors');
     await context.close();

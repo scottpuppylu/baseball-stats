@@ -317,6 +317,19 @@
     if (dot) dot.dispatchEvent(new MouseEvent('mouseenter'));
   });
 
+  // Content panels on scene pages refract the scene (ui-theme.js lenses). Summary cards are re-rendered, so re-register.
+  const registerPanels = () => {
+    if (!window.flRefract) return;
+    document.querySelectorAll('main section:not(.grid), main section.grid > div, #teamSummaryCards > div').forEach(el => {
+      if (!el.parentElement.closest('main section:not(.grid)')) window.flRefract(el, true);
+    });
+  };
+  window.siteHooks.after('switchMainTab', 'ui-app-lens', () => requestAnimationFrame(registerPanels));
+  window.siteHooks.after('renderAll', 'ui-app-lens', () => requestAnimationFrame(registerPanels));
+  registerPanels();
+
   // The app opens on the home page.
   switchMainTab('tabHome');
+  // Reveal the page now that the shell is arranged (boot.js hid it to avoid a flash of the old layout).
+  requestAnimationFrame(() => document.documentElement.classList.remove('fl-booting'));
 })();

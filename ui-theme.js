@@ -194,6 +194,12 @@
     const rect = el.getBoundingClientRect();
     const w = Math.round(rect.width), h = Math.round(rect.height);
     if (w < 24 || h < 24) return; // hidden or tiny: wait for the next resize
+    // Content panels only refract on pages with a space scene (CSS sets --fl-lens-gate there); very large panels keep
+    // the depth-of-field glass without a lens, so scrolling stays smooth on phones.
+    const gated = el.dataset.flGated !== undefined;
+    if ((gated && getComputedStyle(el).getPropertyValue('--fl-lens-gate').trim() !== '1') || (gated && (w * h > 650000 || h > 1500))) {
+      clearLens(el); tracked.set(el, ''); return;
+    }
     const radius = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, h / 2, w / 2);
     const bezel = Math.round(Math.max(8, Math.min(18, Math.min(w, h) * .32)));
     const defocus = parseFloat(getComputedStyle(el).getPropertyValue('--fl-lens-defocus')) || 3;
@@ -211,8 +217,9 @@
   }
   let lensObserver = null;
   const queued = new Set();
-  window.flRefract = el => {
+  window.flRefract = (el, gated = false) => {
     if (!el || tracked.has(el) || !chromium) return;
+    if (gated) el.dataset.flGated = '';
     tracked.set(el, '');
     if (!lensObserver) {
       lensObserver = new ResizeObserver(entries => {
@@ -225,7 +232,7 @@
   if (chromium) {
     root.classList.add('fl-refract');
     ['.ui-mobile-nav', '#mainNavigation', '#appHeader', '.fl-subnav', '.ui-section-bar'].forEach(sel => window.flRefract(document.querySelector(sel)));
-    [contrastQuery, reduceMotion].forEach(q => q.addEventListener('change', () => { tracked.forEach((v, el) => { tracked.set(el, 'stale'); applyLens(el); }); }));
+    [contrastQuery, reduceMotion].forEach(q => q.addEventListener('change', () => { tracked.forEach((v, el) => { if (!el.isConnected) { tracked.delete(el); return; } tracked.set(el, 'stale'); applyLens(el); }); }));
   }
 
   // Charts follow the same type and quiet grid.

@@ -32,9 +32,20 @@ async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
     try {
       const context = await browser.newContext({viewport: {width, height}, hasTouch: width < 1024, isMobile: engine === 'chrome' && width < 768});
       const page = await context.newPage(), errors = [];
+      // Probe: when the original header and overview are first parsed, the page must still be behind the boot splash.
+      await page.addInitScript(() => {
+        window.__bootProbe = null;
+        new MutationObserver((records, observer) => {
+          if (document.getElementById('panelOverview') && document.getElementById('appHeader')) {
+            window.__bootProbe = document.documentElement.classList.contains('fl-booting'); observer.disconnect();
+          }
+        }).observe(document, {childList: true, subtree: true});
+      });
       page.on('pageerror', e => errors.push(e.message));
       await page.goto(url);
       await page.waitForFunction(() => window.teamRecords && !syncStatusBadge.textContent.includes('連線同步中'));
+      assert.equal(await page.evaluate(() => window.__bootProbe), true, 'the half-built page is hidden behind the splash');
+      assert.equal(await page.evaluate(() => document.documentElement.classList.contains('fl-booting')), false, 'the boot splash is gone once the shell is ready');
       // Home is the landing page, fully open, with live numbers and working links.
       assert.equal(await page$(page), 'Home');
       assert.ok(await page.locator('.fl-hero').isVisible());
@@ -70,9 +81,11 @@ async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
         assert.equal(await page.locator('.ui-mobile-nav [data-group="球隊數據"]').getAttribute('aria-current'), 'page');
         const thumb = await page.locator('.ui-mobile-nav .fl-tab-thumb').boundingBox();
         const tab = await page.locator('.ui-mobile-nav [data-group="球隊數據"]').boundingBox();
-        await page.waitForTimeout(700);
-        const settled = await page.locator('.ui-mobile-nav .fl-tab-thumb').boundingBox();
-        assert.ok(Math.abs(settled.x - tab.x) < 2 && Math.abs(settled.width - tab.width) < 2, 'the glass thumb sits on the current tab');
+        // The glass thumb glides onto the current tab (spring animation; wait for it to settle).
+        await page.waitForFunction(() => {
+          const t = document.querySelector('.ui-mobile-nav .fl-tab-thumb').getBoundingClientRect(), b = document.querySelector('.ui-mobile-nav [data-group="球隊數據"]').getBoundingClientRect();
+          return Math.abs(t.x - b.x) < 2 && Math.abs(t.width - b.width) < 2;
+        }, null, {timeout: 4000});
         assert.ok(thumb);
       }
       // Back returns to the previous page.
