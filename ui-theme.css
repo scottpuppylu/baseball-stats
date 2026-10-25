@@ -434,14 +434,24 @@ html.ui-flight {
 html.ui-flight .ui-nav-group { color: var(--fl-ink-3) !important; font-size: 11px !important; font-weight: 600; letter-spacing: .32em !important; padding: 14px 12px 4px !important; }
 html.ui-flight #mainNavigation > button > svg { opacity: .9; }
 html.ui-flight .fl-side-foot { display: none; }
+/* Phone tab bar: clear liquid glass. Light frosting only, so what scrolls behind stays visible; on Chromium
+   ui-theme.js adds a real-time refraction lens (SVG displacement as a backdrop-filter, see html.fl-refract). */
 html.ui-flight .ui-mobile-nav {
-  background: linear-gradient(180deg, rgba(34, 38, 47, .62), rgba(18, 21, 27, .72)) padding-box,
-    linear-gradient(160deg, rgba(255, 255, 255, .36), rgba(160, 200, 255, .14) 25%, rgba(255, 255, 255, .05) 55%, rgba(255, 205, 160, .12) 85%, rgba(255, 255, 255, .24)) border-box !important;
-  border: 1px solid transparent !important;
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  backdrop-filter: blur(26px) saturate(180%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 18px 40px -16px rgba(0, 0, 0, .9);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03) 48%, rgba(255, 255, 255, .055)) !important;
+  border: 1px solid rgba(255, 255, 255, .17) !important;
+  -webkit-backdrop-filter: blur(9px) saturate(190%) brightness(1.06);
+  backdrop-filter: blur(9px) saturate(190%) brightness(1.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 -1px 0 rgba(255, 255, 255, .07), inset 0 0 20px rgba(255, 255, 255, .045), 0 16px 36px -14px rgba(0, 0, 0, .85);
 }
+/* Labels and icons keep a soft shadow so they read over any content passing underneath, including in sunlight. */
+html.ui-flight .ui-mobile-nav button { color: #eef1f5 !important; text-shadow: 0 1px 2px rgba(0, 0, 0, .8), 0 0 8px rgba(0, 0, 0, .35); }
+html.ui-flight .ui-mobile-nav button svg { filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, .7)); }
+html.ui-flight .ui-mobile-nav button[aria-current="page"], html.ui-flight .ui-mobile-nav button[aria-expanded="true"] {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .07)) !important;
+  border: 1px solid rgba(255, 255, 255, .22) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 4px 14px -6px rgba(0, 0, 0, .6) !important;
+}
+html.ui-flight.fl-refract .ui-mobile-nav { -webkit-backdrop-filter: url(#flLiquidNav) saturate(190%) brightness(1.06); backdrop-filter: url(#flLiquidNav) saturate(190%) brightness(1.06); }
 
 /* ---------- Desktop with a mouse (>=1280px): floating glass sidebar + one-line command bar ---------- */
 @media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
@@ -516,22 +526,12 @@ html.ui-flight .ui-mobile-nav {
   html.ui-flight #teamSummaryCards { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 }
 
-/* ---------- Tablets (touch, any width) and narrow laptops: full-width content, the drawer for every page,
-   and a floating glass tab bar within thumb reach (an earlier round required tablets to keep the full content width). ---------- */
+/* ---------- Tablets (touch, any width) and narrow laptops: full-width content; every page sits in the side drawer
+   (collapsed to save space). The phone tab bar is never shown on tablets. ---------- */
 @media (min-width: 768px) and (max-width: 1279px), (min-width: 768px) and (pointer: coarse) {
-  html.ui-flight body { padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important; }
-  html.ui-flight .ui-mobile-nav {
-    display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px;
-    position: fixed; z-index: 70; left: 50%; right: auto; transform: translateX(-50%);
-    bottom: calc(16px + env(safe-area-inset-bottom)); width: min(580px, calc(100% - 48px)); padding: 7px;
-    border-radius: 28px;
-  }
-  html.ui-flight .ui-mobile-nav button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 56px; font-size: 12.5px; letter-spacing: .08em; }
-  html.ui-flight .ui-mobile-nav svg { width: 21px; height: 21px; }
+  html.ui-flight .ui-mobile-nav { display: none !important; }
   html.ui-flight #appHeader { border-radius: 0 0 24px 24px; -webkit-backdrop-filter: var(--fl-liquid-blur); backdrop-filter: var(--fl-liquid-blur); background: var(--fl-liquid) !important; }
   html.ui-flight #mainNavigation { top: 12px !important; bottom: 12px !important; left: 12px !important; height: auto !important; max-height: none !important; border-radius: 28px !important; }
-  html.ui-flight .ui-mobile-nav { transition: opacity .2s var(--fl-ease), transform .25s var(--fl-ease); }
-  html.ui-flight body.ui-nav-open .ui-mobile-nav { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(16px); }
 }
 
 /* ---------- Drawer (tablets) and the "更多" sheet (phone): liquid glass panel ---------- */

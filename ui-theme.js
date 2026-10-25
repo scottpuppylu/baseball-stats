@@ -130,6 +130,77 @@
     }).observe(document.body, {attributes: true, attributeFilter: ['class']});
   }
 
+  // ---------- Real-time refraction for the phone tab bar (Chromium) ----------
+  // A displacement map shaped like a glass lens (strongest at the rim, flat in the middle) drives an SVG filter used as
+  // the bar's backdrop-filter, so the content scrolling underneath is bent live at the edges, with a slight colour
+  // fringe from splitting red/green/blue. Safari and Firefox do not render SVG backdrop filters; they keep the clear
+  // frosted glass from ui-theme.css. Off for "increase contrast" and "reduce motion" users.
+  const tabBar = document.querySelector('.ui-mobile-nav');
+  const chromium = Boolean(navigator.userAgentData && navigator.userAgentData.brands && navigator.userAgentData.brands.some(b => /Chromium|Google Chrome|Microsoft Edge/.test(b.brand)));
+  const phoneQuery = window.matchMedia('(max-width: 767px)');
+  const contrastQuery = window.matchMedia('(prefers-contrast: more)');
+  if (tabBar && chromium) {
+    const NS = 'http://www.w3.org/2000/svg';
+    let svg = null, mapUrl = '', size = '';
+    const lensMap = (w, h) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      const img = ctx.createImageData(w, h);
+      const r = Math.min(26, h / 2), bezel = Math.min(16, h / 2), cx = w / 2, cy = h / 2;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const px = x + .5 - cx, py = y + .5 - cy;
+          const qx = Math.abs(px) - (cx - r), qy = Math.abs(py) - (cy - r);
+          let dist, nx = 0, ny = 0;
+          if (qx > 0 && qy > 0) { const len = Math.hypot(qx, qy) || 1; dist = r - len; nx = Math.sign(px) * qx / len; ny = Math.sign(py) * qy / len; }
+          else if (qx > qy) { dist = cx - Math.abs(px); nx = Math.sign(px); }
+          else { dist = cy - Math.abs(py); ny = Math.sign(py); }
+          const t = Math.max(0, Math.min(1, 1 - dist / bezel));
+          const m = t * t * (3 - 2 * t); // smooth rim curve
+          const i = (y * w + x) * 4;
+          img.data[i] = 128 - nx * m * 127; // sample toward the centre: the rim compresses what lies behind it
+          img.data[i + 1] = 128 - ny * m * 127;
+          img.data[i + 2] = 128;
+          img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    };
+    const channel = k => [0, 1, 2].map(row => [0, 1, 2, 3, 4].map(col => (row === k && col === k ? 1 : 0)).join(' ')).join(' ') + ' 0 0 0 1 0';
+    const build = async () => {
+      if (!phoneQuery.matches || contrastQuery.matches || reduceMotion.matches) { root.classList.remove('fl-refract'); size = ''; return; }
+      const rect = tabBar.getBoundingClientRect();
+      const w = Math.round(rect.width), h = Math.round(rect.height);
+      if (!w || !h || `${w}x${h}` === size) return;
+      size = `${w}x${h}`;
+      const blob = await lensMap(w, h);
+      if (!blob) return;
+      if (mapUrl) URL.revokeObjectURL(mapUrl);
+      mapUrl = URL.createObjectURL(blob);
+      if (!svg) {
+        svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('width', '0');
+        svg.setAttribute('height', '0');
+        svg.setAttribute('style', 'position:absolute');
+        svg.innerHTML = '<filter id="flLiquidNav" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">'
+          + '<feGaussianBlur in="SourceGraphic" stdDeviation="1.6" result="s"/><feImage preserveAspectRatio="none" result="m"/>'
+          + ['r', 'g', 'b'].map((c, k) => `<feDisplacementMap in="s" in2="m" scale="${16 + k * 2}" xChannelSelector="R" yChannelSelector="G" result="d${c}"/><feColorMatrix in="d${c}" type="matrix" values="${channel(k)}" result="${c}"/>`).join('')
+          + '<feBlend in="r" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="b" mode="screen"/></filter>';
+        document.body.append(svg);
+      }
+      const filter = svg.querySelector('filter'), image = svg.querySelector('feImage');
+      for (const el of [filter, image]) { el.setAttribute('x', '0'); el.setAttribute('y', '0'); el.setAttribute('width', String(w)); el.setAttribute('height', String(h)); }
+      image.setAttribute('href', mapUrl);
+      root.classList.add('fl-refract');
+    };
+    new ResizeObserver(() => build()).observe(tabBar);
+    [phoneQuery, contrastQuery, reduceMotion].forEach(q => q.addEventListener('change', () => { size = ''; build(); }));
+    build();
+  }
+
   // Charts follow the same type and quiet grid.
   if (window.Chart && Chart.defaults) {
     const css = getComputedStyle(root);
