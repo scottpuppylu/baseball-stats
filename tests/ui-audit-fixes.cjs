@@ -49,7 +49,7 @@ const output=process.env.UI_QA_OUTPUT||path.join(os.tmpdir(),'baseball-ui-qa');
     await page.route('**/data/games.json?*',fail);
     const cached=await page.evaluate(()=>loadGamesFromGitHub());
     assert.equal(cached,'cache','both read paths fail: use the cache with its actual source');
-    const failed=await page.evaluate(async()=>{localStorage.removeItem('rebas_all_games');return loadGamesFromGitHub();});
+    const failed=await page.evaluate(async()=>{localCache.remove('rebas_all_games');return loadGamesFromGitHub();});
     assert.equal(failed,'failed');
     await page.unroute('**/data/games.json?*',fail);
     await page.unroute('**/__mock-api/data/games.json?*',fail);

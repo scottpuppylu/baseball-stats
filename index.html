@@ -13,6 +13,7 @@
   <meta name="apple-mobile-web-app-title" content="航太系壘">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- Same Tailwind 3.4.17 and Chart.js 4.5.1 the page loaded from CDNs, kept locally so the PWA works offline (vendor/README.md). -->
+  <script src="local-cache.js"></script>
   <script src="vendor/tailwindcss-play-3.4.17.js"></script>
   <script src="vendor/chart.umd-4.5.1.min.js"></script>
   <script src="app-config.js?v=20261016-pwa1"></script>
@@ -57,7 +58,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261025.1523</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261025.2000</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -2368,10 +2369,17 @@
       showToast(lastCloudStatusText || "雲端資料庫：已即時同步");
     };
 
+    // Games, logs, avatars: local-cache.js (IndexedDB). Writes never throw, so a full device cannot fail a cloud load.
+    const localCache = window.LocalCache || {
+      get: key => localStorage.getItem(key),
+      set: (key, value) => { try { localStorage.setItem(key, value); return true; } catch (e) { return false; } },
+      remove: key => localStorage.removeItem(key),
+      ready: Promise.resolve({changed: false})
+    };
     // Corrupted browser storage must not stop the whole page from loading.
     function readStoredJson(key, fallback) {
       try {
-        const value = JSON.parse(localStorage.getItem(key));
+        const value = JSON.parse(localCache.get(key));
         return value === null || value === undefined ? fallback : sanitizeLoadedData(value);
       } catch (e) {
         return fallback;
@@ -2487,7 +2495,7 @@
 
     let allGames = window.allGames = (function() {
       try {
-        const stored = sanitizeLoadedData(JSON.parse(localStorage.getItem('rebas_all_games')) || []);
+        const stored = sanitizeLoadedData(JSON.parse(localCache.get('rebas_all_games')) || []);
         return stored.filter(g => !isSimulatedGame(g));
       } catch (e) {
         return [];
@@ -2588,13 +2596,14 @@
     })();
 
     async function loadDatabaseSource(filePath, storageKey, apply, setSha, optional = false) {
+      await localCache.ready;
       try {
         const { content: rawContent, sha } = await fetchGitHubContent(filePath);
         const content = sanitizeLoadedData(rawContent);
         apply(content, 'cloud');
         setSha(sha);
         rememberCloudBase(filePath, sha, content);
-        localStorage.setItem(storageKey, JSON.stringify(content));
+        localCache.set(storageKey, JSON.stringify(content));
         return 'cloud';
       } catch (err) {
         if (optional && err.status === 404) {
@@ -2608,7 +2617,7 @@
           const content = sanitizeLoadedData(await fetchLocalContent(filePath));
           apply(content, 'static');
           rememberCloudBase(filePath, null, content);
-          localStorage.setItem(storageKey, JSON.stringify(content));
+          localCache.set(storageKey, JSON.stringify(content));
           return 'static';
         } catch (staticErr) {
           const cached = readStoredJson(storageKey, null);
@@ -4720,7 +4729,7 @@ window.toggleDiagnosticsCollapse = function() {
         const result = await commitJsonFile(AVATARS_FILE_PATH, updatedAvatars, commitMessage);
         currentAvatarsSha = result.sha;
         playerAvatars = result.data;
-        localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
+        localCache.set('rebas_player_avatars', JSON.stringify(playerAvatars));
 
 
         setStatusBadge('[連線正常] 頭像已即時同步', 'success');
@@ -4863,7 +4872,7 @@ window.toggleDiagnosticsCollapse = function() {
         const result = await commitJsonFile(DATA_FILE_PATH, updatedLogs, commitMessage, l => l.id);
         currentFileSha = result.sha;
         allLogs = result.data;
-        if (result.merged) localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+        if (result.merged) localCache.set('rebas_logs', JSON.stringify(allLogs));
         syncJerseyMaps();
 
 
@@ -5114,7 +5123,7 @@ window.toggleDiagnosticsCollapse = function() {
 
 
       playerAvatars[targetPlayer] = newAvatarData;
-      localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
+      localCache.set('rebas_player_avatars', JSON.stringify(playerAvatars));
       renderAll();
 
 
@@ -5157,7 +5166,7 @@ window.toggleDiagnosticsCollapse = function() {
     window.clearAvatar = async function(name) {
       if (confirm(`確認自雲端清除 ${name} 的自訂頭像？`)) {
         delete playerAvatars[name];
-        localStorage.setItem('rebas_player_avatars', JSON.stringify(playerAvatars));
+        localCache.set('rebas_player_avatars', JSON.stringify(playerAvatars));
         renderAll();
         await commitAvatarsToGitHub(playerAvatars, `delete: remove avatar for ${name}`);
       }
@@ -7360,11 +7369,11 @@ function renderCustomChart(agg) {
 
         // 1. 自 allGames 中移除該比賽
         allGames = allGames.filter(g => g.id !== gameId);
-        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        localCache.set('rebas_all_games', JSON.stringify(allGames));
 
         // 2. 自 allLogs 中清除該場比賽所有球員日誌
         allLogs = allLogs.filter(l => !(l.id.startsWith(`log_game_${gameId}_`) || l.gameId === gameId));
-        localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+        localCache.set('rebas_logs', JSON.stringify(allLogs));
 
         // 3. 雙向同步推播至 GitHub
         const gamesSynced = await commitGamesToGitHub(allGames, `刪除賽事: ${gameDesc}`);
@@ -8308,7 +8317,7 @@ function renderCustomChart(agg) {
         const result = await commitJsonFile(GAMES_FILE_PATH, updatedGames, commitMessage, g => g.id);
         currentGamesSha = result.sha;
         allGames = result.merged ? result.data.filter(g => !isSimulatedGame(g)) : result.data;
-        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        localCache.set('rebas_all_games', JSON.stringify(allGames));
         // Games another device added or changed also feed the team logs on this device.
         if (result.merged) syncAllGamesToTeamLogs();
 
@@ -9604,7 +9613,7 @@ function renderCustomChart(agg) {
       } else {
         allGames.unshift(JSON.parse(JSON.stringify(activeGame)));
       }
-      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      localCache.set('rebas_all_games', JSON.stringify(allGames));
 
       const success = await commitGamesToGitHub(allGames, `場記同步: 第${activeGame.currentInning}局 vs ${activeGame.opponent}`);
       showSyncResult(success, '✅ 當局場記已成功同步推播至 GitHub！', '當局場記同步失敗；已保留本機紀錄，請再次點擊上傳。');
@@ -9623,7 +9632,7 @@ function renderCustomChart(agg) {
       } else {
         allGames.unshift(finishedGame);
       }
-      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      localCache.set('rebas_all_games', JSON.stringify(allGames));
 
       // 1. 同步賽事紀錄至 GitHub (data/games.json)
       const gamesSynced = await commitGamesToGitHub(allGames, `賽事完賽: vs ${finishedGame.opponent} (${finishedGame.finalScore.us}-${finishedGame.finalScore.opp})`);
@@ -9662,7 +9671,7 @@ function renderCustomChart(agg) {
       if (discardedId && allGames && allGames.length > 0) {
         allGames = allGames.filter(g => g.id !== discardedId);
         if (typeof window !== 'undefined') window.allGames = allGames;
-        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        localCache.set('rebas_all_games', JSON.stringify(allGames));
         syncAllGamesToTeamLogs();
         commitGamesToGitHub(allGames, "清除放棄賽事: " + discardedId).then(success => {
           showSyncResult(success, '已自雲端清除放棄賽事', '放棄賽事的雲端清除失敗；本機已移除，請稍後重試同步。');
@@ -9788,7 +9797,7 @@ function renderCustomChart(agg) {
 
       // 3. 完整綁定合併：以比賽日誌在前、手動日誌在後合成統一數據源
       allLogs = window.allLogs = [...generatedGameLogs, ...manualLogs];
-      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+      localCache.set('rebas_logs', JSON.stringify(allLogs));
       syncJerseyMaps();
       return generatedGameLogs.length;
     }
@@ -9800,7 +9809,7 @@ function renderCustomChart(agg) {
       const oldAutoPrefix = `log_auto_${game.id}_`;
       const logs = buildGameLogs(game);
       allLogs = window.allLogs = [...logs, ...allLogs.filter(l => !l.id.startsWith(logPrefix) && !l.id.startsWith(oldAutoPrefix))];
-      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+      localCache.set('rebas_logs', JSON.stringify(allLogs));
       const success = await commitLogsToGitHub(allLogs, `登入場記至賽事日誌: ${game.date} vs ${game.opponent} (${logs.length}人)`);
       renderAll();
       return { count: logs.length, success };
@@ -9827,11 +9836,11 @@ function renderCustomChart(agg) {
 
       const previousExcluded = game.excludedFromLogs;
       game.excludedFromLogs = true;
-      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      localCache.set('rebas_all_games', JSON.stringify(allGames));
       const gamesSynced = await commitGamesToGitHub(allGames, `撤銷賽事統計: ${game.date} vs ${game.opponent}`);
       if (!gamesSynced) {
         if (previousExcluded === undefined) delete game.excludedFromLogs; else game.excludedFromLogs = previousExcluded;
-        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        localCache.set('rebas_all_games', JSON.stringify(allGames));
         renderAll();
         renderSelectedGameReview(game.id);
         showSyncResult(false, '', '撤銷失敗：賽事排除狀態未上傳，日誌保持原樣，請直接重試。');
@@ -9840,7 +9849,7 @@ function renderCustomChart(agg) {
       const prefix1 = `log_game_${game.id}_`;
       const prefix2 = `log_auto_${game.id}_`;
       allLogs = allLogs.filter(l => !l.id.startsWith(prefix1) && !l.id.startsWith(prefix2));
-      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+      localCache.set('rebas_logs', JSON.stringify(allLogs));
       const success = await commitLogsToGitHub(allLogs, `撤銷賽事日誌: ${game.date} vs ${game.opponent}`);
 
       renderAll();
@@ -9888,7 +9897,7 @@ function renderCustomChart(agg) {
       if (idx === -1 || JSON.stringify(allGames[idx]) === snap.json) return; // deleted, or nothing changed
       allGames[idx] = JSON.parse(snap.json);
       window.allGames = allGames;
-      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      localCache.set('rebas_all_games', JSON.stringify(allGames));
       syncAllGamesToTeamLogs();
       renderAll();
     }
@@ -9910,11 +9919,11 @@ function renderCustomChart(agg) {
       pendingLogins.add(game.id);
       const previousExcluded = game.excludedFromLogs;
       delete game.excludedFromLogs;
-      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      localCache.set('rebas_all_games', JSON.stringify(allGames));
       const gamesSynced = await commitGamesToGitHub(allGames, `重新納入賽事統計: ${game.date} vs ${game.opponent}`);
       if (!gamesSynced) {
         if (previousExcluded !== undefined) game.excludedFromLogs = previousExcluded;
-        localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+        localCache.set('rebas_all_games', JSON.stringify(allGames));
         pendingLogins.delete(game.id);
         renderAll();
         renderSelectedGameReview(game.id);
@@ -9937,13 +9946,13 @@ function renderCustomChart(agg) {
       const deletedId = game.id;
       // 1. 自 allGames 中移除
       allGames = allGames.filter(g => g.id !== deletedId);
-      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      localCache.set('rebas_all_games', JSON.stringify(allGames));
 
       // 2. 自 allLogs 中同步清除對應該場比賽的所有日誌
       const prefix1 = `log_game_${deletedId}_`;
       const prefix2 = `log_auto_${deletedId}_`;
       allLogs = allLogs.filter(l => !l.id.startsWith(prefix1) && !l.id.startsWith(prefix2));
-      localStorage.setItem('rebas_logs', JSON.stringify(allLogs));
+      localCache.set('rebas_logs', JSON.stringify(allLogs));
 
       // 3. 同時推播更新 GitHub 兩大數據庫
       const gamesSynced = await commitGamesToGitHub(allGames, `刪除賽事: ${game.date} vs ${game.opponent}`);
@@ -10649,7 +10658,7 @@ function renderCustomChart(agg) {
 
       applyReviewFormToGame(game);
 
-      localStorage.setItem('rebas_all_games', JSON.stringify(allGames));
+      localCache.set('rebas_all_games', JSON.stringify(allGames));
       const gamesSynced = await commitGamesToGitHub(allGames, `修改賽事紀錄(含投手數據): ${game.date} vs ${game.opponent}`);
 
       // 重新計算並自動綁定更新全隊打擊與投手賽伯計量
@@ -10786,7 +10795,7 @@ function renderCustomChart(agg) {
 
     // 立即從 localStorage 或 baseline 載入快取，0 毫秒極速呈現完整數據，絕不白屏或卡在「連線中...」
     try {
-      const cached = localStorage.getItem('rebas_logs');
+      const cached = localCache.get('rebas_logs');
       if (cached) {
         let parsed = sanitizeLoadedData(JSON.parse(cached));
         // 僅在記憶體中清理 log_game_ 與 log_auto_，讓下方 syncAllGamesToTeamLogs 重新從場記庫合成，絕不覆蓋或抹除手動登記日誌！
@@ -10794,7 +10803,7 @@ function renderCustomChart(agg) {
       }
     } catch(e) {}
     try {
-      const cachedGames = localStorage.getItem('rebas_all_games');
+      const cachedGames = localCache.get('rebas_all_games');
       if (cachedGames) {
         let pGames = sanitizeLoadedData(JSON.parse(cachedGames));
         allGames = window.allGames = pGames.filter(g => !isSimulatedGame(g));
@@ -10811,6 +10820,20 @@ function renderCustomChart(agg) {
     }
     updateDhRuleButtons();
     renderAll();
+    // Cache outgrew localStorage: apply the IndexedDB copy once read (cloud loads await the same promise, then apply on top).
+    localCache.ready.then(({changed}) => {
+      if (!changed) return;
+      try {
+        const logs = sanitizeLoadedData(JSON.parse(localCache.get('rebas_logs')) || []);
+        const manual = logs.filter(l => l && l.id && !l.id.startsWith('log_game_') && !l.id.startsWith('log_auto_'));
+        if (manual.length) allLogs = window.allLogs = manual;
+      } catch (e) { /* invalid cache */ }
+      try { allGames = window.allGames = sanitizeLoadedData(JSON.parse(localCache.get('rebas_all_games')) || []).filter(g => !isSimulatedGame(g)); } catch (e) { /* invalid cache */ }
+      playerAvatars = readStoredJson('rebas_player_avatars', null) || playerAvatars;
+      syncAllGamesToTeamLogs();
+      syncJerseyMaps();
+      renderAll();
+    });
 
     // 背景迅速並行同步 GitHub (最多 3.5 秒超時保護)
     loadLogsFromGitHub();

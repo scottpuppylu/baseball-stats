@@ -30,6 +30,11 @@ function context(extra = {}) {
     commitGamesToGitHub: async () => true, rememberCloudBase() {}, DATA_BRANCH: 'data',
     ...extra,
   };
+  // The page's localCache passes through to localStorage when local-cache.js is absent; mirror that here.
+  ctx.localCache ||= {
+    get: key => ctx.localStorage.getItem(key), set: (key, value) => ctx.localStorage.setItem(key, value),
+    remove: key => ctx.localStorage.removeItem(key), ready: Promise.resolve({changed: false})
+  };
   vm.createContext(ctx);
   vm.runInContext(extract('function showSyncResult(', '\n    }'), ctx);
   // Text safety helpers used by loaders and form handlers.
