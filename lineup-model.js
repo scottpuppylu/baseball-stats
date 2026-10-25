@@ -443,6 +443,26 @@
     return {order: best, runs: bestRuns, evaluations};
   }
 
+  // Lowest-scoring order (pair-swap descent from the strongest hitters batting last): the floor that shows how much order matters.
+  function worstOrder(models, cfg) {
+    const compiled = models.map(m => compileBatter(m, cfg.advance));
+    const run = order => evaluateCompiled(order.map(i => compiled[i]), cfg).runs;
+    const order = models.map((m, i) => i).sort((a, b) => models[a].woba - models[b].woba || a - b);
+    let value = run(order);
+    for (let improved = true; improved;) {
+      improved = false;
+      for (let i = 0; i < order.length - 1; i++) {
+        for (let j = i + 1; j < order.length; j++) {
+          [order[i], order[j]] = [order[j], order[i]];
+          const v = run(order);
+          if (v < value - 1e-9) { value = v; improved = true; }
+          else [order[i], order[j]] = [order[j], order[i]];
+        }
+      }
+    }
+    return {order, runs: value};
+  }
+
   function randomOrderMean(models, cfg, samples = 200, seed = 20261010) {
     const compiled = models.map(m => compileBatter(m, cfg.advance));
     const rand = mulberry32(seed);
@@ -478,7 +498,7 @@
     EVENTS, PRIOR_PA, PRIOR_LIMITS, ADVANCE, DEFAULTS, MAX_PA_PER_INNING,
     teamRates, estimatePriorPa, batterModel, averageBatter, eventOutcomes, compileBatter, halfInning,
     makeConfig, calibrateMinutesPerPa, evaluateOrder, evaluateCompiled, bookOrder,
-    applyLocks, optimizeOrder, randomOrderMean, slotSensitivity
+    applyLocks, optimizeOrder, worstOrder, randomOrderMean, slotSensitivity
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LineupModel = api;

@@ -202,6 +202,9 @@ html.ui-flight #teamSummaryCards > div {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 22px 44px -30px rgba(0, 0, 0, .9) !important;
 }
 html.ui-flight main section section { background: var(--fl-bg-2) !important; box-shadow: none !important; }
+/* A grid <section> (the overview summary row, the analytics chart pair) only lays out separate cards;
+   panel styling on it joins them into one bar. */
+html.ui-flight main section.grid { background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; border-radius: 0 !important; }
 html.ui-flight #teamSummaryCards > div { border-radius: var(--fl-r-lg); }
 html.ui-flight #teamSummaryCards > div > div:first-child,
 html.ui-flight #teamSummaryCards [class*="text-xs"]:first-child { letter-spacing: .04em; color: var(--fl-ink-2); }

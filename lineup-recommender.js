@@ -163,6 +163,7 @@
         sensitivity: chosen.length ? M.slotSensitivity(lineupModels, best.order, cfg, lockInfo.map) : [],
         bookRuns: chosen.length >= 5 ? M.evaluateOrder(lineupModels, M.bookOrder(lineupModels), cfg).runs : null,
         randomRuns: chosen.length ? M.randomOrderMean(lineupModels, cfg) : null,
+        worstRuns: chosen.length >= 2 ? M.worstOrder(lineupModels, cfg).runs : null,
         legacyRuns, minutesPerPa, cfg, history, settings, prior: team.prior, team,
         evaluations: free.evaluations + (locked ? best.evaluations : 0)
       };
@@ -252,9 +253,14 @@
     const locked = sim.lockedSlots.length > 0;
     const signed = d => (d >= 0.005 ? `<span class="text-emerald-400">+${d.toFixed(2)}</span>` : d <= -0.005 ? `<span class="text-amber-300">−${(-d).toFixed(2)}</span>` : '<span class="text-slate-500">±0.00</span>');
     const compare = [
-      ['舊版規則排法（同一批球員）', sim.legacyRuns], ['The Book 排法（最強打者放 1、2、4 棒）', sim.bookRuns], ['隨機排列平均', sim.randomRuns]
+      ['舊版規則排法（同一批球員）', sim.legacyRuns], ['The Book 排法（最強打者放 1、2、4 棒）', sim.bookRuns], ['隨機排列平均', sim.randomRuns], ['最差排法（最強打者全排最後）', sim.worstRuns]
     ].filter(([, v]) => v != null).map(([label, v]) => `<li class="flex justify-between gap-3"><span class="text-slate-400">${label}</span><span class="font-mono text-slate-200">${v.toFixed(2)} 分（${locked ? '鎖定後' : '推薦'} ${signed(sim.runs - v)}）</span></li>`).join('');
     const lockCost = sim.freeRuns - sim.runs;
+    // Why the order matters little: with a high on-base rate the three outs come slowly in every inning.
+    const team = sim.team || {};
+    const teamObp = (team.bb || 0) + (team.s1 || 0) + (team.s2 || 0) + (team.s3 || 0) + (team.hr || 0);
+    const perInning = sim.detail.innings > 0 ? {pa: sim.detail.teamPa.mean / sim.detail.innings, runs: sim.runs / sim.detail.innings} : null;
+    const spread = sim.worstRuns != null ? sim.freeRuns - sim.worstRuns : null;
     const prior = sim.prior || {};
     box.innerHTML = `
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 text-xs">
@@ -264,6 +270,7 @@
           <div class="text-slate-400">約 ${sim.detail.innings.toFixed(1)} 個進攻局；全隊每場約 ${sim.detail.teamPa.mean.toFixed(0)} 打席（八成落在 ${sim.detail.teamPa.p10}–${sim.detail.teamPa.p90}）</div>
           ${locked ? `<div id="lineupLockCost" class="text-amber-200">完全最佳化（不鎖定）${sim.freeRuns.toFixed(2)} 分；${lockCost < 0.005 ? '鎖定後幾乎沒有損失' : `鎖定後每場少 ${lockCost.toFixed(2)} 分`}</div>` : ''}
           <ul class="space-y-1 pt-1 border-t border-slate-800">${compare}</ul>
+          ${perInning && spread != null ? `<p id="lineupOrderImpact" class="text-slate-300 leading-relaxed pt-1 border-t border-slate-800">每個進攻局都要到 3 個出局才結束：以全隊上壘率 ${teamObp.toFixed(3).replace(/^0/, '')} 計算，平均每局 ${perInning.pa.toFixed(1)} 個打席、得 ${perInning.runs.toFixed(1)} 分。上壘率越高，出局來得越慢，棒次的影響越小——最佳與最差排法每場只差 ${spread.toFixed(2)} 分，差距主要來自前段棒次多打的打席。</p>` : ''}
         </div>
         <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2">
           <div class="text-slate-400">每棒每場預期打席（藍）與<span class="text-amber-300">打到第 3 次的機率</span>（計時賽越後段越少）</div>

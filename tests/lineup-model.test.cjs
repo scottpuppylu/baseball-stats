@@ -176,3 +176,13 @@ test('the chance of an n-th plate appearance falls down the order and with n', (
   for (let slot = 1; slot < 10; slot++) for (let n = 0; n < 4; n++) assert.ok(r.paAtLeast[slot][n] <= r.paAtLeast[slot - 1][n] + 1e-12);
   assert.ok(r.paAtLeast[0][2] - r.paAtLeast[9][2] > 0.4, 'a third trip to the plate is far likelier at the top of a timed order');
 });
+test('the worst order bounds every other order from below and the best from above', () => {
+  const M = require('../lineup-model.js');
+  const mk = (name, h) => ({name, pa: 40, bb: 4, k: 2, h1: h, h2: 2, h3: 0, hr: h > 12 ? 3 : 0, gb: 8, fb: 8, ld: 4, pu: 2});
+  const players = [...Array(10)].map((_, i) => mk('p' + i, 6 + i));
+  const team = M.teamRates(players), models = players.map(p => M.batterModel(p, team)), cfg = M.makeConfig({}, team, 10);
+  const worst = M.worstOrder(models, cfg), best = M.optimizeOrder(models, cfg), random = M.randomOrderMean(models, cfg, 50);
+  assert.ok(worst.runs < random && random < best.runs);
+  assert.deepEqual([...worst.order].sort((a, b) => a - b), models.map((m, i) => i), 'a permutation of the hitters');
+  for (let i = 0; i < 9; i++) { const o = worst.order.slice(); [o[i], o[i + 1]] = [o[i + 1], o[i]]; assert.ok(M.evaluateOrder(models, o, cfg).runs >= worst.runs - 1e-9); }
+});
