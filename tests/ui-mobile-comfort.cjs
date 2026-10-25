@@ -135,8 +135,8 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
         await page.locator('.ui-section-bar button',{hasText:label}).click();
         await page.waitForFunction(label=>{const bar=document.querySelector('.ui-section-bar');return bar.querySelector('[aria-current]')?.textContent===label;},label,{timeout:5000});
         await page.waitForTimeout(700);
-        const at=await page.evaluate(()=>{const bar=document.querySelector('.ui-section-bar');return {bar:bar.getBoundingClientRect().top,barH:bar.offsetHeight};});
-        assert.ok(Math.abs(at.bar)<=1,`${width}: jump bar stays at the top (${at.bar})`);
+        const at=await page.evaluate(()=>{const bar=document.querySelector('.ui-section-bar');return {bar:bar.getBoundingClientRect().top,barH:bar.offsetHeight,dock:document.getElementById('appHeader').getBoundingClientRect().bottom};});
+        assert.ok(Math.abs(at.bar-at.dock)<=1.5,`${width}: jump bar docks under the top bar (${at.bar} vs ${at.dock})`);
       }
       assert.equal(await page.locator('.ui-back-top.is-visible').count(),0,'back-to-top stays out of the way while scrolling down');
       await page.mouse.wheel(0,-400);

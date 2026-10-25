@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
-const extras = ['vendor/fonts/tk-sans-400.woff2', 'vendor/fonts/tk-sans-500.woff2', 'vendor/fonts/tk-sans-700.woff2', 'vendor/fonts/tk-serif-600.woff2', 'vendor/fonts/inter-latin-400.woff2', 'vendor/fonts/inter-latin-500.woff2', 'vendor/fonts/inter-latin-600.woff2', 'vendor/fonts/inter-latin-700.woff2', 'assets/logo-128.webp', 'assets/logo-256.webp', 'assets/logo-512.webp', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/maskable-192.png', 'assets/icons/maskable-512.png'];
+const extras = ['vendor/fonts/tk-sans-400.woff2', 'vendor/fonts/tk-sans-500.woff2', 'vendor/fonts/tk-sans-700.woff2', 'vendor/fonts/inter-latin-400.woff2', 'vendor/fonts/inter-latin-500.woff2', 'vendor/fonts/inter-latin-600.woff2', 'vendor/fonts/inter-latin-700.woff2', 'assets/logo-128.webp', 'assets/logo-256.webp', 'assets/logo-512.webp', 'assets/bg-orbit.webp', 'assets/bg-orbit-portrait.webp', 'assets/bg-profile.webp', 'assets/bg-profile-portrait.webp', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/maskable-192.png', 'assets/icons/maskable-512.png'];
 function build(read) {
   let html = read('index.html').toString().replace(/\r\n/g, '\n');
   html = html.replace(/\s*<meta name="baseball-release" content="[^"]+">/g, '');

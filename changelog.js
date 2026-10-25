@@ -1,8 +1,20 @@
-// Version history shown at the bottom of 指標說明. Newest first; every release adds an entry whose version matches
-// the header badge (tests/changelog.test.cjs checks this). The list is built only when opened, so the page stays small.
+// Version history for the 版本紀錄 page (ui-app.js). Newest first; every release adds an entry whose version matches
+// the header badge (tests/changelog.test.cjs checks this). The page builds the list only while it is open.
 (function(root) {
   'use strict';
   const CHANGELOG = [
+    {v: 'v261026.0152', items: [
+      '整個網站改成 App 的使用方式：打開先進入主頁；點左上角隊徽隨時回到主頁；返回鍵／返回手勢在頁面之間返回。',
+      '主頁像 Apple 首頁一樣完全展開：滿版太空主視覺、全隊打擊率／上壘率／OPS／打席、一鍵開始比賽場記、近期比賽、區間焦點與所有功能入口。',
+      '頁面重新分組：球隊數據（總覽、分析、投手、紀錄）、球員（檔案、排行、比較、健康）、比賽（打線、場記）、參考（指標說明、版本紀錄）；同組頁面用標題下方的分段切換。',
+      '手機底部分頁列改為主頁／數據／球員／比賽／更多，每格記得上次的子頁；選中標記是一塊會滑動的玻璃，圖示保留各自顏色。',
+      '原本兩排的頁首改為一條細玻璃工具列；日期篩選、即時重整、守位設定、簡承均切換、匯出 CSV、雲端狀態與版本都收進「工具與篩選」面板，手機與平板多出更多空間。',
+      '所有玻璃改為液態玻璃：整面透鏡（中央輕微放大、邊緣折射最強）＋淺景深失焦，取代毛玻璃；手機底部分頁列更透明，工具面板打開時背景整個失焦、更好閱讀；按鈕顏色辨識度保留，陽光下文字仍清楚（Safari 以一般模糊呈現）。',
+      '球員深度能力檔案加入高清太空背景（手機用直式構圖），卡片為半透明玻璃，數據清楚可讀。',
+      '象限圖、運氣回歸圖等：手機與平板第一次點只顯示該點資訊與「查看檔案」小卡，不再直接跳到個人頁；滑鼠操作不變。',
+      '版本紀錄移到獨立頁面（參考 › 版本紀錄），主頁底部也有入口。',
+      '字體改為 Apple 做法：iPhone、iPad、Mac 使用系統字（SF Pro＋蘋方），其他裝置使用 Inter＋思源黑體；標題改為無襯線粗體。'
+    ]},
     {v: 'v261025.2038', items: [
       '指標說明頁最下方新增「版本更新紀錄」，可展開查看每個版本更新了什麼；之後每次更新都會記錄在這裡。'
     ]},
@@ -167,27 +179,7 @@
       </details>`).join('');
   }
 
-  function mount() {
-    const panel = root.document && root.document.getElementById('panelGlossary');
-    if (!panel || panel.querySelector('#versionHistory')) return;
-    const box = root.document.createElement('div');
-    box.className = 'bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5';
-    box.innerHTML = `<details id="versionHistory">
-        <summary class="cursor-pointer text-sm font-bold text-slate-300"><span class="changelog-caret" aria-hidden="true">▸</span> 版本更新紀錄 <span class="text-xs font-normal text-slate-500">（${CHANGELOG.length} 個版本，點開查看）</span></summary>
-        <div data-changelog-list class="mt-3"></div>
-      </details>`;
-    panel.append(box);
-    const details = box.querySelector('details');
-    details.addEventListener('toggle', () => {
-      const list = box.querySelector('[data-changelog-list]');
-      if (details.open && !list.childElementCount) render(list);
-    });
-  }
-
   root.CHANGELOG = CHANGELOG;
-  if (root.document) {
-    if (root.document.readyState === 'loading') root.document.addEventListener('DOMContentLoaded', mount);
-    else mount();
-  }
+  root.renderChangelog = render; // ui-app.js shows it on its own page (參考 › 版本紀錄)
   if (typeof module !== 'undefined' && module.exports) module.exports = {CHANGELOG, dateOf};
 })(typeof window !== 'undefined' ? window : globalThis);

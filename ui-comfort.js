@@ -54,6 +54,8 @@
   dateControls.addEventListener('click', () => queueMicrotask(updateDateLabel));
   updateDateLabel();
   const pages = {
+    Home: ['主頁', '球隊近況與常用功能。'],
+    Changelog: ['版本紀錄', '每個版本更新了什麼。'],
     Overview: ['全隊總覽', '全隊成績、比賽日誌與補登成績。'],
     Profile: ['球員檔案', '個人指標、逐場成績、擊球分布與診斷。'],
     Leaderboard: ['排行榜', '選擇指標與打席門檻，比較隊內表現。'],
@@ -73,20 +75,38 @@
   const bottom = document.createElement('nav');
   bottom.className = 'ui-mobile-nav';
   bottom.setAttribute('aria-label', '手機常用功能');
-  const shortcuts = { Overview: '總覽', Profile: '球員', Lineup: '打線', Scorebook: '場記' };
-  for (const [key, label] of Object.entries(shortcuts)) {
+  // ---------- Site map ----------
+  // Five places on the phone tab bar; each group's pages switch with a segmented control under the page title.
+  // 參考 (glossary, version history) lives in 「更多」, which also lists every page. Buttons keep their own handlers.
+  const NAV_GROUPS = [
+    ['', ['Home']],
+    ['球隊數據', ['Overview', 'Analytics', 'Pitching', 'Records']],
+    ['球員', ['Profile', 'Leaderboard', 'Compare', 'Health']],
+    ['比賽', ['Lineup', 'Scorebook']],
+    ['參考', ['Glossary', 'Changelog']]
+  ];
+  const SUB_LABELS = {Overview: '總覽', Analytics: '分析', Pitching: '投手', Records: '紀錄', Profile: '檔案', Leaderboard: '排行', Compare: '比較',
+    Health: '健康', Lineup: '打線', Scorebook: '場記', Glossary: '指標說明', Changelog: '版本紀錄'};
+  const groupOf = key => NAV_GROUPS.find(([, keys]) => keys.includes(key)) || NAV_GROUPS[0];
+  const ICON = path => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+  const TABS = [
+    {group: '', label: '主頁', tone: 'home', icon: ICON('<path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>')},
+    {group: '球隊數據', label: '數據', tone: 'data', icon: ICON('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')},
+    {group: '球員', label: '球員', tone: 'player', icon: ICON('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>')},
+    {group: '比賽', label: '比賽', tone: 'game', icon: ICON('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>')}
+  ];
+  // Each group reopens where it was last left, like an app's tabs.
+  const lastInGroup = {};
+  const openPage = key => { const button = document.getElementById(`btnTab${key}`); if (button) button.click(); };
+  for (const tab of TABS) {
+    const keys = NAV_GROUPS.find(([label]) => label === tab.group)[1];
     const button = document.createElement('button');
     button.type = 'button';
-    button.dataset.page = key;
-    const icon = document.getElementById(`btnTab${key}`).querySelector('svg').cloneNode(true);
-    icon.setAttribute('aria-hidden', 'true');
-    button.append(icon);
-    const text = document.createElement('span');
-    text.textContent = label;
-    button.append(text);
-    button.addEventListener('click', () => {
-      document.getElementById(`btnTab${key}`).click();
-    });
+    button.dataset.group = tab.group || 'Home';
+    button.dataset.page = keys[0];
+    button.dataset.tone = tab.tone;
+    button.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
+    button.addEventListener('click', () => openPage(lastInGroup[tab.group] || keys[0]));
     bottom.append(button);
   }
   const more = document.createElement('button');
@@ -137,10 +157,14 @@
   let lastPage;
   function updateNavigation() {
     const active = navigation.querySelector('.tab-active');
-    const key = active?.id.replace('btnTab', '') || 'Overview';
+    const key = active?.id.replace('btnTab', '') || 'Home';
     if (lastPage && lastPage !== key) { window.scrollTo({top: 0, behavior: 'instant'}); detail?.remove(); }
     lastPage = key;
-    const [title, description] = pages[key] || pages.Overview;
+    const [title, description] = pages[key] || pages.Home;
+    const [groupLabel, groupKeys] = groupOf(key);
+    lastInGroup[groupLabel] = key;
+    document.body.dataset.page = key;
+    renderSubnav(groupLabel, groupKeys, key);
     toolbar.querySelector('.ui-current-page').textContent = title;
     document.getElementById('uiPageTitle').textContent = title;
     document.getElementById('uiPageDescription').textContent = description;
@@ -148,14 +172,54 @@
       if (button === active) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
     });
-    bottom.querySelectorAll('[data-page]').forEach(button => {
-      if (button.dataset.page === key) button.setAttribute('aria-current', 'page');
+    bottom.querySelectorAll('[data-group]').forEach(button => {
+      if (button.dataset.group === (groupLabel || 'Home')) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
     });
-    if (!Object.prototype.hasOwnProperty.call(shortcuts, key)) more.setAttribute('aria-current', 'page');
+    if (groupLabel === '參考') more.setAttribute('aria-current', 'page');
     else more.removeAttribute('aria-current');
-    more.lastElementChild.textContent = Object.prototype.hasOwnProperty.call(shortcuts, key) ? '更多' : title;
+    bottom.dispatchEvent(new Event('fl-tab-change'));
   }
+  // Segmented control for the pages of the current group (hidden on Home and for one-page groups).
+  const subnav = document.createElement('nav');
+  subnav.className = 'fl-subnav';
+  subnav.setAttribute('aria-label', '本區頁面');
+  heading.after(subnav);
+  function renderSubnav(groupLabel, keys, current) {
+    const shown = keys.filter(k => document.getElementById(`btnTab${k}`));
+    subnav.hidden = !groupLabel || shown.length < 2;
+    const signature = `${groupLabel}|${shown.join(',')}`;
+    if (subnav.dataset.signature !== signature) {
+      subnav.dataset.signature = signature;
+      subnav.innerHTML = '<span class="fl-subnav-thumb" aria-hidden="true"></span>' + shown.map(k => `<button type="button" data-sub="${k}">${SUB_LABELS[k] || pages[k][0]}</button>`).join('');
+    }
+    subnav.querySelectorAll('[data-sub]').forEach(b => {
+      if (b.dataset.sub === current) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    requestAnimationFrame(() => moveThumb(subnav, subnav.querySelector('[aria-current="page"]')));
+  }
+  subnav.addEventListener('click', event => {
+    const b = event.target.closest('[data-sub]');
+    if (b && b.getAttribute('aria-current') !== 'page') openPage(b.dataset.sub);
+  });
+  // A glass "thumb" glides to the selected item (the segmented control and the tab bar share it).
+  function moveThumb(container, target) {
+    const thumb = container.querySelector(':scope > .fl-subnav-thumb, :scope > .fl-tab-thumb');
+    if (!thumb) return;
+    if (!target || !target.offsetWidth) { thumb.style.opacity = '0'; return; }
+    thumb.style.opacity = '1';
+    thumb.style.width = `${target.offsetWidth}px`;
+    thumb.style.height = `${target.offsetHeight}px`;
+    thumb.style.transform = `translate(${target.offsetLeft}px, ${target.offsetTop}px)`;
+  }
+  const tabThumb = document.createElement('span');
+  tabThumb.className = 'fl-tab-thumb';
+  tabThumb.setAttribute('aria-hidden', 'true');
+  bottom.prepend(tabThumb);
+  const placeTabThumb = () => moveThumb(bottom, bottom.querySelector('button[aria-current="page"]'));
+  bottom.addEventListener('fl-tab-change', () => requestAnimationFrame(placeTabThumb));
+  window.addEventListener('resize', () => { placeTabThumb(); moveThumb(subnav, subnav.querySelector('[aria-current="page"]')); });
+  window.uiNavigation = {groups: NAV_GROUPS, labels: SUB_LABELS, openPage};
   new MutationObserver(updateNavigation).observe(navigation, { subtree: true, attributes: true, attributeFilter: ['class'] });
 
   const scrollAreas = new Set();
@@ -254,7 +318,7 @@
   const sectionBar = document.createElement('nav');
   sectionBar.className = 'ui-section-bar';
   sectionBar.setAttribute('aria-label', '本頁段落');
-  heading.after(sectionBar);
+  subnav.after(sectionBar); // page switcher first, then this page's section chips
   let sectionTargets = [];
   const visible = el => el.getClientRects().length > 0 && !el.closest('.hidden');
   // Short chip names for the long section titles (matched by a distinctive part of the title).
@@ -303,19 +367,21 @@
         // Land just below the sticky chip row.
         const target = sectionTargets[index];
         if (!target?.isConnected) return;
-        const top = target.getBoundingClientRect().top + window.scrollY - (sectionBar.offsetHeight + 12);
+        const top = target.getBoundingClientRect().top + window.scrollY - (stickyBottom() + 12);
         window.scrollTo({top, behavior: 'smooth'});
       });
       sectionBar.append(chip);
     });
     markSection();
   }
+  // The chip row docks under the app's top bar, so landing positions count both.
+  const stickyBottom = () => (parseFloat(getComputedStyle(sectionBar).top) || 0) + sectionBar.offsetHeight;
   function markSection() {
     if (sectionBar.hidden || !sectionTargets.length) return;
     let current = 0;
     // At the very bottom the last sections can never reach the top, so pick the last one on screen.
     const atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
-    const line = atBottom ? window.innerHeight * 0.7 : sectionBar.offsetHeight + 40;
+    const line = atBottom ? window.innerHeight * 0.7 : stickyBottom() + 28;
     sectionTargets.forEach((section, index) => { if (section.getBoundingClientRect().top < line) current = index; });
     sectionBar.querySelectorAll('button').forEach(chip => {
       const on = Number(chip.dataset.index) === current;
@@ -411,26 +477,19 @@
       if (card.querySelectorAll('p').length >= 2) foldable(card);
     });
   }
-  // ---------- Navigation groups ----------
-  // Pages ordered by how they are used: the numbers (people first, then team-wide analysis), the game-day
-  // tools in workflow order (lineup before scoring), and the reference last. Buttons keep their own handlers.
-  const NAV_GROUPS = [
-    ['數據', ['Overview', 'Profile', 'Leaderboard', 'Compare', 'Records', 'Analytics', 'Pitching']],
-    ['比賽', ['Lineup', 'Scorebook']],
-    ['參考', ['Glossary', 'Health']]
-  ];
+  // ---------- Navigation groups: the sidebar, drawer and 「更多」 sheet list every page under NAV_GROUPS ----------
   function arrangeNav() {
     const want = [];
     for (const [label, keys] of NAV_GROUPS) {
-      let head = navigation.querySelector(`.ui-nav-group[data-group="${label}"]`);
-      if (!head) {
+      let head = label ? navigation.querySelector(`.ui-nav-group[data-group="${label}"]`) : null;
+      if (label && !head) {
         head = document.createElement('div');
         head.className = 'ui-nav-group';
         head.dataset.group = label;
         head.setAttribute('aria-hidden', 'true');
         head.textContent = label;
       }
-      want.push(head, ...keys.map(key => document.getElementById(`btnTab${key}`)).filter(Boolean));
+      want.push(...[head, ...keys.map(key => document.getElementById(`btnTab${key}`))].filter(Boolean));
     }
     const current = [...navigation.children].filter(el => want.includes(el));
     if (current.length === want.length && current.every((el, i) => el === want[i])) return;
@@ -597,6 +656,7 @@
   const toolRow = document.querySelector('#uiHeaderTools > div:last-child');
   const dateHome = dateToggle.parentElement, dateNext = dateToggle.nextSibling;
   function placeDateToggle() {
+    if (dateToggle.closest('#flTopbar')) return; // the app top bar (ui-app.js) owns it now
     if (phone() && toolRow && dateToggle.parentElement !== toolRow) toolRow.append(dateToggle);
     else if (!phone() && dateToggle.parentElement !== dateHome) dateHome.insertBefore(dateToggle, dateNext);
   }

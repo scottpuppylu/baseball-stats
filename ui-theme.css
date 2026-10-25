@@ -38,7 +38,7 @@
 @font-face { font-family: "TK Gothic"; src: url("vendor/fonts/tk-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "TK Gothic"; src: url("vendor/fonts/tk-sans-500.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
 @font-face { font-family: "TK Gothic"; src: url("vendor/fonts/tk-sans-700.woff2") format("woff2"); font-weight: 700 900; font-display: swap; }
-@font-face { font-family: "TK Mincho"; src: url("vendor/fonts/tk-serif-600.woff2") format("woff2"); font-weight: 400 900; font-display: swap; }
+/* (Noto Serif TC "TK Mincho" retired 2026/10/26: titles use the sans family.) */
 
 html.ui-flight {
   color-scheme: dark;
@@ -83,7 +83,7 @@ html.ui-flight {
   --fl-ease: cubic-bezier(.2, .8, .2, 1);
   --fl-spring: cubic-bezier(.34, 1.4, .64, 1);
   --fl-font: "Inter Flight", "TK Gothic", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
-  --fl-mincho: "Inter Flight", "TK Mincho", "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --fl-mincho: var(--fl-display); /* titles: same sans family (see "Type" below) */
   --ui-bg: var(--fl-bg);
   --ui-surface: var(--fl-card);
   --ui-line: var(--fl-line-2);
@@ -454,7 +454,6 @@ html.ui-flight .ui-mobile-nav button[aria-current="page"], html.ui-flight .ui-mo
   border: 1px solid rgba(255, 255, 255, .22) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 4px 14px -6px rgba(0, 0, 0, .6) !important;
 }
-html.ui-flight.fl-refract .ui-mobile-nav { -webkit-backdrop-filter: url(#flLiquidNav) saturate(190%) brightness(1.06); backdrop-filter: url(#flLiquidNav) saturate(190%) brightness(1.06); }
 
 /* ---------- Desktop with a mouse (>=1280px): floating glass sidebar + one-line command bar ---------- */
 @media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
@@ -596,3 +595,445 @@ html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][cl
   html.ui-flight :has(> span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"]) { flex-wrap: wrap; row-gap: 6px; }
   html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"] { flex-basis: 100%; margin-left: 0 !important; }
 }
+
+/* =====================================================================================================
+   APP SHELL (2026/10/26) — home page, page groups, refined liquid glass. ui-app.js + ui-comfort.js.
+   ===================================================================================================== */
+/* ---------- Lens glass: translucent, layered, with a light-bending rim drawn by a masked pseudo-element (so the
+   fill can stay see-through without the rim colour bleeding into it) and a soft specular cap. The tint colour
+   (--fl-tint) stays on the text, icon and rim, so every action keeps its colour identity. Text sits on a floor of
+   at least ~55% dark fill, so it stays readable over photos and in sunlight without raising contrast elsewhere. ---------- */
+html.ui-flight {
+  --lens-floor: rgba(19, 22, 28, .56);
+  --lens-fill: linear-gradient(180deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .045) 44%, rgba(255, 255, 255, .02) 56%, rgba(255, 255, 255, .06));
+  --lens-blur: blur(16px) saturate(180%) brightness(1.04);
+  --lens-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), inset 0 -1px 0 rgba(255, 255, 255, .045), 0 1px 1px rgba(0, 0, 0, .35), 0 12px 28px -16px rgba(0, 0, 0, .85);
+  --lens-rim: linear-gradient(155deg, rgba(255, 255, 255, .62), rgba(var(--fl-tint, 190, 215, 255), .34) 24%, rgba(255, 255, 255, .07) 50%, rgba(var(--fl-tint, 255, 210, 170), .22) 80%, rgba(255, 255, 255, .38));
+}
+html.ui-flight :is(.fl-lens, .fl-chip, .fl-version, .fl-point-chip, .fl-subnav, .ui-section-bar button, #appHeader button, .ui-date-toggle, #uiDrawerToggle, #panelScorebook [id^="btnScoreSub"]) {
+  position: relative; isolation: isolate;
+  background: linear-gradient(180deg, rgba(var(--fl-tint, 255, 255, 255), .13), rgba(var(--fl-tint, 255, 255, 255), .035)), var(--lens-fill), var(--lens-floor) !important;
+  border: 1px solid transparent !important;
+  box-shadow: var(--lens-shadow) !important;
+  -webkit-backdrop-filter: var(--lens-blur); backdrop-filter: var(--lens-blur);
+}
+html.ui-flight :is(.fl-lens, .fl-chip, .fl-version, .fl-point-chip, .fl-subnav, .ui-section-bar button, #appHeader button, .ui-date-toggle, #uiDrawerToggle, #panelScorebook [id^="btnScoreSub"])::before {
+  content: ''; position: absolute; inset: -1px; z-index: -1; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: var(--lens-rim);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+html.ui-flight :is(.fl-lens, .fl-chip, .fl-version, .fl-point-chip, .ui-section-bar button, #appHeader button, .ui-date-toggle, #uiDrawerToggle)::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(120% 70% at 50% -18%, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 62%);
+}
+html.ui-flight #appHeader button { color: rgb(var(--fl-tint, 216, 222, 230)) !important; }
+/* Tones used by the app shell (same palette as the data colours). */
+html.ui-flight [data-tone="home"] { --fl-tint: 232, 235, 240; }
+html.ui-flight [data-tone="data"] { --fl-tint: 124, 192, 255; }
+html.ui-flight [data-tone="player"] { --fl-tint: 111, 219, 166; }
+html.ui-flight [data-tone="game"] { --fl-tint: 243, 199, 102; }
+html.ui-flight .fl-lens, html.ui-flight .fl-chip { color: rgb(var(--fl-tint, 232, 235, 240)); font-weight: 600; letter-spacing: .06em; border-radius: 999px; }
+html.ui-flight .fl-lens { min-height: 46px; padding: 10px 20px; font-size: 14.5px; }
+@media (hover: hover) and (pointer: fine) {
+  html.ui-flight :is(.fl-lens, .fl-chip, .fl-version, .ui-section-bar button, #appHeader button):hover { filter: brightness(1.12); }
+}
+
+/* ---------- Phone tab bar: one continuous lens, colour-coded icons, and a glass thumb that glides to the page ---------- */
+html.ui-flight .ui-mobile-nav {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .035) 46%, rgba(255, 255, 255, .055)), rgba(16, 18, 24, .3) !important;
+  border: 1px solid transparent !important;
+  -webkit-backdrop-filter: blur(14px) saturate(185%) brightness(1.05); backdrop-filter: blur(14px) saturate(185%) brightness(1.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), inset 0 -1px 0 rgba(255, 255, 255, .06), inset 0 0 24px rgba(255, 255, 255, .04), 0 18px 40px -16px rgba(0, 0, 0, .9) !important;
+  isolation: isolate;
+}
+html.ui-flight .ui-mobile-nav::before {
+  content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .6), rgba(170, 205, 255, .28) 22%, rgba(255, 255, 255, .06) 50%, rgba(255, 210, 170, .2) 80%, rgba(255, 255, 255, .4));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+html.ui-flight .ui-mobile-nav button,
+html.ui-flight .ui-mobile-nav button[aria-current="page"],
+html.ui-flight .ui-mobile-nav button[aria-expanded="true"] {
+  position: relative; z-index: 1; background: transparent !important; border: 0 !important; box-shadow: none !important;
+  color: #c9d0da !important; text-shadow: 0 1px 1px rgba(0, 0, 0, .55);
+}
+html.ui-flight .ui-mobile-nav button svg { color: rgb(var(--fl-tint, 201, 208, 218)); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .55)); transition: transform .45s var(--fl-spring); }
+html.ui-flight .ui-mobile-nav button[aria-current="page"], html.ui-flight .ui-mobile-nav button[aria-expanded="true"] { color: #f2f4f7 !important; }
+html.ui-flight .ui-mobile-nav button[aria-current="page"] svg { transform: translateY(-1px) scale(1.08); }
+html.ui-flight .ui-mobile-nav button[aria-current="page"] span { font-weight: 700; }
+html.ui-flight #uiMoreNavigation { --fl-tint: 201, 208, 218; }
+html.ui-flight :is(.fl-tab-thumb, .fl-subnav-thumb) {
+  position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; opacity: 0;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .07) 50%, rgba(255, 255, 255, .1));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), inset 0 -1px 0 rgba(255, 255, 255, .1), inset 0 0 0 .5px rgba(255, 255, 255, .22), 0 6px 16px -8px rgba(0, 0, 0, .7);
+  transition: transform .5s var(--fl-spring), width .5s var(--fl-spring), height .3s var(--fl-ease), opacity .2s var(--fl-ease);
+}
+
+/* ---------- Segmented control: the pages of the current group ---------- */
+html.ui-flight .fl-subnav {
+  display: flex; gap: 2px; width: fit-content; max-width: 100%; margin: -6px 0 20px; padding: 4px; border-radius: 999px; overflow-x: auto; scrollbar-width: none;
+}
+html.ui-flight .fl-subnav[hidden] { display: none; }
+html.ui-flight .fl-subnav::-webkit-scrollbar { display: none; }
+html.ui-flight .fl-subnav button {
+  position: relative; z-index: 1; flex: 0 0 auto; min-height: 38px; padding: 7px 18px; border-radius: 999px; background: transparent !important; border: 0 !important; box-shadow: none !important;
+  color: var(--fl-ink-2); font-size: 14px; font-weight: 560; letter-spacing: .08em; white-space: nowrap;
+}
+html.ui-flight .fl-subnav button[aria-current="page"] { color: var(--fl-ink); font-weight: 700; }
+html.ui-flight .fl-subnav-thumb { border-radius: 999px; }
+/* Desktop lists every page in the sidebar already. */
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) { html.ui-flight .fl-subnav { display: none; } }
+@media (max-width: 767px) {
+  html.ui-flight .fl-subnav { width: auto; margin: -4px 0 14px; }
+  html.ui-flight .fl-subnav button { flex: 1 0 auto; padding: 7px 12px; font-size: 13.5px; }
+}
+
+/* ---------- Top bar (all devices): one slim glass row; the old header rows are emptied into the tools panel ---------- */
+html.ui-flight { --fl-top-h: 56px; }
+html.ui-flight #appHeader > .fl-old-header { display: none !important; }
+html.ui-flight #appHeader { position: sticky !important; top: 0; z-index: 70; }
+html.ui-flight #flTopbar {
+  display: flex !important; align-items: center; gap: 10px; min-height: var(--fl-top-h); padding: 8px 14px !important; max-width: none;
+}
+html.ui-flight #flTopbar > * { flex: 0 0 auto; margin: 0 !important; }
+html.ui-flight .fl-top-logo { padding: 0; border: 0; background: none; border-radius: 50%; cursor: pointer; line-height: 0; }
+html.ui-flight .fl-top-logo img { width: 34px; height: 34px; border-radius: 50%; box-shadow: 0 0 0 1px var(--fl-line-2); }
+html.ui-flight .fl-top-title {
+  flex: 1 1 auto !important; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 16px; font-weight: 650; letter-spacing: .1em; color: var(--fl-ink);
+  opacity: 0; transform: translateY(6px); transition: opacity .3s var(--fl-ease), transform .45s var(--fl-spring);
+}
+html.ui-flight #appHeader.fl-title-on .fl-top-title { opacity: 1; transform: none; }
+html.ui-flight .fl-top-space { flex: 0 0 0 !important; }
+html.ui-flight #flTopbar .fl-top-icon, html.ui-flight #flTopbar .fl-status-light {
+  width: 40px; height: 40px; min-height: 40px !important; padding: 0 !important; border-radius: 50% !important; display: inline-flex; align-items: center; justify-content: center;
+}
+html.ui-flight #flTopbar .fl-top-icon svg { width: 20px; height: 20px; }
+html.ui-flight #flTopbar .fl-status-light { width: 34px; height: 34px; min-height: 34px !important; display: inline-flex !important; --fl-tint: 111, 219, 166; }
+html.ui-flight #flTopbar .fl-status-light > span { width: 9px; height: 9px; box-shadow: 0 0 0 3px rgba(111, 219, 166, .18), 0 0 10px rgba(111, 219, 166, .55); }
+html.ui-flight #flTopbar #uiDateToggle { min-height: 40px; padding: 0 16px; border-radius: 999px; font-size: 13px; white-space: nowrap; max-width: 42vw; overflow: hidden; text-overflow: ellipsis; }
+html.ui-flight #flTopbar #uiDrawerToggle { min-height: 40px; padding: 0 14px; border-radius: 999px; font-size: 13.5px; }
+/* Home: the bar floats clear over the hero, then turns to glass. */
+html.ui-flight #appHeader.fl-bar-clear { background: transparent !important; box-shadow: none !important; border-color: transparent !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.ui-flight body[data-page="Home"] #flTopbar #uiDateToggle { display: none !important; }
+html.ui-flight body[data-page="Home"] #appHeader { margin-bottom: calc(-1 * var(--fl-top-h)); }
+
+/* Tools panel: drops from the bar; on phones it spans the width. */
+html.ui-flight #flTools {
+  position: fixed; z-index: 72; top: calc(var(--fl-top-h) + 8px); right: 12px; width: min(440px, calc(100vw - 24px)); max-height: calc(100vh - var(--fl-top-h) - 40px); overflow-y: auto;
+  padding: 18px 18px 20px; border-radius: 26px; display: none;
+  background: var(--fl-liquid) padding-box, var(--fl-liquid-edge) border-box; border: 1px solid transparent;
+  box-shadow: var(--fl-liquid-shadow); -webkit-backdrop-filter: var(--fl-liquid-blur); backdrop-filter: var(--fl-liquid-blur);
+}
+html.ui-flight body.fl-tools-open #flTools { display: block; animation: fl-drop .42s var(--fl-spring); }
+@keyframes fl-drop { from { opacity: 0; transform: translateY(-10px) scale(.97); } to { opacity: 1; transform: none; } }
+html.ui-flight .fl-tools-backdrop { position: fixed; inset: 0; z-index: 65; display: none; background: rgba(4, 5, 8, .45); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+html.ui-flight body.fl-tools-open .fl-tools-backdrop { display: block; }
+html.ui-flight .fl-tools-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+html.ui-flight .fl-tools-head h2 { margin: 0; font-size: 17px; letter-spacing: .14em !important; color: var(--fl-ink); }
+html.ui-flight .fl-tools-done { color: var(--fl-accent); font-weight: 700; font-size: 15px; background: none !important; border: 0 !important; box-shadow: none !important; padding: 6px 4px; }
+html.ui-flight .fl-tools-group { padding: 14px 0 4px; border-top: 1px solid var(--fl-line); }
+html.ui-flight .fl-tools-group h3 { margin: 0 0 10px; font-family: var(--fl-font) !important; font-size: 12.5px; letter-spacing: .24em !important; color: var(--fl-ink-3); }
+html.ui-flight #flTools .ui-date-controls { display: flex !important; flex-direction: column; align-items: stretch; gap: 10px; padding: 0 !important; margin: 0; overflow: visible; }
+html.ui-flight #flTools .ui-date-controls > div { display: flex !important; flex-wrap: wrap; gap: 8px; margin: 0 !important; }
+html.ui-flight #flTools input[type="date"] { flex: 1 1 140px; min-height: 44px; font-size: 15px; border-radius: 14px; }
+html.ui-flight #flTools .ui-date-controls button { min-height: 38px; padding: 6px 14px; border-radius: 999px; }
+html.ui-flight .fl-tools-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+html.ui-flight .fl-tools-actions > button { min-height: 48px; justify-content: center; border-radius: 16px !important; font-size: 14px !important; padding: 8px 12px !important; margin: 0 !important; }
+html.ui-flight #flTools .sm\:hidden { display: none !important; }
+html.ui-flight #flTools .hidden.sm\:inline { display: inline !important; }
+html.ui-flight .fl-tools-status { display: flex; flex-direction: column; gap: 8px; color: var(--fl-ink-2); font-size: 13px; }
+html.ui-flight .fl-tools-status > * { display: block !important; max-width: none !important; white-space: normal !important; margin: 0 !important; }
+html.ui-flight .fl-tools-status #syncStatusBadge { padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--fl-line); font-size: 13px; line-height: 1.5; cursor: pointer; }
+html.ui-flight .fl-tools-status > span:not(#syncStatusBadge) { width: fit-content; background: none !important; border: 0 !important; padding: 0 !important; font-size: 12.5px !important; color: var(--fl-ink-3) !important; }
+/* Section chips dock under the bar. */
+html.ui-flight .ui-section-bar { top: var(--fl-top-h) !important; }
+
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  html.ui-flight #flTopbar .fl-top-logo, html.ui-flight #flTopbar #uiDrawerToggle { display: none !important; }
+  html.ui-flight .fl-top-title { opacity: 1; transform: none; font-family: var(--fl-mincho); font-size: 18px; }
+  html.ui-flight body[data-page="Home"] .fl-top-title { opacity: 0; }
+  html.ui-flight #appHeader { top: 14px; }
+  html.ui-flight body[data-page="Home"] #appHeader { margin: 14px 14px 0 0; }
+}
+@media (max-width: 1279px) {
+  html.ui-flight #appHeader { border-radius: 0 0 22px 22px; }
+}
+@media (max-width: 767px) {
+  html.ui-flight { --fl-top-h: 52px; }
+  html.ui-flight #flTopbar { gap: 8px; padding: 6px 12px !important; }
+  html.ui-flight #flTopbar #uiDateToggle { display: none !important; }
+  html.ui-flight #flTools { left: 10px; right: 10px; width: auto; border-radius: 24px; }
+  html.ui-flight .ui-page-heading p { display: none; }
+}
+
+/* ---------- Home: fully open, edge to edge (Apple-like). Big type, one primary action, full-width bands. ---------- */
+html.ui-flight body[data-page="Home"] .ui-page-heading, html.ui-flight body[data-page="Home"] .ui-section-bar, html.ui-flight body[data-page="Home"] .fl-subnav { display: none !important; }
+html.ui-flight body[data-page="Home"] #appWorkspace { max-width: none !important; padding: 0 !important; }
+html.ui-flight body[data-page="Home"] #appWorkspace > :not(.ui-page-heading):not(.fl-subnav):not(.ui-section-bar):not(main) { margin-left: 16px; margin-right: 16px; }
+html.ui-flight body[data-page="Home"] main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+html.ui-flight .fl-home { display: flex; flex-direction: column; }
+html.ui-flight .fl-hero {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center;
+  min-height: 100svh; padding: calc(var(--fl-top-h) + 9vh) 24px 40px;
+  background: linear-gradient(180deg, rgba(8, 9, 12, .35), rgba(8, 9, 12, 0) 28%, rgba(8, 9, 12, 0) 58%, rgba(8, 9, 12, .78) 90%, var(--fl-bg)), url('assets/bg-orbit.webp') center 68% / cover no-repeat, #07080b;
+}
+html.ui-flight .fl-hero-inner { display: flex; flex-direction: column; align-items: center; max-width: 820px; }
+html.ui-flight .fl-eyebrow { margin: 0; font-family: "Inter Flight", var(--fl-font); font-size: 12px; font-weight: 600; letter-spacing: .44em; color: var(--fl-ink-2); }
+html.ui-flight .fl-hero-title { margin: 18px 0 14px; font-family: var(--fl-font) !important; font-size: clamp(40px, 8.4vw, 92px); font-weight: 600 !important; line-height: 1.08; letter-spacing: .14em !important; color: #f3f5f8; text-indent: .14em; }
+html.ui-flight .fl-hero-sub { margin: 0; max-width: 34em; color: var(--fl-ink-soft); font-size: clamp(15px, 1.6vw, 19px); line-height: 1.7; letter-spacing: .05em; }
+html.ui-flight .fl-hero-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 26px; margin-top: 34px; }
+html.ui-flight .fl-cta {
+  min-height: 50px; padding: 12px 30px; border-radius: 999px; font-size: 16px; font-weight: 650; letter-spacing: .08em; color: #0b0d11 !important;
+  background: linear-gradient(180deg, #ffffff, #e3e8ef) !important; border: 0 !important;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 1px rgba(0, 0, 0, .3), 0 14px 30px -14px rgba(160, 200, 255, .55) !important;
+}
+html.ui-flight .fl-more-link { padding: 8px 2px; color: var(--fl-accent); font-size: 16px; font-weight: 600; letter-spacing: .06em; background: none !important; border: 0 !important; box-shadow: none !important; }
+@media (hover: hover) and (pointer: fine) { html.ui-flight .fl-more-link:hover { text-decoration: underline; text-underline-offset: 4px; } }
+html.ui-flight .fl-telemetry { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(980px, 100%); margin: 48px 0 0; }
+html.ui-flight .fl-telemetry > div { padding: 4px 8px; }
+html.ui-flight .fl-telemetry > div + div { border-left: 1px solid rgba(255, 255, 255, .12); }
+html.ui-flight .fl-telemetry dt { display: flex; flex-direction: column; gap: 3px; color: var(--fl-ink-2); font-size: 12.5px; letter-spacing: .12em; }
+html.ui-flight .fl-telemetry dt span { font-family: "Inter Flight", var(--fl-font); font-size: 11px; font-weight: 600; letter-spacing: .34em; color: var(--fl-ink-3); }
+html.ui-flight .fl-telemetry dd { margin: 8px 0 0; font-family: "Inter Flight", var(--fl-font); font-variant-numeric: tabular-nums; font-size: clamp(26px, 3.6vw, 44px); font-weight: 500; color: #f3f5f8; }
+html.ui-flight .fl-band { padding: clamp(56px, 9vw, 110px) 0 0; }
+html.ui-flight .fl-band-head { max-width: 980px; margin: 0 auto 26px; padding: 0 24px; text-align: center; }
+html.ui-flight .fl-band-head h2 { margin: 0; font-family: var(--fl-font) !important; font-size: clamp(30px, 4.6vw, 52px); font-weight: 600 !important; letter-spacing: .08em !important; color: #f3f5f8; }
+html.ui-flight .fl-band-head p { margin: 10px 0 4px; color: var(--fl-ink-2); font-size: clamp(14.5px, 1.5vw, 18px); letter-spacing: .04em; }
+html.ui-flight .fl-rail { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 300px); gap: 16px; padding: 4px max(24px, calc((100% - 1100px) / 2)) 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; justify-content: start; }
+html.ui-flight .fl-rail::-webkit-scrollbar { display: none; }
+html.ui-flight .fl-rail-3 { grid-auto-columns: minmax(260px, 1fr); max-width: 1100px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+html.ui-flight .fl-card {
+  scroll-snap-align: start; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 190px; padding: 22px; border-radius: 26px; text-align: left; color: var(--fl-ink);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015)), #121419 !important; border: 0 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .08), 0 28px 50px -34px rgba(0, 0, 0, .95) !important;
+}
+html.ui-flight .fl-card-date { font-family: "Inter Flight", var(--fl-font); font-size: 13px; font-weight: 600; letter-spacing: .2em; color: var(--fl-ink-3); }
+html.ui-flight .fl-card-title { font-size: 21px; font-weight: 650; letter-spacing: .06em; }
+html.ui-flight .fl-card-value { font-family: "Inter Flight", var(--fl-font); font-variant-numeric: tabular-nums; font-size: 38px; font-weight: 600; line-height: 1.1; color: #f3f5f8; }
+html.ui-flight .fl-card-meta { margin-top: auto; color: var(--fl-accent); font-size: 13.5px; font-weight: 600; letter-spacing: .04em; }
+html.ui-flight .fl-card.is-empty .fl-card-meta { color: var(--fl-ink-3); }
+html.ui-flight .fl-card .fl-score { font-family: "Inter Flight", var(--fl-font); font-variant-numeric: tabular-nums; font-size: 34px; font-weight: 600; line-height: 1.15; }
+html.ui-flight .fl-score i { font-style: normal; margin: 0 4px; color: var(--fl-ink-3); }
+html.ui-flight .fl-score.is-win { color: var(--fl-green); }
+html.ui-flight .fl-score.is-loss { color: var(--fl-red); }
+html.ui-flight .fl-tag { margin: 8px 0 2px; padding: 4px 11px; border-radius: 999px; font-size: 12.5px; color: var(--fl-ink-2); background: rgba(255, 255, 255, .06); }
+html.ui-flight .fl-leader .fl-card-avatar { width: 64px !important; height: 64px !important; margin-bottom: 6px; border-width: 1px !important; }
+html.ui-flight .fl-empty { margin: 0 24px; color: var(--fl-ink-3); font-size: 15px; }
+html.ui-flight .fl-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+html.ui-flight .fl-tile {
+  display: flex; flex-direction: column; gap: 10px; min-height: 260px; padding: 30px; border-radius: 30px; overflow: hidden;
+  background: radial-gradient(120% 90% at 100% 0%, rgba(var(--fl-tint, 124, 192, 255), .16), rgba(var(--fl-tint, 124, 192, 255), 0) 55%), linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .01)), #111317;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .08), 0 30px 60px -40px rgba(0, 0, 0, .95);
+}
+html.ui-flight .fl-tile h3 { margin: 4px 0 0; font-family: var(--fl-font) !important; font-size: clamp(26px, 3vw, 36px); font-weight: 600 !important; letter-spacing: .1em !important; color: #f3f5f8; }
+html.ui-flight .fl-tile > p:not(.fl-eyebrow) { margin: 0; color: var(--fl-ink-2); font-size: 15px; line-height: 1.7; }
+html.ui-flight .fl-tile .fl-eyebrow { color: rgb(var(--fl-tint, 180, 188, 200)); letter-spacing: .34em; }
+html.ui-flight .fl-tile-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 12px; }
+html.ui-flight .fl-tile .fl-chip { --fl-tint: inherit; }
+html.ui-flight .fl-chip { min-height: 40px; padding: 8px 16px; font-size: 14px; }
+html.ui-flight .fl-home-foot { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: clamp(56px, 8vw, 96px) 24px 40px; text-align: center; }
+html.ui-flight .fl-home-foot p { margin: 0; color: var(--fl-ink-3); font-size: 12.5px; letter-spacing: .14em; }
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  html.ui-flight body[data-page="Home"] #appWorkspace { padding-right: 14px !important; }
+  html.ui-flight .fl-hero { min-height: calc(100vh - 28px); margin-top: calc(-1 * var(--fl-top-h) - 14px); border-radius: 0 0 34px 34px; padding-top: calc(var(--fl-top-h) + 12vh); }
+}
+@media (min-width: 768px) and (max-width: 1279px) {
+  html.ui-flight .fl-tiles { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 767px) {
+  html.ui-flight .fl-hero {
+    padding: calc(var(--fl-top-h) + 7vh) 20px calc(118px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(8, 9, 12, .3), rgba(8, 9, 12, 0) 26%, rgba(8, 9, 12, 0) 52%, rgba(8, 9, 12, .8) 86%, var(--fl-bg)), url('assets/bg-orbit-portrait.webp') center 60% / cover no-repeat, #07080b;
+  }
+  html.ui-flight .fl-hero-title { letter-spacing: .1em !important; text-indent: .1em; }
+  html.ui-flight .fl-hero-cta { flex-direction: column; gap: 6px; margin-top: 28px; width: 100%; }
+  html.ui-flight .fl-cta { width: min(320px, 100%); }
+  html.ui-flight .fl-telemetry { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; margin-top: 36px; }
+  html.ui-flight .fl-telemetry > div:nth-child(3) { border-left: 0; }
+  html.ui-flight .fl-rail, html.ui-flight .fl-rail-3 { grid-auto-columns: 78%; padding-left: 20px; padding-right: 20px; scroll-padding-left: 20px; }
+  html.ui-flight .fl-card { min-height: 172px; padding: 20px; border-radius: 24px; }
+  html.ui-flight .fl-tiles { grid-template-columns: 1fr; padding: 0 16px; }
+  html.ui-flight .fl-tile { min-height: 0; padding: 24px; border-radius: 26px; }
+  html.ui-flight .fl-band-head { padding: 0 20px; margin-bottom: 20px; }
+  html.ui-flight .fl-home-foot { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+}
+
+/* ---------- Header logo and sidebar brand go home ---------- */
+html.ui-flight .fl-home-link { cursor: pointer; }
+html.ui-flight .fl-home-link:focus-visible, html.ui-flight .fl-side-brand:focus-visible { outline: 2px solid var(--fl-accent); outline-offset: 3px; }
+html.ui-flight .fl-side-brand { display: none !important; }
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  html.ui-flight #mainNavigation::before { content: none !important; display: none !important; }
+  html.ui-flight #mainNavigation > .fl-side-brand {
+    display: flex !important; flex: 0 0 auto; flex-direction: column; align-items: center; gap: 10px; order: -1; margin: 0 0 8px; padding: 6px 8px 16px; min-height: 0;
+    background: none !important; border: 0 !important; border-bottom: 1px solid var(--fl-line) !important; border-radius: 0; box-shadow: none !important;
+    font-family: var(--fl-mincho); font-size: 19px; font-weight: 600; letter-spacing: .16em; color: var(--fl-ink);
+  }
+  html.ui-flight #mainNavigation > .fl-side-brand img { width: 68px; height: 68px; border-radius: 50%; box-shadow: 0 0 0 1px var(--fl-line-2), 0 8px 20px -8px rgba(0, 0, 0, .8); }
+}
+
+/* ---------- Player profile: HD background behind the deep profile, glass cards over it ---------- */
+html.ui-flight #panelProfile > section:first-child {
+  background: linear-gradient(180deg, rgba(10, 11, 14, .25), rgba(10, 11, 14, .35) 45%, rgba(10, 11, 14, .78)), url('assets/bg-profile.webp') center bottom / cover no-repeat, #0a0b0e !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 30px 60px -36px rgba(0, 0, 0, .9) !important;
+}
+html.ui-flight #panelProfile > section:first-child :is(#playerProfileBio, #playerProfileCard > div) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02)), rgba(14, 16, 21, .66) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09), inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+@media (max-width: 767px) {
+  html.ui-flight #panelProfile > section:first-child { background: linear-gradient(180deg, rgba(10, 11, 14, .2), rgba(10, 11, 14, .4) 40%, rgba(10, 11, 14, .8)), url('assets/bg-profile-portrait.webp') center top / cover no-repeat, #0a0b0e !important; }
+}
+
+/* ---------- Touch preview card for chart points ---------- */
+html.ui-flight .fl-point-chip {
+  position: fixed; z-index: 90; display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 14px; border-radius: 999px;
+  color: var(--fl-ink); font-size: 14px; font-weight: 600; letter-spacing: .04em; white-space: nowrap;
+}
+html.ui-flight .fl-point-chip button { min-height: 34px; padding: 4px 12px; border-radius: 999px; color: var(--fl-accent); font-weight: 700; background: rgba(255, 255, 255, .06) !important; border: 0 !important; box-shadow: none !important; }
+html.ui-flight .fl-point-chip .fl-point-close { color: var(--fl-ink-2); padding: 4px 10px; }
+
+/* ---------- Version history page ---------- */
+html.ui-flight #panelChangelog summary { list-style: none; }
+html.ui-flight #panelChangelog summary::-webkit-details-marker { display: none; }
+html.ui-flight #panelChangelog .changelog-caret { display: inline-block; color: var(--fl-ink-3); transition: transform .25s var(--fl-spring); }
+html.ui-flight #panelChangelog details[open] > summary > .changelog-caret { transform: rotate(90deg); }
+html.ui-flight #panelChangelog .changelog-version { border-color: var(--fl-line) !important; }
+html.ui-flight #panelChangelog .changelog-version summary { min-height: 44px; align-items: center; }
+html.ui-flight #panelChangelog li { color: var(--fl-ink-soft); font-size: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html.ui-flight :is(.fl-tab-thumb, .fl-subnav-thumb), html.ui-flight .ui-mobile-nav button svg { transition: none; }
+}
+@media (prefers-contrast: more) {
+  html.ui-flight :is(.fl-lens, .fl-chip, .fl-version, .fl-point-chip, .fl-subnav, .ui-section-bar button, #appHeader button) { background: #1a1d23 !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+/* The older desktop header rules style every direct <div> of the header; the bar and the panel opt out. */
+html.ui-flight #flTools { display: none !important; flex-wrap: nowrap; padding: 18px 18px 20px !important; }
+html.ui-flight body.fl-tools-open #flTools { display: block !important; }
+html.ui-flight #flTools > div { display: block !important; }
+html.ui-flight #flTools > .fl-tools-head { display: flex !important; }
+html.ui-flight #flTools .ui-date-controls > div { flex-direction: row !important; align-items: center; }
+html.ui-flight #flTools input[type="date"] { flex: 1 1 130px !important; height: 44px; min-height: 44px; width: auto !important; }
+html.ui-flight #appHeader .fl-top-logo { background: none !important; border: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+html.ui-flight #appHeader .fl-top-logo::before, html.ui-flight #appHeader .fl-top-logo::after { content: none !important; }
+@media (max-width: 767px) { html.ui-flight #flTopbar #uiDrawerToggle { display: none !important; } }
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  html.ui-flight .fl-top-title { opacity: 0; transform: translateY(6px); }
+  html.ui-flight #appHeader.fl-title-on .fl-top-title { opacity: 1; transform: none; }
+  html.ui-flight #flTopbar #uiDateToggle { display: inline-flex !important; align-items: center; }
+  html.ui-flight body[data-page="Home"] #flTopbar #uiDateToggle { display: none !important; }
+}
+/* Tools panel details: date fields in one row, status visible on phones, plain 「完成」. */
+html.ui-flight #flTools .ui-date-controls { flex-direction: row !important; flex-wrap: wrap; align-items: center; }
+html.ui-flight #flTools .ui-date-controls > input, html.ui-flight #flTools .ui-date-controls input[type="date"] { flex: 1 1 130px !important; height: 44px !important; }
+html.ui-flight #flTools .ui-date-controls > div { flex: 1 0 100% !important; }
+html.ui-flight #flTools #syncStatusBadge { display: block !important; }
+html.ui-flight #flTools .fl-tools-done { background: none !important; box-shadow: none !important; border: 0 !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+html.ui-flight #flTools .fl-tools-done::before, html.ui-flight #flTools .fl-tools-done::after { content: none !important; }
+
+/* ---------- Type: Apple's system fonts where available (SF Pro + PingFang TC on iPhone, iPad and Mac), the bundled
+   Inter + Noto Sans TC elsewhere. One sans family everywhere; titles are heavier and slightly tighter instead of serif. ---------- */
+html.ui-flight {
+  --fl-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter Flight", "PingFang TC", "TK Gothic", "Noto Sans TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
+  --fl-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Flight", "PingFang TC", "TK Gothic", "Noto Sans TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
+  --fl-mincho: var(--fl-display);
+}
+html.ui-flight h1, html.ui-flight h2, html.ui-flight h3, html.ui-flight .ui-page-heading h1, html.ui-flight [id$="Modal"] h3 {
+  font-family: var(--fl-display) !important; font-weight: 650 !important; letter-spacing: .02em !important;
+}
+html.ui-flight .ui-page-heading h1 { letter-spacing: .03em !important; font-weight: 700 !important; }
+html.ui-flight body { letter-spacing: .01em; }
+html.ui-flight p, html.ui-flight li { letter-spacing: .015em; }
+html.ui-flight .fl-hero-title { font-family: var(--fl-display) !important; font-weight: 700 !important; letter-spacing: .08em !important; text-indent: .08em; }
+html.ui-flight .fl-band-head h2, html.ui-flight .fl-tile h3 { font-family: var(--fl-display) !important; font-weight: 700 !important; letter-spacing: .04em !important; }
+html.ui-flight :is(.fl-eyebrow, .fl-telemetry dt span, .fl-card-date, .fl-telemetry dd, .fl-card-value, .fl-card .fl-score) { font-family: var(--fl-display); }
+html.ui-flight #mainNavigation > .fl-side-brand, html.ui-flight .fl-top-title { font-family: var(--fl-display) !important; letter-spacing: .06em; font-weight: 650; }
+/* Date chip in the bar on tablets and desktop (phones and Home hide it above with !important). */
+html.ui-flight #flTopbar #uiDateToggle { display: inline-flex; align-items: center; }
+/* The shared lens rule carries ID-level specificity (it lists #appHeader button), so floating pieces restate their position. */
+html.ui-flight .fl-point-chip { position: fixed !important; width: max-content; max-width: calc(100vw - 20px); }
+/* Scorebook sub-tabs: the selected one (the site gives it bg-amber-600) keeps a clear amber lens. */
+html.ui-flight #panelScorebook [id^="btnScoreSub"][class*="bg-amber"] {
+  color: #fff4d6 !important;
+  background: linear-gradient(180deg, rgba(243, 199, 102, .36), rgba(243, 199, 102, .18)), var(--lens-fill), var(--lens-floor) !important;
+}
+
+/* ---------- Clear glass (2026/10/26, later): every glass surface is nearly transparent and separates from what is behind
+   it by refraction (ui-theme.js lenses, Chromium) plus a bright rim, not by frosting. Browsers without SVG backdrop filters
+   (Safari, Firefox) get the same clear glass with only a hint of blur. Text on glass keeps a soft shadow for sunlight. ---------- */
+html.ui-flight {
+  --lens-floor: rgba(14, 16, 21, .16);
+  --lens-fill: linear-gradient(180deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .025) 42%, rgba(255, 255, 255, 0) 58%, rgba(255, 255, 255, .045));
+  --lens-blur: blur(3px) saturate(170%) brightness(.95);
+  --fl-liquid: linear-gradient(180deg, rgba(26, 29, 36, .2), rgba(16, 18, 24, .26));
+  --fl-liquid-blur: blur(3px) saturate(170%) brightness(.92);
+}
+html.ui-flight .ui-mobile-nav {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .02) 46%, rgba(255, 255, 255, .04)), rgba(14, 16, 21, .12) !important;
+  -webkit-backdrop-filter: blur(3px) saturate(175%) brightness(.95); backdrop-filter: blur(3px) saturate(175%) brightness(.95);
+}
+html.ui-flight :is(.fl-tab-thumb, .fl-subnav-thumb) { background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .04) 50%, rgba(255, 255, 255, .07)); }
+/* The large title and controls on clear glass: a soft shadow instead of an opaque backing. */
+html.ui-flight :is(#appHeader, .fl-subnav, .ui-section-bar, #mainNavigation, #flTools, .fl-point-chip) { text-shadow: 0 1px 2px rgba(0, 0, 0, .65), 0 0 10px rgba(0, 0, 0, .3); }
+html.ui-flight :is(#appHeader, .fl-subnav, .ui-section-bar, #mainNavigation) svg { filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, .6)); }
+html.ui-flight .ui-section-bar { background: rgba(10, 11, 14, .18) !important; -webkit-backdrop-filter: blur(3px) saturate(170%); backdrop-filter: blur(3px) saturate(170%); }
+/* Panels open over a dimmed page (no blur), so their clear glass still reads cleanly. */
+html.ui-flight .fl-tools-backdrop, html.ui-flight .ui-nav-backdrop { background: rgba(4, 5, 8, .62) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.ui-flight #appHeader.fl-bar-clear { background: transparent !important; }
+@media (prefers-contrast: more) {
+  html.ui-flight :is(.ui-mobile-nav, #appHeader, #mainNavigation, #flTools, .fl-subnav, .ui-section-bar) { background: #15181d !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
+
+/* Tools panel buttons share the clear lens look (they left the header, whose rule styled them before). */
+html.ui-flight #flTools :is(.fl-tools-actions > button, .ui-date-controls button) {
+  position: relative; isolation: isolate; color: rgb(var(--fl-tint, 216, 222, 230)) !important;
+  background: linear-gradient(180deg, rgba(var(--fl-tint, 255, 255, 255), .13), rgba(var(--fl-tint, 255, 255, 255), .035)), var(--lens-fill), var(--lens-floor) !important;
+  border: 1px solid rgba(255, 255, 255, .16) !important; box-shadow: var(--lens-shadow) !important;
+}
+/* Readability over busy content: small controls and panels that carry text keep a modest tint (still clear, still refracted
+   at the rim); the bars themselves stay nearly clear, and the page dims further behind an open panel. */
+html.ui-flight { --lens-floor: rgba(14, 16, 21, .42); }
+html.ui-flight :is(#flTools, #mainNavigation) { background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .015)), rgba(14, 16, 21, .44) padding-box, var(--fl-liquid-edge) border-box !important; }
+html.ui-flight .fl-tools-backdrop, html.ui-flight .ui-nav-backdrop { background: rgba(4, 5, 8, .78) !important; }
+html.ui-flight .ui-section-bar { background: linear-gradient(180deg, rgba(10, 11, 14, .55), rgba(10, 11, 14, .3)) !important; }
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  html.ui-flight #mainNavigation { background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .012)), rgba(14, 16, 21, .3) padding-box, var(--fl-liquid-edge) border-box !important; }
+}
+/* How much each clear surface dims what passes behind it (refraction lens tone; Safari/Firefox get the same dimming). */
+html.ui-flight .ui-mobile-nav { --fl-lens-tone: saturate(150%) brightness(.58) contrast(.92); -webkit-backdrop-filter: blur(2px) saturate(150%) brightness(.58); backdrop-filter: blur(2px) saturate(150%) brightness(.58); }
+html.ui-flight #appHeader { --fl-lens-tone: saturate(150%) brightness(.66) contrast(.94); }
+html.ui-flight .fl-subnav { --fl-lens-tone: saturate(150%) brightness(.66); }
+html.ui-flight .ui-section-bar { --fl-lens-tone: saturate(150%) brightness(.7); }
+html.ui-flight :is(#flTools, #mainNavigation) { --fl-lens-tone: saturate(140%) brightness(.62); }
+html.ui-flight .fl-point-chip { --fl-lens-tone: saturate(150%) brightness(.6); }
+/* A light frost under the refraction keeps text clear (user, 2026/10/26): ~2.5px in the lens filter (ui-theme.js),
+   6px where refraction is unavailable; dimming eased accordingly. */
+html.ui-flight { --lens-blur: blur(6px) saturate(170%) brightness(.9); --fl-liquid-blur: blur(6px) saturate(170%) brightness(.88); }
+html.ui-flight .ui-mobile-nav { --fl-lens-tone: saturate(155%) brightness(.7) contrast(.94); -webkit-backdrop-filter: blur(6px) saturate(155%) brightness(.7); backdrop-filter: blur(6px) saturate(155%) brightness(.7); }
+html.ui-flight #appHeader { --fl-lens-tone: saturate(155%) brightness(.74); }
+html.ui-flight .fl-subnav { --fl-lens-tone: saturate(155%) brightness(.74); }
+html.ui-flight .ui-section-bar { --fl-lens-tone: saturate(155%) brightness(.78); -webkit-backdrop-filter: blur(6px) saturate(170%); backdrop-filter: blur(6px) saturate(170%); }
+html.ui-flight :is(#flTools, #mainNavigation) { --fl-lens-tone: saturate(145%) brightness(.7); }
+/* Depth of field per surface (--fl-lens-defocus, px) and how much each dims what is behind it. The phone tab bar is the
+   clearest; the tools panel is the most isolated, and the page behind it goes out of focus while it is open. */
+html.ui-flight .ui-mobile-nav {
+  --fl-lens-defocus: 2.2; --fl-lens-tone: saturate(160%) brightness(.8) contrast(.96);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .015) 46%, rgba(255, 255, 255, .03)), rgba(14, 16, 21, .06) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(160%) brightness(.8); backdrop-filter: blur(4px) saturate(160%) brightness(.8);
+}
+html.ui-flight #appHeader, html.ui-flight .fl-subnav { --fl-lens-defocus: 3.5; }
+html.ui-flight .ui-section-bar { --fl-lens-defocus: 3.5; }
+html.ui-flight #mainNavigation { --fl-lens-defocus: 6; }
+html.ui-flight #flTools {
+  --fl-lens-defocus: 9; --fl-lens-tone: saturate(140%) brightness(.55);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .015)), rgba(12, 14, 18, .5) padding-box, var(--fl-liquid-edge) border-box !important;
+  -webkit-backdrop-filter: blur(14px) saturate(140%) brightness(.55); backdrop-filter: blur(14px) saturate(140%) brightness(.55);
+}
+html.ui-flight .fl-tools-backdrop { background: rgba(4, 5, 8, .55) !important; -webkit-backdrop-filter: blur(6px) saturate(120%) !important; backdrop-filter: blur(6px) saturate(120%) !important; }
+html.ui-flight .fl-point-chip { --fl-lens-defocus: 4; }

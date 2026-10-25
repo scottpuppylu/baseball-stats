@@ -53,25 +53,7 @@
   const nav = document.getElementById('mainNavigation');
   const header = document.getElementById('appHeader');
   if (nav && header && header.contains(nav)) header.after(nav);
-  // Wide screens: the sidebar footer carries the version and builder credit; narrow screens: back in the header brand.
-  const brand = document.querySelector('.ui-header-brand');
-  if (nav && brand) {
-    const foot = document.createElement('div');
-    foot.className = 'fl-side-foot';
-    nav.append(foot);
-    // The cloud status joins them, which also keeps the command bar on one line at laptop widths.
-    const moving = [document.getElementById('syncStatusBadge'), ...[...brand.children].filter(el => /^v\d{6}\.\d{4}/.test(el.textContent.trim()) || el.textContent.trim().startsWith('系統建構'))].filter(Boolean);
-    const homes = moving.map(el => [el, el.parentElement, el.nextElementSibling]);
-    const wide = window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)'); // same query as the sidebar layout in ui-theme.css
-    const place = () => {
-      for (const [el, parent, next] of homes) {
-        if (wide.matches) { if (el.parentElement !== foot) foot.append(el); }
-        else if (el.parentElement !== parent) { if (next && next.parentElement === parent) parent.insertBefore(el, next); else parent.append(el); }
-      }
-    };
-    place();
-    wide.addEventListener('change', place);
-  }
+  // The cloud status, version and builder credit live in the tools panel (ui-app.js).
 
   // ---------- Motion: pages, panels, dialogs, drawers and selected states ----------
   // Web Animations only: nothing is left in the DOM or in inline styles afterwards. Page content fades in from a soft
@@ -130,75 +112,120 @@
     }).observe(document.body, {attributes: true, attributeFilter: ['class']});
   }
 
-  // ---------- Real-time refraction for the phone tab bar (Chromium) ----------
-  // A displacement map shaped like a glass lens (strongest at the rim, flat in the middle) drives an SVG filter used as
-  // the bar's backdrop-filter, so the content scrolling underneath is bent live at the edges, with a slight colour
-  // fringe from splitting red/green/blue. Safari and Firefox do not render SVG backdrop filters; they keep the clear
-  // frosted glass from ui-theme.css. Off for "increase contrast" and "reduce motion" users.
-  const tabBar = document.querySelector('.ui-mobile-nav');
+  // ---------- Refraction for every glass surface (Chromium) ----------
+  // Liquid glass: the whole surface is a lens (a gentle bulge, strongest bend at the rim) and what lies behind is set out of
+  // focus like a shallow depth of field, instead of frosted. Each glass element
+  // gets a displacement map shaped like a lens for its own size and corner radius (strongest at the rim, flat in the
+  // middle), used as an SVG filter in its backdrop-filter, so content passing underneath is bent live at the edges with
+  // a slight colour fringe (red/green/blue displaced by different amounts). Maps are cached by size, built when an
+  // element appears or resizes, and set as an inline style, so nothing else in the page changes. Safari and Firefox do
+  // not render SVG backdrop filters; they keep the clear glass from ui-theme.css (a touch of blur only). Off for
+  // "increase contrast" and "reduce motion" users. ui-app.js registers the pieces it creates via window.flRefract().
   const chromium = Boolean(navigator.userAgentData && navigator.userAgentData.brands && navigator.userAgentData.brands.some(b => /Chromium|Google Chrome|Microsoft Edge/.test(b.brand)));
-  const phoneQuery = window.matchMedia('(max-width: 767px)');
   const contrastQuery = window.matchMedia('(prefers-contrast: more)');
-  if (tabBar && chromium) {
-    const NS = 'http://www.w3.org/2000/svg';
-    let svg = null, mapUrl = '', size = '';
-    const lensMap = (w, h) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      const img = ctx.createImageData(w, h);
-      const r = Math.min(26, h / 2), bezel = Math.min(16, h / 2), cx = w / 2, cy = h / 2;
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const px = x + .5 - cx, py = y + .5 - cy;
-          const qx = Math.abs(px) - (cx - r), qy = Math.abs(py) - (cy - r);
-          let dist, nx = 0, ny = 0;
-          if (qx > 0 && qy > 0) { const len = Math.hypot(qx, qy) || 1; dist = r - len; nx = Math.sign(px) * qx / len; ny = Math.sign(py) * qy / len; }
-          else if (qx > qy) { dist = cx - Math.abs(px); nx = Math.sign(px); }
-          else { dist = cy - Math.abs(py); ny = Math.sign(py); }
-          const t = Math.max(0, Math.min(1, 1 - dist / bezel));
-          const m = t * t * (3 - 2 * t); // smooth rim curve
-          const i = (y * w + x) * 4;
-          img.data[i] = 128 - nx * m * 127; // sample toward the centre: the rim compresses what lies behind it
-          img.data[i + 1] = 128 - ny * m * 127;
-          img.data[i + 2] = 128;
-          img.data[i + 3] = 255;
+  const NS = 'http://www.w3.org/2000/svg';
+  let lensSvg = null;
+  const lensCache = new Map(); // key -> Promise<filter id>
+  const lensEnabled = () => chromium && !contrastQuery.matches && !reduceMotion.matches;
+  const channel = k => [0, 1, 2].map(row => [0, 1, 2, 3, 4].map(col => (row === k && col === k ? 1 : 0)).join(' ')).join(' ') + ' 0 0 0 1 0';
+  function lensMap(w, h, r, bezel) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const img = ctx.createImageData(w, h);
+    const cx = w / 2, cy = h / 2;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const px = x + .5 - cx, py = y + .5 - cy;
+        const qx = Math.abs(px) - (cx - r), qy = Math.abs(py) - (cy - r);
+        let dist, nx = 0, ny = 0;
+        if (qx > 0 && qy > 0) { const len = Math.hypot(qx, qy) || 1; dist = r - len; nx = Math.sign(px) * qx / len; ny = Math.sign(py) * qy / len; }
+        else if (qx > qy) { dist = cx - Math.abs(px); nx = Math.sign(px); }
+        else { dist = cy - Math.abs(py); ny = Math.sign(py); }
+        const t = Math.max(0, Math.min(1, 1 - dist / bezel));
+        const m = t * t * (3 - 2 * t); // smooth rim curve
+        // The whole surface is curved, not only the rim: a gentle magnifying bulge (sample toward the centre, more so
+        // further out), with the rim bending hardest.
+        const u = px / cx, v = py / cy, bulge = .32 * Math.min(1, Math.hypot(u, v));
+        const dx = Math.max(-1, Math.min(1, u * bulge + nx * m)), dy = Math.max(-1, Math.min(1, v * bulge + ny * m));
+        const i = (y * w + x) * 4;
+        img.data[i] = 128 - dx * 127;
+        img.data[i + 1] = 128 - dy * 127;
+        img.data[i + 2] = 128;
+        img.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  }
+  function lensFilter(w, h, r, bezel, defocus) {
+    const key = `${w}x${h}r${r}b${bezel}d${defocus}`;
+    if (!lensCache.has(key)) {
+      lensCache.set(key, lensMap(w, h, r, bezel).then(blob => {
+        if (!blob) return '';
+        if (!lensSvg) {
+          lensSvg = document.createElementNS(NS, 'svg');
+          lensSvg.setAttribute('aria-hidden', 'true');
+          lensSvg.setAttribute('width', '0');
+          lensSvg.setAttribute('height', '0');
+          lensSvg.setAttribute('style', 'position:absolute');
+          document.body.append(lensSvg);
         }
-      }
-      ctx.putImageData(img, 0, 0);
-      return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    };
-    const channel = k => [0, 1, 2].map(row => [0, 1, 2, 3, 4].map(col => (row === k && col === k ? 1 : 0)).join(' ')).join(' ') + ' 0 0 0 1 0';
-    const build = async () => {
-      if (!phoneQuery.matches || contrastQuery.matches || reduceMotion.matches) { root.classList.remove('fl-refract'); size = ''; return; }
-      const rect = tabBar.getBoundingClientRect();
-      const w = Math.round(rect.width), h = Math.round(rect.height);
-      if (!w || !h || `${w}x${h}` === size) return;
-      size = `${w}x${h}`;
-      const blob = await lensMap(w, h);
-      if (!blob) return;
-      if (mapUrl) URL.revokeObjectURL(mapUrl);
-      mapUrl = URL.createObjectURL(blob);
-      if (!svg) {
-        svg = document.createElementNS(NS, 'svg');
-        svg.setAttribute('aria-hidden', 'true');
-        svg.setAttribute('width', '0');
-        svg.setAttribute('height', '0');
-        svg.setAttribute('style', 'position:absolute');
-        svg.innerHTML = '<filter id="flLiquidNav" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">'
-          + '<feGaussianBlur in="SourceGraphic" stdDeviation="1.6" result="s"/><feImage preserveAspectRatio="none" result="m"/>'
-          + ['r', 'g', 'b'].map((c, k) => `<feDisplacementMap in="s" in2="m" scale="${16 + k * 2}" xChannelSelector="R" yChannelSelector="G" result="d${c}"/><feColorMatrix in="d${c}" type="matrix" values="${channel(k)}" result="${c}"/>`).join('')
-          + '<feBlend in="r" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="b" mode="screen"/></filter>';
-        document.body.append(svg);
-      }
-      const filter = svg.querySelector('filter'), image = svg.querySelector('feImage');
-      for (const el of [filter, image]) { el.setAttribute('x', '0'); el.setAttribute('y', '0'); el.setAttribute('width', String(w)); el.setAttribute('height', String(h)); }
-      image.setAttribute('href', mapUrl);
-      root.classList.add('fl-refract');
-    };
-    new ResizeObserver(() => build()).observe(tabBar);
-    [phoneQuery, contrastQuery, reduceMotion].forEach(q => q.addEventListener('change', () => { size = ''; build(); }));
-    build();
+        const id = `flLens${lensCache.size}_${w}x${h}`;
+        const filter = document.createElementNS(NS, 'filter');
+        filter.id = id;
+        for (const [a, v] of [['filterUnits', 'userSpaceOnUse'], ['color-interpolation-filters', 'sRGB'], ['x', '0'], ['y', '0'], ['width', w], ['height', h]]) filter.setAttribute(a, String(v));
+        // Depth of field rather than frost: a clean defocus that keeps colour and contrast (no milky haze).
+        const scale = Math.round(Math.min(44, Math.max(bezel * 1.2, Math.min(w, h) * .2)));
+        filter.innerHTML = `<feGaussianBlur in="SourceGraphic" stdDeviation="${defocus}" result="s"/>`
+          + `<feImage href="${URL.createObjectURL(blob)}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="m"/>`
+          + ['r', 'g', 'b'].map((c, k) => `<feDisplacementMap in="s" in2="m" scale="${scale + k * 2}" xChannelSelector="R" yChannelSelector="G" result="d${c}"/><feColorMatrix in="d${c}" type="matrix" values="${channel(k)}" result="${c}"/>`).join('')
+          + '<feBlend in="r" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="b" mode="screen"/>';
+        lensSvg.append(filter);
+        return id;
+      }));
+    }
+    return lensCache.get(key);
+  }
+  const tracked = new Map(); // element -> last size key
+  const clearLens = el => { el.style.removeProperty('backdrop-filter'); el.style.removeProperty('-webkit-backdrop-filter'); el.classList.remove('fl-lens-on'); };
+  async function applyLens(el) {
+    if (!lensEnabled()) { clearLens(el); tracked.set(el, ''); return; }
+    const rect = el.getBoundingClientRect();
+    const w = Math.round(rect.width), h = Math.round(rect.height);
+    if (w < 24 || h < 24) return; // hidden or tiny: wait for the next resize
+    const radius = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, h / 2, w / 2);
+    const bezel = Math.round(Math.max(8, Math.min(18, Math.min(w, h) * .32)));
+    const defocus = parseFloat(getComputedStyle(el).getPropertyValue('--fl-lens-defocus')) || 3;
+    const key = `${w}x${h}r${Math.round(radius)}b${bezel}d${defocus}`;
+    if (tracked.get(el) === key) return;
+    tracked.set(el, key);
+    const id = await lensFilter(w, h, Math.round(radius), bezel, defocus);
+    if (!id || tracked.get(el) !== key) return;
+    // Each surface can dim what lies behind it (no blur): --fl-lens-tone in ui-theme.css.
+    const tone = getComputedStyle(el).getPropertyValue('--fl-lens-tone').trim() || 'saturate(165%) brightness(.94)';
+    const value = `url(#${id}) ${tone}`;
+    el.style.setProperty('backdrop-filter', value, 'important');
+    el.style.setProperty('-webkit-backdrop-filter', value, 'important');
+    el.classList.add('fl-lens-on');
+  }
+  let lensObserver = null;
+  const queued = new Set();
+  window.flRefract = el => {
+    if (!el || tracked.has(el) || !chromium) return;
+    tracked.set(el, '');
+    if (!lensObserver) {
+      lensObserver = new ResizeObserver(entries => {
+        entries.forEach(e => queued.add(e.target));
+        requestAnimationFrame(() => { queued.forEach(applyLens); queued.clear(); });
+      });
+    }
+    lensObserver.observe(el);
+  };
+  if (chromium) {
+    root.classList.add('fl-refract');
+    ['.ui-mobile-nav', '#mainNavigation', '#appHeader', '.fl-subnav', '.ui-section-bar'].forEach(sel => window.flRefract(document.querySelector(sel)));
+    [contrastQuery, reduceMotion].forEach(q => q.addEventListener('change', () => { tracked.forEach((v, el) => { tracked.set(el, 'stale'); applyLens(el); }); }));
   }
 
   // Charts follow the same type and quiet grid.

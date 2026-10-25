@@ -104,7 +104,7 @@ test('accepted legacy declaration is unchanged; no credential copies in other sh
   const original = main.match(declaration), current = read('index.html').match(declaration);
   // Boolean assertion avoids printing a credential-bearing actual/expected value on failure.
   assert.ok(original?.length === 1 && current?.length === 1 && original[0] === current[0], 'only the existing declaration may be retained (RISK_ACCEPTED)');
-  const shipped = ['app-config.js', 'changelog.js', 'local-cache.js', 'pwa.js', 'sw.js', 'ui-comfort.js', 'team-insights.js', 'team-records.js', 'lineup-model.js', 'lineup-recommender.js', 'player-diagnostics.js'];
+  const shipped = ['app-config.js', 'changelog.js', 'ui-app.js', 'local-cache.js', 'pwa.js', 'sw.js', 'ui-comfort.js', 'team-insights.js', 'team-records.js', 'lineup-model.js', 'lineup-recommender.js', 'player-diagnostics.js'];
   for (const file of shipped) {
     const text = read(file);
     assert.doesNotMatch(text, /gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/, file);

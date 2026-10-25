@@ -37,7 +37,7 @@ async function save(p,bats) {
       for(const card of rosterLayout){assert.deepEqual(card.photo,[96,96]);assert.equal(card.fits,true,'roster card contents fit viewport');}
       assert.ok(!/公開讀取/.test(await p.locator('#panelHealth').textContent()),'no public-read notice');
       assert.match(await p.locator('[data-health-summary]').textContent(),/打擊側已設定 \d+／\d+ 位/);
-      assert.equal(await p.locator('#btnTabGlossary').evaluate(e=>e.nextElementSibling.id),'btnTabHealth');
+      assert.equal(await p.locator('#btnTabCompare').evaluate(e=>e.nextElementSibling.id),'btnTabHealth','健康 sits in the 球員 group after 比較');
       await p.waitForFunction(()=>uiPageTitle.textContent==='球員健康資料');
       await p.locator('[name="heightCm"]').fill('178.5');await p.locator('[name="weightKg"]').fill('72.3');
       await p.locator('[name="birthDate"]').fill('2004-02-29');await p.locator('[name="throws"]').selectOption('R');

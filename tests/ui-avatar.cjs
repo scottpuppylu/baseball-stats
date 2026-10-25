@@ -22,6 +22,9 @@ fs.mkdirSync(output,{recursive:true});
         assert.equal(await page.getByRole('button',{name:'更換選手照片',exact:true}).count(),0,'redundant photo button is removed');
         const portrait=page.locator('#playerProfileBio div[onclick="triggerAvatarUpload()"]');
         await portrait.scrollIntoViewIfNeeded();
+        await page.mouse.move(0,0); // the photo has a hover zoom; measure its layout size, not a mid-hover frame
+        await portrait.locator(':scope > :first-child').evaluate(el=>Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{}))));
+        await page.waitForTimeout(300);
         const photo=await portrait.locator(':scope > :first-child').boundingBox();
         const camera=await portrait.locator(':scope > :last-child').boundingBox();
         assert.ok(photo.width>=120 && photo.height>=120,'portrait should be large enough to recognize');

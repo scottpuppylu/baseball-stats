@@ -532,8 +532,3 @@ html { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-ins
 .health-roster-details { display: block; min-width: 0; flex: 1; }
 .health-roster-facts { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; }
 .health-roster-facts > span { white-space: nowrap; }
-/* Version history (changelog.js): a turning arrow shows each row can be opened. */
-#versionHistory summary { list-style: none; }
-#versionHistory summary::-webkit-details-marker { display: none; }
-#versionHistory .changelog-caret { display: inline-block; color: #64748b; transition: transform .2s; }
-#versionHistory details[open] > summary > .changelog-caret, #versionHistory[open] > summary > .changelog-caret { transform: rotate(90deg); }

@@ -8,7 +8,7 @@ const {chromium} = require('playwright');
 const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
 fs.mkdirSync(output, {recursive: true});
-const pages = ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary','Health'];
+const pages = ['Home','Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary','Health','Changelog'];
 const sizes = [[320,568],[390,844],[844,390],[768,1024],[1024,768],[1440,900],[1920,1080]];
 const results = [];
 let browser;
@@ -53,16 +53,18 @@ const contexts = [];
     }
     assert.deepEqual(errors, [], `${width} runtime errors`);
     // Every original summary column remains reachable through "all".
-    if (width < 768) await page.locator('.ui-mobile-nav [data-page="Overview"]').click();
-    else { if (await page.locator('#uiDrawerToggle').isVisible()) await page.locator('#uiDrawerToggle').click(); await page.locator('#btnTabOverview').click(); }
+    if (width < 768) { // the 數據 tab reopens the group's last page; the segmented control picks 總覽
+      await page.locator('.ui-mobile-nav [data-group="球隊數據"]').click();
+      if (!(await page.locator('#panelOverview').isVisible())) await page.locator('.fl-subnav [data-sub="Overview"]').click();
+    } else { if (await page.locator('#uiDrawerToggle').isVisible()) await page.locator('#uiDrawerToggle').click(); await page.locator('#btnTabOverview').click(); }
     await page.locator('#uiSummaryColumns').selectOption('all');
     assert.equal(await page.locator('#viewSummary thead th:visible').count(), 23);
     if (width < 768) {
-      await page.locator('#uiDateToggle').click();
+      await page.locator('#flToolsButton').click(); // the date range lives in the tools panel on phones
       assert.ok(await page.locator('#filterStartDate').isVisible());
       await page.locator('#filterStartDate').fill('2026-09-01');
       await page.locator('#filterEndDate').fill('2026-09-30');
-      await page.locator('#uiDateToggle').click();
+      await page.locator('#flTools .fl-tools-done').click();
       assert.match(await page.locator('#uiDateToggle').textContent(), /2026-09-01/);
       await page.setViewportSize({width: 844, height: 390});
       assert.equal(await page.locator('#filterStartDate').inputValue(), '2026-09-01');
@@ -73,6 +75,7 @@ const contexts = [];
       assert.equal(await page.locator('#uiMoreNavigation').getAttribute('aria-expanded'), 'false');
     }
     // Coach settings must fit and close without altering saved data.
+    await page.locator('#flToolsButton').click(); // coach settings live in the tools panel
     await page.locator('button[onclick="openDefenseModal()"]').click();
     const bounds = await page.locator('#defenseModal > div').boundingBox();
     await page.screenshot({path: path.join(output, `${width}-${height}-Defense.png`)});

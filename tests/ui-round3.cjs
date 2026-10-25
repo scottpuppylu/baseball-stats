@@ -132,7 +132,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     // ---------- 13 & 15. Hooks registry, dead code ----------
     const hooks = await page.evaluate(() => siteHooks.list());
     assert.deepEqual(hooks.after.renderPlayerProfile, ['player-health', 'team-insights', 'team-records']);
-    assert.deepEqual(hooks.after.switchMainTab, ['player-health', 'team-records']);
+    assert.deepEqual(hooks.after.switchMainTab, ['player-health', 'team-records', 'ui-app', 'ui-app', 'ui-app-tools', 'ui-app', 'ui-app-chip']); // ui-app: Home, 版本紀錄, tools panel, back button, chart card
     assert.deepEqual(hooks.after.renderLineupAnalysis, ['lineup-recommender']);
     assert.deepEqual(hooks.replaced, {calculateRecommendedLineup: 'lineup-recommender', renderDiagnostics: 'player-diagnostics'});
     const source = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
@@ -200,7 +200,9 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
 
     // ---------- 21. CSV and full backup ----------
     await page.evaluate(() => switchMainTab('tabOverview'));
+    await page.click('#flToolsButton'); // CSV export lives in the tools panel
     const [csvDownload] = await Promise.all([page.waitForEvent('download'), page.click('#exportCsvBtn')]);
+    await page.click('#flTools .fl-tools-done');
     const csv = fs.readFileSync(await csvDownload.path(), 'utf8').replace(/^﻿/, '').trim().split('\n');
     assert.match(csv[0], /^選手,打席,打數,安打,.*,wOBA,wRC\+,.*,RC\/局,SDI,xBA,xSLG,xwOBA$/);
     const header = csv[0].split(',');

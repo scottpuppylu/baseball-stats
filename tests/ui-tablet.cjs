@@ -22,22 +22,22 @@ fs.mkdirSync(output,{recursive:true});
         if(touch) {
           assert.ok(await drawer.isVisible());
           assert.equal(await page.locator('#mainNavigation').isVisible(),false,'drawer starts collapsed');
-          assert.ok(await page.locator('#uiHeaderTools').isVisible(),'tools always visible');
-          assert.equal(await page.locator('#uiToolsToggle').count(),0,'no tools collapse control');
-          const statusSelector=width<1024?'.ui-header-brand button[onclick="showCloudStatusToast()"]':'#syncStatusBadge';
-          assert.ok(await page.locator('.ui-header-brand').isVisible(),'original brand visible');
-          for(const text of ['淡江航太系壘','系統建構：盧宣嘉',/^v\d{6}\.\d{4}$/]) assert.ok(await page.locator('.ui-header-brand').getByText(text,{exact:true}).isVisible(),String(text)); // version: vYYMMDD.HHMM
-          assert.equal(await page.locator('.ui-current-page').isVisible(),false,'page name must not replace brand');
-          const toolBoxes=await Promise.all(['#uiDrawerToggle','.ui-header-brand',statusSelector,'button[onclick="manualRefresh()"]','button[onclick="openDefenseModal()"]','#btnToggleChien','#exportCsvBtn'].map(selector=>page.locator(selector).boundingBox()));
-          const centers=toolBoxes.map(box=>box.y+box.height/2);
-          assert.ok(Math.max(...centers)-Math.min(...centers)<3,'all header tools occupy one row');
-          for(const box of toolBoxes) assert.ok(box.x>=0 && box.x+box.width<=width,'each tool fits inside viewport');
+          // App shell (2026/10/26): one slim top bar — pages in the drawer (☰), every tool in one panel.
+          const statusSelector='#flTopbar .fl-status-light';
+          // The app opens on Home, where the date chip is hidden (Home is not filtered by page); data pages show it.
+          await page.evaluate(()=>switchMainTab('tabOverview'));
+          const barItems=['#uiDrawerToggle','#flTopbar .fl-top-logo','#uiDateToggle',statusSelector,'#flToolsButton'];
+          for(const selector of barItems) assert.ok(await page.locator(selector).isVisible(),selector);
+          const boxes=await Promise.all(barItems.map(selector=>page.locator(selector).boundingBox()));
+          const centers=boxes.map(box=>box.y+box.height/2);
+          assert.ok(Math.max(...centers)-Math.min(...centers)<3,'the top bar is one row');
+          for(const box of boxes) assert.ok(box.x>=0 && box.x+box.width<=width,'each bar item fits inside viewport');
           const header=await page.locator('#appHeader').boundingBox();
           const workspace=await page.locator('#appWorkspace').boundingBox();
-          assert.ok(header.height<=140,`compact header height ${header.height}`);
+          assert.ok(header.height<=80,`slim top bar (${header.height})`);
           assert.ok(workspace.x<40,'collapsed drawer must release content width');
           await drawer.click();
-          for(const name of ['Overview','Profile','Leaderboard','Analytics','Compare','Lineup','Scorebook','Pitching','Glossary']) assert.ok(await page.locator(`#btnTab${name}`).isVisible());
+          for(const name of ['Home','Overview','Analytics','Pitching','Records','Profile','Leaderboard','Compare','Health','Lineup','Scorebook','Glossary','Changelog']) assert.ok(await page.locator(`#btnTab${name}`).isVisible(),name);
           // Drawer title: small badge beside 所有功能, never the desktop sidebar's large centred badge (it was clipped).
           const title=await page.evaluate(()=>{const s=getComputedStyle(document.getElementById('mainNavigation'),'::before');return {content:s.content,bg:s.backgroundImage,size:s.backgroundSize,height:parseFloat(s.height)};});
           assert.equal(title.content,'"所有功能"');
@@ -53,21 +53,28 @@ fs.mkdirSync(output,{recursive:true});
           await page.locator('#btnTabLeaderboard').click();
           assert.equal(await page.locator('#mainNavigation').isVisible(),false,'selecting a page collapses drawer');
           assert.ok(await page.locator('#panelLeaderboard').isVisible());
-          assert.ok(await page.locator('#uiHeaderTools').isVisible());
-          for(const selector of ['button[onclick="manualRefresh()"]','button[onclick="openDefenseModal()"]','#btnToggleChien','#exportCsvBtn']) assert.ok(await page.locator(selector).isVisible(),selector);
+          assert.ok(await page.locator('.fl-subnav [data-sub="Leaderboard"][aria-current="page"]').isVisible(),'segmented control shows the group');
+          await page.locator('#flToolsButton').click();
+          for(const selector of ['button[onclick="manualRefresh()"]','button[onclick="openDefenseModal()"]','#btnToggleChien','#exportCsvBtn','#filterStartDate','#syncStatusBadge']) assert.ok(await page.locator(selector).isVisible(),selector);
+          for(const text of ['系統建構：盧宣嘉',/^v\d{6}\.\d{4}$/]) assert.ok(await page.locator('#flTools').getByText(text,{exact:true}).isVisible(),String(text));
+          await page.keyboard.press('Escape');
+          assert.equal(await page.locator('#flTools').isVisible(),false,'Escape closes the tools panel');
           await page.locator(statusSelector).click();
           assert.ok(await page.locator('#globalToastContainer').isVisible());
           await page.screenshot({path:path.join(output,`${width}-TabletCompact.png`)});
         } else {
           assert.equal(await drawer.isVisible(),false,'desktop retains full sidebar');
           assert.ok(await page.locator('#mainNavigation').isVisible());
-          const title=await page.evaluate(()=>{const s=getComputedStyle(document.getElementById('mainNavigation'),'::before');return {content:s.content,size:s.backgroundSize};});
-          // Flight design (2026/10/25): floating glass sidebar with a 68px badge above the Mincho team name.
-          assert.deepEqual(title,{content:'"淡江航太系壘"',size:'68px 68px'},'desktop sidebar shows the team badge');
-          assert.ok(await page.locator('.fl-side-foot #syncStatusBadge').isVisible(),'cloud status lives in the sidebar footer');
-          assert.ok(await page.locator('.fl-side-foot').getByText(/^v\d{6}\.\d{4}$/).isVisible(),'version shown in the sidebar footer');
+          const brand=page.locator('#mainNavigation > .fl-side-brand');
+          assert.ok(await brand.isVisible(),'desktop sidebar shows the team badge');
+          assert.deepEqual(await brand.locator('img').evaluate(img=>[img.offsetWidth,img.offsetHeight,img.complete&&img.naturalWidth>0]),[68,68,true]);
+          assert.match(await brand.textContent(),/淡江航太系壘/);
+          await page.locator('#flToolsButton').click();
+          assert.ok(await page.locator('#flTools #syncStatusBadge').isVisible(),'cloud status lives in the tools panel');
+          assert.ok(await page.locator('#flTools').getByText(/^v\d{6}\.\d{4}$/).isVisible(),'version shown in the tools panel');
+          await page.keyboard.press('Escape');
           const bar=await page.locator('#appHeader').boundingBox();
-          assert.ok(bar.height<=80,`desktop command bar stays on one line (${bar.height})`);
+          assert.ok(bar.height<=80,`desktop top bar stays on one line (${bar.height})`);
         }
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'page must not overflow');
         assert.deepEqual(errors,[]);
