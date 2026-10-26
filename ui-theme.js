@@ -89,7 +89,7 @@
       if (!hasClass(r.oldValue, 'hidden') || hasClass(now, 'hidden')) continue;
       if (/^panel/.test(el.id)) revealPage(el);
       else if (/Modal$/.test(el.id) || el.matches('.fixed.inset-0')) revealDialog(el);
-      else if (el.offsetHeight > 40 && el.closest('#appWorkspace')) revealBlock(el);
+      else if (el.offsetHeight > 40 && el.closest('#appWorkspace') && !el.closest('#panelScorebook')) revealBlock(el); // live scoring swaps blocks constantly: controls must not move under the scorer's finger
     }
   }).observe(document.body, {subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'aria-current']});
   // Dialogs created on demand (form dialog, post-game image, detail sheets).

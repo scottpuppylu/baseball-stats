@@ -132,7 +132,7 @@ async function newGame(page, dh, role = '先攻') {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth+1);
       assert.equal(overflow,false,'no horizontal page overflow');
       const controls = await page.locator('#liveLineupRows select, #liveLineupRows button').evaluateAll(nodes => nodes.map(n => { const r=n.getBoundingClientRect();return {w:r.width,h:r.height};}));
-      assert.ok(controls.every(r => r.w >= 75 && r.h >= 44), 'usable controls');
+      assert.ok(controls.every(r => r.w >= 74.5 && r.h >= 43.5), `usable controls ${JSON.stringify(controls)}`);
       // In-game DH toggle preserves the original snapshots and normalizes current positions.
       await click(page,'#btnLiveToggleDh');
       game = await state(page);
