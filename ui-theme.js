@@ -5,28 +5,30 @@
   const root = document.documentElement;
   if (!root.classList.contains('ui-flight')) return;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const EASE = 'cubic-bezier(.2, .8, .2, 1)';
   // Everything a finger can press: buttons, links styled as buttons, clickable cards and rows, chips, summaries, selects.
   const PRESSABLE = 'button, [role="button"], a.inline-flex, label.cursor-pointer, [onclick], .cursor-pointer, summary, select, [data-player], [data-game], [data-health-name], tr[onclick]';
 
-  // Light-catch ripple from the touch point. One shared overlay (#flRipple) is placed over the pressed control and
-  // animated with Web Animations only, so a press changes nothing in the page afterwards (no classes, styles or nodes).
+  // Light-catch ripple from the touch point. One shared overlay (#flRipple) is placed over the pressed control and only
+  // its opacity and the glow's transform animate (compositor work: a press never re-lays out or repaints the page).
   const overlay = document.createElement('div');
   overlay.id = 'flRipple';
   overlay.setAttribute('aria-hidden', 'true');
+  const glow = document.createElement('span');
+  overlay.append(glow);
   document.body.append(overlay);
-  function ripple(el, event) {
+  function ripple(rect, radius, event) {
     if (reduceMotion.matches) return;
-    const rect = el.getBoundingClientRect();
     if (rect.width < 24 || rect.height < 18) return;
     const x = (event.clientX || rect.left + rect.width / 2) - rect.left;
     const y = (event.clientY || rect.top + rect.height / 2) - rect.top;
     const r = Math.ceil(Math.hypot(Math.max(x, rect.width - x), Math.max(y, rect.height - y)));
-    const box = {left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, borderRadius: getComputedStyle(el).borderRadius};
+    Object.assign(overlay.style, {transform: `translate(${rect.left}px, ${rect.top}px)`, width: `${rect.width}px`, height: `${rect.height}px`, borderRadius: radius});
+    Object.assign(glow.style, {left: `${x - r}px`, top: `${y - r}px`, width: `${2 * r}px`, height: `${2 * r}px`});
     try {
       overlay.getAnimations({subtree: true}).forEach(a => a.cancel());
-      overlay.animate([{...box, opacity: 1}, {...box, opacity: 1, offset: .3}, {...box, opacity: 0}], {duration: 600, easing: 'cubic-bezier(.2, .8, .2, 1)'});
-      overlay.animate([{backgroundSize: '8px 8px', backgroundPosition: `${x - 4}px ${y - 4}px`}, {backgroundSize: `${2 * r}px ${2 * r}px`, backgroundPosition: `${x - r}px ${y - r}px`}],
-        {duration: 600, easing: 'cubic-bezier(.2, .8, .2, 1)', pseudoElement: '::after'});
+      overlay.animate([{opacity: 1}, {opacity: 1, offset: .3}, {opacity: 0}], {duration: 560, easing: EASE});
+      glow.animate([{transform: 'scale(.04)'}, {transform: 'scale(1)'}], {duration: 560, easing: EASE});
     } catch (e) { /* older engines: the press compression still gives feedback */ }
   }
 
@@ -34,8 +36,10 @@
     if (event.button > 0) return;
     const el = event.target.closest && event.target.closest(PRESSABLE);
     if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+    // Read layout before writing anything, so the press costs no forced style recalculation.
+    const rect = el.getBoundingClientRect(), radius = getComputedStyle(el).borderRadius;
     el.classList.add('ui-pressed');
-    ripple(el, event);
+    ripple(rect, radius, event);
     // A short tick where the browser supports it (Android). iOS Safari ignores vibrate.
     if (event.pointerType === 'touch' && navigator.vibrate && !reduceMotion.matches) { try { navigator.vibrate(6); } catch (e) { /* not allowed */ } }
   }, {passive: true});
@@ -59,14 +63,13 @@
   // ---------- Motion: pages, panels, dialogs, drawers and selected states ----------
   // Web Animations only: nothing is left in the DOM or in inline styles afterwards. Page content fades in from a soft
   // blur (opacity/filter do not move layout, so taps and measurements land where the user sees them).
-  const EASE = 'cubic-bezier(.2, .8, .2, 1)';
   const SPRING = 'cubic-bezier(.34, 1.56, .64, 1)';
   const motionOk = () => !reduceMotion.matches && document.visibilityState === 'visible';
   const play = (el, frames, options) => { try { el.animate(frames, {fill: 'none', ...options}); } catch (e) { /* not supported */ } };
   function revealPage(panel) {
     play(panel, [{opacity: 0, transform: 'translateY(10px)'}, {opacity: 1, transform: 'none'}], {duration: 380, easing: EASE});
     // The page's own sections follow one after another, like an Apple app settling in.
-    [...panel.children].filter(el => el.offsetHeight > 0).slice(0, 8).forEach((child, i) => {
+    [...panel.children].filter(el => !el.hidden && !el.classList.contains('hidden')).slice(0, 8).forEach((child, i) => { // no layout read: it would force one mid-switch
       play(child, [{opacity: 0}, {opacity: 1}], {duration: 420, delay: 50 + i * 45, easing: EASE, fill: 'backwards'});
     });
   }
@@ -89,7 +92,7 @@
       if (!hasClass(r.oldValue, 'hidden') || hasClass(now, 'hidden')) continue;
       if (/^panel/.test(el.id)) revealPage(el);
       else if (/Modal$/.test(el.id) || el.matches('.fixed.inset-0')) revealDialog(el);
-      else if (el.offsetHeight > 40 && el.closest('#appWorkspace') && !el.closest('#panelScorebook')) revealBlock(el); // live scoring swaps blocks constantly: controls must not move under the scorer's finger
+      else if (el.closest('#appWorkspace') && !el.closest('#panelScorebook') && el.offsetHeight > 40) revealBlock(el); // cheap checks first: offsetHeight forces a layout // live scoring swaps blocks constantly: controls must not move under the scorer's finger
     }
   }).observe(document.body, {subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'aria-current']});
   // Dialogs created on demand (form dialog, post-game image, detail sheets).
@@ -131,14 +134,19 @@
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)'); // content-panel lenses: mouse devices only
   const channel = k => [0, 1, 2].map(row => [0, 1, 2, 3, 4].map(col => (row === k && col === k ? 1 : 0)).join(' ')).join(' ') + ' 0 0 0 1 0';
   function lensMap(w, h, r, bezel) {
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    const img = ctx.createImageData(w, h);
+    // The map is smooth, so it is computed at reduced resolution (about 24k samples, the rim still at least ~5 samples wide)
+    // and the filter stretches it to the element: a fraction of the work, the same refraction.
+    const k = Math.min(1, Math.max(Math.sqrt(24000 / (w * h)), 5 / bezel));
+    const mw = Math.max(8, Math.round(w * k)), mh = Math.max(8, Math.round(h * k));
+    // Written as an uncompressed 24-bit BMP (top-down rows padded to 4 bytes): no canvas, no PNG encoding on the main thread.
+    const stride = (mw * 3 + 3) & ~3, size = 54 + stride * mh;
+    const buf = new ArrayBuffer(size), dv = new DataView(buf), bytes = new Uint8Array(buf);
+    bytes[0] = 0x42; bytes[1] = 0x4d; dv.setUint32(2, size, true); dv.setUint32(10, 54, true); dv.setUint32(14, 40, true);
+    dv.setInt32(18, mw, true); dv.setInt32(22, -mh, true); dv.setUint16(26, 1, true); dv.setUint16(28, 24, true); dv.setUint32(34, stride * mh, true);
     const cx = w / 2, cy = h / 2;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const px = x + .5 - cx, py = y + .5 - cy;
+    for (let my = 0; my < mh; my++) {
+      for (let mx = 0; mx < mw; mx++) {
+        const px = (mx + .5) * w / mw - cx, py = (my + .5) * h / mh - cy;
         const qx = Math.abs(px) - (cx - r), qy = Math.abs(py) - (cy - r);
         let dist, nx = 0, ny = 0;
         if (qx > 0 && qy > 0) { const len = Math.hypot(qx, qy) || 1; dist = r - len; nx = Math.sign(px) * qx / len; ny = Math.sign(py) * qy / len; }
@@ -150,15 +158,13 @@
         // further out), with the rim bending hardest.
         const u = px / cx, v = py / cy, bulge = .32 * Math.min(1, Math.hypot(u, v));
         const dx = Math.max(-1, Math.min(1, u * bulge + nx * m)), dy = Math.max(-1, Math.min(1, v * bulge + ny * m));
-        const i = (y * w + x) * 4;
-        img.data[i] = 128 - dx * 127;
-        img.data[i + 1] = 128 - dy * 127;
-        img.data[i + 2] = 128;
-        img.data[i + 3] = 255;
+        const i = 54 + my * stride + mx * 3; // B, G, R
+        bytes[i] = 128;
+        bytes[i + 1] = Math.round(128 - dy * 127);
+        bytes[i + 2] = Math.round(128 - dx * 127);
       }
     }
-    ctx.putImageData(img, 0, 0);
-    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    return Promise.resolve(new Blob([buf], {type: 'image/bmp'}));
   }
   function lensFilter(w, h, r, bezel, defocus) {
     const key = `${w}x${h}r${r}b${bezel}d${defocus}`;
@@ -244,8 +250,8 @@
     Chart.defaults.font.size = 12;
     Chart.defaults.color = css.getPropertyValue('--fl-ink-2').trim() || '#b4bcc8';
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
-    // Shorter chart animations on touch devices keep page switches smooth on phones.
-    if (window.matchMedia('(pointer: coarse)').matches && Chart.defaults.animation) Chart.defaults.animation.duration = 420;
+    // Touch devices draw charts at once: a page switch then costs one draw instead of a second of redraws.
+    if (window.matchMedia('(pointer: coarse)').matches) Chart.defaults.animation = false;
     if (Chart.defaults.plugins && Chart.defaults.plugins.tooltip) {
       Object.assign(Chart.defaults.plugins.tooltip, {backgroundColor: 'rgba(22, 25, 31, 0.94)', borderColor: 'rgba(255, 255, 255, 0.14)', borderWidth: 1, padding: 10, cornerRadius: 12, titleColor: '#e8ebf0', bodyColor: '#d2d8e0'});
     }

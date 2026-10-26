@@ -1,6 +1,6 @@
-# Builds the site's Chinese typefaces: static weights of Noto Sans TC (gothic, body) and Noto Serif TC (mincho, titles),
+# Builds the site's Chinese typefaces: static weights of Noto Sans TC (gothic, body) and Noto Serif TC Black (mincho, titles),
 # subset to the characters the site actually shows, so the PWA can cache them and pages stay light.
-#   python scripts/build-fonts.py <NotoSansTC[wght].ttf> <NotoSerifTC[wght].ttf>
+#   python scripts/build-fonts.py <NotoSansTC[wght].ttf | -> <NotoSerifTC[wght].ttf>   ("-" keeps the existing sans files)
 # Sources: github.com/google/fonts ofl/notosanstc, ofl/notoseriftc (Adobe Source Han, SIL OFL 1.1). Needs fonttools + brotli.
 # Characters outside the subset (a brand-new player name, say) still display: the browser uses the system font for them.
 import pathlib
@@ -62,9 +62,10 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / 'tk-charset.txt').write_text(chars, encoding='utf-8')
     sizes = {}
-    for weight in (400, 500, 700):
-        sizes[f'tk-sans-{weight}.woff2'] = build(sans, weight, f'tk-sans-{weight}.woff2', chars)
-    sizes['tk-serif-600.woff2'] = build(serif, 600, 'tk-serif-600.woff2', chars)
+    if sans != '-':
+        for weight in (400, 500, 700):
+            sizes[f'tk-sans-{weight}.woff2'] = build(sans, weight, f'tk-sans-{weight}.woff2', chars)
+    sizes['tk-serif-900.woff2'] = build(serif, 900, 'tk-serif-900.woff2', chars)
     print(f'{len(chars)} characters')
     for name, size in sizes.items():
         print(f'{name}: {size / 1024:.0f} KB')

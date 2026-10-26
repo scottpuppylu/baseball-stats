@@ -60,7 +60,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261026.1016</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261026.1214</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -1524,69 +1524,36 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div class="fl-def-row grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                   <section id="liveDefenseFieldCard" class="lg:col-span-6 lineup-field-card" aria-label="查看目前球場守位">
                     <h3>查看目前球場守位</h3>
                     <p class="lineup-help">我方目前守備配置，僅供檢視。換人或守位調整請展開上方歐打單。</p>
                     <div id="liveLineupField"></div>
                   </section>
 
-                <!-- 慢壘投手與防守專屬快捷動作盤 -->
-                <div class="lg:col-span-6 bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                  <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                    <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                      <span>⚾</span> 投手與守備事件快捷登打 (慢壘實用版)
-                    </span>
-                    <span class="text-[11px] text-slate-500 font-mono">點擊即時抓出局或記失分</span>
+                <!-- 慢壘投手與防守專屬快捷動作盤（場記以實用為先：大按鈕、分組、整列寬） -->
+                <div class="fl-def-pad">
+                  <div class="fl-def-head">
+                    <h3>投手與守備快捷登打</h3>
+                    <span>點一下即記錄出局、上壘或失分</span>
                   </div>
-
-                  <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-bold">
-                    <button onclick="recordDefenseEvent('GO')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
-                      <span class="text-base">🟢</span>
-                      <span>滾地刺殺 (+1 Out)</span>
-                    </button>
-                    <button onclick="recordDefenseEvent('FO')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
-                      <span class="text-base">🔵</span>
-                      <span>接殺出局 (+1 Out)</span>
-                    </button>
-                    <button onclick="recordDefenseEvent('K')" class="bg-rose-950/60 hover:bg-rose-900/80 border border-rose-700/80 text-rose-300 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
-                      <span class="text-base">🔴</span>
-                      <span>揮空三振 (+1 Out)</span>
-                    </button>
-                    <button onclick="recordDefenseEvent('界外K')" class="bg-rose-900/70 hover:bg-rose-800 border border-amber-500/70 text-amber-200 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow" title="慢壘規程：兩好球後擊出界外球出局 (+1 出局)">
-                      <span class="text-base">🛑</span>
-                      <span>界外三振 (+1 Out)</span>
-                    </button>
-                    <button onclick="recordDefenseEvent('DP')" class="bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/80 text-purple-300 p-2.5 rounded-xl transition flex flex-col items-center justify-center gap-1 shadow">
-                      <span class="text-base">🟣</span>
-                      <span>雙殺完成 (+2 Out)</span>
-                    </button>
+                  <p class="fl-def-label">出局</p>
+                  <div class="fl-def-grid fl-def-outs">
+                    <button onclick="recordDefenseEvent('GO')" class="fl-def-btn" data-tone="out"><b>滾地刺殺</b><small>+1 出局</small></button>
+                    <button onclick="recordDefenseEvent('FO')" class="fl-def-btn" data-tone="out"><b>接殺出局</b><small>+1 出局</small></button>
+                    <button onclick="recordDefenseEvent('K')" class="fl-def-btn" data-tone="k"><b>揮空三振</b><small>+1 出局</small></button>
+                    <button onclick="recordDefenseEvent('界外K')" class="fl-def-btn" data-tone="k" title="慢壘規程：兩好球後擊出界外球出局 (+1 出局)"><b>界外三振</b><small>+1 出局</small></button>
+                    <button onclick="recordDefenseEvent('DP')" class="fl-def-btn" data-tone="dp"><b>雙殺</b><small>+2 出局</small></button>
+                    <button onclick="recordDefenseEvent('RUNNER_OUT')" class="fl-def-btn" data-tone="dp" title="守備觸殺、牽制或刺殺對方跑壘者出局 (+1 出局)"><b>跑者出局</b><small>+1 出局</small></button>
                   </div>
-
-                  <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-bold pt-1">
-                    <button onclick="recordDefenseEvent('RUNNER_OUT')" class="bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/80 text-purple-300 p-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow" title="守備觸殺、牽制或刺殺對方跑壘者出局 (+1 出局)">
-                      <span>🟣</span>
-                      <span>跑者出局 (+1 Out)</span>
-                    </button>
-                    <button onclick="recordDefenseEvent('BB')" class="bg-amber-950/50 hover:bg-amber-900/70 border border-amber-700/70 text-amber-300 p-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
-                      <span>🟡</span>
-                      <span>四壞保送 (BB)</span>
-                    </button>
-                    <button onclick="recordDefenseEvent('HIT')" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 p-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
-                      <span>🟠</span>
-                      <span>被擊出安打 (Hit)</span>
-                    </button>
-                    <button onclick="recordDefenseEvent('RUN', 1)" class="bg-rose-950/50 hover:bg-rose-900/70 border border-rose-700/80 text-rose-300 p-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
-                      <span>💥</span>
-                      <span>對方得分 (+1 分)</span>
-                    </button>
-                    <button onclick="recordDefenseEvent('RUN', 2)" class="bg-rose-950/50 hover:bg-rose-900/70 border border-rose-700/80 text-rose-300 p-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
-                      <span>💥</span>
-                      <span>對方得分 (+2 分)</span>
-                    </button>
+                  <p class="fl-def-label">上壘・失分</p>
+                  <div class="fl-def-grid fl-def-onbase">
+                    <button onclick="recordDefenseEvent('BB')" class="fl-def-btn" data-tone="bb"><b>四壞保送</b><small>BB</small></button>
+                    <button onclick="recordDefenseEvent('HIT')" class="fl-def-btn" data-tone="hit"><b>被擊出安打</b><small>Hit</small></button>
+                    <button onclick="recordDefenseEvent('RUN', 1)" class="fl-def-btn" data-tone="run"><b>對方得分</b><small>+1 分</small></button>
+                    <button onclick="recordDefenseEvent('RUN', 2)" class="fl-def-btn" data-tone="run"><b>對方得分</b><small>+2 分</small></button>
                   </div>
                 </div>
-
                 </div>
 
                 <!-- 本局防守事件歷程表 -->

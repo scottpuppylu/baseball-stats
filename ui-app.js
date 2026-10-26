@@ -247,7 +247,10 @@
   try { history.replaceState({...(history.state || {}), flTab: 'tabHome'}, ''); } catch (error) { /* sandboxed */ }
   window.siteHooks.after('switchMainTab', 'ui-app', tabId => {
     if (restoring || !tabId) return;
-    try { if ((history.state || {}).flTab !== tabId) history.pushState({flTab: tabId}, ''); } catch (error) { /* sandboxed */ }
+    // Recorded after the new page has painted: pushState talks to the browser process and would delay the switch.
+    requestAnimationFrame(() => setTimeout(() => {
+      try { if ((history.state || {}).flTab !== tabId) history.pushState({flTab: tabId}, ''); } catch (error) { /* sandboxed */ }
+    }, 0));
   });
   window.addEventListener('popstate', event => {
     const tab = event.state && event.state.flTab;

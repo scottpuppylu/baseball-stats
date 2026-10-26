@@ -6,7 +6,6 @@
   const SAMPLE_PA = 20;
   const RECENT_GAMES = 5;
   const TEAM_NAME = '淡江航太系壘';
-  const FONT = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
   // Team badge for the post-game image; loaded once, and the image is drawn without it if it fails.
   const LOGO = typeof Image === 'function' ? new Image() : null;
   const logoReady = LOGO ? new Promise(resolve => { LOGO.onload = LOGO.onerror = resolve; LOGO.src = 'assets/logo-256.webp'; }) : Promise.resolve();
@@ -751,12 +750,24 @@
   }
 
   // ---------- Post-game image ----------
-  // Team colours (from the badge): navy, red and white, with gold reserved for the MVP.
+  // The home page's art direction: a space scene with a planet horizon, clear glass panels with a hairline rim,
+  // titles in Mincho Black (思源宋體) and numbers in the calm serif of the site's content type. Gold stays the MVP's.
   const IMG = {
-    bgTop: '#0a1a44', bgBottom: '#060d22', panel: '#0f1f45', panelEdge: '#ffffff1f', row: '#13254f',
-    red: '#e11d48', redSoft: '#fda4af', white: '#f8fafc', muted: '#94a3b8', dim: '#64748b',
-    green: '#34d399', amber: '#fbbf24', sky: '#7dd3fc', gold: '#fbbf24'
+    ink: '#f3f5f8', soft: '#d6dce4', muted: '#a3adbb', dim: '#7c8796', line: 'rgba(255,255,255,0.16)',
+    glass: 'rgba(255,255,255,0.055)', glassHi: 'rgba(255,255,255,0.1)', red: '#ff6b81', redSoft: '#ffa3b1',
+    green: '#5ee0a8', amber: '#f3c766', sky: '#8ccbff', violet: '#c4b5fd', gold: '#fbbf24'
   };
+  const SANS = '"Serif Flight","PingFang TC","TK Gothic","Noto Sans TC","Microsoft JhengHei",sans-serif';
+  const MINCHO = '"TK Mincho","Noto Serif TC","Songti TC",serif';
+  // The scene behind the image (the home page's planet horizon); drawn without it if it is unavailable.
+  const SCENE = typeof Image === 'function' ? new Image() : null;
+  const sceneReady = SCENE ? new Promise(resolve => { SCENE.onload = SCENE.onerror = resolve; SCENE.src = 'assets/bg-orbit-portrait.webp'; }) : Promise.resolve();
+  const sceneLoaded = () => !!(SCENE && SCENE.complete && SCENE.naturalWidth > 0);
+  // Canvas text only uses web fonts that are already loaded, so the faces are requested first.
+  const fontsReady = () => (typeof document !== 'undefined' && document.fonts
+    ? Promise.all(['900 40px "TK Mincho"', '400 24px "Serif Flight"', '600 24px "Serif Flight"', '700 24px "Serif Flight"', '400 24px "TK Gothic"', '700 24px "TK Gothic"']
+      .map(f => document.fonts.load(f, '淡江航太系壘賽後成績0123456789').catch(() => {})))
+    : Promise.resolve());
 
   function drawGameImage(game, options = {}) {
     const s = gameSummary(game);
@@ -764,7 +775,7 @@
     // A 0:0 final means the score was not kept (as in the stats pages): show hits instead of a fake tie.
     const scored = isGameScoreRecorded(game);
     const result = !scored ? null : score.us > score.opp ? ['勝', IMG.green] : score.us < score.opp ? ['敗', IMG.red] : ['和', IMG.amber];
-    const W = 1080, P = 48, rowH = 50;
+    const W = 1080, P = 48, rowH = 52;
     const mvp = gameMvp(game, s.rows);
     const teamHits = s.rows.reduce((a, r) => a + r.h, 0), teamXbh = s.rows.reduce((a, r) => a + r.h2 + r.h3 + r.hr, 0);
 
@@ -773,24 +784,33 @@
     const hr = s.rows.filter(r => r.hr > 0).map(r => `${r.name}${r.hr > 1 ? ` ×${r.hr}` : ''}`);
     if (hr.length) chips.push({label: '全壘打', color: IMG.red, body: hr.join('、')});
     const multi = s.rows.filter(r => r.h >= 2).map(r => `${r.name} ${r.h}安`);
-    if (multi.length) chips.push({label: '多安打', color: '#22c55e', body: multi.join('、')});
+    if (multi.length) chips.push({label: '多安打', color: IMG.green, body: multi.join('、')});
     const records = gameRecords(game, s.rows);
-    if (records.marks.length) chips.push({label: '里程碑', color: '#a78bfa', body: records.marks.join('、')});
-    if (records.hitStreaks.length) chips.push({label: '連續安打', color: '#38bdf8', body: records.hitStreaks.join('、')});
-    if (records.onBaseStreaks.length) chips.push({label: '連續上壘', color: '#38bdf8', body: records.onBaseStreaks.join('、')});
+    if (records.marks.length) chips.push({label: '里程碑', color: IMG.violet, body: records.marks.join('、')});
+    if (records.hitStreaks.length) chips.push({label: '連續安打', color: IMG.sky, body: records.hitStreaks.join('、')});
+    if (records.onBaseStreaks.length) chips.push({label: '連續上壘', color: IMG.sky, body: records.onBaseStreaks.join('、')});
 
     const canvas = document.createElement('canvas');
     const c = canvas.getContext('2d');
-    const font = (size, weight = 700) => `${weight} ${size}px ${FONT}`;
-    const text = (str, x, y, size, color, align = 'left', weight = 700) => {
-      c.font = font(size, weight);
+    const font = (size, weight = 700, family = SANS) => `${weight} ${size}px ${family}`;
+    const text = (str, x, y, size, color, align = 'left', weight = 700, family = SANS) => {
+      c.font = font(size, weight, family);
       c.fillStyle = color;
       c.textAlign = align;
       c.fillText(String(str), x, y);
     };
-    const width = (str, size, weight = 700) => { c.font = font(size, weight); return c.measureText(String(str)).width; };
+    const title = (str, x, y, size, color = IMG.ink, align = 'left') => text(str, x, y, size, color, align, 900, MINCHO);
+    const width = (str, size, weight = 700, family = SANS) => { c.font = font(size, weight, family); return c.measureText(String(str)).width; };
     const round = (x, y, w, h, r) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
-    const panel = (x, y, w, h, r = 24, fill = IMG.panel) => { round(x, y, w, h, r); c.fillStyle = fill; c.fill(); c.lineWidth = 2; c.strokeStyle = IMG.panelEdge; c.stroke(); };
+    // Clear glass: a faint fill, a soft top sheen and a hairline rim.
+    const panel = (x, y, w, h, r = 26, tint = null) => {
+      round(x, y, w, h, r);
+      c.fillStyle = 'rgba(8,10,15,0.42)'; c.fill();
+      const sheen = c.createLinearGradient(0, y, 0, y + h);
+      sheen.addColorStop(0, tint ? tint + '24' : 'rgba(255,255,255,0.09)'); sheen.addColorStop(0.45, 'rgba(255,255,255,0.025)'); sheen.addColorStop(1, 'rgba(255,255,255,0.04)');
+      c.fillStyle = sheen; c.fill();
+      c.lineWidth = 1.5; c.strokeStyle = IMG.line; c.stroke();
+    };
     // Wrap at 「、」, or by character when one item is still too long.
     const wrap = (line, maxWidth, size, weight = 600, indent = '') => {
       c.font = font(size, weight);
@@ -809,169 +829,173 @@
     // Vertical plan.
     const CARD_W = 440, GAP = 24;
     const chipsW = mvp ? W - P * 2 - CARD_W - GAP : W - P * 2;
-    const chipLines = chips.map(ch => wrap(ch.body, chipsW - 40, 25));
-    const chipsH = chipLines.reduce((a, lines) => a + 62 + lines.length * 36 + 14, 0) + Math.max(0, chips.length - 1) * 14;
+    const chipLines = chips.map(ch => wrap(ch.body, chipsW - 44, 25));
+    const chipsH = chipLines.reduce((a, lines) => a + 64 + lines.length * 38 + 16, 0) + Math.max(0, chips.length - 1) * 14;
     const tagLines = mvp ? mvp.tags.flatMap(t => wrap(t, CARD_W - 96, 23, 600)) : [];
     const cardH = mvp ? 330 + tagLines.length * 40 + 20 : 0;
-    const HEAD = 160, HERO = {y: 182, h: 236}, LINE = {y: 444, h: scored ? 176 : 132};
-    const BOX = {y: LINE.y + LINE.h + 26, h: 70 + (s.rows.length + 1) * rowH + 16};
+    const HEAD = 176, HERO = {y: 200, h: 250}, LINE = {y: 476, h: scored ? 184 : 138};
+    const BOX = {y: LINE.y + LINE.h + 26, h: 72 + (s.rows.length + 1) * rowH + 18};
     const BAND = {y: BOX.y + BOX.h + 26, h: Math.max(chipsH, cardH)};
-    const H = BAND.y + BAND.h + 110;
+    const H = BAND.y + BAND.h + 116;
     canvas.width = W;
     canvas.height = H;
 
-    // Background: navy gradient, a faint diamond behind the score, red/white/navy top stripe.
-    const bg = c.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, IMG.bgTop); bg.addColorStop(1, IMG.bgBottom);
-    c.fillStyle = bg; c.fillRect(0, 0, W, H);
-    c.save(); c.globalAlpha = 0.06; c.translate(W / 2, HERO.y + HERO.h / 2 + 10); c.rotate(Math.PI / 4);
-    c.strokeStyle = IMG.white; c.lineWidth = 6; c.strokeRect(-150, -150, 300, 300); c.restore();
-    c.save(); c.globalAlpha = 0.035; c.strokeStyle = IMG.white; c.lineWidth = 2;
-    for (let x = -H; x < W; x += 46) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x + H, H); c.stroke(); }
-    c.restore();
-    const stripe = c.createLinearGradient(0, 0, W, 0);
-    stripe.addColorStop(0, IMG.red); stripe.addColorStop(0.5, IMG.white); stripe.addColorStop(1, '#1d4ed8');
-    c.fillStyle = stripe; c.fillRect(0, 0, W, 10);
+    // Background: deep space, the planet horizon scene, and a veil that keeps every panel legible.
+    c.fillStyle = '#05070b'; c.fillRect(0, 0, W, H);
+    if (sceneLoaded()) {
+      const scale = Math.max(W / SCENE.naturalWidth, H / SCENE.naturalHeight);
+      const dw = SCENE.naturalWidth * scale, dh = SCENE.naturalHeight * scale;
+      c.drawImage(SCENE, (W - dw) / 2, H - dh, dw, dh);
+    } else {
+      const glow = c.createRadialGradient(W * 0.7, H * 1.05, 40, W * 0.7, H * 1.05, H * 0.7);
+      glow.addColorStop(0, 'rgba(124,192,255,0.22)'); glow.addColorStop(1, 'rgba(124,192,255,0)');
+      c.fillStyle = glow; c.fillRect(0, 0, W, H);
+    }
+    const veil = c.createLinearGradient(0, 0, 0, H);
+    veil.addColorStop(0, 'rgba(4,6,10,0.55)'); veil.addColorStop(0.5, 'rgba(4,6,10,0.62)'); veil.addColorStop(1, 'rgba(4,6,10,0.4)');
+    c.fillStyle = veil; c.fillRect(0, 0, W, H);
 
-    // Header: badge, team, date and event.
+    // Header: badge, eyebrow, team, date and event.
     const logoSize = 112;
-    if (logoLoaded()) c.drawImage(LOGO, P, 26, logoSize, logoSize);
-    const tx = logoLoaded() ? P + logoSize + 22 : P;
-    text(TEAM_NAME, tx, 84, 38, IMG.white, 'left', 900);
-    text('TKU AEROSPACE SOFTBALL・賽後成績', tx, 120, 18, IMG.redSoft, 'left', 700);
-    text(game.date || '', W - P, 80, 32, IMG.white, 'right', 800);
+    if (logoLoaded()) c.drawImage(LOGO, P, 30, logoSize, logoSize);
+    const tx = logoLoaded() ? P + logoSize + 24 : P;
+    c.save(); c.font = font(15, 600); c.letterSpacing = '5px'; c.fillStyle = IMG.muted; c.textAlign = 'left'; c.fillText('TKU AEROSPACE · SOFTBALL', tx, 66); c.restore();
+    title(TEAM_NAME, tx, 116, 44);
+    text('賽後成績', tx, 150, 20, IMG.soft, 'left', 600);
+    text(game.date || '', W - P, 98, 34, IMG.ink, 'right', 600);
     const tag = gameLabel(game.tag || '');
     if (tag) {
-      const tw = width(tag, 20, 700) + 32;
-      round(W - P - tw, 96, tw, 36, 18); c.fillStyle = '#ffffff14'; c.fill();
-      text(tag, W - P - tw / 2, 121, 20, IMG.sky, 'center', 700);
+      const tw = width(tag, 19, 600) + 34;
+      round(W - P - tw, 116, tw, 38, 19); c.fillStyle = IMG.glassHi; c.fill(); c.lineWidth = 1; c.strokeStyle = IMG.line; c.stroke();
+      text(tag, W - P - tw / 2, 142, 19, IMG.sky, 'center', 600);
     }
     const sep = c.createLinearGradient(P, 0, W - P, 0);
-    sep.addColorStop(0, '#e11d4800'); sep.addColorStop(0.5, '#e11d48aa'); sep.addColorStop(1, '#e11d4800');
-    c.fillStyle = sep; c.fillRect(P, HEAD, W - P * 2, 2);
+    sep.addColorStop(0, 'rgba(255,255,255,0)'); sep.addColorStop(0.5, 'rgba(255,255,255,0.28)'); sep.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = sep; c.fillRect(P, HEAD, W - P * 2, 1.5);
 
     // Hero: the score (or the team's hits when no score was kept).
-    const heroFill = c.createLinearGradient(0, HERO.y, 0, HERO.y + HERO.h);
-    heroFill.addColorStop(0, '#16306b'); heroFill.addColorStop(1, '#0d1b3e');
-    panel(P, HERO.y, W - P * 2, HERO.h, 30, heroFill);
+    panel(P, HERO.y, W - P * 2, HERO.h, 32);
     const ourName = TEAM_NAME.replace('系壘', '');
     const oppName = game.opponent || '對手';
     const shorten = (str, max) => (str.length > max ? `${str.slice(0, max)}…` : str);
-    text(shorten(ourName, 6), P + 44, HERO.y + 104, 44, IMG.white, 'left', 900);
-    text(game.ourRole ? `${game.ourRole}・本隊` : '本隊', P + 44, HERO.y + 144, 20, IMG.muted, 'left', 600);
-    text(shorten(oppName, 6), W - P - 44, HERO.y + 104, 44, IMG.white, 'right', 900);
-    text('對手', W - P - 44, HERO.y + 144, 20, IMG.muted, 'right', 600);
+    title(shorten(ourName, 6), P + 44, HERO.y + 108, 46);
+    text(game.ourRole ? `${game.ourRole}・本隊` : '本隊', P + 44, HERO.y + 150, 20, IMG.muted, 'left', 600);
+    title(shorten(oppName, 6), W - P - 44, HERO.y + 108, 46, IMG.ink, 'right');
+    text('對手', W - P - 44, HERO.y + 150, 20, IMG.muted, 'right', 600);
     if (scored) {
-      text(String(score.us), W / 2 - 46, HERO.y + 150, 124, IMG.white, 'right', 900);
-      text(':', W / 2, HERO.y + 136, 84, '#475569', 'center', 900);
-      text(String(score.opp), W / 2 + 46, HERO.y + 150, 124, IMG.white, 'left', 900);
-      round(W / 2 - 64, HERO.y + 172, 128, 44, 22); c.fillStyle = result[1]; c.fill();
-      text(`${result[0]}・FINAL`, W / 2, HERO.y + 203, 22, '#06101f', 'center', 900);
+      text(String(score.us), W / 2 - 40, HERO.y + 156, 128, IMG.ink, 'right', 600);
+      text(':', W / 2, HERO.y + 140, 80, IMG.dim, 'center', 400);
+      text(String(score.opp), W / 2 + 40, HERO.y + 156, 128, IMG.ink, 'left', 600);
+      round(W / 2 - 70, HERO.y + 182, 140, 44, 22); c.fillStyle = result[1] + '2e'; c.fill(); c.lineWidth = 1.5; c.strokeStyle = result[1] + 'aa'; c.stroke();
+      text(`${result[0]}・FINAL`, W / 2, HERO.y + 212, 21, result[1], 'center', 700);
     } else {
-      text(`${teamHits}`, W / 2 - 8, HERO.y + 140, 108, IMG.white, 'right', 900);
-      text('安打', W / 2 + 2, HERO.y + 136, 40, IMG.white, 'left', 800);
-      text(`${teamXbh} 支長打・比分未記錄`, W / 2, HERO.y + 196, 22, IMG.muted, 'center', 600);
+      text(`${teamHits}`, W / 2 - 10, HERO.y + 146, 112, IMG.ink, 'right', 600);
+      title('安打', W / 2 + 2, HERO.y + 140, 40);
+      text(`${teamXbh} 支長打・比分未記錄`, W / 2, HERO.y + 204, 22, IMG.muted, 'center', 600);
     }
 
     // Line score: runs by inning, or our hits by inning when no score was kept.
-    panel(P, LINE.y, W - P * 2, LINE.h, 22);
+    panel(P, LINE.y, W - P * 2, LINE.h, 24);
     const innings = Array.from({length: s.maxInning}, (_, i) => i + 1);
     const nameW = 210, totalsW = scored ? 150 : 90;
     const colW = (W - P * 2 - 40 - nameW - totalsW) / innings.length;
     const ix = i => P + 20 + nameW + i * colW + colW / 2;
-    const headY = LINE.y + 44;
-    text(scored ? '局' : '每局安打', P + 28, headY, 18, IMG.dim, 'left', 700);
-    innings.forEach((n, i) => text(n, ix(i), headY, 20, IMG.dim, 'center', 700));
+    const headY = LINE.y + 46;
+    text(scored ? '局' : '每局安打', P + 28, headY, 18, IMG.dim, 'left', 600);
+    innings.forEach((n, i) => text(n, ix(i), headY, 20, IMG.dim, 'center', 600));
     const rX = P + 20 + nameW + innings.length * colW;
     if (scored) {
-      text('R', rX + 40, headY, 20, IMG.redSoft, 'center', 800);
-      text('H', rX + 110, headY, 20, IMG.dim, 'center', 700);
+      text('R', rX + 40, headY, 20, IMG.redSoft, 'center', 700);
+      text('H', rX + 110, headY, 20, IMG.dim, 'center', 600);
       const ours = {name: ourName, runs: s.ourRuns, r: score.us, h: teamHits, us: true};
       const opp = {name: oppName, runs: s.oppRuns, r: score.opp, h: '-', us: false};
       (game.ourRole === '先攻' ? [ours, opp] : [opp, ours]).forEach((team, row) => {
-        const y = headY + 50 + row * 50;
-        if (team.us) { round(P + 12, y - 34, W - P * 2 - 24, 46, 12); c.fillStyle = '#ffffff0d'; c.fill(); }
-        text(shorten(team.name, 6), P + 28, y, 24, team.us ? IMG.white : '#cbd5e1', 'left', 800);
-        innings.forEach((n, i) => text(team.runs[n] ?? 0, ix(i), y, 24, '#cbd5e1', 'center', 600));
-        round(rX + 14, y - 32, 52, 42, 10); c.fillStyle = '#e11d4826'; c.fill();
-        text(team.r, rX + 40, y, 28, IMG.white, 'center', 900);
-        text(team.h, rX + 110, y, 24, '#cbd5e1', 'center', 600);
+        const y = headY + 52 + row * 52;
+        if (team.us) { round(P + 12, y - 35, W - P * 2 - 24, 48, 14); c.fillStyle = 'rgba(255,255,255,0.06)'; c.fill(); }
+        text(shorten(team.name, 6), P + 28, y, 24, team.us ? IMG.ink : IMG.soft, 'left', 700);
+        innings.forEach((n, i) => text(team.runs[n] ?? 0, ix(i), y, 25, IMG.soft, 'center', 400));
+        round(rX + 14, y - 33, 52, 44, 12); c.fillStyle = 'rgba(255,107,129,0.16)'; c.fill();
+        text(team.r, rX + 40, y, 28, IMG.ink, 'center', 700);
+        text(team.h, rX + 110, y, 25, IMG.soft, 'center', 400);
       });
     } else {
-      const y = headY + 52;
-      round(P + 12, y - 34, W - P * 2 - 24, 46, 12); c.fillStyle = '#ffffff0d'; c.fill();
-      text(shorten(ourName, 6), P + 28, y, 24, IMG.white, 'left', 800);
-      innings.forEach((n, i) => { const v = s.ourHits[n]; text(v ?? '–', ix(i), y, 24, v ? IMG.green : IMG.dim, 'center', v ? 800 : 500); });
-      text('H', rX + 45, headY, 20, IMG.dim, 'center', 700);
-      text(teamHits, rX + 45, y, 28, IMG.white, 'center', 900);
+      const y = headY + 54;
+      round(P + 12, y - 35, W - P * 2 - 24, 48, 14); c.fillStyle = 'rgba(255,255,255,0.06)'; c.fill();
+      text(shorten(ourName, 6), P + 28, y, 24, IMG.ink, 'left', 700);
+      innings.forEach((n, i) => { const v = s.ourHits[n]; text(v ?? '–', ix(i), y, 25, v ? IMG.green : IMG.dim, 'center', v ? 700 : 400); });
+      text('H', rX + 45, headY, 20, IMG.dim, 'center', 600);
+      text(teamHits, rX + 45, y, 28, IMG.ink, 'center', 700);
     }
 
     // Box score.
-    panel(P, BOX.y, W - P * 2, BOX.h, 22);
+    panel(P, BOX.y, W - P * 2, BOX.h, 24);
     const cols = [['棒', P + 34, 'center'], ['打者', P + 78, 'left'], ['打席', 520, 'center'], ['打數', 610, 'center'], ['安打', 700, 'center'], ['長打', 790, 'center'], ['保送', 880, 'center'], ['三振', 970, 'center']];
-    const hy = BOX.y + 44;
-    round(P + 12, BOX.y + 12, W - P * 2 - 24, 46, 14); c.fillStyle = '#0a1633'; c.fill();
-    cols.forEach(([label, x, align]) => text(label, x, hy, 19, IMG.muted, align, 700));
+    const hy = BOX.y + 46;
+    round(P + 12, BOX.y + 12, W - P * 2 - 24, 48, 16); c.fillStyle = 'rgba(255,255,255,0.07)'; c.fill();
+    cols.forEach(([label, x, align]) => text(label, x, hy, 19, IMG.muted, align, 600));
     const totals = {pa: 0, ab: 0, h: 0, xb: 0, bb: 0, k: 0};
     s.rows.forEach((r, i) => {
-      const y = BOX.y + 70 + (i + 1) * rowH - 14;
+      const y = BOX.y + 72 + (i + 1) * rowH - 15;
       const isMvp = mvp && r.name === mvp.name;
       if (isMvp) {
-        round(P + 12, y - 34, W - P * 2 - 24, rowH - 4, 12); c.fillStyle = '#fbbf2424'; c.fill();
-        c.fillStyle = IMG.gold; c.fillRect(P + 12, y - 30, 5, rowH - 12);
-      } else if (i % 2) { round(P + 12, y - 34, W - P * 2 - 24, rowH - 4, 12); c.fillStyle = '#ffffff08'; c.fill(); }
+        round(P + 12, y - 35, W - P * 2 - 24, rowH - 4, 14); c.fillStyle = 'rgba(251,191,36,0.13)'; c.fill();
+        c.fillStyle = IMG.gold; c.fillRect(P + 12, y - 30, 4, rowH - 14);
+      } else if (i % 2) { round(P + 12, y - 35, W - P * 2 - 24, rowH - 4, 14); c.fillStyle = 'rgba(255,255,255,0.035)'; c.fill(); }
       const xb = r.h2 + r.h3 + r.hr;
       for (const [k, v] of Object.entries({pa: r.pa, ab: r.ab, h: r.h, xb, bb: r.bb, k: r.k})) totals[k] += v;
-      text(r.isSub ? '替' : r.slot, cols[0][1], y, 22, r.isSub ? '#c4b5fd' : IMG.redSoft, 'center', 800);
-      text(r.name + (isMvp ? '  🏆' : ''), cols[1][1], y, 25, IMG.white, 'left', isMvp ? 900 : 700);
+      text(r.isSub ? '替' : r.slot, cols[0][1], y, 22, r.isSub ? IMG.violet : IMG.redSoft, 'center', 700);
+      text(r.name + (isMvp ? '  🏆' : ''), cols[1][1], y, 25, IMG.ink, 'left', isMvp ? 700 : 600);
       [r.pa, r.ab, r.h, xb, r.bb, r.k].forEach((v, j) => {
-        const color = j === 2 && v > 0 ? IMG.green : j === 3 && v > 0 ? IMG.amber : j === 5 && v > 0 ? '#fda4af' : '#e2e8f0';
-        text(v, cols[j + 2][1], y, 25, color, 'center', j === 2 && v > 0 ? 900 : 600);
+        const color = j === 2 && v > 0 ? IMG.green : j === 3 && v > 0 ? IMG.amber : j === 5 && v > 0 ? IMG.redSoft : IMG.soft;
+        text(v, cols[j + 2][1], y, 26, color, 'center', (j === 2 || j === 3) && v > 0 ? 700 : 400);
       });
     });
-    const ty = BOX.y + 70 + (s.rows.length + 1) * rowH - 10;
-    c.fillStyle = '#ffffff26'; c.fillRect(P + 20, ty - 38, W - P * 2 - 40, 2);
-    text('合計', cols[1][1], ty, 24, IMG.white, 'left', 900);
-    [totals.pa, totals.ab, totals.h, totals.xb, totals.bb, totals.k].forEach((v, j) => text(v, cols[j + 2][1], ty, 25, IMG.white, 'center', 900));
+    const ty = BOX.y + 72 + (s.rows.length + 1) * rowH - 11;
+    c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(P + 20, ty - 39, W - P * 2 - 40, 1.5);
+    title('合計', cols[1][1], ty, 24);
+    [totals.pa, totals.ab, totals.h, totals.xb, totals.bb, totals.k].forEach((v, j) => text(v, cols[j + 2][1], ty, 26, IMG.ink, 'center', 700));
 
     // Highlights (left) and the MVP (bottom-right).
     let cy = BAND.y;
     chips.forEach((ch, i) => {
-      const h = 62 + chipLines[i].length * 36 + 14;
-      panel(P, cy, chipsW, h, 20, '#0d1b3e');
-      round(P + 18, cy + 16, width(ch.label, 19, 800) + 28, 34, 17); c.fillStyle = ch.color + '33'; c.fill();
-      text(ch.label, P + 32, cy + 40, 19, ch.color, 'left', 800);
-      chipLines[i].forEach((line, j) => text(line, P + 20, cy + 88 + j * 36, 25, '#e2e8f0', 'left', 600));
+      const h = 64 + chipLines[i].length * 38 + 16;
+      panel(P, cy, chipsW, h, 22);
+      round(P + 18, cy + 16, width(ch.label, 19, 700) + 30, 36, 18); c.fillStyle = ch.color + '26'; c.fill(); c.lineWidth = 1; c.strokeStyle = ch.color + '80'; c.stroke();
+      text(ch.label, P + 33, cy + 41, 19, ch.color, 'left', 700);
+      chipLines[i].forEach((line, j) => text(line, P + 22, cy + 92 + j * 38, 25, IMG.soft, 'left', 600));
       cy += h + 14;
     });
     if (mvp) drawMvpCard(c, text, round, mvp, W - P - CARD_W, BAND.y + BAND.h - cardH, CARD_W, cardH, tagLines, options.mvpPhoto);
 
     // Footer.
-    c.fillStyle = '#ffffff1a'; c.fillRect(P, H - 76, W - P * 2, 2);
-    text(`${TEAM_NAME} 數據中心`, W / 2, H - 40, 20, IMG.muted, 'center', 700);
-    text('長打含二壘安打、三壘安打、全壘打', W / 2, H - 14, 15, IMG.dim, 'center', 500);
+    c.fillStyle = 'rgba(255,255,255,0.14)'; c.fillRect(P, H - 80, W - P * 2, 1.5);
+    title(`${TEAM_NAME} 數據中心`, W / 2, H - 42, 21, IMG.soft, 'center');
+    text('長打含二壘安打、三壘安打、全壘打', W / 2, H - 14, 15, IMG.dim, 'center', 400);
     return canvas;
   }
 
   function drawMvpCard(c, text, round, mvp, x, y, w, h, tagLines, photo) {
-    // Gold frame with a soft glow.
+    // A thin gold rim with a soft glow around dark glass.
     c.save();
-    c.shadowColor = '#fbbf2466'; c.shadowBlur = 36;
+    c.shadowColor = 'rgba(251,191,36,0.4)'; c.shadowBlur = 34;
     const frame = c.createLinearGradient(x, y, x + w, y + h);
-    frame.addColorStop(0, '#fde68a'); frame.addColorStop(0.5, '#f59e0b'); frame.addColorStop(1, '#fbbf24');
+    frame.addColorStop(0, '#fde68a'); frame.addColorStop(0.5, '#fbbf24'); frame.addColorStop(1, '#fcd34d');
     round(x, y, w, h, 28); c.fillStyle = frame; c.fill();
     c.restore();
     const inner = c.createLinearGradient(x, y, x, y + h);
-    inner.addColorStop(0, '#1d2a55'); inner.addColorStop(1, '#0b1430');
-    round(x + 4, y + 4, w - 8, h - 8, 25); c.fillStyle = inner; c.fill();
+    inner.addColorStop(0, '#1c1a14'); inner.addColorStop(1, '#0c0b09');
+    round(x + 3, y + 3, w - 6, h - 6, 25); c.fillStyle = inner; c.fill();
+    const sheen = c.createLinearGradient(x, y, x, y + h * 0.5);
+    sheen.addColorStop(0, 'rgba(251,191,36,0.14)'); sheen.addColorStop(1, 'rgba(251,191,36,0)');
+    c.fillStyle = sheen; c.fill();
     // Watermark and title.
-    c.save(); c.globalAlpha = 0.08; text('MVP', x + w - 26, y + 150, 140, '#fbbf24', 'right', 900); c.restore();
-    text('★ GAME MVP', x + 30, y + 52, 20, '#fcd34d', 'left', 900);
-    text('本場最有價值球員', x + 30, y + 80, 18, '#fde68a', 'left', 600);
+    c.save(); c.globalAlpha = 0.06; text('MVP', x + w - 26, y + 150, 140, '#fbbf24', 'right', 700); c.restore();
+    text('★ GAME MVP', x + 30, y + 52, 20, '#fcd34d', 'left', 700);
+    text('本場最有價值球員', x + 30, y + 82, 18, '#fde68a', 'left', 600);
     // Photo with a gold ring (or the initial, as on the site).
     const size = 128, cx = x + 30 + size / 2, cy = y + 100 + size / 2;
-    c.save(); c.shadowColor = '#fbbf2480'; c.shadowBlur = 24;
-    c.beginPath(); c.arc(cx, cy, size / 2 + 6, 0, Math.PI * 2); c.fillStyle = '#fbbf24'; c.fill();
+    c.save(); c.shadowColor = 'rgba(251,191,36,0.5)'; c.shadowBlur = 22;
+    c.beginPath(); c.arc(cx, cy, size / 2 + 5, 0, Math.PI * 2); c.fillStyle = '#fbbf24'; c.fill();
     c.restore();
     c.save(); c.beginPath(); c.arc(cx, cy, size / 2, 0, Math.PI * 2); c.closePath(); c.clip();
     if (photo && photo.complete && photo.naturalWidth) {
@@ -980,24 +1004,24 @@
       c.drawImage(photo, cx - dw / 2, cy - dh / 2, dw, dh);
     } else {
       const g = c.createLinearGradient(cx - size / 2, cy - size / 2, cx + size / 2, cy + size / 2);
-      g.addColorStop(0, '#0284c7'); g.addColorStop(1, '#312e81');
+      g.addColorStop(0, '#2b3a55'); g.addColorStop(1, '#141a26');
       c.fillStyle = g; c.fillRect(cx - size / 2, cy - size / 2, size, size);
-      text(mvp.name.slice(0, 1), cx, cy + 18, 54, '#ffffff', 'center', 900);
+      text(mvp.name.slice(0, 1), cx, cy + 20, 58, '#ffffff', 'center', 900, MINCHO);
     }
     c.restore();
     // Name, number and index.
     const nx = x + 30 + size + 26;
     const jersey = typeof NAME_TO_JERSEY !== 'undefined' && NAME_TO_JERSEY[mvp.name] !== undefined ? `#${NAME_TO_JERSEY[mvp.name]}` : '';
-    if (jersey) { round(nx, y + 116, 70, 34, 17); c.fillStyle = '#fbbf2433'; c.fill(); text(jersey, nx + 35, y + 140, 20, '#fcd34d', 'center', 900); }
-    text(mvp.name, nx, y + 196, 44, '#ffffff', 'left', 900);
-    text(`MVP 指數 +${mvp.score.toFixed(1)}`, nx, y + 228, 20, '#fcd34d', 'left', 700);
+    if (jersey) { round(nx, y + 116, 72, 34, 17); c.fillStyle = 'rgba(251,191,36,0.2)'; c.fill(); text(jersey, nx + 36, y + 140, 20, '#fcd34d', 'center', 700); }
+    text(mvp.name, nx, y + 198, 46, '#ffffff', 'left', 900, MINCHO);
+    text(`MVP 指數 +${mvp.score.toFixed(1)}`, nx, y + 230, 20, '#fcd34d', 'left', 600);
     // Game line and what stood out.
-    c.fillStyle = '#fbbf2440'; c.fillRect(x + 30, y + 256, w - 60, 2);
-    text(mvp.line, x + 30, y + 296, 23, '#f8fafc', 'left', 700);
+    c.fillStyle = 'rgba(251,191,36,0.3)'; c.fillRect(x + 30, y + 256, w - 60, 1.5);
+    text(mvp.line, x + 30, y + 296, 23, '#f8fafc', 'left', 600);
     tagLines.forEach((t, i) => {
       const ty = y + 336 + i * 40;
       c.beginPath(); c.arc(x + 42, ty - 8, 9, 0, Math.PI * 2); c.fillStyle = '#fbbf24'; c.fill();
-      text('★', x + 42, ty - 1, 13, '#1c1203', 'center', 900);
+      text('★', x + 42, ty - 1, 13, '#1c1203', 'center', 700);
       text(t, x + 62, ty, 23, '#fde68a', 'left', 600);
     });
   }
@@ -1011,8 +1035,8 @@
   }
 
   async function openImageModal(gameId) {
-    // Wait briefly for the badge so the first image already carries it.
-    await Promise.race([logoReady, new Promise(resolve => setTimeout(resolve, 1500))]);
+    // Wait briefly for the badge, the scene and the fonts so the first image already carries them.
+    await Promise.race([Promise.all([logoReady, sceneReady, fontsReady()]), new Promise(resolve => setTimeout(resolve, 2500))]);
     const game = allGames.find(g => g.id === gameId);
     if (!game) return;
     closeImageModal();

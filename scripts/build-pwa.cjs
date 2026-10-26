@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
-const extras = ['vendor/fonts/tk-sans-400.woff2', 'vendor/fonts/tk-sans-500.woff2', 'vendor/fonts/tk-sans-700.woff2', 'vendor/fonts/inter-latin-400.woff2', 'vendor/fonts/inter-latin-500.woff2', 'vendor/fonts/inter-latin-600.woff2', 'vendor/fonts/inter-latin-700.woff2', 'assets/logo-128.webp', 'assets/logo-256.webp', 'assets/logo-512.webp', 'assets/bg-orbit.webp', 'assets/bg-orbit-portrait.webp', 'assets/bg-profile.webp', 'assets/bg-profile-portrait.webp', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/maskable-192.png', 'assets/icons/maskable-512.png'];
+const extras = ['vendor/fonts/tk-sans-400.woff2', 'vendor/fonts/tk-sans-500.woff2', 'vendor/fonts/tk-sans-700.woff2', 'vendor/fonts/serif-latin-400.woff2', 'vendor/fonts/serif-latin-600.woff2', 'vendor/fonts/serif-latin-700.woff2', 'vendor/fonts/tk-serif-900.woff2', 'assets/logo-128.webp', 'assets/logo-256.webp', 'assets/logo-512.webp', 'assets/bg-orbit.webp', 'assets/bg-orbit-portrait.webp', 'assets/bg-profile.webp', 'assets/bg-profile-portrait.webp', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/maskable-192.png', 'assets/icons/maskable-512.png'];
 // Published with the site but not precached for offline use (about 1 MB of page scenes; offline shows the dark base).
 const SCENES = ['overview', 'analytics', 'pitching', 'records', 'leaderboard', 'compare', 'health', 'lineup', 'glossary', 'changelog'];
 const publicOnly = SCENES.flatMap(name => [`assets/bg-${name}.webp`, `assets/bg-${name}-portrait.webp`]);

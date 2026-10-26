@@ -3,6 +3,7 @@
   'use strict';
   const navigation = document.getElementById('mainNavigation');
   const workspace = document.getElementById('appWorkspace');
+  const currentPanel = () => workspace.querySelector('[id^="panel"]:not(.hidden)') || workspace;
   if (!navigation || !workspace) return;
   const toolbar = document.createElement('div');
   toolbar.className = 'ui-compact-toolbar';
@@ -97,6 +98,21 @@
   ];
   // Each group reopens where it was last left, like an app's tabs.
   const lastInGroup = {};
+  // A finger tap paints its new selected state first and switches the page on the next frame, so the press is answered
+  // at once (mouse and programmatic navigation stay synchronous).
+  let lastPointer = 'mouse';
+  document.addEventListener('pointerdown', event => { lastPointer = event.pointerType; }, {capture: true, passive: true});
+  const afterPaint = fn => requestAnimationFrame(() => setTimeout(fn, 0));
+  const soon = fn => (lastPointer === 'touch' || lastPointer === 'pen' ? afterPaint(fn) : fn());
+  // Only these class changes matter to the layout passes; press feedback and lens bookkeeping do not.
+  const TRANSIENT = new Set(['ui-pressed', 'fl-lens-on', 'ui-open', 'is-visible']);
+  const meaningful = records => records.some(r => {
+    if (r.type !== 'attributes' || r.attributeName !== 'class') return true;
+    const before = new Set((r.oldValue || '').split(/\s+/).filter(Boolean)), after = new Set(String(r.target.className?.baseVal ?? r.target.className ?? '').split(/\s+/).filter(Boolean));
+    for (const c of before) if (!after.has(c) && !TRANSIENT.has(c)) return true;
+    for (const c of after) if (!before.has(c) && !TRANSIENT.has(c)) return true;
+    return false;
+  });
   const openPage = key => { const button = document.getElementById(`btnTab${key}`); if (button) button.click(); };
   for (const tab of TABS) {
     const keys = NAV_GROUPS.find(([label]) => label === tab.group)[1];
@@ -106,7 +122,13 @@
     button.dataset.page = keys[0];
     button.dataset.tone = tab.tone;
     button.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
-    button.addEventListener('click', () => openPage(lastInGroup[tab.group] || keys[0]));
+    button.addEventListener('click', () => {
+      const target = lastInGroup[tab.group] || keys[0];
+      if (document.body.dataset.page === target) return;
+      bottom.querySelectorAll('[data-group], #uiMoreNavigation').forEach(b => { if (b === button) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+      placeTabThumb();
+      soon(() => openPage(target));
+    });
     bottom.append(button);
   }
   const more = document.createElement('button');
@@ -158,7 +180,7 @@
   function updateNavigation() {
     const active = navigation.querySelector('.tab-active');
     const key = active?.id.replace('btnTab', '') || 'Home';
-    if (lastPage && lastPage !== key) { window.scrollTo({top: 0, behavior: 'instant'}); detail?.remove(); }
+    if (lastPage && lastPage !== key) { if (window.scrollY > 0) window.scrollTo({top: 0, behavior: 'instant'}); detail?.remove(); }
     lastPage = key;
     const [title, description] = pages[key] || pages.Home;
     const [groupLabel, groupKeys] = groupOf(key);
@@ -200,13 +222,19 @@
   }
   subnav.addEventListener('click', event => {
     const b = event.target.closest('[data-sub]');
-    if (b && b.getAttribute('aria-current') !== 'page') openPage(b.dataset.sub);
+    if (!b || b.getAttribute('aria-current') === 'page') return;
+    subnav.querySelectorAll('[data-sub]').forEach(x => { if (x === b) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current'); });
+    moveThumb(subnav, b);
+    soon(() => openPage(b.dataset.sub));
   });
   // A glass "thumb" glides to the selected item (the segmented control and the tab bar share it).
-  function moveThumb(container, target) {
+  const thumbAt = new WeakMap(); // container -> the item its thumb already sits on (re-measured only when that changes or on resize)
+  function moveThumb(container, target, force = false) {
     const thumb = container.querySelector(':scope > .fl-subnav-thumb, :scope > .fl-tab-thumb');
     if (!thumb) return;
-    if (!target || !target.offsetWidth) { thumb.style.opacity = '0'; return; }
+    if (!force && target && thumbAt.get(container) === target && target.isConnected) return;
+    thumbAt.set(container, target);
+    if (!target || !target.offsetWidth) { thumb.style.opacity = '0'; thumbAt.delete(container); return; }
     thumb.style.opacity = '1';
     thumb.style.width = `${target.offsetWidth}px`;
     thumb.style.height = `${target.offsetHeight}px`;
@@ -218,9 +246,19 @@
   bottom.prepend(tabThumb);
   const placeTabThumb = () => moveThumb(bottom, bottom.querySelector('button[aria-current="page"]'));
   bottom.addEventListener('fl-tab-change', () => requestAnimationFrame(placeTabThumb));
-  window.addEventListener('resize', () => { placeTabThumb(); moveThumb(subnav, subnav.querySelector('[aria-current="page"]')); });
+  const refitThumbs = () => { moveThumb(bottom, bottom.querySelector('button[aria-current="page"]'), true); moveThumb(subnav, subnav.querySelector('[aria-current="page"]'), true); };
+  window.addEventListener('resize', refitThumbs);
+  document.fonts?.ready.then(refitThumbs); // web fonts change the item widths
   window.uiNavigation = {groups: NAV_GROUPS, labels: SUB_LABELS, openPage};
-  new MutationObserver(updateNavigation).observe(navigation, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(records => { if (meaningful(records)) updateNavigation(); }).observe(navigation, { subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class'] });
+  // Drawer and sidebar page buttons: a finger tap marks the page, paints, then switches.
+  document.addEventListener('click', event => {
+    const b = event.target.closest?.('#mainNavigation [id^="btnTab"]');
+    if (!b || !event.isTrusted || (lastPointer !== 'touch' && lastPointer !== 'pen') || b.classList.contains('tab-active')) return;
+    event.stopPropagation();
+    navigation.querySelectorAll('[id^="btnTab"]').forEach(x => { if (x === b) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current'); });
+    afterPaint(() => b.click());
+  }, true);
 
   const scrollAreas = new Set();
   const summary = document.getElementById('viewSummary');
@@ -247,14 +285,17 @@
   }
   columnSelect.addEventListener('change', () => { customColumns = true; applyColumns(); updateTableHints(); });
   function updateTableHints() {
+    const panel = currentPanel(), marks = [];
     scrollAreas.forEach(area => {
       if (!area.isConnected) { scrollAreas.delete(area); return; }
-      area.previousElementSibling?.classList.toggle('is-overflowing', area.clientWidth > 0 && area.scrollWidth > area.clientWidth + 2);
+      if (!panel.contains(area)) return; // hidden pages are measured when shown
+      marks.push([area.previousElementSibling, area.clientWidth > 0 && area.scrollWidth > area.clientWidth + 2]);
     });
+    marks.forEach(([hint, on]) => hint?.classList.toggle('is-overflowing', on)); // all reads first, then the writes: one layout
   }
   function enhanceTables() {
     applyColumns();
-    document.querySelectorAll('table').forEach(table => {
+    currentPanel().querySelectorAll('table').forEach(table => {
       const area = table.closest('.overflow-x-auto');
       if (!area || area.classList.contains('ui-table-scroll')) return;
       area.classList.add('ui-table-scroll');
@@ -275,6 +316,7 @@
     scheduled = true;
     requestAnimationFrame(() => { scheduled = false; enhanceTables(); });
   }).observe(workspace, { childList: true, subtree: true });
+  // Hidden pages are handled when they are shown (their tables have no size until then).
   window.addEventListener('resize', () => {
     if (!customColumns) { columnSelect.value = window.innerWidth < 768 ? 'core' : 'all'; applyColumns(); }
     updateTableHints();
@@ -314,7 +356,8 @@
     }));
   }).observe(document.body, {childList: true});
   // ---------- Phone comfort: section jump bar, back-to-top, sticky name column ----------
-  const phone = () => window.innerWidth < 768;
+  const phoneQuery = window.matchMedia('(max-width: 767.98px)');
+  const phone = () => phoneQuery.matches; // a media query: unlike innerWidth, it never forces a layout
   const sectionBar = document.createElement('nav');
   sectionBar.className = 'ui-section-bar';
   sectionBar.setAttribute('aria-label', '本頁段落');
@@ -419,7 +462,7 @@
   // so grouped headers never get a mismatched sticky cell). A narrow first column (slot / rank) also
   // keeps the next column, which is then the name.
   function stickyColumns() {
-    document.querySelectorAll('.ui-table-scroll table').forEach(table => {
+    currentPanel().querySelectorAll('.ui-table-scroll table').forEach(table => {
       const area = table.closest('.ui-table-scroll');
       const multiRowHead = table.tHead && table.tHead.rows.length > 1;
       const firstRow = table.rows[0];
@@ -531,11 +574,12 @@
   // Group header rows (one cell across the table) separate sections; they are not data rows.
   const bodyRows = table => [...(table.tBodies[0]?.rows || [])].filter(row => !row.classList.contains('ui-row-detail') && !row.classList.contains('ui-group-row'));
   function foldTables() {
-    document.querySelectorAll('.ui-table-scroll table').forEach(table => {
+    currentPanel().querySelectorAll('.ui-table-scroll table').forEach(table => {
       const area = table.closest('.ui-table-scroll');
       const rows = bodyRows(table);
       const labels = headerLabels(table);
-      const signature = `${phone()}|${area.clientWidth}|${rows.length}|${rows[0]?.textContent.length || 0}|${labels.join('|')}`;
+      const areaWidth = area.clientWidth; // the container's width does not depend on the classes set below
+      const signature = `${phone()}|${areaWidth}|${rows.length}|${rows[0]?.textContent.length || 0}|${labels.join('|')}`;
       // Same table and still laid out: a re-render that rebuilt the rows (same size, new cells) must be redone.
       const intact = (!table.classList.contains('ui-fold-table') || rows.every(row => row.querySelector('.ui-col-folded'))) &&
         (!table.classList.contains('ui-card-table') || rows.every(row => row.cells.length === 1 || row.cells[0].dataset.label !== undefined));
@@ -582,7 +626,7 @@
       const boxScore = labels.includes('打席歷程') && labels.includes('打數');
       const BOX = ['打數', '安打', '得分', '三振', '保送'];
       labels.map((label, i) => ({i, rank: boxScore && BOX.includes(label) ? -0.5 + BOX.indexOf(label) / 10 : keyRank(label)})).filter(c => !keep.has(c.i)).sort((a, b) => a.rank - b.rank || a.i - b.i)
-        .forEach(c => { if (used + widths[c.i] <= area.clientWidth - 18) { keep.add(c.i); used += widths[c.i]; } });
+        .forEach(c => { if (used + widths[c.i] <= areaWidth - 18) { keep.add(c.i); used += widths[c.i]; } });
       if (keep.size === labels.length) { table.classList.add('ui-wrap-table'); return; } // everything fits once the desktop min-width goes
       table.classList.add('ui-fold-table');
       table.style.setProperty('--ui-name-max', `${NAME_MAX}px`);
@@ -665,11 +709,12 @@
   const queueComfort = () => {
     if (comfortQueued) return;
     comfortQueued = true;
-    requestAnimationFrame(() => { comfortQueued = false; densify(); buildSections(); foldTables(); stickyColumns(); });
+    // After the frame has painted: layout is then clean, so these reads cost nothing extra (the page is still fading in).
+    requestAnimationFrame(() => setTimeout(() => { comfortQueued = false; enhanceTables(); densify(); buildSections(); foldTables(); stickyColumns(); }, 0));
   };
   window.addEventListener('resize', placeDateToggle);
   placeDateToggle();
-  new MutationObserver(queueComfort).observe(workspace, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
+  new MutationObserver(records => { if (meaningful(records)) queueComfort(); }).observe(workspace, {childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class']});
   window.addEventListener('resize', queueComfort);
 
   updateNavigation();

@@ -3,36 +3,6 @@
    Legibility: every text colour keeps at least 6:1 against its surface (sunlight on a phone), without pure-white glare.
    Everything is scoped to html.ui-flight; removing that class from <html> restores the previous look. */
 
-/* Inter (SIL OFL 1.1, vendor/fonts) — Latin letters and digits only; Chinese uses the system font (PingFang TC / Noto Sans TC / JhengHei). */
-@font-face {
-  font-family: "Inter Flight";
-  src: url("vendor/fonts/inter-latin-400.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "Inter Flight";
-  src: url("vendor/fonts/inter-latin-500.woff2") format("woff2");
-  font-weight: 500;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "Inter Flight";
-  src: url("vendor/fonts/inter-latin-600.woff2") format("woff2");
-  font-weight: 600;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "Inter Flight";
-  src: url("vendor/fonts/inter-latin-700.woff2") format("woff2");
-  font-weight: 700;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
 /* Source Han (Noto Sans TC / Noto Serif TC, SIL OFL 1.1) subset to the site's 1,333 characters by scripts/build-fonts.py.
    Gothic for reading, Mincho for titles: the quiet precision of Japanese editorial typesetting. Other characters fall back to the system font. */
 @font-face { font-family: "TK Gothic"; src: url("vendor/fonts/tk-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
@@ -308,12 +278,8 @@ html.ui-flight .ui-pressed {
   filter: brightness(1.18);
   transition-duration: .08s;
 }
-html.ui-flight #flRipple { position: fixed; left: 0; top: 0; width: 0; height: 0; overflow: hidden; pointer-events: none; z-index: 2147483000; opacity: 0; }
-html.ui-flight #flRipple::after {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(circle closest-side, rgba(255, 255, 255, .42), rgba(255, 255, 255, .16) 55%, rgba(255, 255, 255, 0)) no-repeat;
-  background-size: 0 0;
-}
+html.ui-flight #flRipple { position: fixed; left: 0; top: 0; width: 0; height: 0; overflow: hidden; pointer-events: none; z-index: 2147483000; opacity: 0; will-change: opacity; contain: strict; }
+html.ui-flight #flRipple > span { position: absolute; border-radius: 50%; transform: scale(0); will-change: transform; background: radial-gradient(circle closest-side, rgba(255, 255, 255, .42), rgba(255, 255, 255, .16) 55%, rgba(255, 255, 255, 0)); }
 html.ui-flight button:disabled, html.ui-flight button[disabled] { opacity: .45; filter: saturate(.4); cursor: not-allowed; }
 
 /* ---------- Bars from ui-comfort (section jump, compact toolbar, back-to-top, sticky columns) ---------- */
@@ -488,7 +454,7 @@ html.ui-flight .ui-mobile-nav button[aria-current="page"], html.ui-flight .ui-mo
     display: flex; flex-direction: column; gap: 6px; order: 99; margin-top: auto; padding: 16px 10px 4px;
     border-top: 1px solid var(--fl-line); color: var(--fl-ink-3); font-size: 11.5px;
   }
-  html.ui-flight .fl-side-foot::before { content: 'TKU AEROSPACE · SOFTBALL'; font-family: "Inter Flight", var(--fl-font); font-size: 10px; letter-spacing: .22em; white-space: nowrap; color: var(--fl-ink-3); }
+  html.ui-flight .fl-side-foot::before { content: 'TKU AEROSPACE · SOFTBALL'; font-family: var(--fl-font); font-size: 10px; letter-spacing: .22em; white-space: nowrap; color: var(--fl-ink-3); }
   html.ui-flight .fl-side-foot > span { display: inline-flex !important; width: fit-content; }
   html.ui-flight .ui-nav-backdrop, html.ui-flight body.ui-nav-open .ui-nav-backdrop { display: none !important; }
   html.ui-flight .ui-compact-toolbar { display: none !important; }
@@ -746,8 +712,8 @@ html.ui-flight .fl-tools-actions > button { min-height: 48px; justify-content: c
 html.ui-flight #flTools .sm\:hidden { display: none !important; }
 html.ui-flight #flTools .hidden.sm\:inline { display: inline !important; }
 html.ui-flight .fl-tools-status { display: flex; flex-direction: column; gap: 8px; color: var(--fl-ink-2); font-size: 13px; }
-html.ui-flight .fl-tools-status > * { display: block !important; max-width: none !important; white-space: normal !important; margin: 0 !important; }
-html.ui-flight .fl-tools-status #syncStatusBadge { padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--fl-line); font-size: 13px; line-height: 1.5; cursor: pointer; }
+html.ui-flight .fl-tools-status > * { flex: none !important; display: block !important; max-width: none !important; white-space: normal !important; margin: 0 !important; }
+html.ui-flight .fl-tools-status #syncStatusBadge { flex: none !important; overflow: visible !important; text-overflow: clip !important; overflow-wrap: anywhere; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--fl-line); font-size: 13px; line-height: 1.5; cursor: pointer; }
 html.ui-flight .fl-tools-status > span:not(#syncStatusBadge) { width: fit-content; background: none !important; border: 0 !important; padding: 0 !important; font-size: 12.5px !important; color: var(--fl-ink-3) !important; }
 /* Section chips dock under the bar. */
 html.ui-flight .ui-section-bar { top: var(--fl-top-h) !important; }
@@ -782,7 +748,7 @@ html.ui-flight .fl-hero {
   background: linear-gradient(180deg, rgba(8, 9, 12, .35), rgba(8, 9, 12, 0) 28%, rgba(8, 9, 12, 0) 58%, rgba(8, 9, 12, .78) 90%, var(--fl-bg)), url('assets/bg-orbit.webp') center 68% / cover no-repeat, #07080b;
 }
 html.ui-flight .fl-hero-inner { display: flex; flex-direction: column; align-items: center; max-width: 820px; }
-html.ui-flight .fl-eyebrow { margin: 0; font-family: "Inter Flight", var(--fl-font); font-size: 12px; font-weight: 600; letter-spacing: .44em; color: var(--fl-ink-2); }
+html.ui-flight .fl-eyebrow { margin: 0; font-family: var(--fl-font); font-size: 12px; font-weight: 600; letter-spacing: .44em; color: var(--fl-ink-2); }
 html.ui-flight .fl-hero-title { margin: 18px 0 14px; font-family: var(--fl-font) !important; font-size: clamp(40px, 8.4vw, 92px); font-weight: 600 !important; line-height: 1.08; letter-spacing: .14em !important; color: #f3f5f8; text-indent: .14em; }
 html.ui-flight .fl-hero-sub { margin: 0; max-width: 34em; color: var(--fl-ink-soft); font-size: clamp(15px, 1.6vw, 19px); line-height: 1.7; letter-spacing: .05em; }
 html.ui-flight .fl-hero-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 26px; margin-top: 34px; }
@@ -797,8 +763,8 @@ html.ui-flight .fl-telemetry { display: grid; grid-template-columns: repeat(4, m
 html.ui-flight .fl-telemetry > div { padding: 4px 8px; }
 html.ui-flight .fl-telemetry > div + div { border-left: 1px solid rgba(255, 255, 255, .12); }
 html.ui-flight .fl-telemetry dt { display: flex; flex-direction: column; gap: 3px; color: var(--fl-ink-2); font-size: 12.5px; letter-spacing: .12em; }
-html.ui-flight .fl-telemetry dt span { font-family: "Inter Flight", var(--fl-font); font-size: 11px; font-weight: 600; letter-spacing: .34em; color: var(--fl-ink-3); }
-html.ui-flight .fl-telemetry dd { margin: 8px 0 0; font-family: "Inter Flight", var(--fl-font); font-variant-numeric: tabular-nums; font-size: clamp(26px, 3.6vw, 44px); font-weight: 500; color: #f3f5f8; }
+html.ui-flight .fl-telemetry dt span { font-family: var(--fl-font); font-size: 11px; font-weight: 600; letter-spacing: .34em; color: var(--fl-ink-3); }
+html.ui-flight .fl-telemetry dd { margin: 8px 0 0; font-family: var(--fl-font); font-variant-numeric: tabular-nums; font-size: clamp(26px, 3.6vw, 44px); font-weight: 500; color: #f3f5f8; }
 html.ui-flight .fl-band { padding: clamp(56px, 9vw, 110px) 0 0; }
 html.ui-flight .fl-band-head { max-width: 980px; margin: 0 auto 26px; padding: 0 24px; text-align: center; }
 html.ui-flight .fl-band-head h2 { margin: 0; font-family: var(--fl-font) !important; font-size: clamp(30px, 4.6vw, 52px); font-weight: 600 !important; letter-spacing: .08em !important; color: #f3f5f8; }
@@ -811,12 +777,12 @@ html.ui-flight .fl-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015)), #121419 !important; border: 0 !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .08), 0 28px 50px -34px rgba(0, 0, 0, .95) !important;
 }
-html.ui-flight .fl-card-date { font-family: "Inter Flight", var(--fl-font); font-size: 13px; font-weight: 600; letter-spacing: .2em; color: var(--fl-ink-3); }
+html.ui-flight .fl-card-date { font-family: var(--fl-font); font-size: 13px; font-weight: 600; letter-spacing: .2em; color: var(--fl-ink-3); }
 html.ui-flight .fl-card-title { font-size: 21px; font-weight: 650; letter-spacing: .06em; }
-html.ui-flight .fl-card-value { font-family: "Inter Flight", var(--fl-font); font-variant-numeric: tabular-nums; font-size: 38px; font-weight: 600; line-height: 1.1; color: #f3f5f8; }
+html.ui-flight .fl-card-value { font-family: var(--fl-font); font-variant-numeric: tabular-nums; font-size: 38px; font-weight: 600; line-height: 1.1; color: #f3f5f8; }
 html.ui-flight .fl-card-meta { margin-top: auto; color: var(--fl-accent); font-size: 13.5px; font-weight: 600; letter-spacing: .04em; }
 html.ui-flight .fl-card.is-empty .fl-card-meta { color: var(--fl-ink-3); }
-html.ui-flight .fl-card .fl-score { font-family: "Inter Flight", var(--fl-font); font-variant-numeric: tabular-nums; font-size: 34px; font-weight: 600; line-height: 1.15; }
+html.ui-flight .fl-card .fl-score { font-family: var(--fl-font); font-variant-numeric: tabular-nums; font-size: 34px; font-weight: 600; line-height: 1.15; }
 html.ui-flight .fl-score i { font-style: normal; margin: 0 4px; color: var(--fl-ink-3); }
 html.ui-flight .fl-score.is-win { color: var(--fl-green); }
 html.ui-flight .fl-score.is-loss { color: var(--fl-red); }
@@ -1100,10 +1066,10 @@ html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook
    use a lighter defocus; live refraction on content panels is for mouse devices (ui-theme.js), bars keep theirs. */
 html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(main section:not(.grid), main section.grid > div, #teamSummaryCards > div) {
   background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .015) 38%, rgba(255, 255, 255, .025)) padding-box,
-    linear-gradient(rgba(10, 12, 16, .3), rgba(10, 12, 16, .3)) padding-box,
+    linear-gradient(rgba(10, 12, 16, .24), rgba(10, 12, 16, .24)) padding-box,
     linear-gradient(155deg, rgba(255, 255, 255, .42), rgba(170, 205, 255, .14) 25%, rgba(255, 255, 255, .05) 55%, rgba(255, 210, 170, .12) 82%, rgba(255, 255, 255, .28)) border-box !important;
-  -webkit-backdrop-filter: blur(22px) saturate(160%) brightness(.66); backdrop-filter: blur(22px) saturate(160%) brightness(.66);
-  --fl-lens-defocus: 9; --fl-lens-tone: saturate(160%) brightness(.66);
+  -webkit-backdrop-filter: blur(22px) saturate(160%) brightness(.7); backdrop-filter: blur(22px) saturate(160%) brightness(.7);
+  --fl-lens-defocus: 9; --fl-lens-tone: saturate(160%) brightness(.7);
   text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
 }
 html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]):not(button):not(input):not(select):not(textarea) {
@@ -1112,7 +1078,7 @@ html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook
 }
 @media (pointer: coarse) {
   html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(main section:not(.grid), main section.grid > div, #teamSummaryCards > div) {
-    -webkit-backdrop-filter: blur(16px) saturate(155%) brightness(.64); backdrop-filter: blur(16px) saturate(155%) brightness(.64);
+    -webkit-backdrop-filter: blur(16px) saturate(155%) brightness(.68); backdrop-filter: blur(16px) saturate(155%) brightness(.68);
   }
 }
 /* Small controls sit on glass already: no backdrop blur of their own (dozens per page were the main GPU cost). */
@@ -1136,3 +1102,112 @@ html.ui-flight :is(summary, select).ui-pressed { transform: scale(.985); }
 @media (prefers-reduced-motion: reduce) {
   html.ui-flight :is([onclick], .cursor-pointer, summary, select, [data-player], [data-game], [data-health-name], .fl-card, .fl-tile, .fl-chip) { transition: none; }
 }
+
+html.ui-flight :is(.ui-section-bar button, .fl-subnav, #appHeader button):not(#fl-x)::before { content: none !important; }
+html.ui-flight .fl-subnav:not(#fl-x) { --fl-lens-tone: saturate(140%) brightness(.94); --fl-lens-defocus: 2; }
+html.ui-flight .ui-section-bar:not(#fl-x) { background: transparent !important; border-bottom-color: transparent !important; --fl-lens-tone: saturate(140%) brightness(.94); }
+
+/* ---------- Scorebook: defense quick-entry pad (practical first: big grouped buttons, full width on phones and tablets) ---------- */
+html.ui-flight .fl-def-pad { padding: 16px; border-radius: 22px; background: rgba(12, 14, 19, .72); border: 1px solid var(--fl-line); }
+/* Phones: the pad comes first, full width. Tablets and up: field on the left, pad on the right, same height. */
+html.ui-flight .fl-def-row { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; gap: 16px !important; align-items: stretch !important; }
+html.ui-flight .fl-def-row > * { grid-column: auto !important; }
+html.ui-flight .fl-def-row > .fl-def-pad { order: -1; }
+@media (min-width: 768px) {
+  html.ui-flight .fl-def-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; }
+  html.ui-flight .fl-def-row > .fl-def-pad { order: 2; display: flex; flex-direction: column; }
+  html.ui-flight .fl-def-row > #liveDefenseFieldCard { order: 1; margin: 0; }
+  html.ui-flight .fl-def-pad .fl-def-grid { flex: 1 1 auto; grid-auto-rows: 1fr; }
+  html.ui-flight .fl-def-pad .fl-def-outs { flex-grow: 3; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  html.ui-flight .fl-def-pad .fl-def-onbase { flex-grow: 2; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+html.ui-flight .fl-def-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding-bottom: 10px; border-bottom: 1px solid var(--fl-line); }
+html.ui-flight .fl-def-head h3 { margin: 0; font-size: 17px; font-weight: 700; color: #fcd58a; letter-spacing: .04em; }
+html.ui-flight .fl-def-head span { font-size: 13px; color: var(--fl-ink-3); }
+html.ui-flight .fl-def-label { margin: 14px 2px 8px; font-size: 12.5px; font-weight: 700; letter-spacing: .22em; color: var(--fl-ink-3); }
+html.ui-flight .fl-def-grid { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+html.ui-flight .fl-def-onbase { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html.ui-flight .fl-def-btn {
+  --tone: 148, 163, 184; position: relative; min-height: 78px; padding: 12px 8px; border-radius: 18px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center;
+  color: #f1f4f8; background: linear-gradient(180deg, rgba(var(--tone), .2), rgba(var(--tone), .08)) !important;
+  border: 1px solid rgba(var(--tone), .45) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 6px 16px rgba(0, 0, 0, .3) !important;
+  touch-action: manipulation; -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  transition: transform .12s var(--fl-spring, ease), background-color .12s;
+}
+html.ui-flight .fl-def-btn b { font-size: 17px; font-weight: 700; line-height: 1.2; white-space: nowrap; letter-spacing: .02em; }
+html.ui-flight .fl-def-btn small { font-size: 13px; font-weight: 600; line-height: 1.2; color: rgb(var(--tone)); font-variant-numeric: tabular-nums; }
+html.ui-flight .fl-def-btn.ui-pressed, html.ui-flight .fl-def-btn:active { transform: scale(.95); }
+@media (min-width: 768px) { html.ui-flight .fl-def-btn { min-height: 86px; } html.ui-flight .fl-def-btn b { font-size: 18px; } }
+@media (max-width: 359px) { html.ui-flight .fl-def-btn b { font-size: 15px; } }
+html.ui-flight .fl-def-btn[data-tone="out"] { --tone: 125, 211, 252; }
+html.ui-flight .fl-def-btn[data-tone="k"] { --tone: 251, 113, 133; }
+html.ui-flight .fl-def-btn[data-tone="dp"] { --tone: 196, 181, 253; }
+html.ui-flight .fl-def-btn[data-tone="bb"] { --tone: 252, 211, 77; }
+html.ui-flight .fl-def-btn[data-tone="hit"] { --tone: 253, 186, 116; }
+html.ui-flight .fl-def-btn[data-tone="run"] { --tone: 248, 113, 113; }
+
+/* ---------- Liquid glass controls v2: the segmented control, section chips and top-bar buttons ----------
+   High transparency rather than shine: a near-clear fill that lets the scene through, a fine hairline rim, and the
+   selection shown as slightly denser glass. No specular blobs or glow. Gradients and shadows only (compositor-cheap). */
+html.ui-flight .fl-subnav:not(#fl-x) {
+  background: rgba(255, 255, 255, .045) !important;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14), 0 12px 32px -22px rgba(0, 0, 0, .9) !important;
+}
+html.ui-flight :is(.fl-subnav-thumb, .fl-tab-thumb) {
+  background: rgba(255, 255, 255, .12) !important;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .3), inset 0 1px 0 rgba(255, 255, 255, .16), 0 6px 18px -12px rgba(0, 0, 0, .8) !important;
+}
+html.ui-flight .fl-subnav:not(#fl-x) button { color: rgba(226, 232, 240, .72); }
+html.ui-flight .fl-subnav:not(#fl-x) button[aria-current="page"] { color: #fff; }
+html.ui-flight .ui-section-bar:not(#fl-x) button {
+  color: rgba(232, 236, 242, .82) !important; font-weight: 600;
+  background: rgba(255, 255, 255, .05) !important;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .16), 0 6px 16px -12px rgba(0, 0, 0, .8) !important;
+}
+html.ui-flight .ui-section-bar:not(#fl-x) button[aria-current="true"] {
+  color: #fff !important; font-weight: 700;
+  background: rgba(150, 200, 255, .14) !important;
+  box-shadow: inset 0 0 0 .5px rgba(190, 220, 255, .42), inset 0 1px 0 rgba(255, 255, 255, .14), 0 6px 16px -12px rgba(0, 0, 0, .8) !important;
+}
+html.ui-flight :is(.ui-section-bar button, .fl-subnav):not(#fl-x)::after { content: none !important; }
+html.ui-flight #appHeader button {
+  background: rgba(255, 255, 255, .06) !important;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18), 0 8px 20px -14px rgba(0, 0, 0, .9) !important;
+}
+html.ui-flight #appHeader button::after { content: none !important; }
+
+/* ---------- Type v3 (2026/10/26): titles in Mincho Black, content in a clear literary serif ----------
+   Titles: Noto Serif TC Black (思源宋體, subset to the site's characters: vendor/fonts/tk-serif-900.woff2) — artistic but
+   unmistakable. Content: Source Serif 4 for Latin letters and digits (the calm, readable serif feel of Claude's text),
+   with Chinese in a clean gothic (PingFang TC on Apple devices, the bundled Noto Sans TC subset elsewhere) so data stays crisp. */
+@font-face { font-family: "Serif Flight"; src: url("vendor/fonts/serif-latin-400.woff2") format("woff2"); font-weight: 400 500; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Serif Flight"; src: url("vendor/fonts/serif-latin-600.woff2") format("woff2"); font-weight: 550 650; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Serif Flight"; src: url("vendor/fonts/serif-latin-700.woff2") format("woff2"); font-weight: 651 900; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "TK Mincho"; src: url("vendor/fonts/tk-serif-900.woff2") format("woff2"); font-weight: 500 900; font-display: swap; }
+html.ui-flight {
+  --fl-font: "Serif Flight", "PingFang TC", "TK Gothic", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --fl-display: var(--fl-font);
+  --fl-mincho: "TK Mincho", "Noto Serif TC", "Noto Serif CJK TC", "Songti TC", serif;
+}
+html.ui-flight :is(h1, h2, h3, .ui-page-heading h1, [id$="Modal"] h3, .fl-hero-title, .fl-band-head h2, .fl-tile h3, .fl-top-title, #mainNavigation > .fl-side-brand, .fl-def-head h3, .fl-tools-head h2) {
+  font-family: var(--fl-mincho) !important; font-weight: 900 !important; font-feature-settings: "palt" 1; text-wrap: balance;
+}
+html.ui-flight .fl-hero-title { letter-spacing: .1em !important; text-indent: .1em; }
+html.ui-flight :is(h1, h2, .ui-page-heading h1) { letter-spacing: .05em !important; }
+html.ui-flight h3 { letter-spacing: .03em !important; }
+/* Chinese lines break cleanly: no lone character on the last line, headings balanced, punctuation kept with its word. */
+html.ui-flight :is(p, li, dd, figcaption) { text-wrap: pretty; line-break: strict; }
+/* Small filter chips (spray filters) and stat-card footers: each label stays on one line and the row wraps instead (phones, tablets). */
+html.ui-flight main button.text-xs.py-1 { white-space: nowrap; flex-shrink: 0; }
+html.ui-flight main .justify-between:has(> div > button.text-xs.py-1) { flex-wrap: wrap; row-gap: 10px; }
+html.ui-flight main div.flex.justify-between.font-mono { flex-wrap: wrap; column-gap: 10px; row-gap: 2px; }
+html.ui-flight main div.flex.justify-between.font-mono:not(.flex-col) > span:not(.block) { white-space: nowrap; }
+html.ui-flight main .flex.justify-between:not(.flex-col) > span:not(.block):is([class*="text-[10px]"], [class*="text-[11px]"]):not(:only-child) { white-space: nowrap; flex-shrink: 0; margin-left: 10px; }
+html.ui-flight main th { white-space: nowrap; }
+html.ui-flight main h4 { text-wrap: balance; }
+html.ui-flight main .ui-wrap-table th { word-break: keep-all; }
+html.ui-flight main :is(span.block, div[class*="text-[1"], div.text-xs, div.text-sm) { text-wrap: pretty; }
+/* The phone tab bar always fits the screen: equal columns that may shrink (a wide label never stretches the bar). */
+html.ui-flight .ui-mobile-nav { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+html.ui-flight .ui-mobile-nav > button { min-width: 0; }

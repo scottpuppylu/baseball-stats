@@ -132,3 +132,15 @@
 - 折光邊是畫在 border-box 的背景，填色層下必須墊不透明底（`--fl-glass-base`），否則邊框顏色會滲進整顆按鈕。
 - 頁面 HTML 有 100 萬字元上限檢查（防止 base64 頭像），所以這一層刻意不新增 DOM 文字（側欄英文標語用 CSS `content`）。
 - 新增字型字元：改內容後執行 `python scripts/build-fonts.py …` 重新產生子集。
+
+## 2026/10/26 第四輪：反應速度、字體、高透玻璃、場記快捷鍵、賽後成績圖
+
+- **按壓反應**：觸控點擊導覽（底部分頁列、頁面切換列、抽屜選單）先畫出選取狀態，下一格畫面才呼叫換頁（`ui-comfort.js` 的 `soon()`）；滑鼠與程式呼叫維持同步。按壓光暈只動畫 `opacity` 與 `transform`（`#flRipple > span`），並在寫入前先讀版面。
+- **版面工作**：`ui-comfort.js` 的整理（表格摺疊、黏性欄、區段列）只處理目前顯示的頁面，忽略按壓／玻璃等暫態 class 的變動，並在畫面畫出後才執行；`phone()` 用 media query，不讀 `innerWidth`；讀寫分批，避免反覆強制排版。
+- **折射玻璃**：形變圖以約 2.4 萬取樣點計算、直接寫成 BMP（不經 canvas／PNG 壓縮），由 SVG 濾鏡放大到元件尺寸。
+- **量測**：`Event Timing` 於手機視窗、CPU 降速 4 倍：按下到畫面回應約 30～60 ms（原 1～1.5 s）。
+- **字體**：標題 `--fl-mincho` = 思源宋體 Black（`vendor/fonts/tk-serif-900.woff2`）；內容 `--fl-font` = Source Serif 4（英數，`serif-latin-*.woff2`）＋ PingFang TC／思源黑體（中文）。Inter 已移除。重新產生：`python scripts/build-fonts.py <NotoSansTC VF | -> <NotoSerifTC VF>`。
+- **頁面按鈕（高透玻璃）**：切換列、區段按鈕、頂列圖示按鈕為近乎透明的底＋0.5px 細邊，選取者為略濃的玻璃；不使用高光斑或外發光。
+- **場記防守快捷登打**（`.fl-def-pad`）：分「出局」「上壘・失分」兩組大按鈕；寬度 ≥768px 時與守備圖左右並排、上下對齊（`.fl-def-row`），手機放在守備圖上方。場記頁不播放區塊滑入動畫。
+- **賽後成績圖**：行星地平線背景（`assets/bg-orbit-portrait.webp`）＋暗色遮罩、透明玻璃面板、宋體標題、襯線數字；開啟前先載入字體與背景（最多等 2.5 秒）。
+- **換行**：短按鈕與標籤 `word-break: keep-all`；小篩選鈕與數據卡標籤整段不拆、改為換列；段落 `text-wrap: pretty`、標題 `balance`。
