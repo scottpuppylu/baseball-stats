@@ -4,6 +4,9 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const extras = ['vendor/fonts/tk-sans-400.woff2', 'vendor/fonts/tk-sans-500.woff2', 'vendor/fonts/tk-sans-700.woff2', 'vendor/fonts/inter-latin-400.woff2', 'vendor/fonts/inter-latin-500.woff2', 'vendor/fonts/inter-latin-600.woff2', 'vendor/fonts/inter-latin-700.woff2', 'assets/logo-128.webp', 'assets/logo-256.webp', 'assets/logo-512.webp', 'assets/bg-orbit.webp', 'assets/bg-orbit-portrait.webp', 'assets/bg-profile.webp', 'assets/bg-profile-portrait.webp', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/maskable-192.png', 'assets/icons/maskable-512.png'];
+// Published with the site but not precached for offline use (about 1 MB of page scenes; offline shows the dark base).
+const SCENES = ['overview', 'analytics', 'pitching', 'records', 'leaderboard', 'compare', 'health', 'lineup', 'glossary', 'changelog'];
+const publicOnly = SCENES.flatMap(name => [`assets/bg-${name}.webp`, `assets/bg-${name}-portrait.webp`]);
 function build(read) {
   let html = read('index.html').toString().replace(/\r\n/g, '\n');
   html = html.replace(/\s*<meta name="baseball-release" content="[^"]+">/g, '');
@@ -21,9 +24,9 @@ function build(read) {
   const entries = [...files].map(([file, bytes]) => ({file, sha256: digest(bytes), url: file === 'index.html' ? file : file + '?v=' + digest(bytes).slice(0, 20)}));
   const release = {version, files: entries};
   files.set('sw.js', Buffer.from(worker.replace('const RELEASE = null; // generated-release', 'const RELEASE = ' + JSON.stringify(release) + '; // generated-release')));
-  return {version, files, release};
+  return {version, files, release, publicOnly};
 }
-module.exports = {build, digest};
+module.exports = {build, digest, extras, publicOnly};
 if (require.main === module) {
   const root = path.resolve(__dirname, '..');
   const result = build(file => fs.readFileSync(path.join(root, file)));
@@ -34,6 +37,10 @@ if (require.main === module) {
     if (stage === root || stage.startsWith(root + path.sep)) throw new Error('Stage must be outside source checkout');
     fs.mkdirSync(stage, {recursive: true});
     for (const file of result.files.keys()) {
+      fs.mkdirSync(path.dirname(path.join(stage, file)), {recursive: true});
+      fs.renameSync(path.join(root, file), path.join(stage, file));
+    }
+    for (const file of result.publicOnly) {
       fs.mkdirSync(path.dirname(path.join(stage, file)), {recursive: true});
       fs.renameSync(path.join(root, file), path.join(stage, file));
     }
