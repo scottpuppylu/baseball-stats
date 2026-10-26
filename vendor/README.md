@@ -10,3 +10,5 @@
 | `fonts/tk-sans-{400,500,700}.woff2`、`fonts/tk-serif-600.woff2` | Google Fonts 儲存庫 `ofl/notosanstc`、`ofl/notoseriftc`（Adobe 思源黑體／思源宋體 TC 可變字型），由 `scripts/build-fonts.py` 固定字重並只保留網站用到的 1,333 字（清單：`fonts/tk-charset.txt`）；其他字自動改用系統字型 | SIL OFL 1.1（`fonts/NotoTC-OFL.txt`） | 重新產生：`python scripts/build-fonts.py <NotoSansTC[wght].ttf> <NotoSerifTC[wght].ttf>` |
 
 更新版本時：換檔名中的版本號、更新上表、同步修改 `index.html` 與 `sw.js` 的檔名，並重跑 `npm test`。
+
+`tailwind-site.css` 由 `node scripts/build-tailwind.cjs` 以上表的 `tailwindcss-play-3.4.17.js` 在無頭瀏覽器中產生（2026/10/26 起網站改載入此預先產生的 CSS，不再於瀏覽器即時編譯；Play 檔案保留作為產生工具）。

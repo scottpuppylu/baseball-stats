@@ -213,7 +213,8 @@
     const title = bar.querySelector('.fl-top-title');
     const pageTitle = document.getElementById('uiPageTitle');
     const heading = document.querySelector('.ui-page-heading');
-    const copyTitle = () => { title.textContent = document.body.dataset.page === 'Home' ? '淡江航太系壘' : (pageTitle ? pageTitle.textContent : ''); };
+    // Only write when the text changes: scroll handlers call this, and any DOM change costs work on phones.
+    const copyTitle = () => { const text = document.body.dataset.page === 'Home' ? '淡江航太系壘' : (pageTitle ? pageTitle.textContent : ''); if (title.textContent !== text) title.textContent = text; };
     if (pageTitle) new MutationObserver(copyTitle).observe(pageTitle, {childList: true, characterData: true, subtree: true});
     copyTitle();
     let headingVisible = true;
@@ -227,7 +228,8 @@
       header.classList.toggle('fl-title-on', home ? window.scrollY > window.innerHeight * 0.5 : !headingVisible);
       copyTitle();
     };
-    window.addEventListener('scroll', markBar, {passive: true});
+    let barQueued = false;
+    window.addEventListener('scroll', () => { if (barQueued) return; barQueued = true; requestAnimationFrame(() => { barQueued = false; markBar(); }); }, {passive: true});
     new MutationObserver(markBar).observe(document.body, {attributes: true, attributeFilter: ['data-page']});
     markBar();
   }

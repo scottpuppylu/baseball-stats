@@ -581,7 +581,7 @@ html.ui-flight select, html.ui-flight input[type="date"] { transition: border-co
 html.ui-flight select:active, html.ui-flight input[type="date"]:active { transform: scale(.985); }
 html.ui-flight details > summary { transition: color .2s var(--fl-ease); }
 html.ui-flight details[open] > summary ~ * { animation: fl-fade .32s var(--fl-ease); }
-@keyframes fl-fade { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: none; } }
+@keyframes fl-fade { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { html.ui-flight details[open] > summary ~ * { animation: none; } }
 
 /* Eyebrow labels stay on one line (they were stacking word by word on tablets). */
@@ -1028,9 +1028,9 @@ html.ui-flight .fl-point-chip { --fl-lens-defocus: 4; }
 html.fl-booting body > * { visibility: hidden !important; }
 html.fl-booting body::after {
   content: ''; position: fixed; inset: 0; z-index: 2147483600; pointer-events: none;
-  background: url('assets/logo-256.webp') center 42% / 92px 92px no-repeat, linear-gradient(180deg, rgba(8, 9, 12, .2), rgba(8, 9, 12, .65)), url('assets/bg-orbit.webp') center 68% / cover no-repeat, #07080b;
+  background: url('assets/logo-512.webp') center 42% / 156px 156px no-repeat, linear-gradient(180deg, rgba(8, 9, 12, .2), rgba(8, 9, 12, .65)), url('assets/bg-orbit.webp') center 68% / cover no-repeat, #07080b;
 }
-@media (orientation: portrait) { html.fl-booting body::after { background: url('assets/logo-256.webp') center 40% / 92px 92px no-repeat, linear-gradient(180deg, rgba(8, 9, 12, .2), rgba(8, 9, 12, .65)), url('assets/bg-orbit-portrait.webp') center 60% / cover no-repeat, #07080b; } }
+@media (orientation: portrait) { html.fl-booting body::after { background: url('assets/logo-512.webp') center 40% / 140px 140px no-repeat, linear-gradient(180deg, rgba(8, 9, 12, .2), rgba(8, 9, 12, .65)), url('assets/bg-orbit-portrait.webp') center 60% / cover no-repeat, #07080b; } }
 
 /* ---------- Page scenes (2026/10/26): every page except 場記 sits on its own space scene (scripts/build-backgrounds.py),
    a fixed full-screen layer that fades in on page change; content panels are liquid glass over it. Portrait crops for phones
@@ -1091,4 +1091,48 @@ html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook
 html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr:nth-child(odd) { background-color: rgba(255, 255, 255, .02); }
 @media (prefers-contrast: more) {
   html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section:not(.grid), html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section.grid > div, html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #teamSummaryCards > div { background: #15181d !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
+
+/* ---------- Clearer liquid glass + performance (2026/10/26, round 3) ----------
+   Panels: much more transparent; legibility comes from a strong depth-of-field defocus and dimming of the scene behind
+   (not a dark fill) plus a faint text shadow. Nested cards: light liquid glass (tint + highlight rim, no blur layer).
+   Performance (iPhone 13 / Galaxy S21): small controls inside glass no longer run their own backdrop blur; touch devices
+   use a lighter defocus; live refraction on content panels is for mouse devices (ui-theme.js), bars keep theirs. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(main section:not(.grid), main section.grid > div, #teamSummaryCards > div) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .015) 38%, rgba(255, 255, 255, .025)) padding-box,
+    linear-gradient(rgba(10, 12, 16, .3), rgba(10, 12, 16, .3)) padding-box,
+    linear-gradient(155deg, rgba(255, 255, 255, .42), rgba(170, 205, 255, .14) 25%, rgba(255, 255, 255, .05) 55%, rgba(255, 210, 170, .12) 82%, rgba(255, 255, 255, .28)) border-box !important;
+  -webkit-backdrop-filter: blur(22px) saturate(160%) brightness(.66); backdrop-filter: blur(22px) saturate(160%) brightness(.66);
+  --fl-lens-defocus: 9; --fl-lens-tone: saturate(160%) brightness(.66);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+}
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]):not(button):not(input):not(select):not(textarea) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .025)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 -10px 18px -14px rgba(0, 0, 0, .35) !important;
+}
+@media (pointer: coarse) {
+  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(main section:not(.grid), main section.grid > div, #teamSummaryCards > div) {
+    -webkit-backdrop-filter: blur(16px) saturate(155%) brightness(.64); backdrop-filter: blur(16px) saturate(155%) brightness(.64);
+  }
+}
+/* Small controls sit on glass already: no backdrop blur of their own (dozens per page were the main GPU cost). */
+html.ui-flight main :is(button, [role="button"], .ui-glass, label.cursor-pointer),
+html.ui-flight :is(.ui-section-bar, .fl-subnav, #appHeader, #flTools, #mainNavigation) :is(button, [role="button"]) {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+/* Press feedback on everything tappable (ui-theme.js marks the element with .ui-pressed and plays the light ripple):
+   small controls compress, large cards and rows give a gentler squeeze or a highlight, then spring back. */
+html.ui-flight :is([onclick], .cursor-pointer, summary, select, [data-player], [data-game], [data-health-name], .fl-card, .fl-tile, .fl-chip) {
+  transition: transform .32s var(--fl-spring), filter .22s var(--fl-ease), background-color .22s var(--fl-ease), box-shadow .3s var(--fl-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+html.ui-flight :is(.fl-card, .fl-tile, [data-health-name], div[onclick], section [class*="rounded"][onclick]).ui-pressed { transform: scale(.975); filter: brightness(1.12); transition-duration: .08s; }
+html.ui-flight :is(tr[onclick], tr.cursor-pointer).ui-pressed { transform: none; background-color: rgba(255, 255, 255, .07) !important; transition-duration: .06s; }
+html.ui-flight :is(summary, select).ui-pressed { transform: scale(.985); }
+@media (hover: hover) and (pointer: fine) {
+  html.ui-flight :is(.fl-card, .fl-tile, [data-health-name]):hover { transform: translateY(-2px); filter: brightness(1.08); }
+  html.ui-flight :is(tr[onclick], tr.cursor-pointer):hover { background-color: rgba(255, 255, 255, .045) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.ui-flight :is([onclick], .cursor-pointer, summary, select, [data-player], [data-game], [data-health-name], .fl-card, .fl-tile, .fl-chip) { transition: none; }
 }

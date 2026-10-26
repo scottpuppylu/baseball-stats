@@ -31,7 +31,8 @@ test('page head links the manifest, iOS home-screen settings and local copies of
   assert.ok(/apple-mobile-web-app-title" content="航太系壘"/.test(html));
   assert.ok(/viewport-fit=cover/.test(html));
   assert.ok(!/<script src="https?:\/\//.test(html), 'PWA program dependencies are local');
-  for (const file of ['vendor/tailwindcss-play-3.4.17.js', 'vendor/chart.umd-4.5.1.min.js']) assert.ok(fs.statSync(path.join(root, file)).size > 100000, file);
+  for (const file of ['vendor/chart.umd-4.5.1.min.js']) assert.ok(fs.statSync(path.join(root, file)).size > 100000, file);
+  assert.ok(fs.statSync(path.join(root, 'vendor/tailwind-site.css')).size > 30000, 'prebuilt Tailwind CSS');
 });
 
 test('release pre-caches exactly the program files the generated page loads', () => {

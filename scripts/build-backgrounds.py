@@ -377,8 +377,276 @@ def comet(w, h, seed, portrait):
     return img, rng
 
 
-PAGE_SCENES = [('overview', milkyway), ('analytics', nebula), ('pitching', mars), ('records', saturn), ('leaderboard', moon),
-               ('compare', binary), ('health', aurora), ('lineup', jupiter), ('glossary', galaxy), ('changelog', comet)]
+# ---------- Premium planets (2026/10/26, v2): textures live on the sphere, lighting reads surface relief ----------
+def _hash3(xi, yi, zi, seed):
+    h = (xi.astype(np.uint32) * np.uint32(73856093)) ^ (yi.astype(np.uint32) * np.uint32(19349663)) ^ (zi.astype(np.uint32) * np.uint32(83492791)) ^ np.uint32(seed)
+    h = (h ^ (h >> np.uint32(13))) * np.uint32(1274126177)
+    h = h ^ (h >> np.uint32(16))
+    return (h & np.uint32(0xFFFF)).astype(np.float32) / 65535.0
+
+
+def vnoise3(x, y, z, seed=0):
+    """Smooth 3D value noise in 0..1 (quintic interpolation)."""
+    xf, yf, zf = np.floor(x), np.floor(y), np.floor(z)
+    tx, ty, tz = x - xf, y - yf, z - zf
+    sx, sy, sz = (t * t * t * (t * (t * 6 - 15) + 10) for t in (tx, ty, tz))
+    xi, yi, zi = xf.astype(np.int64), yf.astype(np.int64), zf.astype(np.int64)
+    def c(dx, dy, dz):
+        return _hash3(xi + dx, yi + dy, zi + dz, seed)
+    x00 = c(0, 0, 0) + (c(1, 0, 0) - c(0, 0, 0)) * sx
+    x10 = c(0, 1, 0) + (c(1, 1, 0) - c(0, 1, 0)) * sx
+    x01 = c(0, 0, 1) + (c(1, 0, 1) - c(0, 0, 1)) * sx
+    x11 = c(0, 1, 1) + (c(1, 1, 1) - c(0, 1, 1)) * sx
+    y0 = x00 + (x10 - x00) * sy
+    y1 = x01 + (x11 - x01) * sy
+    return y0 + (y1 - y0) * sz
+
+
+def fbm3(x, y, z, octaves=6, freq=1.0, gain=.5, seed=0):
+    total, amp, norm = 0.0, 1.0, 0.0
+    for o in range(octaves):
+        total = total + vnoise3(x * freq, y * freq, z * freq, seed + o * 101) * amp
+        norm += amp
+        amp *= gain
+        freq *= 2.03
+    return total / norm
+
+
+def sphere_points(w, h, cx, cy, r, margin=4):
+    """Pixels covered by the disk (cropped to the image): indices and unit-sphere coordinates (z toward the viewer)."""
+    x0, x1 = max(0, int(cx - r - margin)), min(w, int(cx + r + margin) + 1)
+    y0, y1 = max(0, int(cy - r - margin)), min(h, int(cy + r + margin) + 1)
+    if x0 >= x1 or y0 >= y1:
+        return None
+    yy, xx = np.mgrid[y0:y1, x0:x1].astype(np.float32)
+    u, v = (xx + .5 - cx) / r, (yy + .5 - cy) / r
+    rr = u * u + v * v
+    return (y0, y1, x0, x1), u, v, rr
+
+
+def render_planet(img, cx, cy, r, light, surface, bump=0.0, limb_dark=0.0, atmosphere=None, night=None, aa=1.2):
+    """surface(px, py, pz) -> (albedo HxWx3, height HxW or None) on the unit sphere (y up is screen up).
+    Lambert lighting with a soft terminator, bump from the height field, optional limb darkening, night lights
+    and a scattering halo. Antialiased edge."""
+    h, w, _ = img.shape
+    res = sphere_points(w, h, cx, cy, r, margin=int(r * .02) + 6)
+    if res is None:
+        return
+    (y0, y1, x0, x1), u, v, rr = res
+    inside = rr < 1
+    z = np.sqrt(np.clip(1 - rr, 0, 1))
+    px, py, pz = u, -v, z  # sphere point (unit)
+    lx, ly, lz = light
+    ln = math.sqrt(lx * lx + ly * ly + lz * lz)
+    lx, ly, lz = lx / ln, ly / ln, lz / ln
+    albedo, height = surface(px, py, pz)
+    ndl = px * lx + py * ly + pz * lz
+    if height is not None and bump:
+        # Screen-space bump: relief along the light's screen direction brightens slopes facing it.
+        gx = np.zeros_like(height); gy = np.zeros_like(height)
+        gx[:, 1:-1] = (height[:, 2:] - height[:, :-2]) * .5
+        gy[1:-1, :] = (height[2:, :] - height[:-2, :]) * .5
+        ndl = ndl + bump * (gx * lx - gy * ly) * 40  # height in 0..1 per pixel: size-independent strength
+    shade = np.clip((ndl + .06) / 1.06, 0, 1) ** .9
+    shade = shade * shade * (3 - 2 * shade) * .35 + shade * .65  # soft terminator
+    if limb_dark:
+        shade = shade * (np.clip(z, 0, 1) ** limb_dark)
+    col = albedo * shade[..., None]
+    if night is not None:
+        dark = np.clip(-ndl * 3, 0, 1)
+        col = col + night(px, py, pz) * dark[..., None]
+    edge = np.clip((1 - np.sqrt(rr)) * r / aa + .5, 0, 1)  # antialiased limb
+    region = img[y0:y1, x0:x1]
+    region[:] = region * (1 - edge[..., None]) + col * edge[..., None]
+    if atmosphere is not None:
+        colour, thickness, strength = atmosphere
+        d = (np.sqrt(rr) - 1) * r  # >0 outside
+        lit = np.clip((u * lx - v * ly) / max(1e-3, math.hypot(lx, ly)) * .6 + .55, 0, 1) if math.hypot(lx, ly) > 1e-3 else 1.0
+        halo = np.where(d > 0, np.exp(-np.clip(d, 0, None) / thickness), np.exp(np.clip(d, None, 0) / (thickness * .6)) * .7) * lit * strength
+        rim = np.exp(-np.abs(d) / 1.6) * lit * strength * .8
+        region += (halo + rim)[..., None] * np.array(colour, np.float32)
+
+
+def earth_v2(img, cx, cy, r, light, city=True, cloud_scale=1.0, seed=7):
+    """Night-side Earth seen near the limb: dark oceans and land, thin clouds, warm city lights, blue scattering rim."""
+    f = r / 260.0 * cloud_scale  # feature size ~260 px of arc
+    def surface(px, py, pz):
+        land = fbm3(px * f, py * f, pz * f, 5, 1.0, .55, seed) > .52
+        clouds = np.clip((fbm3(px * f * 1.7, py * f * 1.7, pz * f * 1.7, 6, 1.0, .55, seed + 9) - .48) * 2.4, 0, 1)
+        base = np.where(land[..., None], np.array([.035, .045, .035], np.float32), np.array([.015, .03, .06], np.float32))
+        alb = base * (1 - clouds[..., None]) + clouds[..., None] * np.array([.55, .6, .66], np.float32) * .55
+        return alb, clouds * .6
+    def night(px, py, pz):
+        if not city:
+            return np.zeros(px.shape + (3,), np.float32)
+        n = fbm3(px * f * 4, py * f * 4, pz * f * 4, 4, 1.0, .6, seed + 21)
+        land = fbm3(px * f, py * f, pz * f, 5, 1.0, .55, seed) > .52
+        lights = np.clip((n - .62) * 6, 0, 1) ** 2 * land
+        return lights[..., None] * np.array([1.0, .72, .38], np.float32) * .7
+    render_planet(img, cx, cy, r, light, surface, bump=.6, night=night, atmosphere=((.35, .65, 1.0), max(8, r * .006), 1.0))
+
+
+def mars_v2(w, h, seed, portrait):
+    rng = np.random.default_rng(seed)
+    img = space(rng, w, h)
+    r = w * (2.2 if not portrait else 3.0)
+    horizon = h * (.74 if not portrait else .62)
+    f = r / 220.0
+    def surface(px, py, pz):
+        base = fbm3(px * f, py * f, pz * f, 7, 1.0, .52, seed)
+        dark = np.clip((fbm3(px * f * .35, py * f * .35, pz * f * .35, 4, 1.0, .5, seed + 5) - .45) * 2.2, 0, 1)
+        dunes = fbm3(px * f * 6, py * f * 6, pz * f * 6, 4, 1.0, .5, seed + 9)
+        alb = np.stack([.62 + base * .28, .28 + base * .14, .14 + base * .06], -1) * (1 - dark[..., None] * .45)
+        return alb * .62, base * .55 + dunes * .2
+    render_planet(img, w * .5, horizon + r, r, (.75, .35, .28), surface, bump=1.1, atmosphere=((1.0, .66, .42), max(8, r * .005), .75))
+    glow(img, w * .82, horizon - h * .01, min(w, h) * .05, (1.0, .86, .66), .5)
+    return img, rng
+
+
+def moon_v2(w, h, seed, portrait):
+    rng = np.random.default_rng(seed)
+    img = space(rng, w, h)
+    r = w * (2.4 if not portrait else 3.2)
+    horizon = h * (.76 if not portrait else .66)
+    cx, cy = w * .45, horizon + r
+    f = r / 200.0
+    # Craters as (centre on the sphere, angular radius), concentrated on the visible cap.
+    craters = []
+    for _ in range(150):
+        sx = (rng.random() - .5) * (w * 1.1) / r
+        sy = -(horizon + h * .04 + rng.random() * (h - horizon) * 1.05 - cy) / r
+        sz = math.sqrt(max(0, 1 - sx * sx - sy * sy))
+        craters.append((sx, sy, sz, (4 + rng.random() ** 4 * 55) / r))
+    def surface(px, py, pz):
+        maria = np.clip((fbm3(px * f * .3, py * f * .3, pz * f * .3, 4, 1.0, .5, seed) - .5) * 2.5, 0, 1)
+        grit = fbm3(px * f * 3, py * f * 3, pz * f * 3, 6, 1.0, .55, seed + 3)
+        fade = np.clip(pz / .08, 0, 1) ** .8  # detail fades toward the grazing horizon (no shimmer)
+        height = grit * .22 * fade
+        for (sx, sy, sz, ar) in craters:
+            d = np.arccos(np.clip(px * sx + py * sy + pz * sz, -1, 1)) / ar
+            near = d < 1.6
+            if not near.any():
+                continue
+            bowl = np.where(d < 1, (d * d - 1) * .16, 0)
+            rim = np.exp(-((d - 1) / .2) ** 2) * .07 + np.where(d > 1, np.exp(-(d - 1) * 3) * .02, 0)
+            height = height + (bowl + rim) * near * fade
+        g = (.30 + grit * .14) * (1 - maria * .38)
+        alb = np.stack([g, g * .985, g * .96], -1) * .72
+        return alb, height
+    render_planet(img, cx, cy, r, (-.82, .25, .3), surface, bump=1.6, atmosphere=None)
+    # Earthrise
+    er = min(w, h) * (.05 if not portrait else .085)
+    ex, ey = (w * .74, horizon - h * .17) if not portrait else (w * .7, horizon - h * .13)
+    fe = er / 22.0
+    def esurf(px, py, pz):
+        land = fbm3(px * fe + 3, py * fe, pz * fe, 5, 1.0, .55, seed + 40) > .55
+        clouds = np.clip((fbm3(px * fe * 2, py * fe * 2, pz * fe * 2, 6, 1.0, .55, seed + 41) - .45) * 2.2, 0, 1)
+        base = np.where(land[..., None], np.array([.16, .2, .1], np.float32), np.array([.04, .14, .36], np.float32))
+        return base * (1 - clouds[..., None]) + clouds[..., None] * .82, None
+    render_planet(img, ex, ey, er, (-.82, .25, .3), esurf, atmosphere=((.4, .65, 1.0), max(2, er * .06), .9))
+    return img, rng
+
+
+def jupiter_v2(w, h, seed, portrait):
+    rng = np.random.default_rng(seed)
+    img = space(rng, w, h)
+    r = h * .82 if not portrait else w * .78
+    cx, cy = (w * .12, h * 1.05) if not portrait else (w * .5, h * 1.08)
+    def surface(px, py, pz):
+        lat = np.arcsin(np.clip(py, -1, 1))
+        warp = (fbm3(px * 3, py * 3, pz * 3, 6, 1.0, .55, seed) - .5) * .22 + (fbm3(px * 9, py * 9, pz * 9, 4, 1.0, .5, seed + 2) - .5) * .05
+        L = lat + warp
+        b = .5 + .5 * np.tanh(np.sin(L * 14) * 2.4)  # crisp zones and belts
+        c = .5 + .5 * np.tanh(np.sin(L * 5 + 1.1) * 1.6)
+        fine = np.sin(L * 60 + fbm3(px * 14, py * 14, pz * 14, 3, 1.0, .5, seed + 4) * 6) * .5 + .5
+        col = np.stack([.72 + .24 * b - .18 * c + .06 * fine, .58 + .15 * b - .15 * c + .04 * fine, .42 + .07 * b - .1 * c], -1)
+        # Great Red Spot near -22° latitude, a swirled oval.
+        lon = np.arctan2(px, pz)
+        dl, dla = (lon - .3) / .14, (lat - .36) / .06
+        spot = np.exp(-(dl * dl + dla * dla) ** 1.2)
+        col = col * (1 - spot[..., None] * .5) + spot[..., None] * np.array([.78, .38, .26], np.float32)
+        return col * .5, b * .3 + fine * .1
+    render_planet(img, cx, cy, r, (.45, .6, .65), surface, bump=.6, limb_dark=.45, atmosphere=((.9, .8, .65), max(6, r * .004), .35))
+    return img, rng
+
+
+def saturn_v2(w, h, seed, portrait):
+    rng = np.random.default_rng(seed)
+    img = space(rng, w, h)
+    cx, cy = (w * .7, h * .38) if not portrait else (w * .55, h * .26)
+    r = min(w, h) * (.2 if not portrait else .19)
+    tilt, ang = .27, math.radians(-16)
+    light = (-.75, .25, .6)
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    rx = (xx - cx) * math.cos(ang) + (yy - cy) * math.sin(ang)
+    ry = -(xx - cx) * math.sin(ang) + (yy - cy) * math.cos(ang)
+    rd = np.sqrt(rx ** 2 + (ry / tilt) ** 2) / r
+    # Ring radial profile: C ring faint, B ring bright, Cassini division, A ring with the Encke gap; fine ringlets.
+    ringlets = np.interp(rd, np.linspace(1.1, 2.4, 2048), fbm(np.random.default_rng(seed + 1), 2048, 2, 4, 2)[0])
+    prof = (np.clip((rd - 1.24) / .02, 0, 1) * np.clip((1.53 - rd) / .02, 0, 1) * .28  # C
+            + np.clip((rd - 1.53) / .01, 0, 1) * np.clip((1.95 - rd) / .01, 0, 1) * .95  # B
+            + np.clip((rd - 2.03) / .01, 0, 1) * np.clip((2.27 - rd) / .01, 0, 1) * .7)  # A
+    prof *= (1 - np.exp(-((rd - 2.21) / .006) ** 2) * .9)  # Encke gap
+    prof *= (.7 + .3 * ringlets)
+    ring_col = np.array([.78, .7, .56], np.float32) * prof[..., None] * .82
+    # The planet's shadow on the far side of the rings (cast away from the light).
+    sh = np.clip(1 - np.exp(-((rx - (-light[0]) * r * 1.6) ** 2 / (r * .9) ** 2 + (ry / tilt - r * .2) ** 2 / (r * 1.1) ** 2) * 3), .25, 1)
+    behind = ry < 0
+    img += np.where(behind[..., None], ring_col * sh[..., None] * .85, 0)
+    def surface(px, py, pz):
+        lat = np.arcsin(np.clip(py, -1, 1))
+        L = lat + (fbm3(px * 4, py * 4, pz * 4, 5, 1.0, .5, seed) - .5) * .06
+        b = np.sin(L * 18) * .5 + .5
+        c = np.sin(L * 6 + .7) * .5 + .5
+        col = np.stack([.76 + .08 * b - .06 * c, .66 + .07 * b - .05 * c, .48 + .04 * b], -1)
+        return col * .6, None
+    # Ring shadow band across the planet's lit face.
+    render_planet(img, cx, cy, r, light, surface, limb_dark=.35, atmosphere=((.9, .85, .7), max(3, r * .01), .25))
+    band = np.exp(-((ry - r * .16) / (r * .07)) ** 2) * (np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) < r)
+    img *= (1 - band[..., None] * .45)
+    front = ~behind
+    over_planet = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) < r
+    img = np.where(front[..., None], img * (1 - prof[..., None] * .55) + ring_col, img)
+    return img, rng
+
+
+def orbit_v2(w, h, seed, portrait):
+    rng = np.random.default_rng(seed)
+    img = space(rng, w, h)
+    r = (w * 2.6) if not portrait else (w * 3.4)
+    cx, horizon = w * .42, h * (.78 if not portrait else .6)
+    sun_x = w * (.82 if not portrait else .76)
+    earth_v2(img, cx, horizon + r, r, (.55, .18, -.05))
+    sy = horizon + r - math.sqrt(max(r ** 2 - (sun_x - cx) ** 2, 0))
+    glow(img, sun_x, sy, min(w, h) * .045, (1.0, .9, .72), .65)
+    return img, rng
+
+
+def profile_v2(w, h, seed, portrait):
+    rng = np.random.default_rng(seed)
+    img = space(rng, w, h)
+    r = w * (2.2 if not portrait else 3.0)
+    horizon = h * (.86 if not portrait else .46)
+    earth_v2(img, w * .55, horizon + r, r, (-.6, .2, -.05), city=False, seed=11)
+    arcs(rng, w, h, img, horizon, (0.95, 0.78, 0.45))
+    return img, rng
+
+
+def aurora_v2(w, h, seed, portrait):
+    img, rng = aurora(w, h, seed, portrait)  # curtains from the first version
+    r = w * (2.4 if not portrait else 3.2)
+    horizon = h * (.72 if not portrait else .64)
+    # Repaint the planet with the sphere renderer underneath the curtains' base.
+    base = np.zeros_like(img)
+    earth_v2(base, w * .5, horizon + r, r, (0, -.2, -1), city=True, seed=13)
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    inside = np.sqrt((xx - w * .5) ** 2 + (yy - horizon - r) ** 2) < r - 2
+    img = np.where(inside[..., None], base + img * .15, img)
+    return img, rng
+
+
+PAGE_SCENES = [('overview', milkyway), ('analytics', nebula), ('pitching', mars_v2), ('records', saturn_v2), ('leaderboard', moon_v2),
+               ('compare', binary), ('health', aurora_v2), ('lineup', jupiter_v2), ('glossary', galaxy), ('changelog', comet)]
 
 
 def build_pages(only=None):
@@ -393,8 +661,8 @@ def build_pages(only=None):
 def main():
     OUT.mkdir(exist_ok=True)
     for name, fn, size, portrait in [
-        ('bg-orbit.webp', orbit, (2560, 1440), False), ('bg-orbit-portrait.webp', orbit, (1290, 2400), True),
-        ('bg-profile.webp', profile, (2400, 1200), False), ('bg-profile-portrait.webp', profile, (1290, 2000), True),
+        ('bg-orbit.webp', orbit_v2, (2560, 1440), False), ('bg-orbit-portrait.webp', orbit_v2, (1290, 2400), True),
+        ('bg-profile.webp', profile_v2, (2560, 1440), False), ('bg-profile-portrait.webp', profile_v2, (1290, 2400), True),
     ]:
         img, rng = fn(*size, seed=20261026 + len(name), portrait=portrait)
         finish(img, rng, OUT / name)

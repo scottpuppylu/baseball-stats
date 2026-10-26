@@ -5,6 +5,7 @@ const {chromium, webkit} = require('playwright');
 const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
 const page$ = page => page.evaluate(() => document.body.dataset.page);
+const settle = page => page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect && a.effect.getComputedTiming().endTime !== Infinity).map(a => a.finished.catch(() => {}))));
 async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
   // Real input: a touchscreen tap on touch devices, a mouse click otherwise (a scripted click has wrong offsets in WebKit).
   const point = await page.evaluate(({chartVar, index}) => {
@@ -97,6 +98,7 @@ async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
       await page.waitForTimeout(1200); // let the page finish its own re-render after opening (a chart redraw replaces the tooltip)
       await page.evaluate(() => quadrantChartInst.canvas.scrollIntoView({block: 'center'}));
       await page.waitForTimeout(400);
+      await settle(page); // a tap during the page-reveal slide would land beside the point
       const before = await page.evaluate(() => quadrantChartInst.id);
       const touched = await tapPoint(page, 'quadrantChartInst', 0, 'touch', width < 1024);
       assert.equal(await page$(page), 'Analytics', 'a tap does not jump away');
@@ -112,6 +114,7 @@ async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
         await page.waitForTimeout(1200);
         await page.evaluate(() => luckRegressionChartInst.canvas.scrollIntoView({block: 'center'}));
         await page.waitForTimeout(400);
+        await settle(page);
         const clicked = await tapPoint(page, 'luckRegressionChartInst', 0, 'mouse', width < 1024);
         await page.waitForFunction(() => document.body.dataset.page === 'Profile', null, {timeout: 3000}); // a mouse click still opens the profile (Chart.js handles it a frame later)
         assert.equal(await page.evaluate(() => selectedPlayerName), clicked);

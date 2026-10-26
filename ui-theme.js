@@ -5,7 +5,8 @@
   const root = document.documentElement;
   if (!root.classList.contains('ui-flight')) return;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const PRESSABLE = 'button, [role="button"], a.inline-flex, label.cursor-pointer';
+  // Everything a finger can press: buttons, links styled as buttons, clickable cards and rows, chips, summaries, selects.
+  const PRESSABLE = 'button, [role="button"], a.inline-flex, label.cursor-pointer, [onclick], .cursor-pointer, summary, select, [data-player], [data-game], [data-health-name], tr[onclick]';
 
   // Light-catch ripple from the touch point. One shared overlay (#flRipple) is placed over the pressed control and
   // animated with Web Animations only, so a press changes nothing in the page afterwards (no classes, styles or nodes).
@@ -63,13 +64,13 @@
   const motionOk = () => !reduceMotion.matches && document.visibilityState === 'visible';
   const play = (el, frames, options) => { try { el.animate(frames, {fill: 'none', ...options}); } catch (e) { /* not supported */ } };
   function revealPage(panel) {
-    play(panel, [{opacity: 0, filter: 'blur(8px)'}, {opacity: 1, filter: 'blur(0)'}], {duration: 380, easing: EASE});
+    play(panel, [{opacity: 0, transform: 'translateY(10px)'}, {opacity: 1, transform: 'none'}], {duration: 380, easing: EASE});
     // The page's own sections follow one after another, like an Apple app settling in.
     [...panel.children].filter(el => el.offsetHeight > 0).slice(0, 8).forEach((child, i) => {
       play(child, [{opacity: 0}, {opacity: 1}], {duration: 420, delay: 50 + i * 45, easing: EASE, fill: 'backwards'});
     });
   }
-  function revealBlock(el) { play(el, [{opacity: 0, filter: 'blur(5px)'}, {opacity: 1, filter: 'blur(0)'}], {duration: 300, easing: EASE}); }
+  function revealBlock(el) { play(el, [{opacity: 0, transform: 'translateY(6px)'}, {opacity: 1, transform: 'none'}], {duration: 300, easing: EASE}); }
   function revealDialog(dialog) {
     const card = dialog.firstElementChild || dialog;
     play(dialog, [{opacity: 0}, {opacity: 1}], {duration: 220, easing: EASE});
@@ -127,6 +128,7 @@
   let lensSvg = null;
   const lensCache = new Map(); // key -> Promise<filter id>
   const lensEnabled = () => chromium && !contrastQuery.matches && !reduceMotion.matches;
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)'); // content-panel lenses: mouse devices only
   const channel = k => [0, 1, 2].map(row => [0, 1, 2, 3, 4].map(col => (row === k && col === k ? 1 : 0)).join(' ')).join(' ') + ' 0 0 0 1 0';
   function lensMap(w, h, r, bezel) {
     const canvas = document.createElement('canvas');
@@ -197,7 +199,7 @@
     // Content panels only refract on pages with a space scene (CSS sets --fl-lens-gate there); very large panels keep
     // the depth-of-field glass without a lens, so scrolling stays smooth on phones.
     const gated = el.dataset.flGated !== undefined;
-    if ((gated && getComputedStyle(el).getPropertyValue('--fl-lens-gate').trim() !== '1') || (gated && (w * h > 650000 || h > 1500))) {
+    if (gated && (!finePointer.matches || getComputedStyle(el).getPropertyValue('--fl-lens-gate').trim() !== '1' || w * h > 650000 || h > 1500)) {
       clearLens(el); tracked.set(el, ''); return;
     }
     const radius = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, h / 2, w / 2);
@@ -242,6 +244,8 @@
     Chart.defaults.font.size = 12;
     Chart.defaults.color = css.getPropertyValue('--fl-ink-2').trim() || '#b4bcc8';
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
+    // Shorter chart animations on touch devices keep page switches smooth on phones.
+    if (window.matchMedia('(pointer: coarse)').matches && Chart.defaults.animation) Chart.defaults.animation.duration = 420;
     if (Chart.defaults.plugins && Chart.defaults.plugins.tooltip) {
       Object.assign(Chart.defaults.plugins.tooltip, {backgroundColor: 'rgba(22, 25, 31, 0.94)', borderColor: 'rgba(255, 255, 255, 0.14)', borderWidth: 1, padding: 10, cornerRadius: 12, titleColor: '#e8ebf0', bodyColor: '#d2d8e0'});
     }
