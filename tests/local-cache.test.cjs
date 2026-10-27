@@ -89,3 +89,13 @@ test('startup derived writes cannot overwrite a larger IndexedDB-only snapshot',
     await f.cache.ready;await tick();assert.equal(f.cache.get('rebas_all_games'),'real');assert.equal(f.disk.get('rebas_all_games'),'real');
   }finally{f.close();}
 });
+
+test('a draft key registered after hydration reloads its IndexedDB-only value',async()=>{
+  const f=fixture({local:new Map([['rebas_cache_idb_only','1']]),disk:new Map([['rebas_sync_pending','drafts']])});
+  try{
+    await f.cache.ready;await f.cache.register('rebas_sync_pending');
+    assert.equal(f.cache.get('rebas_sync_pending'),'drafts');
+    f.cache.set('rebas_sync_pending','new drafts');await f.cache.whenPersisted('rebas_sync_pending');
+    assert.equal(f.disk.get('rebas_sync_pending'),'new drafts');
+  }finally{f.close();}
+});

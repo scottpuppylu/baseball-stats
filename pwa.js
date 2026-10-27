@@ -63,6 +63,9 @@
       localStorage.setItem('rebas_pwa_storage_probe', '1');
       localStorage.removeItem('rebas_pwa_storage_probe');
     } catch (_) { return '本機儲存無法確認，請先匯出備份；本次不重新整理。'; }
+    const localState = window.LocalCache?.status();
+    if (localState?.failed || localState?.pending) return '本機儲存尚未完成，請先匯出備份並重試保存。';
+    if (window.SyncDrafts?.status().pending) return '尚有待同步草稿，請先同步或匯出備份；本次不重新整理。';
     if (pendingWrites) return '資料仍在儲存或同步，請稍後再試。';
     if (document.querySelector('[id$="Modal"]:not(.hidden):not([hidden])')) return '請先完成並關閉目前的編輯視窗。';
     if (dirty) return '尚有編輯操作；請完成儲存，再確認更新。';

@@ -352,9 +352,21 @@ test('an upload with no change in the cloud sends exactly this device\'s data an
   const local = [{id: 'a'}, {id: 'mine'}];
   const result = await ctx.commitJsonFile('data/logs.json', local, 'test', byId);
   assert.equal(result.merged, false);
-  assert.equal(result.data, local, 'same array, untouched');
+  assert.deepEqual(JSON.parse(JSON.stringify(result.data)), local, 'same record content, captured independently');
+  assert.notEqual(result.data, local, 'the upload owns a snapshot, not a mutable caller array');
   assert.equal(ids(cloud.data), 'a,mine');
   assert.equal(ctx.messages.length, 0);
+});
+test('an upload snapshots the caller before any asynchronous cloud reads', async () => {
+  const cloud = fakeCloud([{id:'a',score:0}]);
+  let release;
+  const gate = new Promise(resolve => {release = resolve;});
+  const ctx = mergeContext({fetch:async (...args)=>{await gate;return cloud.fetch(...args);}});
+  ctx.rememberCloudBase('data/logs.json','s0',[{id:'a',score:0}]);
+  const local=[{id:'a',score:1}];
+  const pending=ctx.commitJsonFile('data/logs.json',local,'snapshot',byId);
+  local[0].score=2;release();await pending;
+  assert.equal(cloud.data[0].score,1,'an in-flight request cannot silently pick up later edits');
 });
 test('an upload after another device saved merges instead of overwriting', async () => {
   const cloud = fakeCloud([{id: 'a'}, {id: 'theirs'}]);

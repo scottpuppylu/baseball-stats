@@ -263,7 +263,7 @@ const cloud = (page, file) => page.evaluate(async file => {
     const soloResult = await solo.page.evaluate(async () => {
       const local = [...allLogs, {id: 'log_solo', date: '2026-10-11', tag: '單機', name: '盧宣嘉', jersey: 44, pa: 1, ab: 1, h: 0, h1: 0, h2: 0, h3: 0, hr: 0, bb: 0, sf: 0, k: 1}];
       await commitLogsToGitHub(local, 'solo');
-      return {same: allLogs === local, toast: document.getElementById('globalToastContainer')?.textContent || ''};
+      return {same: JSON.stringify(allLogs) === JSON.stringify(local), toast: document.getElementById('globalToastContainer')?.textContent || ''};
     });
     assert.ok(soloResult.same && !/合併/.test(soloResult.toast), 'no merge when nothing changed elsewhere');
     checks.push('1-two-devices');

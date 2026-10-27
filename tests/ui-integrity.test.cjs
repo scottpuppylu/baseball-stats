@@ -29,8 +29,11 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 // v10: authorized durable local persistence and failure feedback; existing controls and formulas retained.
+// v11: authorized persistent pending-sync intents and retry UI; original controls and scoring formulas retained.
+// v11a: authorized draft loading, acknowledgements, durable retry and manual record identity.
+// v11b: pending snapshots precede stale fallback copies; record contents and scoring remain unchanged.
 const BASELINE = {
-  "script": "6e6f75beac558d3c3fbf133e30eb29374f2be8c71467e33bea4c01c618058c7b",
+  "script": "2e1c8cb8bbc34125a95ff8d29b9ccb75a7cd52c7f4fc9cb10676ababced6cfd4",
   "handlers": "0528cb136b3834a2318417e68ff7eb16d854422d202a43cc815eef56681bb219",
   "idCount": 287,
   "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"
