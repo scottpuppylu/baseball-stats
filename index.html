@@ -38,6 +38,7 @@
   </style>
   <link rel="stylesheet" href="ui-comfort.css?v=20261016-pwa1">
   <link rel="stylesheet" href="ui-theme.css">
+  <link rel="stylesheet" href="review-spray.css">
   <!-- Prebuilt Tailwind (scripts/build-tailwind.cjs), after the site styles exactly where the Play compiler used to inject it. -->
   <link rel="stylesheet" href="vendor/tailwind-site.css">
 </head>
@@ -61,7 +62,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.0112</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.0127</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -6003,7 +6004,7 @@ window.toggleDiagnosticsCollapse = function() {
     // 觸控裝置則由 ui-comfort.js 依 <title> 顯示。
     const SPRAY_DOT_STYLE = { HR: ['#f59e0b', 8.5], '3H': ['#a855f7', 7], '2H': ['#38bdf8', 6.5], '1H': ['#22c55e', 6] };
     function sprayDotsSvg(points, { scale = 1, tooltipId = '', opacity = 0.9, withInning = false } = {}) {
-      return points.map(p => {
+      return points.filter(p => Number.isFinite(p.x) && Number.isFinite(p.y)).map(p => {
         const [color, radius] = SPRAY_DOT_STYLE[p.result] || ['#f43f5e', 5.5];
         const title = [p.batterName, withInning && p.inningNum ? `第${p.inningNum}局` : '', p.result, p.trajectory, p.location].filter(Boolean).join(' | ');
         const hover = tooltipId
@@ -6042,7 +6043,7 @@ window.toggleDiagnosticsCollapse = function() {
           if (!isGameInDateRange(g)) return;
           (g.innings || []).forEach(inn => {
             (inn.plateAppearances || []).forEach(pa => {
-              if (pa.batterName === name && pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none' && !isRunnerOutPlay(pa)) {
+              if (pa.batterName === name && Number.isFinite(pa.x) && Number.isFinite(pa.y) && pa.trajectory !== 'none' && !isRunnerOutPlay(pa)) {
                 pts.push(pa);
               }
             });
@@ -6155,7 +6156,7 @@ window.toggleDiagnosticsCollapse = function() {
         (game.innings || []).forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
             if (pa.batterName !== playerName) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
+            if (!Number.isFinite(pa.x) || !Number.isFinite(pa.y) || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
@@ -6959,7 +6960,7 @@ function renderTeamSpatialLab(agg) {
         (g.innings || []).forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
             if (chosenPlayer !== 'all' && pa.batterName !== chosenPlayer) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
+            if (!Number.isFinite(pa.x) || !Number.isFinite(pa.y) || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
@@ -10268,7 +10269,7 @@ function renderCustomChart(agg) {
       const gamePoints = [];
       game.innings.forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
-          if (!isSprayChartArchived(game) && pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none') gamePoints.push({ ...pa, inningNum: inn.inningNum });
+          if (!isSprayChartArchived(game) && Number.isFinite(pa.x) && Number.isFinite(pa.y) && pa.trajectory !== 'none') gamePoints.push({ ...pa, inningNum: inn.inningNum });
         });
       });
       const sprayPointsHtml = gamePoints.length ? [sprayDotsSvg(gamePoints, { scale: 0.82, opacity: 0.85, withInning: true })] : [];
@@ -10442,9 +10443,11 @@ function renderCustomChart(agg) {
               </select>
             </td>
             <td class="p-2 text-center">
-              <select id="edit_play_loc_${innIdx}_${playIdx}" class="bg-slate-900 border border-slate-700 text-sky-300 text-xs rounded px-2 py-1 font-bold">
-                ${(FIELD_LOCATIONS.includes(p.location) ? '' : `<option value="${p.location || ''}" selected>— 無落點</option>`) + FIELD_LOCATIONS.map(loc => `<option value="${loc}" ${loc === p.location ? 'selected' : ''}>${loc}</option>`).join('')}
+              <select aria-label="接球守位" id="edit_play_loc_${innIdx}_${playIdx}" class="bg-slate-900 border border-slate-700 text-sky-300 text-xs rounded px-2 py-1 font-bold">
+                ${(FIELD_LOCATIONS.includes(p.location) ? '' : `<option value="${p.location || ''}" selected>— 守位未記錄</option>`) + FIELD_LOCATIONS.map(loc => `<option value="${loc}" ${loc === p.location ? 'selected' : ''}>${loc}</option>`).join('')}
               </select>
+              <button type="button" onclick="editReviewLandingPoint(${jsArg(game.id)}, ${innIdx}, ${playIdx})" class="block mt-1 text-xs text-sky-300 border border-slate-700 rounded px-2 py-1">${Number.isFinite(p.x) && Number.isFinite(p.y) ? '調整既有座標' : '點選實際落點'}</button>
+              <span class="block mt-1 text-xs text-slate-400">${Number.isFinite(p.x) && Number.isFinite(p.y) ? '已有座標' : '無座標，不畫落點'}</span>
             </td>
             <td class="p-2 text-center">
               <input type="number" id="edit_play_r_${innIdx}_${playIdx}" value="${p.runsScored || 0}" min="0" max="4" class="w-12 bg-slate-900 border border-slate-700 text-center text-sky-400 font-bold rounded py-1 text-xs">
@@ -10521,7 +10524,7 @@ function renderCustomChart(agg) {
                       <th class="p-2">打者</th>
                       <th class="p-2 text-center">打擊結果</th>
                       <th class="p-2 text-center">球型</th>
-                      <th class="p-2 text-center">落點</th>
+                      <th class="p-2 text-center">守位／實際落點</th>
                       <th class="p-2 text-center">得分</th>
                       <th class="p-2 text-center">操作</th>
                     </tr>
@@ -10636,9 +10639,7 @@ function renderCustomChart(agg) {
         slot: 1,
         result: '1H',
         trajectory: 'line',
-        location: 'LF',
-        x: 0.2,
-        y: 0.35,
+        location: '',
         runsScored: 0,
         outsAdded: 0,
         outsAtEnd: 0,
@@ -10808,7 +10809,7 @@ function renderCustomChart(agg) {
         game.innings.forEach(inn => {
           inn.plateAppearances.forEach(pa => {
             if (selectedSprayPlayer !== 'all' && pa.batterName !== selectedSprayPlayer) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
+            if (!Number.isFinite(pa.x) || !Number.isFinite(pa.y) || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
@@ -10944,6 +10945,7 @@ function renderCustomChart(agg) {
     </script>
   <script src="storage-status.js"></script>
   <script src="sync-status.js"></script>
+  <script src="review-spray.js"></script>
   <script src="ui-comfort.js?v=20261011-audit2"></script>
   <script src="player-health-ui.js"></script>
   <script src="changelog.js"></script>

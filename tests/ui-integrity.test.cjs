@@ -34,9 +34,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // v11b: pending snapshots precede stale fallback copies; record contents and scoring remain unchanged.
 // v12: authorized finalization lock and snapshot comparison; all existing scoring formulas and controls retained.
 // v12a: reject stale cloud responses and retain the operation baseline across local persistence awaits.
+// v13: authorized explicit review landing-point input; existing recorded coordinates and scoring formulas retained.
 const BASELINE = {
-  "script": "578b8c74fdc2df0df7ed835f2cbfb5bfa4f9f8ad8127b82aefca7b8269bd9d56",
-  "handlers": "47938acabcb4927187d700545af14eb1bc10f8466be741bd2ae166aa215be31c",
+  "script": "7c11b4f2fff6e0ade29380f840796a8bfef5cd225f7f2d95de77552c9cce70af",
+  "handlers": "06f31722ae03f6405ff1766863227b0da05590e698ae93309d09a4c27692b7f0",
   "idCount": 287,
   "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"
 };
