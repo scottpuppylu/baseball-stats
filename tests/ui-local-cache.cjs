@@ -43,6 +43,7 @@ const totals = page => page.evaluate(() => ({games: allGames.length, pa: getFull
         try { for (;;) { localStorage.setItem('fill' + n, chunk); n++; } } catch (e) { /* full */ }
         for (let size = 25000, t = 0; size >= 1; size = Math.floor(size / 2)) { for (;;) { try { localStorage.setItem('fill-tail-' + t++, 'x'.repeat(size)); } catch (e) { break; } } }
         const source = await loadGamesFromGitHub();
+        await LocalCache.whenPersisted();
         return {source, mirror: localStorage.getItem('rebas_all_games'), games: allGames.length, idbOnly: localStorage.getItem('rebas_cache_idb_only'),
           otherMirrors: ['rebas_logs', 'rebas_player_avatars'].filter(k => localStorage.getItem(k) !== null)};
       });
@@ -67,6 +68,38 @@ const totals = page => page.evaluate(() => ({games: allGames.length, pa: getFull
       assert.deepEqual(errors, []);
       results.push({engine, passed: true, games: cloud.games, pa: cloud.pa});
       await context.close();
+      // 4. Neither persistent layer accepts the new value. Keep old mirrors, warn, export, then recover.
+      const failureContext = await browser.newContext({serviceWorkers:'block',acceptDownloads:true});
+      const failurePage = await failureContext.newPage();
+      failurePage.on('pageerror',e=>errors.push(e.message));
+      await failurePage.goto(url); await ready(failurePage);
+      const failure = await failurePage.evaluate(async()=>{
+        await LocalCache.ready;
+        window.__storageMethods = {set:Storage.prototype.setItem, put:IDBObjectStore.prototype.put};
+        Storage.prototype.setItem=function(key,value){if(LocalCache.KEYS.includes(key))throw new DOMException('isolated quota','QuotaExceededError');return window.__storageMethods.set.call(this,key,value);};
+        IDBObjectStore.prototype.put=function(){throw new DOMException('isolated IDB failure','QuotaExceededError');};
+        const old=JSON.parse(localStorage.getItem('rebas_all_games'))[0].finalScore.us;
+        allGames[0].finalScore.us=99;
+        const accepted=LocalCache.set('rebas_all_games',JSON.stringify(allGames));
+        let rejected=false;try{await LocalCache.whenPersisted('rebas_all_games');}catch(_){rejected=true;}
+        return {old,accepted,rejected,failed:LocalCache.status().failed,mirror:JSON.parse(localStorage.getItem('rebas_all_games'))[0].finalScore.us,idbOnly:localStorage.getItem('rebas_cache_idb_only')};
+      });
+      assert.equal(failure.accepted,false);assert.equal(failure.rejected,true);assert.equal(failure.failed,true);
+      assert.equal(failure.mirror,failure.old,'the previous durable mirror is not removed on failure');assert.equal(failure.idbOnly,null);
+      await failurePage.locator('#uiStorageWarning').waitFor({state:'visible'});
+      const download=await Promise.all([failurePage.waitForEvent('download'),failurePage.locator('#uiStorageWarning button').filter({hasText:'下載完整備份'}).click()]);
+      const backup=JSON.parse(require('node:fs').readFileSync(await download[0].path(),'utf8'));
+      assert.equal(backup.files['data/games.json'][0].finalScore.us,99,'backup includes the in-memory edit that could not be saved');
+      await failurePage.evaluate(async()=>{
+        Storage.prototype.setItem=window.__storageMethods.set;IDBObjectStore.prototype.put=window.__storageMethods.put;
+        await LocalCache.retry();
+      });
+      await failurePage.locator('#uiStorageWarning').waitFor({state:'hidden'});
+      await failureContext.route(/\/__mock-api\/|\/data\/[^/]+\.json/,route=>route.abort());
+      await failurePage.reload();await ready(failurePage);
+      assert.equal(await failurePage.evaluate(()=>allGames[0].finalScore.us),99,'recovered write survives an offline reopen');
+      assert.deepEqual(errors,[]);
+      await failureContext.close();
     } finally { await browser.close(); }
   }
   console.log(JSON.stringify({passed: results.length, results}));
