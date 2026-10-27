@@ -61,7 +61,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.0035</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.0112</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -2569,7 +2569,17 @@
       await localCache.ready;
       const drafts = typeof window !== 'undefined' ? window.SyncDrafts : null;
       if (drafts) await drafts.ready;
+      const readEpoch = drafts?.epoch(filePath);
       const accept = async (raw, source, sha = null) => {
+        // An older response must not replace edits staged or acknowledged since this read began.
+        if (drafts && drafts.epoch(filePath) !== readEpoch) {
+          const cached = readStoredJson(storageKey, null);
+          if (cached !== null) {
+            apply(drafts.overlay(filePath, cached), 'cache');
+            setSha(cloudBase[filePath]?.sha || null);
+            return 'cache';
+          }
+        }
         const content = sanitizeLoadedData(raw);
         const effective = drafts ? drafts.overlay(filePath, content) : content;
         apply(effective, source);
@@ -2772,11 +2782,11 @@
     }
     // Uploads one JSON file without overwriting another device's newer upload. Returns { data, sha, merged, conflicts };
     // `data` is what was uploaded (the merged content when the cloud had changed). Throws on failure.
-    async function commitJsonFile(filePath, localData, commitMessage, keyOf = null) {
+    async function commitJsonFile(filePath, localData, commitMessage, keyOf = null, operationBase = undefined) {
       localData = JSON.parse(JSON.stringify(localData));
       const drafts = typeof window !== 'undefined' ? window.SyncDrafts : null;
-      const knownBase = cloudBase[filePath];
-      const ticket = drafts ? await drafts.stage(filePath, localData, knownBase?.sha ? JSON.parse(knownBase.json) : null) : null;
+      const knownBase = operationBase === undefined ? cloudBase[filePath] : operationBase;
+      const ticket = drafts ? await drafts.stage(filePath, localData, knownBase ? JSON.parse(knownBase.json) : null) : null;
       const queues = commitJsonFile.queues || (commitJsonFile.queues = new Map());
       const previous = queues.get(filePath) || Promise.resolve();
       let release;
@@ -2796,7 +2806,7 @@
           if (err && err.name === 'AbortError') throw new Error(`網路逾時（${WRITE_TIMEOUT_MS / 1000} 秒），請稍後重試`);
           if (!(err && err.status === 404)) throw err; // a missing file is created below
         }
-        const base = cloudBase[filePath];
+        const base = knownBase;
         let data = localData, merged = false, conflicts = 0;
         if (remoteSha && (!base || base.sha !== remoteSha)) {
           const result = mergeCloudChanges(base ? JSON.parse(base.json) : null, localData, remote, keyOf);
@@ -2823,9 +2833,9 @@
         }
         const resData = await putRes.json();
         const sha = resData && resData.content ? resData.content.sha : null;
-        rememberCloudBase(filePath, sha, data);
         if (merged) showToast(`雲端已有其他裝置的新紀錄，已自動合併後上傳${conflicts ? `（${conflicts} 筆兩邊都改過，以這台裝置為準）` : ''}`);
         if (ticket) await drafts.acknowledge(ticket);
+        rememberCloudBase(filePath, sha, data);
         const visible = drafts ? drafts.overlay(filePath, data) : data;
         return { data: visible, sha, merged: merged || JSON.stringify(visible) !== JSON.stringify(data), conflicts };
       }
@@ -2984,6 +2994,7 @@
     };
 
     window.confirmSubstitution = async function() {
+      if (window.__gameFinalizing) return;
       if (!activeGame || !substituteTarget) return;
       const target = {...substituteTarget};
       const select = document.getElementById('substituteNewPlayerSelect');
@@ -2994,7 +3005,7 @@
         if (!guest) return;
         chosenPlayer = guest.name;
       }
-      if (!activeGame || activeGame.id !== target.gameId || activeGame.lineup[target.index] !== target.name) {
+      if (window.__gameFinalizing || !activeGame || activeGame.id !== target.gameId || activeGame.lineup[target.index] !== target.name) {
         showToast('打線已變更，請重新選擇換人棒次。', 'error');
         return;
       }
@@ -3667,6 +3678,7 @@
 
     // 進行中實況比賽即時切換 DH 制 (10 棒 vs 11 棒)
     window.toggleActiveGameDh = function() {
+      if (window.__gameFinalizing) return;
       if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       if (!activeGame) return;
       const targetHasDh = !activeGame.hasDh;
@@ -4884,13 +4896,14 @@ window.toggleDiagnosticsCollapse = function() {
 
     async function commitLogsToGitHub(updatedLogs, commitMessage = "update: sync match logs via portal") {
       updatedLogs = JSON.parse(JSON.stringify(updatedLogs));
+      const operationBase = cloudBase[DATA_FILE_PATH] || null;
       setStatusBadge('雲端資料庫：正在寫入 GitHub...', 'pending');
 
 
       try {
         localCache.set('rebas_logs', JSON.stringify(updatedLogs));
         if (localCache.whenPersisted) await localCache.whenPersisted('rebas_logs');
-        const result = await commitJsonFile(DATA_FILE_PATH, updatedLogs, commitMessage, l => l.id);
+        const result = await commitJsonFile(DATA_FILE_PATH, updatedLogs, commitMessage, l => l.id, operationBase);
         currentFileSha = result.sha;
         allLogs = result.data;
         if (result.merged) localCache.set('rebas_logs', JSON.stringify(allLogs));
@@ -8335,6 +8348,7 @@ function renderCustomChart(agg) {
 
     async function commitGamesToGitHub(updatedGames, commitMessage = "update: sync scorebook games via portal") {
       updatedGames = JSON.parse(JSON.stringify(updatedGames));
+      const operationBase = cloudBase[GAMES_FILE_PATH] || null;
       setStatusBadge('雲端資料庫：正在同步場記數據...', 'pending');
 
       const inningSyncBtn = document.getElementById('btnInningCloudSync');
@@ -8346,7 +8360,7 @@ function renderCustomChart(agg) {
       try {
         localCache.set('rebas_all_games', JSON.stringify(updatedGames));
         if (localCache.whenPersisted) await localCache.whenPersisted('rebas_all_games');
-        const result = await commitJsonFile(GAMES_FILE_PATH, updatedGames, commitMessage, g => g.id);
+        const result = await commitJsonFile(GAMES_FILE_PATH, updatedGames, commitMessage, g => g.id, operationBase);
         currentGamesSha = result.sha;
         allGames = result.merged ? result.data.filter(g => !isSimulatedGame(g)) : result.data;
         localCache.set('rebas_all_games', JSON.stringify(allGames));
@@ -8525,6 +8539,7 @@ function renderCustomChart(agg) {
     }
 
     window.startNewGameFromSetup = function() {
+      if (window.__gameFinalizing) return;
       const date = document.getElementById('setup_game_date').value || getTaipeiDateString();
       const opponent = document.getElementById('setup_game_opponent').value.trim() || '友隊選手';
       const tag = document.getElementById('setup_game_tag').value.trim() || '系壘例行賽';
@@ -8834,6 +8849,8 @@ function renderCustomChart(agg) {
     }
 
     window.changeDefensePitcher = async function(newPitcherName) {
+      if (window.__gameFinalizing) return;
+      const changingGameId = activeGame?.id;
       if (!activeGame || !newPitcherName) return;
 
       if (newPitcherName === '__NEW_GUEST_PITCHER__') {
@@ -8842,6 +8859,7 @@ function renderCustomChart(agg) {
         newPitcherName = guest.name;
       }
 
+      if (window.__gameFinalizing || !activeGame || activeGame.id !== changingGameId) return;
       const isInLineup = (activeGame.lineup || []).includes(newPitcherName);
 
       if (isInLineup) {
@@ -8859,6 +8877,7 @@ function renderCustomChart(agg) {
     };
 
     window.openPitcherChangeModal = function(targetPlayerName = null) {
+      if (window.__gameFinalizing) return;
       if (!activeGame) return;
       const curPitcher = activeGame.pitcherName || '';
       const statusInfo = document.getElementById('pitcherCurrentStatusInfo');
@@ -8947,6 +8966,7 @@ function renderCustomChart(agg) {
     };
 
     window.confirmPitcherChange = function() {
+      if (window.__gameFinalizing) return;
       if (!activeGame) return;
       const select = document.getElementById('modalNewPitcherSelect');
       const newPitcher = select ? select.value : '';
@@ -8991,6 +9011,7 @@ function renderCustomChart(agg) {
 
     // 慢壘特化：對方進攻紀錄 (專注投手出局數、保送與失分控制)
     window.recordDefenseEvent = function(eventType, runs = 0) {
+      if (window.__gameFinalizing) return;
       if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       if (!activeGame) return;
       // 每筆守備事件都要歸屬到實際登板的投手，不自動代填。
@@ -9057,6 +9078,7 @@ function renderCustomChart(agg) {
     };
 
     window.deleteDefenseEvent = function(evtId) {
+      if (window.__gameFinalizing) return;
       if (!activeGame) return;
       const curInning = activeGame.innings.find(i => i.inningNum === activeGame.currentInning && i.topBottom === activeGame.currentHalf);
       if (!curInning || !curInning.defensiveEvents) return;
@@ -9117,6 +9139,7 @@ function renderCustomChart(agg) {
     }
 
     window.changeCurrentBatterIndex = function(targetIdx) {
+      if (window.__gameFinalizing) return;
       if (!activeGame) return;
       activeGame.currentBatterIdx = targetIdx % activeGame.lineup.length;
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
@@ -9148,6 +9171,7 @@ function renderCustomChart(agg) {
     }
 
     window.toggleBaseRunner = function(baseKey) {
+      if (window.__gameFinalizing) return;
       if (!activeGame) return;
       activeGame.currentBases = activeGame.currentBases || { first: null, second: null, third: null };
       activeGame.currentBases[baseKey] = activeGame.currentBases[baseKey] ? null : 'Runner';
@@ -9156,6 +9180,7 @@ function renderCustomChart(agg) {
     };
 
     window.adjustOpponentScore = function(delta) {
+      if (window.__gameFinalizing) return;
       if (!activeGame) return;
       if (delta < 0 && (activeGame.finalScore.opp || 0) <= 0) return;
       activeGame.finalScore.opp = Math.max(0, activeGame.finalScore.opp + delta);
@@ -9191,6 +9216,7 @@ function renderCustomChart(agg) {
     }
 
     function handleFieldClick(e) {
+      if (window.__gameFinalizing) return;
       const svg = document.getElementById('interactiveFieldSvg');
       if (!svg) return;
       const rect = svg.getBoundingClientRect();
@@ -9228,6 +9254,7 @@ function renderCustomChart(agg) {
     }
 
     window.selectFieldPosition = function(posKey) {
+      if (window.__gameFinalizing) return;
       currentPlayInput.location = posKey;
       const posCoords = {
         'C': [200, 375],
@@ -9274,6 +9301,7 @@ function renderCustomChart(agg) {
     }
 
     window.selectTrajectory = function(traj) {
+      if (window.__gameFinalizing) return;
       currentPlayInput.trajectory = traj;
       ['grounder', 'line', 'fly', 'popup'].forEach(t => {
         const btn = document.getElementById(`traj_${t}`);
@@ -9288,6 +9316,7 @@ function renderCustomChart(agg) {
     };
 
     window.selectOutcome = function(outc) {
+      if (window.__gameFinalizing) return;
       currentPlayInput.result = outc;
       // 安打防呆：慢壘安打落點絕不可為捕手 C 或跑者 Bases，若為 C 則自動智慧切換至合理的安打落點守位
       if (['1H', '2H', '3H', 'HR'].includes(outc)) {
@@ -9312,6 +9341,7 @@ function renderCustomChart(agg) {
     };
 
     window.selectRunsScored = function(val) {
+      if (window.__gameFinalizing) return;
       currentPlayInput.runsScored = parseInt(val, 10);
       for (let i = 0; i <= 4; i++) {
         const btn = document.getElementById(`runs_${i}`);
@@ -9332,6 +9362,7 @@ function renderCustomChart(agg) {
     }
 
     window.recordQuickStrikeout = function(type = 'K') {
+      if (window.__gameFinalizing) return;
       if (isLiveHalfInningOver()) return;
       currentPlayInput.result = (type === '界外K' || type === 'foul') ? '界外K' : 'K';
       currentPlayInput.trajectory = 'none';
@@ -9344,6 +9375,7 @@ function renderCustomChart(agg) {
 
         // 跑壘者出局記錄 (壘上跑者遭觸殺、刺殺或牽制出局，+1 出局數，打者打席繼續)
     window.recordRunnerOut = function() {
+      if (window.__gameFinalizing) return;
       if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       if (!activeGame) return;
       if (isLiveHalfInningOver()) return;
@@ -9405,6 +9437,7 @@ function renderCustomChart(agg) {
     };
 
     window.recordQuickWalk = function() {
+      if (window.__gameFinalizing) return;
       if (isLiveHalfInningOver()) return;
       currentPlayInput.result = 'BB';
       currentPlayInput.trajectory = 'none';
@@ -9416,6 +9449,7 @@ function renderCustomChart(agg) {
     };
 
     window.submitBattedBallPlay = function() {
+      if (window.__gameFinalizing) return;
       if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       if (!activeGame) return;
       if (isLiveHalfInningOver()) return;
@@ -9484,6 +9518,7 @@ function renderCustomChart(agg) {
     };
 
     function appendPlayToActiveGame(paObj) {
+      if (window.__gameFinalizing) return;
       if (typeof window !== 'undefined' && window.activeGame) activeGame = window.activeGame;
       let curInning = activeGame.innings.find(i => i.inningNum === activeGame.currentInning && i.topBottom === activeGame.currentHalf);
       if (!curInning) {
@@ -9533,6 +9568,7 @@ function renderCustomChart(agg) {
     }
 
     window.deleteInningPlay = function(playIdx) {
+      if (window.__gameFinalizing) return;
       if (!activeGame) return;
       const curInning = activeGame.innings.find(i => i.inningNum === activeGame.currentInning && i.topBottom === activeGame.currentHalf);
       if (!curInning || !curInning.plateAppearances || !curInning.plateAppearances[playIdx]) return;
@@ -9606,6 +9642,7 @@ function renderCustomChart(agg) {
     }
 
     window.switchInningNext = function() {
+      if (window.__gameFinalizing) return;
       if (!activeGame) return;
       activeGame.currentOuts = 0;
       activeGame.currentBases = { first: null, second: null, third: null };
@@ -9636,6 +9673,7 @@ function renderCustomChart(agg) {
     };
 
     window.syncCurrentInningToCloud = async function() {
+      if (window.__gameFinalizing) return;
       if (!activeGame) return;
       showToast('正在將當局比賽戰況與日誌同步至 GitHub...');
 
@@ -9651,48 +9689,79 @@ function renderCustomChart(agg) {
       showSyncResult(success, '✅ 當局場記已成功同步推播至 GitHub！', '當局場記同步失敗；已保留本機紀錄，請再次點擊上傳。');
     };
 
-        window.finishActiveGameAndSyncLogs = async function() {
-      if (!activeGame) return;
-      if (!confirm(`確認正式完賽結束本場比賽（淡江航太 ${activeGame.finalScore.us} : ${activeGame.finalScore.opp} ${activeGame.opponent}）？\n賽事紀錄將儲存至歷史賽事庫，系統將自動綁定日誌並即時統一全隊數據與球員個人三圍成績！`)) return;
-
-      activeGame.status = 'finished';
-      const finishedGame = JSON.parse(JSON.stringify(activeGame));
-
-      const existingIdx = allGames.findIndex(g => g.id === finishedGame.id);
-      if (existingIdx !== -1) {
-        allGames[existingIdx] = finishedGame;
-      } else {
-        allGames.unshift(finishedGame);
-      }
-      localCache.set('rebas_all_games', JSON.stringify(allGames));
-
-      // 1. 同步賽事紀錄至 GitHub (data/games.json)
-      const gamesSynced = await commitGamesToGitHub(allGames, `賽事完賽: vs ${finishedGame.opponent} (${finishedGame.finalScore.us}-${finishedGame.finalScore.opp})`);
-
-      // 2. 關鍵綁定：自動將比賽成績與全隊日誌綁定統一，並同步推播至 GitHub (data/logs.json)
-      const syncedCount = syncAllGamesToTeamLogs();
-      const logsSynced = await commitLogsToGitHub(allLogs, `自動綁定賽事日誌: vs ${finishedGame.opponent}`);
-      if (!gamesSynced || !logsSynced) {
+    window.finishActiveGameAndSyncLogs = async function() {
+      if (!activeGame || window.__gameFinalizing) return;
+      if (!confirm(`確認正式完賽結束本場比賽（淡江航太 ${activeGame.finalScore.us} : ${activeGame.finalScore.opp} ${activeGame.opponent}）？\n賽事紀錄將儲存至歷史賽事庫，並同步全隊日誌與球員成績。`)) return;
+      window.__gameFinalizing = true;
+      const finishingGame = activeGame;
+      activeGame.status = 'in_progress';
+      const fingerprint = JSON.stringify(activeGame);
+      const panel = document.getElementById('panelScorebook');
+      const previousInert = panel?.inert || false;
+      let notice = null;
+      const finishButtons = [...document.querySelectorAll('button[onclick="finishActiveGameAndSyncLogs()"]')].map(button => [button, button.disabled]);
+      finishButtons.forEach(([button]) => { button.disabled = true; });
+      const retainProgress = async () => {
+        if (activeGame !== finishingGame) return;
         activeGame.status = 'in_progress';
+        const index = allGames.findIndex(g => g.id === activeGame.id);
+        if (index !== -1) allGames[index] = JSON.parse(JSON.stringify(activeGame));
+        localCache.set('rebas_all_games', JSON.stringify(allGames));
         localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
-        showSyncResult(false, '', '完賽資料尚未完整同步；已保留本機比賽，請再次點擊完賽重試。');
-        return;
+        await window.SyncDrafts?.stage(GAMES_FILE_PATH, allGames, JSON.parse(cloudBase[GAMES_FILE_PATH]?.json || 'null'));
+      };
+      if (panel) { panel.inert = true; panel.setAttribute('aria-busy', 'true'); }
+      if (document.body) {
+        notice = document.createElement('div'); notice.id = 'uiFinalizeStatus';
+        notice.className = 'ui-app-bar ui-app-bar-warn'; notice.setAttribute('role', 'status');
+        notice.textContent = '完賽資料上傳中，場記暫停操作；請保留此頁。'; document.body.appendChild(notice);
       }
-
-      const finishedGameId = finishedGame.id;
-      activeGame = null;
-      if (typeof window !== 'undefined') window.activeGame = null;
-      localStorage.removeItem('rebas_active_game');
-
-      renderLiveScorer();
-      selectedReviewGameId = finishedGameId;
-      switchScorebookSubTab('review');
-      renderGameReview();
-      renderAll();
-      showToast(`🏆 比賽已完結！數據已全面綁定統一，全隊戰況與個人成績已即時更新！`);
+      try {
+        localStorage.setItem('rebas_active_game', fingerprint);
+        const finishedGame = JSON.parse(fingerprint);
+        finishedGame.status = 'finished';
+        const existingIdx = allGames.findIndex(g => g.id === finishedGame.id);
+        if (existingIdx !== -1) allGames[existingIdx] = finishedGame;
+        else allGames.unshift(finishedGame);
+        localCache.set('rebas_all_games', JSON.stringify(allGames));
+        const gamesSynced = await commitGamesToGitHub(allGames, `賽事完賽: vs ${finishedGame.opponent} (${finishedGame.finalScore.us}-${finishedGame.finalScore.opp})`);
+        syncAllGamesToTeamLogs();
+        const logsSynced = await commitLogsToGitHub(allLogs, `自動綁定賽事日誌: vs ${finishedGame.opponent}`);
+        if (!gamesSynced || !logsSynced) {
+          await retainProgress();
+          showSyncResult(false, '', '完賽資料尚未完整同步；已保留本機比賽，請再次點擊完賽重試。');
+          return;
+        }
+        // Defense in depth: a future unguarded mutation must never be cleared by this older response.
+        if (activeGame !== finishingGame || JSON.stringify(activeGame) !== fingerprint) {
+          if (activeGame) {
+            localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+            const index = allGames.findIndex(g => g.id === activeGame.id);
+            if (index !== -1) allGames[index] = JSON.parse(JSON.stringify(activeGame));
+            localCache.set('rebas_all_games', JSON.stringify(allGames));
+            await window.SyncDrafts?.stage(GAMES_FILE_PATH, allGames, JSON.parse(cloudBase[GAMES_FILE_PATH]?.json || 'null'));
+          }
+          showSyncResult(false, '', '上傳期間比賽內容有變動，已保留目前場記，請確認後再次完賽。');
+          return;
+        }
+        activeGame = null; window.activeGame = null;
+        localStorage.removeItem('rebas_active_game');
+        renderLiveScorer(); selectedReviewGameId = finishedGame.id;
+        switchScorebookSubTab('review'); renderGameReview(); renderAll();
+        showToast('🏆 比賽已完結！數據已全面綁定統一，全隊戰況與個人成績已即時更新！');
+      } catch (err) {
+        try { await retainProgress(); } catch (_) { /* storage warning and backup remain available */ }
+        showSyncResult(false, '', '完賽未完成，場記仍保留在此頁；請先下載備份再重試：' + err.message);
+      } finally {
+        window.__gameFinalizing = false;
+        if (panel) { panel.inert = previousInert; panel.removeAttribute('aria-busy'); }
+        notice?.remove();
+        finishButtons.forEach(([button, wasDisabled]) => { if (button.isConnected) button.disabled = wasDisabled; });
+      }
     };
 
     window.discardActiveGame = function() {
+      if (window.__gameFinalizing) return;
       if (!confirm('確定要放棄當前記錄中的這場比賽嗎？未推播的數據將會遺失。')) return;
       const discardedId = activeGame ? activeGame.id : (window.activeGame ? window.activeGame.id : null);
       activeGame = null;

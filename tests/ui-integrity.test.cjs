@@ -32,9 +32,11 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // v11: authorized persistent pending-sync intents and retry UI; original controls and scoring formulas retained.
 // v11a: authorized draft loading, acknowledgements, durable retry and manual record identity.
 // v11b: pending snapshots precede stale fallback copies; record contents and scoring remain unchanged.
+// v12: authorized finalization lock and snapshot comparison; all existing scoring formulas and controls retained.
+// v12a: reject stale cloud responses and retain the operation baseline across local persistence awaits.
 const BASELINE = {
-  "script": "2e1c8cb8bbc34125a95ff8d29b9ccb75a7cd52c7f4fc9cb10676ababced6cfd4",
-  "handlers": "0528cb136b3834a2318417e68ff7eb16d854422d202a43cc815eef56681bb219",
+  "script": "578b8c74fdc2df0df7ed835f2cbfb5bfa4f9f8ad8127b82aefca7b8269bd9d56",
+  "handlers": "47938acabcb4927187d700545af14eb1bc10f8466be741bd2ae166aa215be31c",
   "idCount": 287,
   "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"
 };

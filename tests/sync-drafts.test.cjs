@@ -15,6 +15,11 @@ function fixture(disk=new Map()) {
   return {drafts:root.SyncDrafts,disk,setFailure:value=>{failure=value;}};
 }
 const plain=value=>JSON.parse(JSON.stringify(value));
+test('an edit begun before any UI baseline cannot infer deletions from unseen cache records',async()=>{
+  const f=fixture(new Map([['rebas_all_games',JSON.stringify([{id:'unseen'}])]]));await f.drafts.ready;
+  await f.drafts.stage(file,[{id:'new'}],null);
+  assert.deepEqual(plain(f.drafts.overlay(file,[{id:'unseen'}])),[{id:'new'},{id:'unseen'}]);
+});
 test('overlay preserves unrelated duplicate IDs, order and malformed input validation',async()=>{
   const f=fixture();await f.drafts.ready;
   const rows=[{id:'old',v:1},{id:'old',v:2},{id:'a',v:0}];

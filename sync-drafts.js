@@ -5,7 +5,8 @@
   const FILES = {'data/games.json':'rebas_all_games','data/logs.json':'rebas_logs'};
   const cache = root.LocalCache;
   let state = {version:1,files:{}}, serial = Promise.resolve();
-  const baselines = new Map();
+  const baselines = new Map(), epochs = new Map();
+  const advance = file => epochs.set(file,(epochs.get(file)||0)+1);
   const copy = value => JSON.parse(JSON.stringify(value));
   const equal = (a,b) => JSON.stringify(a) === JSON.stringify(b);
   const records = rows => new Map((Array.isArray(rows)?rows:[]).filter(row=>row&&row.id!=null).map(row=>[String(row.id),row]));
@@ -51,6 +52,7 @@
   }
   async function stage(file, rows, base) {
     if (!FILES[file]) return null;
+    advance(file);
     const desired = copy(rows), known = base == null ? null : copy(base);
     await ready;
     return enqueue(async () => {
@@ -58,8 +60,13 @@
       const ops = new Map(Object.entries(state.files[file] || {}));
       for (const id of new Set([...before.keys(),...local.keys()])) {
         const a = before.get(id), b = local.get(id);
-        if (equal(a,b)) { if (known !== null) ops.delete(id); continue; }
         const previous = ops.get(id);
+        if (equal(a,b)) {
+          // A fallback snapshot may already contain a pending edit; equality cannot acknowledge it.
+          if (known !== null && !(previous?.op === 'put' && equal(previous.value,b))) ops.delete(id);
+          continue;
+        }
+        if (b === undefined && known === null) continue; // no UI baseline: unseen rows were never deleted here
         const next = b === undefined ? {op:'delete'} : {op:'put',value:b};
         if (previous?.op === next.op && (next.op === 'delete' || equal(previous.value,next.value))) continue;
         ops.set(id,{...next,at:Date.now(),token:token()});
@@ -89,6 +96,7 @@
     if (!ticket) return;
     await ready;
     return enqueue(async () => {
+      advance(ticket.file);
       const file = ticket.file, current = state.files[file];
       if (!current) return;
       for (const [id,op] of Object.entries(ticket.ops)) if (current[id]?.token === op.token) delete current[id];
@@ -98,5 +106,6 @@
   }
   function observe(file, rows) { if (FILES[file]) baselines.set(file,copy(rows)); }
   root.SyncDrafts = {ready,stage,overlay,acknowledge,observe,status,
+    epoch:file=>epochs.get(file)||0,
     snapshot:()=>copy(state),has:file=>!!Object.keys(state.files[file] || {}).length};
 })(typeof window !== 'undefined' ? window : globalThis);

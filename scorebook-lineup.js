@@ -83,6 +83,7 @@ function getGameLineupPositions() {
 }
 
 function ensureGameLineupPositions() {
+  if (typeof window !== 'undefined' && window.__gameFinalizing) return;
   if (activeGame) activeGame.lineupPositions = getGameLineupPositions();
 }
 
@@ -92,6 +93,7 @@ function gameDefenseSnapshot() {
 }
 
 function saveLineupDefenseChange(before, reason) {
+  if (typeof window !== 'undefined' && window.__gameFinalizing) return;
   activeGame.dhSlot = activeGame.hasDh && activeGame.lineupPositions.includes('DH') ? activeGame.lineupPositions.indexOf('DH') + 1 : null;
   const after = gameDefenseSnapshot();
   if (JSON.stringify(before) !== JSON.stringify(after)) {
@@ -101,6 +103,7 @@ function saveLineupDefenseChange(before, reason) {
 }
 
 function alignLineupPitcher(name) {
+  if (typeof window !== 'undefined' && window.__gameFinalizing) return;
   ensureGameLineupPositions();
   const index = activeGame.lineup.indexOf(name);
   if (index >= 0) swapLineupPosition(activeGame.lineupPositions, index, 'P');
@@ -109,6 +112,7 @@ function alignLineupPitcher(name) {
 }
 
 function changeLiveLineupPosition(index, position) {
+  if (typeof window !== 'undefined' && window.__gameFinalizing) return;
   if (!activeGame || !Number.isInteger(index) || index < 0 || index >= activeGame.lineup.length) return;
   if (position && !POSITIONS.some(p => p.key === position) && !(activeGame.hasDh && position === 'DH')) return;
   const before = gameDefenseSnapshot();
