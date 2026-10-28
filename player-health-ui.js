@@ -104,9 +104,13 @@
     choose(b.dataset.healthName);
     // The roster sits below the form; bring the form into view so the tap visibly opens that player.
     const identity = panel.querySelector('[data-health-identity]');
-    const box = identity.getBoundingClientRect(), header = document.querySelector('header')?.getBoundingClientRect().bottom || 0;
-    // Also when it is only partly visible (cut off by the header or the bottom edge), e.g. after an interrupted scroll.
-    if (selected !== before && (box.top < header || box.bottom > innerHeight)) identity.scrollIntoView({block:'center',behavior:'smooth'});
+    const header = () => document.querySelector('header')?.getBoundingClientRect().bottom || 0;
+    // Also when it is only partly visible (cut off by the header or the bottom edge).
+    const hidden = () => { const box = identity.getBoundingClientRect(); return box.top < header() || box.bottom > innerHeight; };
+    if (selected === before || !hidden()) return;
+    identity.scrollIntoView({block:'center',behavior:'smooth'});
+    // The browser drops a smooth scroll when the layout shifts meanwhile (a web font arriving, say): finish it directly.
+    setTimeout(() => { if (identity.isConnected && hidden()) identity.scrollIntoView({block:'center',behavior:'auto'}); }, 700);
   });
   form.addEventListener('input',() => {dirty=true; birth(); state();});
   form.addEventListener('change',() => {dirty=true; birth(); state();});
