@@ -224,7 +224,9 @@ html.ui-flight button,
 html.ui-flight [role="button"],
 html.ui-flight a.inline-flex,
 html.ui-flight label.cursor-pointer {
-  transition: transform .22s var(--fl-spring), background-color .2s var(--fl-ease), border-color .2s var(--fl-ease), box-shadow .22s var(--fl-ease), filter .2s var(--fl-ease), color .2s var(--fl-ease);
+  /* Only properties the GPU can animate cheaply or that repaint once: no box-shadow or filter transitions (they
+     repaint the control on every frame of the animation). */
+  transition: transform .22s var(--fl-spring), background-color .2s var(--fl-ease), border-color .2s var(--fl-ease), color .2s var(--fl-ease);
   -webkit-tap-highlight-color: transparent;
 }
 /* Neutral controls become glass. */
@@ -1089,10 +1091,11 @@ html.ui-flight :is(.ui-section-bar, .fl-subnav, #appHeader, #flTools, #mainNavig
 /* Press feedback on everything tappable (ui-theme.js marks the element with .ui-pressed and plays the light ripple):
    small controls compress, large cards and rows give a gentler squeeze or a highlight, then spring back. */
 html.ui-flight :is([onclick], .cursor-pointer, summary, select, [data-player], [data-game], [data-health-name], .fl-card, .fl-tile, .fl-chip) {
-  transition: transform .32s var(--fl-spring), filter .22s var(--fl-ease), background-color .22s var(--fl-ease), box-shadow .3s var(--fl-ease);
+  transition: transform .32s var(--fl-spring), background-color .22s var(--fl-ease);
   -webkit-tap-highlight-color: transparent;
 }
-html.ui-flight :is(.fl-card, .fl-tile, [data-health-name], div[onclick], section [class*="rounded"][onclick]).ui-pressed { transform: scale(.975); filter: brightness(1.12); transition-duration: .08s; }
+/* Cards compress (a GPU transform; the light ripple is the highlight), no brightness filter repainting the whole card. */
+html.ui-flight :is(.fl-card, .fl-tile, [data-health-name], div[onclick], section [class*="rounded"][onclick]).ui-pressed { transform: scale(.975); filter: none; transition-duration: .08s; }
 html.ui-flight :is(tr[onclick], tr.cursor-pointer).ui-pressed { transform: none; background-color: rgba(255, 255, 255, .07) !important; transition-duration: .06s; }
 html.ui-flight :is(summary, select).ui-pressed { transform: scale(.985); }
 @media (hover: hover) and (pointer: fine) {
@@ -1225,3 +1228,6 @@ html.ui-flight .fl-notice button { min-height: 36px; padding: 6px 12px; border-r
 html.ui-flight .fl-notice button + button { color: #fde68a; background: rgba(251, 191, 36, .14) !important; }
 html.ui-flight .fl-notice button:disabled { opacity: .6; }
 html.ui-flight #scoreSubPanelLive.ui-finalizing { opacity: .55; filter: saturate(.6); transition: opacity .2s; }
+/* Tailwind's .transition (140 elements) also animates box-shadow, filter and backdrop-filter, which repaint every frame;
+   keep the cheap ones. */
+html.ui-flight .transition { transition-property: color, background-color, border-color, opacity, transform; }

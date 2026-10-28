@@ -32,6 +32,7 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
         await page.waitForTimeout(250);
         await settle(page); // page-reveal animations move and scale things; measure the settled layout
         const r=await page.evaluate(()=>{
+          document.documentElement.classList.add('fl-full-layout'); // heights and text sizes need every section laid out
           const panel=document.querySelector('[id^=panel]:not(.hidden)');
           const shown=el=>{const s=getComputedStyle(el);if(s.display==='none'||s.visibility==='hidden')return false;const b=el.getBoundingClientRect();return b.width>0&&b.height>0&&!el.closest('.hidden');};
           const targets=[...panel.querySelectorAll('button,a[href],select,input:not([type=hidden]),[onclick],[role=button],summary')].filter(shown)

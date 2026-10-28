@@ -197,8 +197,12 @@
     // follows the same state, so the date chip, the tools button, 「完成」 and the backdrop all agree.
     const isOpen = () => !document.body.classList.contains('ui-date-collapsed');
     const setOpen = open => { if (open !== isOpen()) dateToggle.click(); };
+    // The panel sits just below the header. Its height is tracked as it changes (ResizeObserver reads layout when it is
+    // already up to date), so opening never forces a layout in the middle of the tap.
+    let headerBottom = Math.round(header.getBoundingClientRect().bottom);
+    if ('ResizeObserver' in window) new ResizeObserver(() => { headerBottom = Math.round(header.getBoundingClientRect().bottom); if (isOpen()) tools.style.top = `${headerBottom + 8}px`; }).observe(header);
     const sync = () => {
-      if (isOpen()) tools.style.top = `${Math.round(header.getBoundingClientRect().bottom) + 8}px`;
+      if (isOpen()) tools.style.top = `${headerBottom + 8}px`;
       toolsButton.setAttribute('aria-expanded', String(isOpen()));
       document.body.classList.toggle('fl-tools-open', isOpen());
     };

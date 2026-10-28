@@ -144,3 +144,11 @@
 - **場記防守快捷登打**（`.fl-def-pad`）：分「出局」「上壘・失分」兩組大按鈕；寬度 ≥768px 時與守備圖左右並排、上下對齊（`.fl-def-row`），手機放在守備圖上方。場記頁不播放區塊滑入動畫。
 - **賽後成績圖**：行星地平線背景（`assets/bg-orbit-portrait.webp`）＋暗色遮罩、透明玻璃面板、宋體標題、襯線數字；開啟前先載入字體與背景（最多等 2.5 秒）。
 - **換行**：短按鈕與標籤 `word-break: keep-all`；小篩選鈕與數據卡標籤整段不拆、改為換列；段落 `text-wrap: pretty`、標題 `balance`。
+
+## 2026/10/28：折射回到觸控裝置、首次開頁與按壓動畫
+
+- **折射**：Chromium（Android、Chrome 平板、電腦）全部恢復 SVG 位移折射；Safari／iPhone 不支援 SVG backdrop filter，維持清透模糊。抽屜與工具面板滑入期間以 `--fl-glass-moving`（一般模糊）暫代折射，動畫結束即恢復（`ui-theme.js` 的 `calmGlassWhile`）。
+- **首次開頁**：Chromium 上，面板第 2 個以後的 `section` 使用 `content-visibility: auto`（`contain-intrinsic-size: auto 900px`），畫面外不做樣式與排版；場記、打線、健康頁不套用；WebKit 不套用（曾偶發當掉）；列印與 `html.fl-full-layout`（測試量測用）時完整排版。區段跳轉先平滑捲到估計位置，`scrollend` 後校正到實際位置（使用者觸控或捲動則取消校正）。
+- **只畫需要的頁面**：資料或篩選改變時只重畫目前頁面，其他頁打開時才重畫；資料沒變回到看過的頁面不重畫；圖表 `upsertChart()` 原地更新（含內嵌外掛的圖表重建）。
+- **按壓與轉場**：按鈕、卡片與 Tailwind `.transition` 只轉場 transform、顏色、邊框、透明度；不轉場 box-shadow、filter、backdrop-filter（每格重繪）。大卡片按壓只縮放，不加亮度濾鏡。
+- **工具面板**：頂部位置以 ResizeObserver 追蹤頁首高度，開啟時不再強制排版。

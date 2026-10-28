@@ -363,6 +363,8 @@
   sectionBar.setAttribute('aria-label', '本頁段落');
   subnav.after(sectionBar); // page switcher first, then this page's section chips
   let sectionTargets = [];
+  let sectionJump = 0; // the latest chip jump; touching or scrolling by hand cancels its final correction
+  ['touchstart', 'wheel'].forEach(type => window.addEventListener(type, () => { sectionJump++; }, {passive: true}));
   const visible = el => el.getClientRects().length > 0 && !el.closest('.hidden');
   // Short chip names for the long section titles (matched by a distinctive part of the title).
   const SHORT_LABELS = [
@@ -410,8 +412,19 @@
         // Land just below the sticky chip row.
         const target = sectionTargets[index];
         if (!target?.isConnected) return;
-        const top = target.getBoundingClientRect().top + window.scrollY - (stickyBottom() + 12);
-        window.scrollTo({top, behavior: 'smooth'});
+        const destination = () => target.getBoundingClientRect().top + window.scrollY - (stickyBottom() + 12);
+        window.scrollTo({top: destination(), behavior: 'smooth'});
+        // Sections not yet shown may be skipped by content-visibility (Chromium) with an estimated height, so the first
+        // landing can be a little off: once the scroll ends, settle on the real position (unless the user took over).
+        const jump = ++sectionJump;
+        const settle = () => {
+          window.removeEventListener('scrollend', settle);
+          if (jump !== sectionJump || !target.isConnected) return;
+          const top = destination();
+          if (Math.abs(window.scrollY - top) > 2) window.scrollTo({top, behavior: 'instant'});
+        };
+        window.addEventListener('scrollend', settle);
+        setTimeout(settle, 1500); // browsers without scrollend (they do not skip sections either)
       });
       sectionBar.append(chip);
     });

@@ -94,6 +94,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     const wording = await page.evaluate(() => {
       const text = () => document.body.innerText;
       const pages = {};
+      document.documentElement.classList.add('fl-full-layout'); // innerText needs every section laid out
       for (const t of ['Overview', 'Profile', 'Leaderboard', 'Analytics', 'Compare', 'Pitching', 'Glossary']) { switchMainTab('tab' + t); pages[t] = text(); }
       const agg = getAnalysisAgg();
       const tracked = agg.players.filter(p => p.tracked);

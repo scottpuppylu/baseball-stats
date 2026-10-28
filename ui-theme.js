@@ -65,7 +65,15 @@
   // blur (opacity/filter do not move layout, so taps and measurements land where the user sees them).
   const SPRING = 'cubic-bezier(.34, 1.56, .64, 1)';
   const motionOk = () => !reduceMotion.matches && document.visibilityState === 'visible';
-  const play = (el, frames, options) => { try { el.animate(frames, {fill: 'none', ...options}); } catch (e) { /* not supported */ } };
+  const play = (el, frames, options) => { try { return el.animate(frames, {fill: 'none', ...options}); } catch (e) { return null; /* not supported */ } };
+  // While a glass surface slides in, a plain blur stands in for its refraction (recomputing the lens on every moving
+  // frame costs most of a frame on phones); the refraction returns as soon as the surface comes to rest.
+  const MOVING_GLASS = 'blur(10px) saturate(150%) brightness(.8)';
+  function calmGlassWhile(el, finished) {
+    if (!el) return;
+    el.style.setProperty('--fl-glass-moving', MOVING_GLASS);
+    Promise.resolve(finished).catch(() => {}).then(() => el.style.removeProperty('--fl-glass-moving'));
+  }
   function revealPage(panel) {
     play(panel, [{opacity: 0, transform: 'translateY(10px)'}, {opacity: 1, transform: 'none'}], {duration: 380, easing: EASE});
     // The page's own sections follow one after another, like an Apple app settling in.
@@ -111,10 +119,25 @@
       wasOpen = open;
       if (!open || !motionOk() || window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) return;
       const phone = window.innerWidth < 768;
-      play(nav, [{opacity: 0, transform: phone ? 'translateY(40px)' : 'translateX(-28px)'}, {opacity: 1, transform: 'none'}], {duration: 460, easing: SPRING});
+      const slide = play(nav, [{opacity: 0, transform: phone ? 'translateY(40px)' : 'translateX(-28px)'}, {opacity: 1, transform: 'none'}], {duration: 460, easing: SPRING});
+      calmGlassWhile(nav, slide && slide.finished);
       [...nav.querySelectorAll(':scope > button')].forEach((b, i) => play(b, [{opacity: 0}, {opacity: 1}], {duration: 300, delay: 60 + i * 22, easing: EASE, fill: 'backwards'}));
     }).observe(document.body, {attributes: true, attributeFilter: ['class']});
   }
+  // The tools panel drops in with a CSS animation (ui-theme.css, fl-drop): same treatment until it ends.
+  let toolsOpen = false;
+  new MutationObserver(() => {
+    const open = document.body.classList.contains('fl-tools-open');
+    if (open === toolsOpen) return;
+    toolsOpen = open;
+    const tools = document.getElementById('flTools');
+    if (!open || !tools) return;
+    calmGlassWhile(tools, new Promise(resolve => {
+      const done = () => { tools.removeEventListener('animationend', done); resolve(); };
+      tools.addEventListener('animationend', done);
+      setTimeout(done, 600); // no animation (reduced motion) or an interrupted one
+    }));
+  }).observe(document.body, {attributes: true, attributeFilter: ['class']});
 
   // ---------- Refraction for every glass surface (Chromium) ----------
   // Liquid glass: the whole surface is a lens (a gentle bulge, strongest bend at the rim) and what lies behind is set out of
@@ -133,7 +156,7 @@
   // Touch devices (phones, tablets) keep the stylesheet's plain glass blur: the SVG refraction filter costs most of a
   // frame there whenever a bar or the drawer moves (measured: drawer animation p95 67 ms with it, 11 ms without).
   const coarsePointer = window.matchMedia('(pointer: coarse)');
-  const lensEnabled = () => chromium && !coarsePointer.matches && !contrastQuery.matches && !reduceMotion.matches;
+  const lensEnabled = () => chromium && !contrastQuery.matches && !reduceMotion.matches;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)'); // content-panel lenses: mouse devices only
   const channel = k => [0, 1, 2].map(row => [0, 1, 2, 3, 4].map(col => (row === k && col === k ? 1 : 0)).join(' ')).join(' ') + ' 0 0 0 1 0';
   function lensMap(w, h, r, bezel) {
@@ -221,7 +244,7 @@
     if (!id || tracked.get(el) !== key) return;
     // Each surface can dim what lies behind it (no blur): --fl-lens-tone in ui-theme.css.
     const tone = getComputedStyle(el).getPropertyValue('--fl-lens-tone').trim() || 'saturate(165%) brightness(.94)';
-    const value = `url(#${id}) ${tone}`;
+    const value = `var(--fl-glass-moving, url(#${id}) ${tone})`; // --fl-glass-moving: see calmGlassWhile()
     el.style.setProperty('backdrop-filter', value, 'important');
     el.style.setProperty('-webkit-backdrop-filter', value, 'important');
     el.classList.add('fl-lens-on');
