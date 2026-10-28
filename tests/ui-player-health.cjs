@@ -59,7 +59,9 @@ async function save(p,bats) {
       await card.click();
       assert.equal(await p.locator('[name="heightCm"]').inputValue(),'178.5','roster card returns to saved profile');
       assert.equal(await card.getAttribute('aria-pressed'),'true','selected roster card is highlighted');
-      await p.waitForFunction(()=>{const r=document.querySelector('[data-health-identity]').getBoundingClientRect();const h=document.querySelector('header')?.getBoundingClientRect().bottom||0;return r.top>=h-1&&r.bottom<=innerHeight;},null,{timeout:8000}); // tapping a roster card shows the form below the sticky header
+      await p.waitForFunction(()=>{const r=document.querySelector('[data-health-identity]').getBoundingClientRect();const h=document.querySelector('header')?.getBoundingClientRect().bottom||0;return r.top>=h-1&&r.bottom<=innerHeight;},null,{timeout:8000}).catch(async error=>{ // tapping a roster card shows the form below the sticky header
+        const at=await p.evaluate(()=>{const r=document.querySelector('[data-health-identity]').getBoundingClientRect();return {top:Math.round(r.top),bottom:Math.round(r.bottom),header:Math.round(document.querySelector('header')?.getBoundingClientRect().bottom||0),viewport:innerHeight,scrollY:Math.round(scrollY)};});
+        error.message+=` [${engine}-${width} identity ${JSON.stringify(at)}]`;throw error;});
       await p.screenshot({path:path.join(output,`${engine}-${width}-health.png`),fullPage:true});
       await p.evaluate(n=>{selectedPlayerName=n;switchMainTab('tabProfile');},name);
       const bio = p.locator('#playerProfileBio [data-profile-health]');
