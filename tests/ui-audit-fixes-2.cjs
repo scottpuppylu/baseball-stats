@@ -225,7 +225,7 @@ let externalGitHub = 0;
       assert.match(await page.locator('#jerseyMatchHint').textContent(), /#0 零號新人/);
       await page.evaluate(() => { new_date.value = '2026-10-11'; new_pa.value = '1'; new_h1.value = '1'; ['new_bb', 'new_sf', 'new_h2', 'new_h3', 'new_hr', 'new_k'].forEach(id => document.getElementById(id).value = '0'); addLogForm.dispatchEvent(new Event('submit', {cancelable: true})); });
       await page.waitForFunction(() => allLogs.some(l => l.name === '零號新人' && l.pa === 1));
-      await page.evaluate(() => {renderAll();switchMainTab('tabOverview');}); assert.match(await page.locator('#playerSelect').textContent(), /#0 零號新人/);
+      await page.evaluate(() => renderAll()); assert.match(await page.locator('#playerSelect').textContent(), /#0 零號新人/);
       assert.match(await page.locator('#summaryTableBody').textContent(), /#0/);
     });
     await check('12-bubble-zero', async page => {

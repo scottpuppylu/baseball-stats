@@ -6,7 +6,6 @@ const fs=require('node:fs');
 const path=require('node:path');
 const os=require('node:os');
 const {chromium}=require('playwright');
-const {realizeSections,restoreSections,scrollSettled}=require('./ui-wait.cjs');
 const url=process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa');
 const PAGES=[['Overview'],['Profile'],['Leaderboard'],['Analytics'],['Compare'],['Lineup'],['Scorebook','live'],['Scorebook','review'],['Scorebook','spray'],['Pitching'],['Records'],['Glossary']];
@@ -32,7 +31,6 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
         await page.evaluate(([t,s])=>{switchMainTab(`tab${t}`);if(s)switchScorebookSubTab(s);window.scrollTo(0,0);},[tab,sub]);
         await page.waitForTimeout(250);
         await settle(page); // page-reveal animations move and scale things; measure the settled layout
-        await realizeSections(page); // inspect fully realized content, including deferred analysis
         const r=await page.evaluate(()=>{
           const panel=document.querySelector('[id^=panel]:not(.hidden)');
           const shown=el=>{const s=getComputedStyle(el);if(s.display==='none'||s.visibility==='hidden')return false;const b=el.getBoundingClientRect();return b.width>0&&b.height>0&&!el.closest('.hidden');};
@@ -80,7 +78,6 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
         assert.ok(r.chips.every(c=>c.length<=11),`${width} ${name}: short chip labels`);
         pages[name]=r.chips.length;
         heights[name]=r;
-        await restoreSections(page);
       }
       // Density: compact header, content soon after it, and every long page clearly shorter than before the
       // density pass (390 px heights measured on the same fixture, 2026/10/10).
@@ -198,11 +195,6 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
       await page.screenshot({path:path.join(output,`${width}-MobileLive.png`),fullPage:true});
       await page.evaluate(()=>{activeGame=window.activeGame=null;localStorage.removeItem('rebas_active_game');});
 
-      // First finish the actual one-time presentation work; a real render loop still fails the zero-mutation window.
-      await scrollSettled(page);
-      await page.evaluate(()=>PageRendering.settled());
-      await settle(page);
-      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       // Nothing keeps re-rendering while the page is idle.
       const idle=await page.evaluate(()=>new Promise(res=>{let n=0;const o=new MutationObserver(r=>{n+=r.length;});o.observe(document.getElementById('appWorkspace'),{subtree:true,attributes:true,childList:true});setTimeout(()=>{o.disconnect();res(n);},1200);}));
       assert.equal(idle,0,`${width}: no idle re-render loop`);

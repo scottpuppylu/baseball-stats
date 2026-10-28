@@ -1119,24 +1119,17 @@
     renderCompareGameLog(agg);
   });
   after('renderSelectedGameReview', addImageButton);
-  after('renderPage', tab => { if(tab==='tabAnalytics') renderTeamGameLog(getAnalysisAgg()); });
   after('renderLuckRegressionChart', renderTeamGameLog);
   after('renderSummaryTable', renderAttendance);
 
   // The first render happened before this file loaded.
   try {
-    // Only the shown page; the others draw these when they are opened (the renderPage / render hooks above).
-    const shown = id => !document.getElementById(id)?.classList.contains('hidden');
-    if (shown('panelProfile')) {
-      renderProfileNote(getAnalysisAgg());
-      renderGameLog(selectedPlayerName);
-    }
-    if (shown('panelCompare')) {
-      renderCompareNote(getFullAgg());
-      renderCompareGameLog(getFullAgg());
-    }
-    if (shown('panelAnalytics')) renderTeamGameLog(getAnalysisAgg());
-    if (shown('panelOverview')) renderAttendance();
+    renderProfileNote(getAnalysisAgg());
+    renderGameLog(selectedPlayerName);
+    renderCompareNote(getFullAgg());
+    renderCompareGameLog(getFullAgg());
+    renderTeamGameLog(getAnalysisAgg());
+    renderAttendance();
     if (selectedReviewGameId) addImageButton(selectedReviewGameId);
   } catch (error) { console.error('[team-insights] init', error); }
 

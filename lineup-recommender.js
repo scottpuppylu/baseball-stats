@@ -383,5 +383,5 @@
   after('evaluateCustomLineup', renderCustomCard);
 
   // The first render ran with the original algorithm before this file loaded.
-  try { if (!document.getElementById('panelLineup')?.classList.contains('hidden')) renderLineupAnalysis(getFullAgg()); } catch (error) { console.error('[lineup-recommender] init', error); }
+  try { renderLineupAnalysis(getFullAgg()); } catch (error) { console.error('[lineup-recommender] init', error); }
 })();

@@ -64,8 +64,6 @@ const output=process.env.UI_QA_OUTPUT||path.join(os.tmpdir(),'baseball-ui-qa');
     });
     const empty=await page.evaluate(()=>{
       document.getElementById('filterStartDate').value='2099-01-01';document.getElementById('filterEndDate').value='2099-12-31';renderAll();
-      // Hidden pages update on their next visit; exercise each page before inspecting its empty state.
-      switchMainTab('tabProfile');switchMainTab('tabLineup');switchMainTab('tabCompare');
       return {players:getFullAgg().players.length,
         rows:['recommendedLineupBody','customLineupTableBody','compareTableBody'].map(id=>document.getElementById(id).querySelectorAll('tr').length),
         charts:['radarChart','donutChart','profileBattedBallChart','profileSprayPolarChart','profileExpectedChart','compareRadarChart','lineupFlowChart'].map(id=>!!Chart.getChart(id)),
@@ -83,8 +81,6 @@ const output=process.env.UI_QA_OUTPUT||path.join(os.tmpdir(),'baseball-ui-qa');
     assert.equal(empty.customModel,false);assert.deepEqual(empty.spray,[0,0,0]);
     const restored=await page.evaluate(()=>{
       document.getElementById('filterStartDate').value='';document.getElementById('filterEndDate').value='';renderAll();
-      // Direct renderer calls retain their synchronous API for numerical chart assertions.
-      renderPlayerProfile(getAnalysisAgg());renderLineupAnalysis(getFullAgg());renderComparison(getFullAgg());
       return {rows:['recommendedLineupBody','customLineupTableBody','compareTableBody'].map(id=>document.getElementById(id).querySelectorAll('tr').length),
         charts:['radarChart','donutChart','profileBattedBallChart','profileSprayPolarChart','profileExpectedChart','compareRadarChart','lineupFlowChart'].map(id=>!!Chart.getChart(id)),
         enabled:!document.getElementById('comparePlayerA').disabled&&!document.getElementById('comparePlayerB').disabled,model:!!document.getElementById('lineupModelSummary')?.textContent,compareLog:!!document.getElementById('insightCompareGameLogSection')?.textContent};

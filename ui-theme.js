@@ -130,8 +130,7 @@
   const NS = 'http://www.w3.org/2000/svg';
   let lensSvg = null;
   const lensCache = new Map(); // key -> Promise<filter id>
-  const coarsePointer = window.matchMedia('(pointer: coarse)');
-  const lensEnabled = () => chromium && !coarsePointer.matches && !contrastQuery.matches && !reduceMotion.matches;
+  const lensEnabled = () => chromium && !contrastQuery.matches && !reduceMotion.matches;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)'); // content-panel lenses: mouse devices only
   const channel = k => [0, 1, 2].map(row => [0, 1, 2, 3, 4].map(col => (row === k && col === k ? 1 : 0)).join(' ')).join(' ') + ' 0 0 0 1 0';
   function lensMap(w, h, r, bezel) {
@@ -196,17 +195,8 @@
     }
     return lensCache.get(key);
   }
-  // While the page scrolls, the glass bars swap their refraction filter for a plain blur (much cheaper to recompose
-  // every frame); --fl-active-lens overrides the lens inside the inline backdrop-filter set by applyLens().
-  const scrollLenses = new Set();
-  const PAUSABLE = '.ui-mobile-nav, #mainNavigation, #appHeader, .fl-subnav, .ui-section-bar, #flTools';
-  const pauseLens = el => {
-    if (!el.matches(PAUSABLE)) return;
-    scrollLenses.add(el);
-    el.style.setProperty('--fl-active-lens', 'blur(6px) saturate(155%) brightness(.78)');
-  };
   const tracked = new Map(); // element -> last size key
-  const clearLens = el => { scrollLenses.delete(el); el.style.removeProperty('--fl-active-lens'); el.style.removeProperty('backdrop-filter'); el.style.removeProperty('-webkit-backdrop-filter'); el.classList.remove('fl-lens-on'); };
+  const clearLens = el => { el.style.removeProperty('backdrop-filter'); el.style.removeProperty('-webkit-backdrop-filter'); el.classList.remove('fl-lens-on'); };
   async function applyLens(el) {
     if (!lensEnabled()) { clearLens(el); tracked.set(el, ''); return; }
     const rect = el.getBoundingClientRect();
@@ -225,34 +215,16 @@
     if (tracked.get(el) === key) return;
     tracked.set(el, key);
     const id = await lensFilter(w, h, Math.round(radius), bezel, defocus);
-    if (!id || tracked.get(el) !== key || !el.isConnected || !lensEnabled()) return;
+    if (!id || tracked.get(el) !== key) return;
     // Each surface can dim what lies behind it (no blur): --fl-lens-tone in ui-theme.css.
     const tone = getComputedStyle(el).getPropertyValue('--fl-lens-tone').trim() || 'saturate(165%) brightness(.94)';
-    const value = `var(--fl-active-lens, url(#${id}) ${tone})`;
+    const value = `url(#${id}) ${tone}`;
     el.style.setProperty('backdrop-filter', value, 'important');
     el.style.setProperty('-webkit-backdrop-filter', value, 'important');
     el.classList.add('fl-lens-on');
-    if (root.hasAttribute('data-fl-scrolling')) pauseLens(el);
   }
   let lensObserver = null;
   const queued = new Set();
-  window.flReleaseDetached = () => {
-    tracked.forEach((value, el) => { if (!el.isConnected) { lensObserver?.unobserve(el); queued.delete(el); clearLens(el); tracked.delete(el); } });
-  };
-  // data-fl-scrolling on <html> marks an active scroll (also read by page-rendering.js, which waits to build charts).
-  let scrollStop;
-  window.addEventListener('scroll', () => {
-    if (!root.hasAttribute('data-fl-scrolling')) {
-      root.setAttribute('data-fl-scrolling', '');
-      document.querySelectorAll('.fl-lens-on').forEach(pauseLens);
-    }
-    clearTimeout(scrollStop);
-    scrollStop = setTimeout(() => {
-      root.removeAttribute('data-fl-scrolling');
-      scrollLenses.forEach(el => el.style.removeProperty('--fl-active-lens'));
-      scrollLenses.clear();
-    }, 150);
-  }, {passive: true});
   window.flRefract = (el, gated = false) => {
     if (!el || tracked.has(el) || !chromium) return;
     if (gated) el.dataset.flGated = '';
@@ -268,7 +240,7 @@
   if (chromium) {
     root.classList.add('fl-refract');
     ['.ui-mobile-nav', '#mainNavigation', '#appHeader', '.fl-subnav', '.ui-section-bar'].forEach(sel => window.flRefract(document.querySelector(sel)));
-    [contrastQuery, reduceMotion, coarsePointer].forEach(q => q.addEventListener('change', () => { tracked.forEach((v, el) => { if (!el.isConnected) { lensObserver?.unobserve(el); queued.delete(el); clearLens(el); tracked.delete(el); return; } tracked.set(el, 'stale'); applyLens(el); }); }));
+    [contrastQuery, reduceMotion].forEach(q => q.addEventListener('change', () => { tracked.forEach((v, el) => { if (!el.isConnected) { tracked.delete(el); return; } tracked.set(el, 'stale'); applyLens(el); }); }));
   }
 
   // Charts follow the same type and quiet grid.

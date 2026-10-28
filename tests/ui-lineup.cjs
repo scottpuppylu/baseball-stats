@@ -19,7 +19,6 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       await page.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//,route=>route.abort());
       await page.goto(url);
       await page.waitForFunction(()=>window.LineupModel && allLogs.some(l=>String(l.id).startsWith('log_game_')));
-      await page.evaluate(()=>switchMainTab('tabLineup'));
       // First visit: default attendance is re-picked from cloud data (PA >= 14), grid included.
       const attendance=await page.evaluate(()=>{
         const hist={};

@@ -64,7 +64,15 @@ html.ui-flight {
 /* ---------- Canvas and type ---------- */
 html.ui-flight body {
   /* Deep-space canvas: two sparse star layers and a faint planet-horizon glow. Behind opaque cards, so text contrast is unaffected. */
-  background: var(--fl-bg) !important;
+  background:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, .5), transparent 60%) 0 0 / 340px 340px,
+    radial-gradient(1px 1px at 68% 42%, rgba(255, 255, 255, .35), transparent 60%) 0 0 / 340px 340px,
+    radial-gradient(1.2px 1.2px at 38% 76%, rgba(200, 220, 255, .4), transparent 60%) 0 0 / 520px 520px,
+    radial-gradient(1px 1px at 86% 8%, rgba(255, 255, 255, .3), transparent 60%) 0 0 / 520px 520px,
+    radial-gradient(140% 70% at 70% -32%, rgba(124, 192, 255, .1), rgba(124, 192, 255, .025) 45%, transparent 62%),
+    radial-gradient(900px 500px at -10% 110%, rgba(255, 196, 140, .04), transparent 60%),
+    var(--fl-bg) !important;
+  background-attachment: fixed !important;
   color: var(--fl-ink);
   font-family: var(--fl-font);
   font-feature-settings: "cv11", "ss01", "tnum" 0;
@@ -1062,6 +1070,7 @@ html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook
     linear-gradient(155deg, rgba(255, 255, 255, .42), rgba(170, 205, 255, .14) 25%, rgba(255, 255, 255, .05) 55%, rgba(255, 210, 170, .12) 82%, rgba(255, 255, 255, .28)) border-box !important;
   -webkit-backdrop-filter: blur(22px) saturate(160%) brightness(.7); backdrop-filter: blur(22px) saturate(160%) brightness(.7);
   --fl-lens-defocus: 9; --fl-lens-tone: saturate(160%) brightness(.7);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
 }
 html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]):not(button):not(input):not(select):not(textarea) {
   background: linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .025)) !important;
@@ -1202,14 +1211,3 @@ html.ui-flight main :is(span.block, div[class*="text-[1"], div.text-xs, div.text
 /* The phone tab bar always fits the screen: equal columns that may shrink (a wide label never stretches the bar). */
 html.ui-flight .ui-mobile-nav { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
 html.ui-flight .ui-mobile-nav > button { min-width: 0; }
-
-/* Fixed scene surface: stars are composited with the scene, not repainted as a body background. */
-html.ui-flight body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;  background:
-    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, .5), transparent 60%) 0 0 / 340px 340px,
-    radial-gradient(1px 1px at 68% 42%, rgba(255, 255, 255, .35), transparent 60%) 0 0 / 340px 340px,
-    radial-gradient(1.2px 1.2px at 38% 76%, rgba(200, 220, 255, .4), transparent 60%) 0 0 / 520px 520px,
-    radial-gradient(1px 1px at 86% 8%, rgba(255, 255, 255, .3), transparent 60%) 0 0 / 520px 520px,
-    radial-gradient(140% 70% at 70% -32%, rgba(124, 192, 255, .1), rgba(124, 192, 255, .025) 45%, transparent 62%),
-    radial-gradient(900px 500px at -10% 110%, rgba(255, 196, 140, .04), transparent 60%),
-    var(--fl-bg);
-}

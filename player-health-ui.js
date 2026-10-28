@@ -144,10 +144,8 @@
     column.append(block);
   }
   siteHooks.after('renderPlayerProfile','player-health',renderProfileHealth);
-  // Redrawn when shown, and only if the data changed since (page-rendering.js).
-  const renderIfStale = () => PageRendering.run('health-ui', '', render);
-  siteHooks.after('switchMainTab','player-health',tab => {if(tab==='tabHealth') renderIfStale();});
-  siteHooks.after('renderAll','player-health',() => {if(!panel.classList.contains('hidden')) renderIfStale();});
+  siteHooks.after('switchMainTab','player-health',tab => {if(tab==='tabHealth') render();});
+  siteHooks.after('renderAll','player-health',() => {if(!panel.classList.contains('hidden')) render();});
   window.addEventListener('player-health-status',state);
   render();
   renderProfileHealth(getAnalysisAgg());

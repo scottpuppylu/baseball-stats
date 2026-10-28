@@ -1,7 +1,6 @@
 // UI + cloud + statistics integration, isolated in-memory preview only.
 const assert = require('node:assert/strict'), fs=require('node:fs'), path=require('node:path'), os=require('node:os'), crypto=require('node:crypto');
 const {chromium,webkit}=require('playwright');
-const {scrollSettled}=require('./ui-wait.cjs');
 const url=process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa');
 const formal=path.join(__dirname,'../data');
@@ -57,11 +56,9 @@ async function save(p,bats) {
       const otherName=await p.locator('[data-health-name]').evaluateAll((cards,n)=>cards.find(c=>c.dataset.healthName!==n).dataset.healthName,name);
       await p.locator(`[data-health-name="${otherName}"] > :first-child`).click();
       assert.equal(await p.locator('[data-health-player]').inputValue(),otherName,'clicking roster avatar chooses that player');
-      await scrollSettled(p);
       await card.click();
       assert.equal(await p.locator('[name="heightCm"]').inputValue(),'178.5','roster card returns to saved profile');
       assert.equal(await card.getAttribute('aria-pressed'),'true','selected roster card is highlighted');
-      await scrollSettled(p);
       await p.waitForFunction(()=>{const r=document.querySelector('[data-health-identity]').getBoundingClientRect();const h=document.querySelector('header')?.getBoundingClientRect().bottom||0;return r.top>=h-1&&r.bottom<=innerHeight;},null,{timeout:3000}); // tapping a roster card shows the form below the sticky header
       await p.screenshot({path:path.join(output,`${engine}-${width}-health.png`),fullPage:true});
       await p.evaluate(n=>{selectedPlayerName=n;switchMainTab('tabProfile');},name);
@@ -130,7 +127,7 @@ async function save(p,bats) {
       await open(p);assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'no page overflow');
       assert.deepEqual(errors,[]);assert.equal(external,0);
       results.push({engine,width,passed:true});await c.close();
-    }catch(error){error.testCase=`${engine}-${width}`;throw error;}finally{await browser.close();}
+    }finally{await browser.close();}
   }
   assert.deepEqual(hashes(),before,'formal data files stay byte-identical');
   console.log(JSON.stringify({passed:results.length,results}));

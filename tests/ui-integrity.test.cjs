@@ -28,20 +28,9 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // overwriting them, no preset batting result and no recording after three outs, no invented pitching numbers or
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
-// v10: authorized durable local persistence and failure feedback; existing controls and formulas retained.
-// v11: authorized persistent pending-sync intents and retry UI; original controls and scoring formulas retained.
-// v11a: authorized draft loading, acknowledgements, durable retry and manual record identity.
-// v11b: pending snapshots precede stale fallback copies; record contents and scoring remain unchanged.
-// v12: authorized finalization lock and snapshot comparison; all existing scoring formulas and controls retained.
-// v12a: reject stale cloud responses and retain the operation baseline across local persistence awaits.
-// v13: authorized explicit review landing-point input; existing recorded coordinates and scoring formulas retained.
-// v14: authorized visible-page rendering, cached charts, and lazy presentation; all data writers and scoring formulas retained.
-// A: visible-page rendering with stable chart instances; IDs and existing handlers retained
-// A: primary analytics tables render with the page, independently of deferred charts
-// A: current-page primary tables, original hooks and deferred charts
 const BASELINE = {
-  "script": "25bd8713f326f68a6c784a9312ad6219fd56bce14fee542e63fb38fbbe49f1b9",
-  "handlers": "06f31722ae03f6405ff1766863227b0da05590e698ae93309d09a4c27692b7f0",
+  "script": "62b7db0eee8c44252d57c67537279e4017c4a72ef2bbe005eb34bd67c29e927c",
+  "handlers": "0528cb136b3834a2318417e68ff7eb16d854422d202a43cc815eef56681bb219",
   "idCount": 287,
   "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"
 };

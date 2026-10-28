@@ -29,9 +29,9 @@
       const on = tabId === `tab${key}`;
       panel.classList.toggle('hidden', !on);
       button.className = on ? ACTIVE : INACTIVE;
-      window.PageRendering.cachedPanel(panel, on, render);
+      if (on) render(panel); else if (panel.firstChild) panel.innerHTML = '';
     });
-    window.siteHooks.after('renderAll', 'ui-app', () => { if (!panel.classList.contains('hidden')) window.PageRendering.cachedPanel(panel, true, render); });
+    window.siteHooks.after('renderAll', 'ui-app', () => { if (!panel.classList.contains('hidden')) render(panel); });
     return {button, panel};
   }
   const svg = path => `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`;
@@ -287,7 +287,7 @@
     chip.style.left = `${left}px`;
     chip.style.top = `${Math.min(window.innerHeight - h - 10, top)}px`;
   }
-  window.addEventListener('scroll', () => { if (chip && Math.abs(window.scrollY - chipY) > 40) hideChip(); }, {passive: true}); // a real scroll, not the nudge of opening
+  window.addEventListener('scroll', () => { if (Math.abs(window.scrollY - chipY) > 40) hideChip(); }, {passive: true}); // a real scroll, not the nudge of opening
   window.siteHooks.after('switchMainTab', 'ui-app-chip', hideChip);
   document.addEventListener('pointerdown', event => { if (chip && !chip.contains(event.target) && !(event.target instanceof HTMLCanvasElement)) hideChip(); }, {passive: true});
   if (window.Chart && typeof Chart.register === 'function') {
@@ -325,7 +325,6 @@
   // Content panels on scene pages refract the scene (ui-theme.js lenses). Summary cards are re-rendered, so re-register.
   const registerPanels = () => {
     if (!window.flRefract) return;
-    window.flReleaseDetached?.();
     document.querySelectorAll('main section:not(.grid), main section.grid > div, #teamSummaryCards > div').forEach(el => {
       if (!el.parentElement.closest('main section:not(.grid)')) window.flRefract(el, true);
     });
@@ -335,7 +334,6 @@
   registerPanels();
 
   // The app opens on the home page.
-  window.PageRendering?.invalidate(); // all page extensions have registered their render hooks
   switchMainTab('tabHome');
   // Reveal the page now that the shell is arranged (boot.js hid it to avoid a flash of the old layout).
   requestAnimationFrame(() => document.documentElement.classList.remove('fl-booting'));
