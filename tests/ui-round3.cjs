@@ -53,6 +53,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
       const agg = getAnalysisAgg();
       const minPa = rateQualifyingPa(agg.players);
       const expectedKing = agg.players.filter(p => p.pa >= minPa).sort((a, b) => b.avg - a.avg)[0];
+      switchMainTab('tabOverview'); // the summary cards are drawn when the page is shown
       const cards = [...teamSummaryCards.children].map(c => c.innerText.replace(/\s+/g, ' '));
       switchMainTab('tabLeaderboard');
       const metric = leaderboardMetricSelect;

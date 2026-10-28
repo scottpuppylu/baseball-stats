@@ -130,7 +130,10 @@
   const NS = 'http://www.w3.org/2000/svg';
   let lensSvg = null;
   const lensCache = new Map(); // key -> Promise<filter id>
-  const lensEnabled = () => chromium && !contrastQuery.matches && !reduceMotion.matches;
+  // Touch devices (phones, tablets) keep the stylesheet's plain glass blur: the SVG refraction filter costs most of a
+  // frame there whenever a bar or the drawer moves (measured: drawer animation p95 67 ms with it, 11 ms without).
+  const coarsePointer = window.matchMedia('(pointer: coarse)');
+  const lensEnabled = () => chromium && !coarsePointer.matches && !contrastQuery.matches && !reduceMotion.matches;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)'); // content-panel lenses: mouse devices only
   const channel = k => [0, 1, 2].map(row => [0, 1, 2, 3, 4].map(col => (row === k && col === k ? 1 : 0)).join(' ')).join(' ') + ' 0 0 0 1 0';
   function lensMap(w, h, r, bezel) {
@@ -240,7 +243,7 @@
   if (chromium) {
     root.classList.add('fl-refract');
     ['.ui-mobile-nav', '#mainNavigation', '#appHeader', '.fl-subnav', '.ui-section-bar'].forEach(sel => window.flRefract(document.querySelector(sel)));
-    [contrastQuery, reduceMotion].forEach(q => q.addEventListener('change', () => { tracked.forEach((v, el) => { if (!el.isConnected) { tracked.delete(el); return; } tracked.set(el, 'stale'); applyLens(el); }); }));
+    [contrastQuery, reduceMotion, coarsePointer].forEach(q => q.addEventListener('change', () => { tracked.forEach((v, el) => { if (!el.isConnected) { tracked.delete(el); return; } tracked.set(el, 'stale'); applyLens(el); }); }));
   }
 
   // Charts follow the same type and quiet grid.

@@ -60,7 +60,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261026.1214</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.2051</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -2566,13 +2566,20 @@
 
     async function loadDatabaseSource(filePath, storageKey, apply, setSha, optional = false) {
       await localCache.ready;
+      const epoch = writeEpoch[filePath] || 0;
+      // This device uploaded the file while this load was in flight: its own copy is newer than the response.
+      const outdated = () => (writeEpoch[filePath] || 0) !== epoch;
+      // Unsent changes from this device always go back on top of whatever copy was loaded.
+      const withDrafts = content => applyPendingChanges(filePath, content);
       try {
         const { content: rawContent, sha } = await fetchGitHubContent(filePath);
+        if (outdated()) return 'cloud';
         const content = sanitizeLoadedData(rawContent);
-        apply(content, 'cloud');
+        const shown = withDrafts(content);
+        apply(shown, 'cloud');
         setSha(sha);
         rememberCloudBase(filePath, sha, content);
-        localCache.set(storageKey, JSON.stringify(content));
+        localCache.set(storageKey, JSON.stringify(shown));
         return 'cloud';
       } catch (err) {
         if (optional && err.status === 404) {
@@ -2584,14 +2591,16 @@
         }
         try {
           const content = sanitizeLoadedData(await fetchLocalContent(filePath));
-          apply(content, 'static');
+          if (outdated()) return 'static';
+          const shown = withDrafts(content);
+          apply(shown, 'static');
           rememberCloudBase(filePath, null, content);
-          localCache.set(storageKey, JSON.stringify(content));
+          localCache.set(storageKey, JSON.stringify(shown));
           return 'static';
         } catch (staticErr) {
           const cached = readStoredJson(storageKey, null);
           if (cached !== null) {
-            try { apply(cached, 'cache'); rememberCloudBase(filePath, null, cached); return 'cache'; } catch (cacheErr) { /* invalid cache */ }
+            try { apply(withDrafts(cached), 'cache'); rememberCloudBase(filePath, null, cached); return 'cache'; } catch (cacheErr) { /* invalid cache */ }
           }
           return 'failed';
         }
@@ -2720,6 +2729,23 @@
       }
     }
 
+    // Charts are updated in place when the same canvas shows the same kind of chart again (no destroy/create: no
+    // flicker, no re-measuring the page); a new canvas or a different chart type gets a new chart. Inline plugins are
+    // bound when a chart is created (the quadrant chart's average lines read this render's values), so those charts are
+    // always recreated.
+    function upsertChart(previous, canvas, config) {
+      const element = canvas && canvas.canvas ? canvas.canvas : canvas;
+      const reusable = previous && previous.canvas === element && previous.config.type === config.type && !(config.plugins && config.plugins.length);
+      if (reusable) {
+        previous.data = config.data;
+        previous.options = config.options || {};
+        previous.update('none');
+        return previous;
+      }
+      if (previous) previous.destroy();
+      return new Chart(canvas, config);
+    }
+
     // ★ 多裝置同時寫入保護：記住本頁載入（或上次寫入）時的雲端內容與版本。寫入前若雲端已被其他裝置更新，
     // 先把「本機相對於載入時的變更」套到雲端最新內容上（三方合併）再上傳，不覆蓋其他裝置的紀錄。
     const cloudBase = {};
@@ -2764,6 +2790,8 @@
     // Uploads one JSON file without overwriting another device's newer upload. Returns { data, sha, merged, conflicts };
     // `data` is what was uploaded (the merged content when the cloud had changed). Throws on failure.
     async function commitJsonFile(filePath, localData, commitMessage, keyOf = null) {
+      await localCache.ready; // the draft store and cloud base are complete only after the device cache has loaded
+      const ticket = stagePendingChanges(filePath, localData); // recorded before any check, so offline edits are kept too
       if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new Error('目前離線，資料已保存在本機，恢復連線後請再同步');
       if (!GITHUB_TOKEN) throw new Error('離線版本未保留憑證，請連線後重新開啟網站；本機資料仍保留');
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -2800,12 +2828,102 @@
         const resData = await putRes.json();
         const sha = resData && resData.content ? resData.content.sha : null;
         rememberCloudBase(filePath, sha, data);
+        writeEpoch[filePath] = (writeEpoch[filePath] || 0) + 1;
+        settlePendingChanges(ticket);
         if (merged) showToast(`雲端已有其他裝置的新紀錄，已自動合併後上傳${conflicts ? `（${conflicts} 筆兩邊都改過，以這台裝置為準）` : ''}`);
         return { data, sha, merged, conflicts };
       }
       throw new Error('雲端資料持續被其他裝置更新，請稍後重試');
     }
     // ★ 多裝置同時寫入保護（結束）
+
+    // ★ 待同步草稿：每次上傳前，先把「這台裝置相對於雲端的變更」逐筆存進本機（成功上傳且之後沒再改才清除）。
+    // 重新整理、離線或改讀備援副本時，草稿會再套回載入的資料，所以同步失敗的修改不會被雲端舊資料蓋掉。
+    // 只處理以識別碼合併的清單檔（賽事、日誌、支援名冊）；頭像、標籤、守位排名是物件檔，不在此列。
+    const PENDING_KEY = 'rebas_pending_sync';
+    const PENDING_KEY_OF = { [GAMES_FILE_PATH]: g => g.id, [DATA_FILE_PATH]: l => l.id, [GUESTS_FILE_PATH]: g => g.name };
+    const writeEpoch = {}; // filePath -> successful uploads so far (a load that started earlier must not undo them)
+    let pendingSync = null;
+    function pendingStore() {
+      if (!pendingSync) {
+        try { pendingSync = JSON.parse(localCache.get(PENDING_KEY)) || {}; } catch (e) { pendingSync = {}; }
+        if (typeof pendingSync !== 'object' || Array.isArray(pendingSync)) pendingSync = {};
+      }
+      return pendingSync;
+    }
+    function savePendingSync() {
+      const store = pendingStore();
+      for (const file of Object.keys(store)) if (!Object.keys(store[file]).length) delete store[file];
+      localCache.set(PENDING_KEY, JSON.stringify(store));
+      window.dispatchEvent(new CustomEvent('pendingsync:change', { detail: { count: pendingSyncCount() } }));
+    }
+    function pendingSyncCount() {
+      return Object.values(pendingStore()).reduce((n, ops) => n + Object.keys(ops).length, 0);
+    }
+    window.pendingSyncCount = pendingSyncCount;
+    // Records every item of `localData` that differs from the cloud copy this page last saw (and every item deleted
+    // here). Returns a ticket naming the exact versions recorded, so a later success clears only those.
+    function stagePendingChanges(filePath, localData) {
+      const keyOf = PENDING_KEY_OF[filePath];
+      if (!keyOf || !Array.isArray(localData)) return null;
+      const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+      const base = cloudBase[filePath] ? JSON.parse(cloudBase[filePath].json) : null;
+      const baseMap = Array.isArray(base) ? new Map(base.filter(Boolean).map(item => [String(keyOf(item)), item])) : null;
+      const store = pendingStore();
+      const ops = store[filePath] || (store[filePath] = {});
+      const stamp = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      const localKeys = new Set();
+      for (const item of localData) {
+        if (!item || keyOf(item) === undefined || keyOf(item) === null) continue;
+        const key = String(keyOf(item));
+        localKeys.add(key);
+        if (baseMap && same(baseMap.get(key), item)) { delete ops[key]; continue; } // same as the cloud: nothing pending
+        if (ops[key] && ops[key].op === 'put' && same(ops[key].value, item)) continue; // already recorded
+        ops[key] = { op: 'put', value: JSON.parse(JSON.stringify(item)), rev: stamp() };
+      }
+      // Without a known cloud copy nothing can count as deleted here (as in mergeCloudChanges).
+      if (baseMap) {
+        for (const key of baseMap.keys()) {
+          if (!localKeys.has(key) && !(ops[key] && ops[key].op === 'delete')) ops[key] = { op: 'delete', rev: stamp() };
+        }
+      }
+      savePendingSync();
+      return { filePath, revs: Object.fromEntries(Object.entries(ops).map(([key, op]) => [key, op.rev])) };
+    }
+    function settlePendingChanges(ticket) {
+      if (!ticket) return;
+      const ops = pendingStore()[ticket.filePath];
+      if (!ops) return;
+      for (const [key, rev] of Object.entries(ticket.revs)) if (ops[key] && ops[key].rev === rev) delete ops[key];
+      savePendingSync();
+    }
+    // Loaded content with this device's unsent changes applied on top (added items first, as the page lists them).
+    function applyPendingChanges(filePath, content) {
+      const keyOf = PENDING_KEY_OF[filePath];
+      const ops = pendingStore()[filePath];
+      if (!keyOf || !ops || !Array.isArray(content) || !Object.keys(ops).length) return content;
+      const seen = new Set();
+      const kept = content.flatMap(item => {
+        const key = item && keyOf(item) !== undefined && keyOf(item) !== null ? String(keyOf(item)) : null;
+        if (key === null || !ops[key]) return [item];
+        seen.add(key);
+        return ops[key].op === 'delete' ? [] : [JSON.parse(JSON.stringify(ops[key].value))];
+      });
+      const added = Object.entries(ops).filter(([key, op]) => op.op === 'put' && !seen.has(key)).map(([, op]) => JSON.parse(JSON.stringify(op.value)));
+      return [...added, ...kept];
+    }
+    // 「重新同步」：把仍有草稿的檔案，以目前畫面上的資料再上傳一次。
+    window.retryPendingSync = async function() {
+      const files = Object.keys(pendingStore());
+      let ok = true;
+      if (files.includes(GAMES_FILE_PATH)) ok = (await commitGamesToGitHub(allGames, '重新同步：未上傳的賽事修改')) && ok;
+      if (files.includes(DATA_FILE_PATH)) ok = (await commitLogsToGitHub(allLogs, '重新同步：未上傳的日誌修改')) && ok;
+      if (files.includes(GUESTS_FILE_PATH)) ok = (await commitGuestsToGitHub(guestPlayers, '重新同步：未上傳的支援名冊修改')) && ok;
+      renderAll();
+      showSyncResult(ok, '未上傳的修改已全部同步至 GitHub', '仍有修改尚未同步；資料保留在這台裝置，請稍後再試。');
+      return ok;
+    };
+    // ★ 待同步草稿（結束）
 
     // 取得所有可用選手（隊員與非隊員支援）
     window.getAllAvailablePlayerNames = getAllAvailablePlayerNames;
@@ -3272,34 +3390,56 @@
       });
 
 
+      currentTabId = tabId;
+      renderPage(tabId);
+      } finally { siteHooks.run('switchMainTab', arguments); }
+    };
+
+    // ★ 只畫需要的頁面：資料或篩選改變（renderAll）時所有頁面標記為過期，但只重畫目前顯示的頁面；隱藏的頁面
+    // 在打開時才重畫。資料沒變又回到看過的頁面就不重畫（頁面在隱藏時保留原內容，圖表也保留）。
+    let currentTabId = 'tabHome';
+    let dataVersion = 0;
+    const pageDrawnAt = {}; // tabId -> data version and page selection it was last drawn with
+    // What a page shows besides the shared data: selections that can change while the page is hidden.
+    function pageStateKey(tabId) {
+      if (tabId === 'tabProfile') return selectedPlayerName + '|' + JSON.stringify(PlayerHealthStore.data()[selectedPlayerName] || null);
+      if (tabId === 'tabCompare') return comparePlayerAName + '|' + comparePlayerBName;
+      return '';
+    }
+    // Scorebook and pitching depend on the live game and their own selections, and were always redrawn when shown.
+    const ALWAYS_REDRAWN = new Set(['tabScorebook', 'tabPitching']);
+    function renderPage(tabId, aggs = {}) {
+      const stamp = `${dataVersion}|${pageStateKey(tabId)}`;
+      if (pageDrawnAt[tabId] === stamp && !ALWAYS_REDRAWN.has(tabId)) return;
+      const analysisAgg = () => aggs.analysisAgg || getAnalysisAgg();
       if (tabId === 'tabAnalytics') {
-        const anaAgg = getAnalysisAgg();
+        const anaAgg = analysisAgg();
         renderQuadrantChart(anaAgg);
         renderCustomChart(anaAgg);
         renderTeamSpatialLab(anaAgg);
         renderLuckRegressionChart(anaAgg);
       } else if (tabId === 'tabCompare') {
-        renderComparison(getFullAgg());
+        renderComparison(aggs.fullAgg || getFullAgg());
       } else if (tabId === 'tabProfile') {
-        const anaAgg = getAnalysisAgg();
+        const anaAgg = analysisAgg();
         renderPlayerProfile(anaAgg);
         renderDiagnostics(anaAgg);
       } else if (tabId === 'tabLeaderboard') {
-        renderLeaderboard(getAnalysisAgg());
+        renderLeaderboard(analysisAgg());
       } else if (tabId === 'tabOverview') {
-        const anaAgg = getAnalysisAgg();
+        const anaAgg = analysisAgg();
         renderSummaryCards(anaAgg);
         renderSummaryTable(anaAgg);
-        renderLogsTable(getAnalysisLogs());
+        renderLogsTable(aggs.analysisLogs || getAnalysisLogs());
       } else if (tabId === 'tabLineup') {
-        renderLineupAnalysis(getFullAgg());
+        renderLineupAnalysis(aggs.fullAgg || getFullAgg());
       } else if (tabId === 'tabScorebook') {
         renderScorebook();
       } else if (tabId === 'tabPitching') {
         renderPitchingStudio();
       }
-      } finally { siteHooks.run('switchMainTab', arguments); }
-    };
+      pageDrawnAt[tabId] = `${dataVersion}|${pageStateKey(tabId)}`;
+    }
 
 
     window.openDefenseModal = function() {
@@ -4582,9 +4722,8 @@
       const canvas = document.getElementById('lineupFlowChart');
       if (canvas && canvas.getContext) {
         const ctx = canvas.getContext('2d');
-        if (lineupFlowChartInst) lineupFlowChartInst.destroy();
 
-        lineupFlowChartInst = new Chart(ctx, {
+        lineupFlowChartInst = upsertChart(lineupFlowChartInst, ctx, {
           type: 'bar',
           data: {
             labels: lineupPlayers.map((p, i) => `${i + 1}棒 ${p.name}${isDhEnabled && (i+1)===customDhSlot ? ' (DH)' : ''}`),
@@ -5852,10 +5991,9 @@ window.toggleDiagnosticsCollapse = function() {
       const radarCanvas = document.getElementById('compareRadarChart');
       if (radarCanvas && radarCanvas.getContext) {
         const radarCtx = radarCanvas.getContext('2d');
-        if (compareRadarChartInst) compareRadarChartInst.destroy();
 
 
-        compareRadarChartInst = new Chart(radarCtx, {
+        compareRadarChartInst = upsertChart(compareRadarChartInst, radarCtx, {
           type: 'radar',
           data: {
             labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '好球帶紀律 (SDI)', '擊球掌握 (1-K%)', '進攻產出 (wRC+)'],
@@ -5974,7 +6112,7 @@ window.toggleDiagnosticsCollapse = function() {
           if (!isGameInDateRange(g)) return;
           (g.innings || []).forEach(inn => {
             (inn.plateAppearances || []).forEach(pa => {
-              if (pa.batterName === name && pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none' && !isRunnerOutPlay(pa)) {
+              if (pa.batterName === name && Number.isFinite(pa.x) && Number.isFinite(pa.y) && pa.trajectory !== 'none' && !isRunnerOutPlay(pa)) {
                 pts.push(pa);
               }
             });
@@ -6087,7 +6225,7 @@ window.toggleDiagnosticsCollapse = function() {
         (game.innings || []).forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
             if (pa.batterName !== playerName) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
+            if (!Number.isFinite(pa.x) || !Number.isFinite(pa.y) || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
@@ -6436,8 +6574,7 @@ function renderPlayerProfile(agg) {
       }
       
       const radarCanvas = document.getElementById('radarChart'); if (!radarCanvas || !radarCanvas.getContext) return; const radarCtx = radarCanvas.getContext('2d');
-      if (radarChartInst) radarChartInst.destroy();
-      radarChartInst = new Chart(radarCtx, {
+      radarChartInst = upsertChart(radarChartInst, radarCtx, {
         type: 'radar',
         data: {
           labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '好球帶紀律 (SDI)', '擊球掌握 (1-K%)', '進攻產出 (wRC+)'],
@@ -6467,8 +6604,7 @@ function renderPlayerProfile(agg) {
 
 
       const donutCanvas = document.getElementById('donutChart'); if (!donutCanvas || !donutCanvas.getContext) return; const donutCtx = donutCanvas.getContext('2d');
-      if (donutChartInst) donutChartInst.destroy();
-      donutChartInst = new Chart(donutCtx, {
+      donutChartInst = upsertChart(donutChartInst, donutCtx, {
         type: 'doughnut',
         data: {
           labels: ['1H', '2H', '3H', 'HR'],
@@ -6489,14 +6625,13 @@ function renderPlayerProfile(agg) {
       const bbCanvas = document.getElementById('profileBattedBallChart');
       if (bbCanvas && bbCanvas.getContext) {
         const bbCtx = bbCanvas.getContext('2d');
-        if (profileBattedBallChartInst) profileBattedBallChartInst.destroy();
         const teamBipTotal = agg.players.reduce((sum, pl) => sum + (pl.bip || 0), 0) || 1;
         const teamLdRate = agg.players.reduce((sum, pl) => sum + (pl.ld || 0), 0) / teamBipTotal;
         const teamGbRate = agg.players.reduce((sum, pl) => sum + (pl.gb || 0), 0) / teamBipTotal;
         const teamFbRate = agg.players.reduce((sum, pl) => sum + (pl.fb || 0), 0) / teamBipTotal;
         const teamPuRate = agg.players.reduce((sum, pl) => sum + (pl.pu || 0), 0) / teamBipTotal;
 
-        profileBattedBallChartInst = new Chart(bbCtx, {
+        profileBattedBallChartInst = upsertChart(profileBattedBallChartInst, bbCtx, {
           type: 'bar',
           data: {
             labels: ['平飛 (LD%)', '滾地 (GB%)', '高飛 (FB%)', '沖天 (PU%)'],
@@ -6539,8 +6674,7 @@ function renderPlayerProfile(agg) {
       const polarCanvas = document.getElementById('profileSprayPolarChart');
       if (polarCanvas && polarCanvas.getContext) {
         const polarCtx = polarCanvas.getContext('2d');
-        if (profileSprayPolarChartInst) profileSprayPolarChartInst.destroy();
-        profileSprayPolarChartInst = new Chart(polarCtx, {
+        profileSprayPolarChartInst = upsertChart(profileSprayPolarChartInst, polarCtx, {
           type: 'polarArea',
           data: {
             labels: ['拉打 (Pull)', '中線 (Center)', '推打 (Oppo)'],
@@ -6572,8 +6706,7 @@ function renderPlayerProfile(agg) {
       const expCanvas = document.getElementById('profileExpectedChart');
       if (expCanvas && expCanvas.getContext) {
         const expCtx = expCanvas.getContext('2d');
-        if (profileExpectedChartInst) profileExpectedChartInst.destroy();
-        profileExpectedChartInst = new Chart(expCtx, {
+        profileExpectedChartInst = upsertChart(profileExpectedChartInst, expCtx, {
           type: 'bar',
           data: {
             labels: ['打擊率 (BA)', '長打率 (SLG)', '加權上壘 (wOBA)'],
@@ -6630,7 +6763,6 @@ function renderPlayerProfile(agg) {
       const qCanvas = document.getElementById('quadrantChart');
       if (!qCanvas || !qCanvas.getContext) return;
       const ctx = qCanvas.getContext('2d');
-      if (quadrantChartInst) quadrantChartInst.destroy();
 
       const preset = document.getElementById('quadrantPresetSelect')?.value || 'obp_slg';
       const descEl = document.getElementById('quadrantDescText');
@@ -6680,7 +6812,7 @@ function renderPlayerProfile(agg) {
         return Number(v).toFixed(3);
       };
 
-      quadrantChartInst = new Chart(ctx, {
+      quadrantChartInst = upsertChart(quadrantChartInst, ctx, {
         type: 'scatter',
         data: {
           datasets: [{
@@ -6768,7 +6900,6 @@ function renderPlayerProfile(agg) {
       const canvas = document.getElementById('luckRegressionChart');
       if (!canvas || !canvas.getContext) return;
       const ctx = canvas.getContext('2d');
-      if (luckRegressionChartInst) luckRegressionChartInst.destroy();
 
       // Actual average over the same scorebook sample as xBA; players without batted-ball types are left out.
       const trackedPlayers = pList.filter(p => p.tracked);
@@ -6787,7 +6918,7 @@ function renderPlayerProfile(agg) {
       const axisMax = values.length ? Math.max(0.05, Math.ceil((Math.max(...values) + 0.025) / 0.05) * 0.05) : 1;
       const lineData = [{ x: axisMin, y: axisMin }, { x: axisMax, y: axisMax }];
 
-      luckRegressionChartInst = new Chart(ctx, {
+      luckRegressionChartInst = upsertChart(luckRegressionChartInst, ctx, {
         type: 'scatter',
         data: {
           datasets: [
@@ -6891,7 +7022,7 @@ function renderTeamSpatialLab(agg) {
         (g.innings || []).forEach(inn => {
           (inn.plateAppearances || []).forEach(pa => {
             if (chosenPlayer !== 'all' && pa.batterName !== chosenPlayer) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
+            if (!Number.isFinite(pa.x) || !Number.isFinite(pa.y) || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);
@@ -7010,7 +7141,6 @@ function renderCustomChart(agg) {
       const point = c => `${c.raw.name}：${labelOf(xKey)} ${formatMetric(xKey, c.raw.x)}、${labelOf(yKey)} ${formatMetric(yKey, c.raw.y)}`;
 
 
-      if (customChartInst) customChartInst.destroy();
 
 
       const xVals = pList.map(d => Number(d[xKey]) || 0);
@@ -7046,7 +7176,7 @@ function renderCustomChart(agg) {
         const maxZ = zVals.length ? Math.max(...zVals) : 0;
 
 
-        customChartInst = new Chart(ctx, {
+        customChartInst = upsertChart(customChartInst, ctx, {
           type: 'bubble',
           data: {
             datasets: [{
@@ -7080,7 +7210,7 @@ function renderCustomChart(agg) {
         });
       }
       else if (type === 'dual_axis') {
-        customChartInst = new Chart(ctx, {
+        customChartInst = upsertChart(customChartInst, ctx, {
           type: 'bar',
           data: {
             labels: pList.map(d => d.name),
@@ -7133,7 +7263,7 @@ function renderCustomChart(agg) {
         });
       }
       else if (type === 'scatter') {
-        customChartInst = new Chart(ctx, {
+        customChartInst = upsertChart(customChartInst, ctx, {
           type: 'scatter',
           data: {
             datasets: [{
@@ -7157,7 +7287,7 @@ function renderCustomChart(agg) {
         });
       }
       else {
-        customChartInst = new Chart(ctx, {
+        customChartInst = upsertChart(customChartInst, ctx, {
           type: 'bar',
           data: {
             labels: pList.map(d => d.name),
@@ -7879,8 +8009,7 @@ function renderCustomChart(agg) {
       if (!currentP.tracked && pitcherOutProfileChartInst) { pitcherOutProfileChartInst.destroy(); pitcherOutProfileChartInst = null; }
       if (currentP.tracked && outCanvas && outCanvas.getContext) {
         const ctx = outCanvas.getContext('2d');
-        if (pitcherOutProfileChartInst) pitcherOutProfileChartInst.destroy();
-        pitcherOutProfileChartInst = new Chart(ctx, {
+        pitcherOutProfileChartInst = upsertChart(pitcherOutProfileChartInst, ctx, {
           type: 'doughnut',
           data: {
             labels: ['內野滾地刺殺 (GO)', '外野高飛接殺 (FO)', '兩好界外K (Foul-K)', '揮空三振 (K)', '雙殺守備 (DP)', '跑壘刺殺 (Out)'],
@@ -7920,7 +8049,6 @@ function renderCustomChart(agg) {
       if (!currentP.tracked && pitcherRadarChartInst) { pitcherRadarChartInst.destroy(); pitcherRadarChartInst = null; }
       if (currentP.tracked && radarCanvas && radarCanvas.getContext) {
         const ctx = radarCanvas.getContext('2d');
-        if (pitcherRadarChartInst) pitcherRadarChartInst.destroy();
         const trackedPitchers = pList.filter(p => p.tracked);
         const radarNote = document.getElementById('pitcherRadarNote');
         if (radarNote) radarNote.textContent = trackedPitchers.length < 5 ? `與 ${trackedPitchers.length} 位投手比較・人數少，PR 向 50 收斂` : `與 ${trackedPitchers.length} 位投手比較 0–100 PR`;
@@ -7931,7 +8059,7 @@ function renderCustomChart(agg) {
         const prBip = getPercentile(currentP.bipOutPct ?? 0, 'bipOutPct', trackedPitchers);
         const prIp = getPercentile(currentP.outs, 'outs', trackedPitchers);
 
-        pitcherRadarChartInst = new Chart(ctx, {
+        pitcherRadarChartInst = upsertChart(pitcherRadarChartInst, ctx, {
           type: 'radar',
           data: {
             labels: ['好球好投率 (ZCR)', '奪三振能力 (K%)', '界外K誘陷 (FKR)', '弱化擊球 (BIP Out%)', '吃局耐力 (IP)'],
@@ -8062,12 +8190,7 @@ function renderCustomChart(agg) {
       const analysisLogs = includeChien ? filteredLogs : filteredLogs.filter(l => l.name !== '簡承均');
       const analysisAgg = getAggregatedStats(analysisLogs);
 
-      // 1. 全隊戰況與日誌 (使用 analysisAgg 與 analysisLogs)
-      renderSummaryCards(analysisAgg);
-      renderSummaryTable(analysisAgg);
-      renderLogsTable(analysisLogs);
-
-      // 2. 球員深度能力檔案 (使用 analysisAgg，若簡承均被排除且當前選取為他，自動退回可用第一位選手)
+      // 球員深度能力檔案：若簡承均被排除且當前選取為他（或選到支援選手），自動退回可用的選手
       if (!includeChien && selectedPlayerName === '簡承均' && analysisAgg.players.length > 0) {
         selectedPlayerName = analysisAgg.players[0].name;
       }
@@ -8076,31 +8199,13 @@ function renderCustomChart(agg) {
         selectedPlayerName = firstOfficial ? firstOfficial.name : analysisAgg.players[0].name;
       }
       populatePlayerSelect(analysisAgg.players);
-      renderPlayerProfile(analysisAgg);
-      renderDiagnostics(analysisAgg);
 
-      // 3. 數據排行榜 (使用 analysisAgg)
-      renderLeaderboard(analysisAgg);
-
-      // 4. 賽伯計量實驗室 (使用 analysisAgg)
-      renderQuadrantChart(analysisAgg);
-      renderCustomChart(analysisAgg);
-      renderTeamSpatialLab(analysisAgg);
-      renderLuckRegressionChart(analysisAgg);
-
-      // 5. 雙雄攻守對決 (不受排除影響，仍可選取簡承均比較，使用 fullAgg)
-      renderComparison(fullAgg);
-
-      // 6. 棒次分析與推薦 (不受排除影響，簡承均為主力先發，使用 fullAgg)
+      // Every page is out of date now; only the shown one is redrawn here (the others when they are opened).
+      dataVersion++;
+      // 棒次分析與推薦 (不受排除影響，使用 fullAgg)：出席名單與自訂打線在這裡建立，其他頁面與場記會用到，所以照常執行。
       renderLineupAnalysis(fullAgg);
-
-      // 7. 數位圖像場記與落點 (不受影響，比賽真實登打)
-      if (document.getElementById('panelScorebook') && !document.getElementById('panelScorebook').classList.contains('hidden')) {
-        renderScorebook();
-      }
-      if (document.getElementById('panelPitching') && !document.getElementById('panelPitching').classList.contains('hidden')) {
-        renderPitchingStudio();
-      }
+      pageDrawnAt.tabLineup = `${dataVersion}|${pageStateKey('tabLineup')}`;
+      renderPage(currentTabId, {analysisAgg, fullAgg, analysisLogs});
       } finally { siteHooks.run('renderAll', arguments); }
     }
 
@@ -9588,31 +9693,65 @@ function renderCustomChart(agg) {
       showSyncResult(success, '✅ 當局場記已成功同步推播至 GitHub！', '當局場記同步失敗；已保留本機紀錄，請再次點擊上傳。');
     };
 
-        window.finishActiveGameAndSyncLogs = async function() {
-      if (!activeGame) return;
+    // 完賽上傳期間鎖住即時記分區（inert：點擊與鍵盤都無效），避免上傳途中新增的打席在完賽後被清除。
+    let finalizingGame = false;
+    function setScorerLocked(locked) {
+      finalizingGame = locked;
+      const live = document.getElementById('scoreSubPanelLive');
+      if (live) {
+        live.inert = locked;
+        live.classList.toggle('ui-finalizing', locked);
+        live.setAttribute('aria-busy', String(locked));
+      }
+    }
+    window.isFinalizingGame = () => finalizingGame;
+
+    window.finishActiveGameAndSyncLogs = async function() {
+      if (!activeGame || finalizingGame) return;
       if (!confirm(`確認正式完賽結束本場比賽（淡江航太 ${activeGame.finalScore.us} : ${activeGame.finalScore.opp} ${activeGame.opponent}）？\n賽事紀錄將儲存至歷史賽事庫，系統將自動綁定日誌並即時統一全隊數據與球員個人三圍成績！`)) return;
 
-      activeGame.status = 'finished';
-      const finishedGame = JSON.parse(JSON.stringify(activeGame));
-
-      const existingIdx = allGames.findIndex(g => g.id === finishedGame.id);
-      if (existingIdx !== -1) {
-        allGames[existingIdx] = finishedGame;
-      } else {
-        allGames.unshift(finishedGame);
+      setScorerLocked(true);
+      showToast('完賽資料上傳中，記分區暫時鎖定…');
+      const inProgress = JSON.parse(JSON.stringify(activeGame));
+      const finishedGame = { ...JSON.parse(JSON.stringify(activeGame)), status: 'finished' };
+      const putInHistory = game => {
+        const index = allGames.findIndex(g => g.id === game.id);
+        if (index !== -1) allGames[index] = game; else allGames.unshift(game);
+        localCache.set('rebas_all_games', JSON.stringify(allGames));
+      };
+      let gamesSynced = false, logsSynced = false;
+      try {
+        putInHistory(finishedGame);
+        // 1. 同步賽事紀錄至 GitHub (data/games.json)
+        gamesSynced = await commitGamesToGitHub(allGames, `賽事完賽: vs ${finishedGame.opponent} (${finishedGame.finalScore.us}-${finishedGame.finalScore.opp})`);
+        // 2. 關鍵綁定：自動將比賽成績與全隊日誌綁定統一，並同步推播至 GitHub (data/logs.json)
+        if (gamesSynced) {
+          syncAllGamesToTeamLogs();
+          logsSynced = await commitLogsToGitHub(allLogs, `自動綁定賽事日誌: vs ${finishedGame.opponent}`);
+        }
+      } finally {
+        setScorerLocked(false);
       }
-      localCache.set('rebas_all_games', JSON.stringify(allGames));
 
-      // 1. 同步賽事紀錄至 GitHub (data/games.json)
-      const gamesSynced = await commitGamesToGitHub(allGames, `賽事完賽: vs ${finishedGame.opponent} (${finishedGame.finalScore.us}-${finishedGame.finalScore.opp})`);
-
-      // 2. 關鍵綁定：自動將比賽成績與全隊日誌綁定統一，並同步推播至 GitHub (data/logs.json)
-      const syncedCount = syncAllGamesToTeamLogs();
-      const logsSynced = await commitLogsToGitHub(allLogs, `自動綁定賽事日誌: vs ${finishedGame.opponent}`);
       if (!gamesSynced || !logsSynced) {
+        // Still the live game: history shows it in progress again (also in the unsent draft), so nothing looks finished
+        // on this device until the retry succeeds.
         activeGame.status = 'in_progress';
         localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+        if (!gamesSynced) {
+          putInHistory(JSON.parse(JSON.stringify(activeGame)));
+          stagePendingChanges(GAMES_FILE_PATH, allGames); // the draft holds the in-progress game, not the failed finish
+        }
+        renderLiveScorer();
         showSyncResult(false, '', '完賽資料尚未完整同步；已保留本機比賽，請再次點擊完賽重試。');
+        return;
+      }
+      // Safety net: anything recorded after the snapshot keeps the game open instead of being dropped.
+      if (JSON.stringify({ ...activeGame, status: 'in_progress' }) !== JSON.stringify({ ...inProgress, status: 'in_progress' })) {
+        activeGame.status = 'in_progress';
+        localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+        renderLiveScorer();
+        showToast('完賽上傳期間比賽內容有變動，比賽保持進行中；請確認後再按一次完賽。', 'warning');
         return;
       }
 
@@ -9810,6 +9949,7 @@ function renderCustomChart(agg) {
       if (!gamesSynced) {
         if (previousExcluded === undefined) delete game.excludedFromLogs; else game.excludedFromLogs = previousExcluded;
         localCache.set('rebas_all_games', JSON.stringify(allGames));
+        stagePendingChanges(GAMES_FILE_PATH, allGames); // the draft follows the rollback (a reload must not re-apply it)
         renderAll();
         renderSelectedGameReview(game.id);
         showSyncResult(false, '', '撤銷失敗：賽事排除狀態未上傳，日誌保持原樣，請直接重試。');
@@ -9893,6 +10033,7 @@ function renderCustomChart(agg) {
       if (!gamesSynced) {
         if (previousExcluded !== undefined) game.excludedFromLogs = previousExcluded;
         localCache.set('rebas_all_games', JSON.stringify(allGames));
+        stagePendingChanges(GAMES_FILE_PATH, allGames); // the draft follows the rollback (a reload must not re-apply it)
         pendingLogins.delete(game.id);
         renderAll();
         renderSelectedGameReview(game.id);
@@ -10134,7 +10275,7 @@ function renderCustomChart(agg) {
       const gamePoints = [];
       game.innings.forEach(inn => {
         (inn.plateAppearances || []).forEach(pa => {
-          if (!isSprayChartArchived(game) && pa.x !== undefined && pa.y !== undefined && pa.trajectory !== 'none') gamePoints.push({ ...pa, inningNum: inn.inningNum });
+          if (!isSprayChartArchived(game) && Number.isFinite(pa.x) && Number.isFinite(pa.y) && pa.trajectory !== 'none') gamePoints.push({ ...pa, inningNum: inn.inningNum });
         });
       });
       const sprayPointsHtml = gamePoints.length ? [sprayDotsSvg(gamePoints, { scale: 0.82, opacity: 0.85, withInning: true })] : [];
@@ -10502,9 +10643,7 @@ function renderCustomChart(agg) {
         slot: 1,
         result: '1H',
         trajectory: 'line',
-        location: 'LF',
-        x: 0.2,
-        y: 0.35,
+        location: 'LF', // 接球守位；不附落點座標（覆盤補登不是實際量測的擊球位置，不畫進噴流圖）
         runsScored: 0,
         outsAdded: 0,
         outsAtEnd: 0,
@@ -10674,7 +10813,7 @@ function renderCustomChart(agg) {
         game.innings.forEach(inn => {
           inn.plateAppearances.forEach(pa => {
             if (selectedSprayPlayer !== 'all' && pa.batterName !== selectedSprayPlayer) return;
-            if (pa.x === undefined || pa.y === undefined || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
+            if (!Number.isFinite(pa.x) || !Number.isFinite(pa.y) || pa.trajectory === 'none' || isRunnerOutPlay(pa)) return;
 
             const isHit = ['1H', '2H', '3H', 'HR'].includes(pa.result);
             const isExtra = ['2H', '3H', 'HR'].includes(pa.result);

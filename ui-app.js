@@ -333,6 +333,51 @@
   window.siteHooks.after('renderAll', 'ui-app-lens', () => requestAnimationFrame(registerPanels));
   registerPanels();
 
+  // ---------- Data-safety notices: values not yet saved on this device, and edits not yet uploaded ----------
+  // A small stack at the top of the page content (in the flow, so it never covers a control). Each notice stays until
+  // its condition clears (no dismiss button: it means data could be lost), and offers the action that resolves it.
+  const notices = document.createElement('div');
+  notices.className = 'fl-notices';
+  notices.setAttribute('aria-live', 'polite');
+  (document.getElementById('appWorkspace') || document.body).prepend(notices);
+  function setNotice(id, text, actions) {
+    let notice = notices.querySelector(`[data-notice="${id}"]`);
+    if (!text) { notice?.remove(); return; }
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.className = 'fl-notice';
+      notice.dataset.notice = id;
+      notice.setAttribute('role', 'status');
+      notice.append(document.createElement('span'));
+      for (const [label, run] of actions) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = label;
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          try { await run(); } finally { button.disabled = false; }
+        });
+        notice.append(button);
+      }
+      notices.append(notice);
+    }
+    notice.querySelector('span').textContent = text;
+  }
+  const backup = () => document.getElementById('downloadBackupBtn')?.click();
+  const showStorageState = () => {
+    const state = window.LocalCache?.status?.();
+    setNotice('storage', state && state.failed ? '這台裝置的儲存空間不足，部分資料尚未存進本機（重新整理可能遺失）。請先下載完整備份。' : '',
+      [['下載完整備份', backup], ['再試一次', () => window.LocalCache.retry()]]);
+  };
+  const showPendingState = () => {
+    const count = typeof window.pendingSyncCount === 'function' ? window.pendingSyncCount() : 0;
+    setNotice('pending', count ? `有 ${count} 筆修改尚未同步到雲端，已保留在這台裝置。` : '',
+      [['重新同步', () => window.retryPendingSync()], ['下載完整備份', backup]]);
+  };
+  window.addEventListener('localcache:status', showStorageState);
+  window.addEventListener('pendingsync:change', showPendingState);
+  window.LocalCache?.ready.then(() => { showStorageState(); showPendingState(); });
+
   // The app opens on the home page.
   switchMainTab('tabHome');
   // Reveal the page now that the shell is arranged (boot.js hid it to avoid a flash of the old layout).

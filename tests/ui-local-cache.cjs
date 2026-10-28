@@ -43,6 +43,7 @@ const totals = page => page.evaluate(() => ({games: allGames.length, pa: getFull
         try { for (;;) { localStorage.setItem('fill' + n, chunk); n++; } } catch (e) { /* full */ }
         for (let size = 25000, t = 0; size >= 1; size = Math.floor(size / 2)) { for (;;) { try { localStorage.setItem('fill-tail-' + t++, 'x'.repeat(size)); } catch (e) { break; } } }
         const source = await loadGamesFromGitHub();
+        await LocalCache.whenPersisted('rebas_all_games'); // the switch happens once IndexedDB has confirmed the copy
         return {source, mirror: localStorage.getItem('rebas_all_games'), games: allGames.length, idbOnly: localStorage.getItem('rebas_cache_idb_only'),
           otherMirrors: ['rebas_logs', 'rebas_player_avatars'].filter(k => localStorage.getItem(k) !== null)};
       });

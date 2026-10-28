@@ -29,7 +29,7 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 const BASELINE = {
-  "script": "62b7db0eee8c44252d57c67537279e4017c4a72ef2bbe005eb34bd67c29e927c",
+  "script": "2c1a19854871c150a3619c6799f07d8115f72a2219abd600bff94b1313eda457",
   "handlers": "0528cb136b3834a2318417e68ff7eb16d854422d202a43cc815eef56681bb219",
   "idCount": 287,
   "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"

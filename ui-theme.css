@@ -72,7 +72,7 @@ html.ui-flight body {
     radial-gradient(140% 70% at 70% -32%, rgba(124, 192, 255, .1), rgba(124, 192, 255, .025) 45%, transparent 62%),
     radial-gradient(900px 500px at -10% 110%, rgba(255, 196, 140, .04), transparent 60%),
     var(--fl-bg) !important;
-  background-attachment: fixed !important;
+  background-attachment: scroll !important; /* fixed would repaint on every scroll frame; the space scene is its own fixed layer */
   color: var(--fl-ink);
   font-family: var(--fl-font);
   font-feature-settings: "cv11", "ss01", "tnum" 0;
@@ -1211,3 +1211,17 @@ html.ui-flight main :is(span.block, div[class*="text-[1"], div.text-xs, div.text
 /* The phone tab bar always fits the screen: equal columns that may shrink (a wide label never stretches the bar). */
 html.ui-flight .ui-mobile-nav { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
 html.ui-flight .ui-mobile-nav > button { min-width: 0; }
+
+/* ---------- Data-safety notices (ui-app.js) and the scorer lock during the finish upload (index.html) ---------- */
+html.ui-flight .fl-notices { display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; }
+html.ui-flight .fl-notices:empty { display: none; }
+html.ui-flight .fl-notice {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+  padding: 10px 12px; border-radius: 16px; color: #fde68a; font-size: 13.5px; line-height: 1.5;
+  background: rgba(40, 30, 8, .92); border: 1px solid rgba(251, 191, 36, .45); box-shadow: 0 12px 30px -14px rgba(0, 0, 0, .9);
+}
+html.ui-flight .fl-notice span { flex: 1 1 220px; }
+html.ui-flight .fl-notice button { min-height: 36px; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #1c1406; background: #fbbf24 !important; border: 0 !important; }
+html.ui-flight .fl-notice button + button { color: #fde68a; background: rgba(251, 191, 36, .14) !important; }
+html.ui-flight .fl-notice button:disabled { opacity: .6; }
+html.ui-flight #scoreSubPanelLive.ui-finalizing { opacity: .55; filter: saturate(.6); transition: opacity .2s; }

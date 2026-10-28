@@ -28,6 +28,9 @@ function context(extra = {}) {
     confirm: () => true, renderAll() {}, renderLiveScorer() {}, renderGameReview() {},
     renderSelectedGameReview() {}, switchScorebookSubTab() {}, syncAllGamesToTeamLogs() {},
     commitGamesToGitHub: async () => true, rememberCloudBase() {}, DATA_BRANCH: 'data',
+    // Unsent-change drafts and the finish lock are covered by pending-sync.test.cjs; neutral stand-ins here.
+    stagePendingChanges: () => null, settlePendingChanges() {}, applyPendingChanges: (file, content) => content, writeEpoch: {},
+    setScorerLocked() {}, finalizingGame: false, GAMES_FILE_PATH: 'data/games.json',
     ...extra,
   };
   // The page's localCache passes through to localStorage when local-cache.js is absent; mirror that here.
