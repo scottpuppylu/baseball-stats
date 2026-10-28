@@ -36,7 +36,9 @@ const url=process.env.UI_PREVIEW_URL||'http://127.0.0.1:54321';
     });
     assert.ok(releases>0,'page navigation releases detached lens observers');
    }
-   await page.emulateMedia({reducedMotion:'reduce'});await page.waitForTimeout(100);
+   await page.emulateMedia({reducedMotion:'reduce'});
+   // The media-change event can arrive a few frames later on a slow runner: wait for it, then assert.
+   await page.waitForFunction(()=>document.querySelectorAll('.fl-lens-on').length===0,null,{timeout:3000}).catch(()=>{});
    assert.equal(await page.evaluate(()=>document.querySelectorAll('.fl-lens-on').length),0,'reduce-motion preference clears lenses');
    assert.deepEqual(errors,[]);await context.close();console.log(engine+' '+width+' glass fallback and scroll lifecycle PASS');
   }finally{await browser.close();}

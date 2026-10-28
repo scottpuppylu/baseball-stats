@@ -196,8 +196,15 @@
     }
     return lensCache.get(key);
   }
+  // While the page scrolls, the glass bars swap their refraction filter for a plain blur (much cheaper to recompose
+  // every frame); --fl-active-lens overrides the lens inside the inline backdrop-filter set by applyLens().
   const scrollLenses = new Set();
-  const pauseLens = el => { if(el.matches('.ui-mobile-nav,#mainNavigation,#appHeader,.fl-subnav,.ui-section-bar,#flTools')) { scrollLenses.add(el); el.style.setProperty('--fl-active-lens','blur(6px) saturate(155%) brightness(.78)'); } };
+  const PAUSABLE = '.ui-mobile-nav, #mainNavigation, #appHeader, .fl-subnav, .ui-section-bar, #flTools';
+  const pauseLens = el => {
+    if (!el.matches(PAUSABLE)) return;
+    scrollLenses.add(el);
+    el.style.setProperty('--fl-active-lens', 'blur(6px) saturate(155%) brightness(.78)');
+  };
   const tracked = new Map(); // element -> last size key
   const clearLens = el => { scrollLenses.delete(el); el.style.removeProperty('--fl-active-lens'); el.style.removeProperty('backdrop-filter'); el.style.removeProperty('-webkit-backdrop-filter'); el.classList.remove('fl-lens-on'); };
   async function applyLens(el) {
@@ -225,24 +232,26 @@
     el.style.setProperty('backdrop-filter', value, 'important');
     el.style.setProperty('-webkit-backdrop-filter', value, 'important');
     el.classList.add('fl-lens-on');
-    if(root.hasAttribute('data-fl-scrolling'))pauseLens(el);
+    if (root.hasAttribute('data-fl-scrolling')) pauseLens(el);
   }
   let lensObserver = null;
   const queued = new Set();
   window.flReleaseDetached = () => {
     tracked.forEach((value, el) => { if (!el.isConnected) { lensObserver?.unobserve(el); queued.delete(el); clearLens(el); tracked.delete(el); } });
   };
+  // data-fl-scrolling on <html> marks an active scroll (also read by page-rendering.js, which waits to build charts).
   let scrollStop;
   window.addEventListener('scroll', () => {
-    if(!root.hasAttribute('data-fl-scrolling')){
-      root.setAttribute('data-fl-scrolling','');
+    if (!root.hasAttribute('data-fl-scrolling')) {
+      root.setAttribute('data-fl-scrolling', '');
       document.querySelectorAll('.fl-lens-on').forEach(pauseLens);
     }
     clearTimeout(scrollStop);
     scrollStop = setTimeout(() => {
       root.removeAttribute('data-fl-scrolling');
-      scrollLenses.forEach(el=>el.style.removeProperty('--fl-active-lens'));scrollLenses.clear();
-    },150);
+      scrollLenses.forEach(el => el.style.removeProperty('--fl-active-lens'));
+      scrollLenses.clear();
+    }, 150);
   }, {passive: true});
   window.flRefract = (el, gated = false) => {
     if (!el || tracked.has(el) || !chromium) return;

@@ -63,7 +63,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.0813</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.1850</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -3273,48 +3273,77 @@
     };
 
 
-    function reuseChart(previous,canvas,config,assign) {
-        if(window.PageRendering)return window.PageRendering.chart(previous,canvas,config,assign);
-        previous?.destroy();return new Chart(canvas,config);
-      }
+    // Charts are reused (updated in place) and, during a page render, built only when they come into view (page-rendering.js).
+    function reuseChart(previous, canvas, config, assign) {
+      if (window.PageRendering) return window.PageRendering.chart(previous, canvas, config, assign);
+      previous?.destroy();
+      return new Chart(canvas, config);
+    }
 
-    function renderCurrentTab(tabId, analysisAgg=null, fullAgg=null, analysisLogs=null) {
-        const rendering=window.PageRendering;
-        rendering?.syncData(JSON.stringify([allLogs,allGames,playerTags,defenseRankings,guestPlayers,PlayerHealthStore.data(),rendering?.avatarVersion(playerAvatars),includeChien,isDhEnabled,customDhSlot,customLineup,[...presentPlayersSet],document.getElementById('filterStartDate')?.value,document.getElementById('filterEndDate')?.value]));
-        // Keep an open review form intact when navigating or refreshing other page statistics.
-        if(tabId==='tabScorebook'&&isEditingReviewGame&&document.getElementById('editGameOpponent'))return;
-        const signature=()=>{
-          if(tabId==='tabProfile')return selectedPlayerName+'|'+document.getElementById('diagFilterMode')?.value;
-          if(tabId==='tabCompare')return comparePlayerAName+'|'+comparePlayerBName;
-          if(tabId==='tabPitching')return selectedPitcherName;
-          if(tabId==='tabScorebook')return currentScorebookSubTab+'|'+JSON.stringify(activeGame);
-          if(tabId==='tabAnalytics')return [...document.querySelectorAll('#panelAnalytics select')].map(el=>el.value).join('|');
-          if(tabId==='tabLineup')return JSON.stringify([customLineup,customDhSlot,isDhEnabled,[...presentPlayersSet]]);
-          return '';
-        };
-        const draw=()=>{
-          const wasDeferred=window.__deferPageCharts;window.__deferPageCharts=true;
-          try{
-            if(tabId==='tabAnalytics'){
-              const agg=analysisAgg||getAnalysisAgg();renderQuadrantChart(agg);renderCustomChart(agg);renderTeamSpatialLab(agg);
-              if(rendering)rendering.defer(document.getElementById('luckRegressionChart')?.closest('section'),()=>renderLuckRegressionChart(agg));
-              else renderLuckRegressionChart(agg);
-            }else if(tabId==='tabProfile'){
-              const agg=analysisAgg||getAnalysisAgg();renderPlayerProfile(agg);
-              if(rendering)rendering.defer(document.getElementById('diagFilterMode')?.closest('section'),()=>renderDiagnostics(agg));
-              else renderDiagnostics(agg);
-            }else if(tabId==='tabCompare')renderComparison(fullAgg||getFullAgg());
-            else if(tabId==='tabLeaderboard')renderLeaderboard(analysisAgg||getAnalysisAgg());
-            else if(tabId==='tabOverview'){
-              const agg=analysisAgg||getAnalysisAgg();renderSummaryCards(agg);renderSummaryTable(agg);renderLogsTable(analysisLogs||getAnalysisLogs());
-            }else if(tabId==='tabLineup')renderLineupAnalysis(fullAgg||getFullAgg());
-            else if(tabId==='tabScorebook')renderScorebook();
-            else if(tabId==='tabPitching')renderPitchingStudio();
-            siteHooks.run('renderPage',[tabId]);
-          }finally{window.__deferPageCharts=wasDeferred;}
-        };
-        if(rendering)rendering.run(tabId,signature,draw);else draw();
+    // Everything the statistics pages are drawn from. When it changes, every page is redrawn the next time it is shown.
+    // Avatars are large, so they are represented by a revision number instead of their content.
+    function currentDataSignature() {
+      return JSON.stringify([
+        allLogs, allGames, playerTags, defenseRankings, guestPlayers, PlayerHealthStore.data(),
+        window.PageRendering?.avatarVersion(playerAvatars),
+        includeChien, isDhEnabled, customDhSlot, customLineup, [...presentPlayersSet],
+        document.getElementById('filterStartDate')?.value, document.getElementById('filterEndDate')?.value
+      ]);
+    }
+
+    // The page's own selections: a page is redrawn when these change even if the data did not.
+    function pageStateSignature(tabId) {
+      if (tabId === 'tabProfile') return selectedPlayerName + '|' + document.getElementById('diagFilterMode')?.value;
+      if (tabId === 'tabCompare') return comparePlayerAName + '|' + comparePlayerBName;
+      if (tabId === 'tabPitching') return selectedPitcherName;
+      if (tabId === 'tabScorebook') return currentScorebookSubTab + '|' + JSON.stringify(activeGame);
+      if (tabId === 'tabAnalytics') return [...document.querySelectorAll('#panelAnalytics select')].map(el => el.value).join('|');
+      if (tabId === 'tabLineup') return JSON.stringify([customLineup, customDhSlot, isDhEnabled, [...presentPlayersSet]]);
+      return '';
+    }
+
+    function drawPage(tabId, analysisAgg, fullAgg, analysisLogs) {
+      const rendering = window.PageRendering;
+      if (tabId === 'tabAnalytics') {
+        const agg = analysisAgg || getAnalysisAgg();
+        renderQuadrantChart(agg);
+        renderCustomChart(agg);
+        renderTeamSpatialLab(agg);
+        const luck = document.getElementById('luckRegressionChart')?.closest('section');
+        if (rendering) rendering.defer(luck, () => renderLuckRegressionChart(agg)); else renderLuckRegressionChart(agg);
+      } else if (tabId === 'tabProfile') {
+        const agg = analysisAgg || getAnalysisAgg();
+        renderPlayerProfile(agg);
+        const diagnostics = document.getElementById('diagFilterMode')?.closest('section');
+        if (rendering) rendering.defer(diagnostics, () => renderDiagnostics(agg)); else renderDiagnostics(agg);
+      } else if (tabId === 'tabCompare') {
+        renderComparison(fullAgg || getFullAgg());
+      } else if (tabId === 'tabLeaderboard') {
+        renderLeaderboard(analysisAgg || getAnalysisAgg());
+      } else if (tabId === 'tabOverview') {
+        const agg = analysisAgg || getAnalysisAgg();
+        renderSummaryCards(agg);
+        renderSummaryTable(agg);
+        renderLogsTable(analysisLogs || getAnalysisLogs());
+      } else if (tabId === 'tabLineup') {
+        renderLineupAnalysis(fullAgg || getFullAgg());
+      } else if (tabId === 'tabScorebook') {
+        renderScorebook();
+      } else if (tabId === 'tabPitching') {
+        renderPitchingStudio();
       }
+      siteHooks.run('renderPage', [tabId]);
+    }
+
+    // Draws the shown page only, and only if its data or its own selections changed since it was last drawn.
+    function renderCurrentTab(tabId, analysisAgg = null, fullAgg = null, analysisLogs = null) {
+      const rendering = window.PageRendering;
+      rendering?.syncData(currentDataSignature());
+      // Keep an open review form intact when navigating or refreshing other page statistics.
+      if (tabId === 'tabScorebook' && isEditingReviewGame && document.getElementById('editGameOpponent')) return;
+      if (!rendering) { drawPage(tabId, analysisAgg, fullAgg, analysisLogs); return; }
+      rendering.run(tabId, () => pageStateSignature(tabId), () => rendering.withDeferredCharts(() => drawPage(tabId, analysisAgg, fullAgg, analysisLogs)));
+    }
 
     window.switchMainTab = function(tabId) {
       try { // 結束後執行各模組登記的後續繪製（siteHooks）
@@ -4959,7 +4988,12 @@ window.toggleDiagnosticsCollapse = function() {
         return true;
       } catch (err) {
         if (window.SyncDrafts) {
-          try { allLogs = window.SyncDrafts.overlay(DATA_FILE_PATH, JSON.parse(localCache.get('rebas_logs')) || allLogs); syncJerseyMaps(); renderAll(); } catch (_) { /* retain the form and memory cache for backup */ }
+          try {
+            // Show the device copy with the unsent edit applied, so the page matches what is kept for retry.
+            allLogs = window.SyncDrafts.overlay(DATA_FILE_PATH, JSON.parse(localCache.get('rebas_logs')) || allLogs);
+            syncJerseyMaps();
+            renderAll();
+          } catch (_) { /* retain the form and memory cache for backup */ }
         }
         setStatusBadge(`[寫入失敗] 雲端寫入失敗: ${err.message}`, 'error');
         showToast(`寫入 GitHub 失敗：${err.message}`, 'error');
@@ -8164,22 +8198,30 @@ function renderCustomChart(agg) {
       renderPitchingStudio();
     };
 
+    // Data or filters changed: recompute the statistics, mark every page out of date, and redraw only the shown page.
+    // Hidden pages redraw when they are opened (renderCurrentTab from switchMainTab).
     function renderAll() {
-        try {
-          updateChienFilterButton();
-          const filteredLogs=getFilteredLogs(),fullAgg=getAggregatedStats(filteredLogs);
-          const analysisLogs=includeChien?filteredLogs:filteredLogs.filter(l=>l.name!=='簡承均');
-          const analysisAgg=getAggregatedStats(analysisLogs);
-          if(!includeChien&&selectedPlayerName==='簡承均'&&analysisAgg.players.length)selectedPlayerName=analysisAgg.players[0].name;
-          if(isGuestPlayerName(selectedPlayerName)&&analysisAgg.players.length){const first=analysisAgg.players.find(p=>isOfficialTeamPlayer(p.name));selectedPlayerName=first?first.name:analysisAgg.players[0].name;}
-          populatePlayerSelect(analysisAgg.players);
-          // Preserve attendance/custom-lineup initialization without rendering hidden tables and charts.
-          renderLineupAnalysis(fullAgg,true);
-          window.PageRendering?.invalidate();
-          const panel=document.querySelector('#appWorkspace main > [id^="panel"]:not(.hidden)');
-          if(panel)renderCurrentTab('tab'+panel.id.slice(5),analysisAgg,fullAgg,analysisLogs);
-        }finally{siteHooks.run('renderAll',arguments);}
-      }
+      try { // 結束後執行各模組登記的後續繪製（siteHooks）
+        updateChienFilterButton();
+        const filteredLogs = getFilteredLogs();
+        const fullAgg = getAggregatedStats(filteredLogs);
+        // 簡承均超標過濾：僅對 1.全隊戰況與日誌 2.球員深度檔案 3.數據排行榜 4.賽伯計量實驗室 生效
+        const analysisLogs = includeChien ? filteredLogs : filteredLogs.filter(l => l.name !== '簡承均');
+        const analysisAgg = getAggregatedStats(analysisLogs);
+        // 若簡承均被排除且當前選取為他（或選到支援選手），自動退回可用的第一位選手
+        if (!includeChien && selectedPlayerName === '簡承均' && analysisAgg.players.length) selectedPlayerName = analysisAgg.players[0].name;
+        if (isGuestPlayerName(selectedPlayerName) && analysisAgg.players.length) {
+          const firstOfficial = analysisAgg.players.find(p => isOfficialTeamPlayer(p.name));
+          selectedPlayerName = firstOfficial ? firstOfficial.name : analysisAgg.players[0].name;
+        }
+        populatePlayerSelect(analysisAgg.players);
+        // Attendance and the custom lineup are initialised here even while the lineup page is hidden (no tables or charts).
+        renderLineupAnalysis(fullAgg, true);
+        window.PageRendering?.invalidate();
+        const panel = document.querySelector('#appWorkspace main > [id^="panel"]:not(.hidden)');
+        if (panel) renderCurrentTab('tab' + panel.id.slice(5), analysisAgg, fullAgg, analysisLogs);
+      } finally { siteHooks.run('renderAll', arguments); }
+    }
 
 
     document.getElementById('filterStartDate').addEventListener('change', () => {

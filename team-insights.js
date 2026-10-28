@@ -1125,10 +1125,18 @@
 
   // The first render happened before this file loaded.
   try {
-    if (!document.getElementById('panelProfile')?.classList.contains('hidden')) { renderProfileNote(getAnalysisAgg()); renderGameLog(selectedPlayerName); }
-    if (!document.getElementById('panelCompare')?.classList.contains('hidden')) { renderCompareNote(getFullAgg()); renderCompareGameLog(getFullAgg()); }
-    if (!document.getElementById('panelAnalytics')?.classList.contains('hidden')) renderTeamGameLog(getAnalysisAgg());
-    if (!document.getElementById('panelOverview')?.classList.contains('hidden')) renderAttendance();
+    // Only the shown page; the others draw these when they are opened (the renderPage / render hooks above).
+    const shown = id => !document.getElementById(id)?.classList.contains('hidden');
+    if (shown('panelProfile')) {
+      renderProfileNote(getAnalysisAgg());
+      renderGameLog(selectedPlayerName);
+    }
+    if (shown('panelCompare')) {
+      renderCompareNote(getFullAgg());
+      renderCompareGameLog(getFullAgg());
+    }
+    if (shown('panelAnalytics')) renderTeamGameLog(getAnalysisAgg());
+    if (shown('panelOverview')) renderAttendance();
     if (selectedReviewGameId) addImageButton(selectedReviewGameId);
   } catch (error) { console.error('[team-insights] init', error); }
 

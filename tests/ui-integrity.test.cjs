@@ -40,7 +40,7 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // A: primary analytics tables render with the page, independently of deferred charts
 // A: current-page primary tables, original hooks and deferred charts
 const BASELINE = {
-  "script": "c1b2caa81427cdbc79db3c347f8286f8475e0e1857b9d687c80c6ab82709117b",
+  "script": "25bd8713f326f68a6c784a9312ad6219fd56bce14fee542e63fb38fbbe49f1b9",
   "handlers": "06f31722ae03f6405ff1766863227b0da05590e698ae93309d09a4c27692b7f0",
   "idCount": 287,
   "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"

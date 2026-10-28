@@ -594,45 +594,96 @@
   };
   // Group header rows (one cell across the table) separate sections; they are not data rows.
   const bodyRows = table => [...(table.tBodies[0]?.rows || [])].filter(row => !row.classList.contains('ui-row-detail') && !row.classList.contains('ui-group-row'));
-  function foldTables(){
-    const plans=[];
-    currentPanel().querySelectorAll('.ui-table-scroll table').forEach(table=>{
-      const area=table.closest('.ui-table-scroll'),rows=bodyRows(table),labels=headerLabels(table),areaWidth=area.clientWidth;
-      const signature=`${phone()}|${areaWidth}|${rows.length}|${rows[0]?.textContent.length||0}|${labels.join('|')}`;
-      const intact=(!table.classList.contains('ui-fold-table')||rows.every(row=>row.querySelector('.ui-col-folded')))&&(!table.classList.contains('ui-card-table')||rows.every(row=>row.cells.length===1||row.cells[0].dataset.label!==undefined));
-      if(table.dataset.uiFoldSig===signature&&intact)return;
-      const hint=area.previousElementSibling?.classList.contains('ui-table-hint')?area.previousElementSibling:null;
-      const eligible=phone()&&!table.closest('#viewSummary')&&labels.length>=3&&table.tHead.rows.length===1&&rows.length>0&&!table.querySelector('input, select, textarea')&&rows.every(row=>row.cells.length===labels.length);
-      plans.push({table,area,rows,labels,areaWidth,signature,hint,eligible,mode:'normal'});
+  // Every table on the page is planned first and changed in batches (reset all, measure all, apply all), so the page
+  // lays out a few times in total instead of several times per table.
+  function foldTables() {
+    const plans = [];
+    currentPanel().querySelectorAll('.ui-table-scroll table').forEach(table => {
+      const area = table.closest('.ui-table-scroll');
+      const rows = bodyRows(table);
+      const labels = headerLabels(table);
+      const areaWidth = area.clientWidth; // the container's width does not depend on the classes set below
+      const signature = `${phone()}|${areaWidth}|${rows.length}|${rows[0]?.textContent.length || 0}|${labels.join('|')}`;
+      // Same table and still laid out: a re-render that rebuilt the rows (same size, new cells) must be redone.
+      const intact = (!table.classList.contains('ui-fold-table') || rows.every(row => row.querySelector('.ui-col-folded'))) &&
+        (!table.classList.contains('ui-card-table') || rows.every(row => row.cells.length === 1 || row.cells[0].dataset.label !== undefined));
+      if (table.dataset.uiFoldSig === signature && intact) return;
+      const hint = area.previousElementSibling?.classList.contains('ui-table-hint') ? area.previousElementSibling : null;
+      // The overview summary has its own column picker (重點表現／全部欄位…), which already fits a phone.
+      const eligible = phone() && !table.closest('#viewSummary') && labels.length >= 3 && table.tHead.rows.length === 1 && rows.length > 0 &&
+        !table.querySelector('input, select, textarea') && rows.every(row => row.cells.length === labels.length);
+      plans.push({table, area, rows, labels, areaWidth, signature, hint, eligible, mode: 'normal'});
     });
-    // Reset every candidate before measuring overflow in any candidate.
-    for(const p of plans){p.table.dataset.uiFoldSig=p.signature;p.table.querySelectorAll('.ui-col-folded').forEach(cell=>cell.classList.remove('ui-col-folded'));p.table.querySelectorAll('.ui-row-detail').forEach(row=>row.remove());p.table.classList.remove('ui-fold-table','ui-card-table','ui-wrap-table');}
-    for(const p of plans){
-      if(phone()&&p.rows.length&&p.rows.every(row=>row.cells.length===1&&row.cells[0].colSpan>1))p.mode='empty';
-      else if(p.eligible&&p.area.scrollWidth>p.areaWidth+4)p.mode=p.labels.length<=5?'try-wrap':p.rows.length<=2?'card':'measure';
+
+    // 1. Reset every table before measuring any of them.
+    for (const plan of plans) {
+      const {table} = plan;
+      table.dataset.uiFoldSig = plan.signature;
+      table.querySelectorAll('.ui-col-folded').forEach(cell => cell.classList.remove('ui-col-folded'));
+      table.querySelectorAll('.ui-row-detail').forEach(row => row.remove());
+      table.classList.remove('ui-fold-table', 'ui-card-table', 'ui-wrap-table');
     }
-    for(const p of plans)if(p.mode==='try-wrap')p.table.classList.add('ui-wrap-table');
-    for(const p of plans)if(p.mode==='try-wrap')p.mode=p.area.scrollWidth<=p.areaWidth+2?'wrap':p.rows.length<=2?'card':'measure';
-    for(const p of plans){if(p.mode!=='wrap')p.table.classList.remove('ui-wrap-table');if(p.mode==='measure')p.table.classList.add('ui-measure');}
-    // Natural widths are read as one batch, then every result is applied as one batch.
-    for(const p of plans)if(p.mode==='measure')p.widths=p.labels.map((label,i)=>Math.max(Math.min(64,label.length*12+16),...p.rows.map(row=>row.cells[i].getBoundingClientRect().width)));
-    for(const p of plans){
-      const {table,rows,labels,areaWidth,hint}=p;table.classList.remove('ui-measure');if(hint)hint.textContent='左右滑動查看完整欄位';
-      if(p.mode==='empty'){table.classList.add('ui-card-table');continue;}
-      if(p.mode==='wrap'){table.classList.add('ui-wrap-table');continue;}
-      if(p.mode==='card'){table.classList.add('ui-card-table');rows.forEach(row=>[...row.cells].forEach((cell,i)=>{cell.dataset.label=labels[i];}));continue;}
-      if(p.mode!=='measure')continue;
-      const widths=p.widths,slotFirst=widths[0]<72||/^(棒次|名次|#|排名)$/.test(labels[0]);
-      const identity=slotFirst&&labels.length>3?[0,1]:[0],NAME_MAX=150,last=identity[identity.length-1];
-      const nameCol=/^(選手|球員|隊員|打者|評比指標)$/.test(labels[last])||rows.some(row=>row.cells[last].querySelector('img, .rounded-full'));
-      let used=identity.reduce((sum,i)=>sum+(i===last&&nameCol?Math.min(widths[i],NAME_MAX):widths[i]),0);const keep=new Set(identity);
-      const boxScore=labels.includes('打席歷程')&&labels.includes('打數'),BOX=['打數','安打','得分','三振','保送'];
-      labels.map((label,i)=>({i,rank:boxScore&&BOX.includes(label)?-.5+BOX.indexOf(label)/10:keyRank(label)})).filter(c=>!keep.has(c.i)).sort((a,b)=>a.rank-b.rank||a.i-b.i).forEach(c=>{if(used+widths[c.i]<=areaWidth-18){keep.add(c.i);used+=widths[c.i];}});
-      if(keep.size===labels.length){table.classList.add('ui-wrap-table');continue;}
-      table.classList.add('ui-fold-table');table.style.setProperty('--ui-name-max',`${NAME_MAX}px`);
-      if(nameCol)table.dataset.uiNameCol=String(last+1);else delete table.dataset.uiNameCol;
-      [table.tHead.rows[0],...rows].forEach(row=>[...row.cells].forEach((cell,i)=>cell.classList.toggle('ui-col-folded',!keep.has(i))));
-      if(hint)hint.textContent=`點一列查看其他 ${labels.length-keep.size} 項數據`;
+
+    // 2. Decide what each table needs. An empty table (a single message row) needs no wide header on a phone;
+    //    small tables first try to fit by letting text wrap; one or two rows become labelled cards; the rest fold.
+    for (const plan of plans) {
+      if (phone() && plan.rows.length && plan.rows.every(row => row.cells.length === 1 && row.cells[0].colSpan > 1)) plan.mode = 'empty';
+      else if (plan.eligible && plan.area.scrollWidth > plan.areaWidth + 4) plan.mode = plan.labels.length <= 5 ? 'try-wrap' : plan.rows.length <= 2 ? 'card' : 'measure';
+    }
+    const fallback = plan => (plan.rows.length <= 2 ? 'card' : 'measure');
+    for (const plan of plans) if (plan.mode === 'try-wrap') plan.table.classList.add('ui-wrap-table');
+    for (const plan of plans) if (plan.mode === 'try-wrap') plan.mode = plan.area.scrollWidth <= plan.areaWidth + 2 ? 'wrap' : fallback(plan);
+    for (const plan of plans) {
+      if (plan.mode !== 'wrap') plan.table.classList.remove('ui-wrap-table');
+      if (plan.mode === 'measure') plan.table.classList.add('ui-measure'); // natural column widths, without the desktop min-width
+    }
+
+    // 3. Read natural column widths for every folding table in one pass. A column is never so narrow that a short
+    //    header (「全壘打」) breaks into one character per line.
+    const headerRoom = label => Math.min(64, label.length * 12 + 16);
+    for (const plan of plans) {
+      if (plan.mode !== 'measure') continue;
+      plan.widths = plan.labels.map((label, i) => Math.max(headerRoom(label), ...plan.rows.map(row => row.cells[i].getBoundingClientRect().width)));
+    }
+
+    // 4. Apply the results.
+    const NAME_MAX = 150;
+    const BOX = ['打數', '安打', '得分', '三振', '保送'];
+    for (const plan of plans) {
+      const {table, rows, labels, areaWidth, hint} = plan;
+      table.classList.remove('ui-measure');
+      if (hint) hint.textContent = '左右滑動查看完整欄位';
+      if (plan.mode === 'empty') { table.classList.add('ui-card-table'); continue; }
+      if (plan.mode === 'wrap') { table.classList.add('ui-wrap-table'); continue; }
+      if (plan.mode === 'card') {
+        // One or two rows (a single pitcher, a summary): every value as a labelled card.
+        table.classList.add('ui-card-table');
+        rows.forEach(row => [...row.cells].forEach((cell, i) => { cell.dataset.label = labels[i]; }));
+        continue;
+      }
+      if (plan.mode !== 'measure') continue;
+
+      const widths = plan.widths;
+      // A slot / rank first column always brings the name next to it; the name column wraps at about 120px.
+      const slotFirst = widths[0] < 72 || /^(棒次|名次|#|排名)$/.test(labels[0]);
+      const identity = slotFirst && labels.length > 3 ? [0, 1] : [0];
+      const last = identity[identity.length - 1];
+      // Only a real name column wraps (a player with avatar, or the metric names of a comparison); dates do not.
+      const nameCol = /^(選手|球員|隊員|打者|評比指標)$/.test(labels[last]) || rows.some(row => row.cells[last].querySelector('img, .rounded-full'));
+      let used = identity.reduce((sum, i) => sum + (i === last && nameCol ? Math.min(widths[i], NAME_MAX) : widths[i]), 0);
+      const keep = new Set(identity);
+      // A single game's box score reads as at-bats, hits and RBI rather than rates.
+      const boxScore = labels.includes('打席歷程') && labels.includes('打數');
+      labels.map((label, i) => ({i, rank: boxScore && BOX.includes(label) ? -0.5 + BOX.indexOf(label) / 10 : keyRank(label)}))
+        .filter(column => !keep.has(column.i))
+        .sort((a, b) => a.rank - b.rank || a.i - b.i)
+        .forEach(column => { if (used + widths[column.i] <= areaWidth - 18) { keep.add(column.i); used += widths[column.i]; } });
+      if (keep.size === labels.length) { table.classList.add('ui-wrap-table'); continue; } // everything fits once the desktop min-width goes
+      table.classList.add('ui-fold-table');
+      table.style.setProperty('--ui-name-max', `${NAME_MAX}px`);
+      if (nameCol) table.dataset.uiNameCol = String(last + 1); else delete table.dataset.uiNameCol;
+      [table.tHead.rows[0], ...rows].forEach(row => [...row.cells].forEach((cell, i) => cell.classList.toggle('ui-col-folded', !keep.has(i))));
+      if (hint) hint.textContent = `點一列查看其他 ${labels.length - keep.size} 項數據`;
     }
   }
   // Tapping a folded row shows its hidden columns right below it.

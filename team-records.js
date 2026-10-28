@@ -338,9 +338,9 @@
       const on = tabId === 'tabRecords';
       panel.classList.toggle('hidden', !on);
       button.className = on ? ACTIVE : INACTIVE;
-      // Hidden, the page keeps no markup (about a hundred rows with photos); it re-renders when opened.
-      if (window.PageRendering) window.PageRendering.cachedPanel(panel, on, renderRecordsPage);
-      else if (on) renderRecordsPage(); else if (panel.firstChild) panel.innerHTML = '';
+      // Hidden, its markup (about a hundred rows with photos) is set aside outside the page; opening restores it,
+      // or rebuilds it if the data changed meanwhile.
+      window.PageRendering.cachedPanel(panel, on, renderRecordsPage);
     });
     button.addEventListener('click', () => switchMainTab('tabRecords'));
   }
@@ -348,7 +348,10 @@
   // ---------- Hooks ----------
   const after = (name, hook) => window.siteHooks.after(name, 'team-records', hook);
   after('renderPlayerProfile', agg => renderProfileRecords(agg.players.some(p => p.name === selectedPlayerName) ? selectedPlayerName : ''));
-  after('renderAll', () => { const panel = document.getElementById(PAGE_ID); if (panel && !panel.classList.contains('hidden')) { if (window.PageRendering) window.PageRendering.cachedPanel(panel, true, renderRecordsPage); else renderRecordsPage(); } });
+  after('renderAll', () => {
+    const panel = document.getElementById(PAGE_ID);
+    if (panel && !panel.classList.contains('hidden')) window.PageRendering.cachedPanel(panel, true, renderRecordsPage);
+  });
   try { if (!document.getElementById('panelProfile')?.classList.contains('hidden')) renderProfileRecords(selectedPlayerName); } catch (error) { console.error('[team-records] init', error); }
 
   window.teamRecords = {MIN_RATE_PA, teamRecords, teamGameRecords, playerRecord, noKStreak, renderRecordsPage};

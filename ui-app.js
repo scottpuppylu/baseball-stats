@@ -29,10 +29,9 @@
       const on = tabId === `tab${key}`;
       panel.classList.toggle('hidden', !on);
       button.className = on ? ACTIVE : INACTIVE;
-      if (window.PageRendering) window.PageRendering.cachedPanel(panel, on, render);
-      else if (on) render(panel); else if (panel.firstChild) panel.innerHTML = '';
+      window.PageRendering.cachedPanel(panel, on, render);
     });
-    window.siteHooks.after('renderAll', 'ui-app', () => { if (!panel.classList.contains('hidden')) { if (window.PageRendering) window.PageRendering.cachedPanel(panel, true, render); else render(panel); } });
+    window.siteHooks.after('renderAll', 'ui-app', () => { if (!panel.classList.contains('hidden')) window.PageRendering.cachedPanel(panel, true, render); });
     return {button, panel};
   }
   const svg = path => `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`;
