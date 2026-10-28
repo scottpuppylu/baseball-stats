@@ -60,8 +60,13 @@ async function save(p,bats) {
       assert.equal(await p.locator('[name="heightCm"]').inputValue(),'178.5','roster card returns to saved profile');
       assert.equal(await card.getAttribute('aria-pressed'),'true','selected roster card is highlighted');
       await p.waitForFunction(()=>{const r=document.querySelector('[data-health-identity]').getBoundingClientRect();const h=document.querySelector('header')?.getBoundingClientRect().bottom||0;return r.top>=h-1&&r.bottom<=innerHeight;},null,{timeout:8000}).catch(async error=>{ // tapping a roster card shows the form below the sticky header
-        const at=await p.evaluate(()=>{const r=document.querySelector('[data-health-identity]').getBoundingClientRect();return {top:Math.round(r.top),bottom:Math.round(r.bottom),header:Math.round(document.querySelector('header')?.getBoundingClientRect().bottom||0),viewport:innerHeight,scrollY:Math.round(scrollY)};});
-        error.message+=` [${engine}-${width} identity ${JSON.stringify(at)}]`;throw error;});
+        console.error('HEALTH_SCROLL_DIAG',engine,width,JSON.stringify(await p.evaluate(async()=>{
+          const at=()=>{const r=document.querySelector('[data-health-identity]').getBoundingClientRect();return [Math.round(r.top),Math.round(r.bottom),Math.round(scrollY)].join('/');};
+          let changes=0;const kinds={};const mo=new MutationObserver(rs=>{for(const r of rs){changes++;const k=r.type+':'+(r.attributeName||'')+':'+(r.target.id||String(r.target.className).slice(0,30));kinds[k]=(kinds[k]||0)+1;}});
+          mo.observe(document.body,{subtree:true,childList:true,attributes:true});const samples=[];
+          for(let i=0;i<6;i++){samples.push(at());await new Promise(r=>setTimeout(r,170));}
+          mo.disconnect();return {header:Math.round(document.querySelector('header')?.getBoundingClientRect().bottom||0),viewport:innerHeight,samples,changes,top:Object.entries(kinds).sort((a,b)=>b[1]-a[1]).slice(0,5)};
+        })));throw error;});
       await p.screenshot({path:path.join(output,`${engine}-${width}-health.png`),fullPage:true});
       await p.evaluate(n=>{selectedPlayerName=n;switchMainTab('tabProfile');},name);
       const bio = p.locator('#playerProfileBio [data-profile-health]');

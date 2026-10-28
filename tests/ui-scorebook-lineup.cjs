@@ -11,7 +11,20 @@ async function click(page, selector) {
   if (selector.startsWith('#liveLineupRows') && !await page.locator('#liveLineupCard').evaluate(el => el.open)) {
     await page.locator('#liveLineupCard > summary').click();
   }
-  await page.locator(selector).first().click();
+  try { await page.locator(selector).first().click({timeout: 15000}); }
+  catch (error) {
+    // Diagnostics for CI: is the element still moving, and is something on the page changing continuously?
+    console.error('CLICK_DIAG', selector, JSON.stringify(await page.evaluate(async sel => {
+      const el = document.querySelector(sel); const boxes = [];
+      let changes = 0; const kinds = {};
+      const mo = new MutationObserver(rs => { for (const r of rs) { changes++; const k = r.type + ':' + (r.attributeName || '') + ':' + (r.target.id || String(r.target.className).slice(0, 30)); kinds[k] = (kinds[k] || 0) + 1; } });
+      mo.observe(document.body, {subtree: true, childList: true, attributes: true});
+      for (let i = 0; i < 8; i++) { const b = el.getBoundingClientRect(); boxes.push([Math.round(b.top), Math.round(b.left), Math.round(scrollY)].join('/')); await new Promise(r => requestAnimationFrame(r)); }
+      mo.disconnect();
+      return {boxes, changes, animations: document.getAnimations().map(a => (a.effect?.target?.id || String(a.effect?.target?.className || '').slice(0, 30)) + ':' + (a.animationName || a.constructor.name)).slice(0, 8), top: Object.entries(kinds).sort((a, b) => b[1] - a[1]).slice(0, 5)};
+    }, selector)));
+    throw error;
+  }
 }
 async function newGame(page, dh, role = '先攻') {
   await page.evaluate(({dh,role}) => {
