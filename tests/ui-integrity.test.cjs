@@ -35,8 +35,12 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // v12: authorized finalization lock and snapshot comparison; all existing scoring formulas and controls retained.
 // v12a: reject stale cloud responses and retain the operation baseline across local persistence awaits.
 // v13: authorized explicit review landing-point input; existing recorded coordinates and scoring formulas retained.
+// v14: authorized visible-page rendering, cached charts, and lazy presentation; all data writers and scoring formulas retained.
+// A: visible-page rendering with stable chart instances; IDs and existing handlers retained
+// A: primary analytics tables render with the page, independently of deferred charts
+// A: current-page primary tables, original hooks and deferred charts
 const BASELINE = {
-  "script": "7c11b4f2fff6e0ade29380f840796a8bfef5cd225f7f2d95de77552c9cce70af",
+  "script": "c1b2caa81427cdbc79db3c347f8286f8475e0e1857b9d687c80c6ab82709117b",
   "handlers": "06f31722ae03f6405ff1766863227b0da05590e698ae93309d09a4c27692b7f0",
   "idCount": 287,
   "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"

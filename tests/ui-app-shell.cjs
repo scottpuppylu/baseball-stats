@@ -2,6 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os');
 const {chromium, webkit} = require('playwright');
+const {scrollToRendered}=require('./ui-wait.cjs');
 const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
 const page$ = page => page.evaluate(() => document.body.dataset.page);
@@ -99,6 +100,8 @@ async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
       await page.evaluate(() => quadrantChartInst.canvas.scrollIntoView({block: 'center'}));
       await page.waitForTimeout(400);
       await settle(page); // a tap during the page-reveal slide would land beside the point
+      await scrollToRendered(page,page.locator('#quadrantChart'));
+      await page.waitForFunction(()=>!!quadrantChartInst);
       const before = await page.evaluate(() => quadrantChartInst.id);
       const touched = await tapPoint(page, 'quadrantChartInst', 0, 'touch', width < 1024);
       assert.equal(await page$(page), 'Analytics', 'a tap does not jump away');
@@ -112,7 +115,8 @@ async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
       if (width >= 1024) { // with a mouse (desktop), a click on a point still opens the profile directly
         await page.evaluate(() => uiNavigation.openPage('Analytics'));
         await page.waitForTimeout(1200);
-        await page.evaluate(() => luckRegressionChartInst.canvas.scrollIntoView({block: 'center'}));
+        await scrollToRendered(page,page.locator('#luckRegressionChart'));
+        await page.waitForFunction(()=>!!luckRegressionChartInst);
         await page.waitForTimeout(400);
         await settle(page);
         const clicked = await tapPoint(page, 'luckRegressionChartInst', 0, 'mouse', width < 1024);

@@ -5,7 +5,7 @@ const os = require('node:os');
 const {webkit} = require('playwright');
 const base = process.env.UI_PREVIEW_URL;
 const output = process.env.UI_QA_OUTPUT || os.tmpdir();
-const ready = page => page.waitForFunction(() => window.teamRecords && !/連線同步中/.test(syncStatusBadge.textContent));
+const ready = page => page.waitForFunction(() => window.teamRecords && !/連線同步中/.test(syncStatusBadge.textContent) && !legacyMergeRunning);
 (async () => {
  const browser = await webkit.launch({headless:true});
  const results = []; const checks = []; const errors = []; let externalRequests = 0; let offlineNavigationProbe;

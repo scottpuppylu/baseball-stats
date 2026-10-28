@@ -539,3 +539,11 @@ html { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-ins
 .ui-sync-drafts{position:sticky;top:var(--fl-top-h,72px)!important;bottom:auto!important;left:auto;transform:none;margin:8px auto;z-index:46;}
 .ui-storage-warning{top:auto!important;}
 .ui-nav-open :is(.ui-sync-drafts,.ui-storage-warning),.fl-tools-open :is(.ui-sync-drafts,.ui-storage-warning){visibility:hidden;}
+
+/* Reserve chart geometry while deferred work is scheduled. */
+.ui-chart-frame{position:relative;}
+.ui-chart-frame.ui-chart-pending::after{content:'圖表載入中…';position:absolute;inset:0;display:grid;place-items:center;color:#94a3b8;background:#0b1220cc;font-size:13px;pointer-events:none;}
+@supports(content-visibility:auto){
+  html.ui-flight main > [id^="panel"]:not(#panelScorebook):not(#panelLineup):not(#panelHealth) > section:nth-of-type(n+2){content-visibility:auto;contain-intrinsic-size:auto 900px;}
+  html.ui-flight .ui-render-section,html.ui-flight .ui-section-reveal{content-visibility:visible!important;}
+}

@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const {chromium, webkit} = require('playwright');
+const {scrollSettled,dataReady}=require('./ui-wait.cjs');
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
 const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const state = page => page.evaluate(() => JSON.parse(localStorage.getItem('rebas_active_game')));
@@ -11,7 +12,10 @@ async function click(page, selector) {
   if (selector.startsWith('#liveLineupRows') && !await page.locator('#liveLineupCard').evaluate(el => el.open)) {
     await page.locator('#liveLineupCard > summary').click();
   }
-  await page.locator(selector).first().click();
+  const target=page.locator(selector).first();
+  await target.evaluate(element=>element.scrollIntoView({block:'center',behavior:'auto'}));
+  await scrollSettled(page);
+  await target.click();
 }
 async function newGame(page, dh, role = '先攻') {
   await page.evaluate(({dh,role}) => {
@@ -35,7 +39,7 @@ async function newGame(page, dh, role = '先攻') {
       page.on('pageerror', e => errors.push(e.message));
       page.on('dialog', d => d.accept());
       await page.goto(url);
-      await page.waitForFunction(() => window.LineupModel && allLogs.some(l => String(l.id).startsWith('log_game_')));
+      await dataReady(page);
       await newGame(page, true);
       assert.equal(await page.locator('#setupLineupGrid .lineup-row').count(), 11);
       assert.equal(await page.locator('#setupLineupGrid .lineup-avatar').count(), 11);
@@ -120,7 +124,7 @@ async function newGame(page, dh, role = '先攻') {
       // Reload restores the edited order and position history.
       const saved = await state(page);
       await page.reload();
-      await page.waitForFunction(() => window.LineupModel);
+      await dataReady(page);
       await page.evaluate(() => switchMainTab('tabScorebook'));
       assert.deepEqual(await state(page),saved);
       assert.equal(await page.locator('#liveLineupCard').evaluate(el => el.open),false,'collapsed preference survives reload');
@@ -178,7 +182,7 @@ async function newGame(page, dh, role = '先攻') {
       await page.evaluate(() => changeCurrentBatterIndex(10));
       assert.equal(await page.locator('.lineup-current').getAttribute('data-slot'),'11');
       assert.ok(await page.locator('#liveLineupRows').evaluate(el => el.scrollTop > 0));
-      await page.reload(); await page.waitForFunction(() => window.LineupModel);
+      await page.reload(); await dataReady(page);
       await page.evaluate(() => switchMainTab('tabScorebook'));
       assert.equal(await page.locator('#liveLineupCard').evaluate(el => el.open),true,'expanded preference survives reload');
       assert.ok(await page.locator('#liveLineupRows').evaluate(el => el.scrollTop > 0),'restored current slot is visible');
@@ -196,7 +200,7 @@ async function newGame(page, dh, role = '先攻') {
       assert.ok((await page.locator('#liveLineupStatus').textContent()).includes('下次打擊'));
       assert.deepEqual(errors,[]);
       results.push({engine,width,passed:true});
-    } finally { await browser.close(); }
+    } catch(error) { error.testCase=`${engine}-${width}`;throw error; } finally { await browser.close(); }
   }
   console.log(JSON.stringify({passed:true,results}));
 })().catch(e => {console.error(e);process.exitCode=1;});

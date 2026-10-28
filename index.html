@@ -17,6 +17,7 @@
   <script src="local-cache.js"></script>
   <script src="sync-drafts.js"></script>
   <script src="vendor/chart.umd-4.5.1.min.js"></script>
+  <script src="page-rendering.js"></script>
   <script src="app-config.js?v=20261016-pwa1"></script>
   <script src="pwa.js?v=20261016-pwa1"></script>
   <style>
@@ -62,7 +63,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.0127</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.0748</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -3272,6 +3273,49 @@
     };
 
 
+    function reuseChart(previous,canvas,config,assign) {
+        if(window.PageRendering)return window.PageRendering.chart(previous,canvas,config,assign);
+        previous?.destroy();return new Chart(canvas,config);
+      }
+
+    function renderCurrentTab(tabId, analysisAgg=null, fullAgg=null, analysisLogs=null) {
+        const rendering=window.PageRendering;
+        rendering?.syncData(JSON.stringify([allLogs,allGames,playerTags,defenseRankings,guestPlayers,PlayerHealthStore.data(),rendering?.avatarVersion(playerAvatars),includeChien,isDhEnabled,customDhSlot,customLineup,[...presentPlayersSet],document.getElementById('filterStartDate')?.value,document.getElementById('filterEndDate')?.value]));
+        // Keep an open review form intact when navigating or refreshing other page statistics.
+        if(tabId==='tabScorebook'&&isEditingReviewGame&&document.getElementById('editGameOpponent'))return;
+        const signature=()=>{
+          if(tabId==='tabProfile')return selectedPlayerName+'|'+document.getElementById('diagFilterMode')?.value;
+          if(tabId==='tabCompare')return comparePlayerAName+'|'+comparePlayerBName;
+          if(tabId==='tabPitching')return selectedPitcherName;
+          if(tabId==='tabScorebook')return currentScorebookSubTab+'|'+JSON.stringify(activeGame);
+          if(tabId==='tabAnalytics')return [...document.querySelectorAll('#panelAnalytics select')].map(el=>el.value).join('|');
+          if(tabId==='tabLineup')return JSON.stringify([customLineup,customDhSlot,isDhEnabled,[...presentPlayersSet]]);
+          return '';
+        };
+        const draw=()=>{
+          const wasDeferred=window.__deferPageCharts;window.__deferPageCharts=true;
+          try{
+            if(tabId==='tabAnalytics'){
+              const agg=analysisAgg||getAnalysisAgg();renderQuadrantChart(agg);renderCustomChart(agg);renderTeamSpatialLab(agg);
+              if(rendering)rendering.defer(document.getElementById('luckRegressionChart')?.closest('section'),()=>renderLuckRegressionChart(agg));
+              else renderLuckRegressionChart(agg);
+            }else if(tabId==='tabProfile'){
+              const agg=analysisAgg||getAnalysisAgg();renderPlayerProfile(agg);
+              if(rendering)rendering.defer(document.getElementById('diagFilterMode')?.closest('section'),()=>renderDiagnostics(agg));
+              else renderDiagnostics(agg);
+            }else if(tabId==='tabCompare')renderComparison(fullAgg||getFullAgg());
+            else if(tabId==='tabLeaderboard')renderLeaderboard(analysisAgg||getAnalysisAgg());
+            else if(tabId==='tabOverview'){
+              const agg=analysisAgg||getAnalysisAgg();renderSummaryCards(agg);renderSummaryTable(agg);renderLogsTable(analysisLogs||getAnalysisLogs());
+            }else if(tabId==='tabLineup')renderLineupAnalysis(fullAgg||getFullAgg());
+            else if(tabId==='tabScorebook')renderScorebook();
+            else if(tabId==='tabPitching')renderPitchingStudio();
+            siteHooks.run('renderPage',[tabId]);
+          }finally{window.__deferPageCharts=wasDeferred;}
+        };
+        if(rendering)rendering.run(tabId,signature,draw);else draw();
+      }
+
     window.switchMainTab = function(tabId) {
       try { // 結束後執行各模組登記的後續繪製（siteHooks）
       const panels = {
@@ -3311,32 +3355,7 @@
       });
 
 
-      if (tabId === 'tabAnalytics') {
-        const anaAgg = getAnalysisAgg();
-        renderQuadrantChart(anaAgg);
-        renderCustomChart(anaAgg);
-        renderTeamSpatialLab(anaAgg);
-        renderLuckRegressionChart(anaAgg);
-      } else if (tabId === 'tabCompare') {
-        renderComparison(getFullAgg());
-      } else if (tabId === 'tabProfile') {
-        const anaAgg = getAnalysisAgg();
-        renderPlayerProfile(anaAgg);
-        renderDiagnostics(anaAgg);
-      } else if (tabId === 'tabLeaderboard') {
-        renderLeaderboard(getAnalysisAgg());
-      } else if (tabId === 'tabOverview') {
-        const anaAgg = getAnalysisAgg();
-        renderSummaryCards(anaAgg);
-        renderSummaryTable(anaAgg);
-        renderLogsTable(getAnalysisLogs());
-      } else if (tabId === 'tabLineup') {
-        renderLineupAnalysis(getFullAgg());
-      } else if (tabId === 'tabScorebook') {
-        renderScorebook();
-      } else if (tabId === 'tabPitching') {
-        renderPitchingStudio();
-      }
+      renderCurrentTab(tabId);
       } finally { siteHooks.run('switchMainTab', arguments); }
     };
 
@@ -4035,7 +4054,27 @@
       };
     }
 
-    function renderLineupAnalysis(agg) {
+    function renderLineupAnalysis(agg, prepareOnly = false) {
+      if (prepareOnly) {
+        const pList = agg.players;
+        if (!pList || !pList.length) return;
+        const historicalPaMap = {};
+        allLogs.forEach(l => { historicalPaMap[l.name] = (historicalPaMap[l.name] || 0) + (Number(l.pa) || 0); });
+        initAttendance(Object.values(JERSEY_TO_NAME), historicalPaMap);
+        const targetSize = isDhEnabled ? 11 : 10;
+        if (customLineup.length !== targetSize) {
+          const rec = calculateRecommendedLineup(pList);
+          if (rec.items && rec.items.length >= targetSize) {
+            customLineup = rec.items.map(r => r.player.name);
+            while (customLineup.length < targetSize) {
+              const avail = pList.find(p => !customLineup.includes(p.name)) || pList[0]; customLineup.push(avail.name);
+            }
+            if (isDhEnabled) { const dhIdx = rec.items.findIndex(r => r.posInfo.isDh); if (dhIdx !== -1) customDhSlot = dhIdx + 1; }
+          }
+        }
+        renderCustomLineupPickers(pList, true);
+        return;
+      }
       try { // 結束後執行各模組登記的後續繪製（siteHooks）
       const pList = agg.players;
       if (!pList || pList.length === 0) {
@@ -4193,7 +4232,7 @@
       evaluateCustomLineup(agg);
     };
 
-    function renderCustomLineupPickers(players) {
+    function renderCustomLineupPickers(players, prepareOnly = false) {
       const container = document.getElementById('customLineupPickersContainer');
       const controlBar = document.getElementById('customDhControlBar');
       // 棒次分析嚴格只使用正式隊員名單，徹底排除任何支援選手
@@ -4217,6 +4256,8 @@
       if (customLineup.length > targetSize) {
         customLineup = customLineup.slice(0, targetSize);
       }
+
+      if (prepareOnly) return;
 
       if (controlBar) {
         if (isDhEnabled) {
@@ -4622,9 +4663,9 @@
       const canvas = document.getElementById('lineupFlowChart');
       if (canvas && canvas.getContext) {
         const ctx = canvas.getContext('2d');
-        if (lineupFlowChartInst) lineupFlowChartInst.destroy();
 
-        lineupFlowChartInst = new Chart(ctx, {
+
+        lineupFlowChartInst = reuseChart(lineupFlowChartInst, ctx, {
           type: 'bar',
           data: {
             labels: lineupPlayers.map((p, i) => `${i + 1}棒 ${p.name}${isDhEnabled && (i+1)===customDhSlot ? ' (DH)' : ''}`),
@@ -4687,7 +4728,7 @@
               }
             }
           }
-        });
+        }, chart => { lineupFlowChartInst = chart; });
       }
       } finally { siteHooks.run('evaluateCustomLineup', arguments); }
     }
@@ -5921,10 +5962,10 @@ window.toggleDiagnosticsCollapse = function() {
       const radarCanvas = document.getElementById('compareRadarChart');
       if (radarCanvas && radarCanvas.getContext) {
         const radarCtx = radarCanvas.getContext('2d');
-        if (compareRadarChartInst) compareRadarChartInst.destroy();
 
 
-        compareRadarChartInst = new Chart(radarCtx, {
+
+        compareRadarChartInst = reuseChart(compareRadarChartInst, radarCtx, {
           type: 'radar',
           data: {
             labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '好球帶紀律 (SDI)', '擊球掌握 (1-K%)', '進攻產出 (wRC+)'],
@@ -5966,7 +6007,7 @@ window.toggleDiagnosticsCollapse = function() {
               }
             }
           }
-        });
+        }, chart => { compareRadarChartInst = chart; });
       }
       // ★★★ 渲染雙雄球場擊球噴流圖對照 ★★★
       renderDualSprayCharts(pA, pB);
@@ -6505,8 +6546,8 @@ function renderPlayerProfile(agg) {
       }
       
       const radarCanvas = document.getElementById('radarChart'); if (!radarCanvas || !radarCanvas.getContext) return; const radarCtx = radarCanvas.getContext('2d');
-      if (radarChartInst) radarChartInst.destroy();
-      radarChartInst = new Chart(radarCtx, {
+
+      radarChartInst = reuseChart(radarChartInst, radarCtx, {
         type: 'radar',
         data: {
           labels: ['擊球率 (AVG)', '長打破壞 (ISO)', '好球帶紀律 (SDI)', '擊球掌握 (1-K%)', '進攻產出 (wRC+)'],
@@ -6532,12 +6573,12 @@ function renderPlayerProfile(agg) {
           },
           plugins: { legend: { display: false } }
         }
-      });
+      }, chart => { radarChartInst = chart; });
 
 
       const donutCanvas = document.getElementById('donutChart'); if (!donutCanvas || !donutCanvas.getContext) return; const donutCtx = donutCanvas.getContext('2d');
-      if (donutChartInst) donutChartInst.destroy();
-      donutChartInst = new Chart(donutCtx, {
+
+      donutChartInst = reuseChart(donutChartInst, donutCtx, {
         type: 'doughnut',
         data: {
           labels: ['1H', '2H', '3H', 'HR'],
@@ -6553,19 +6594,19 @@ function renderPlayerProfile(agg) {
           plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 10 } } } },
           cutout: '65%'
         }
-      });
+      }, chart => { donutChartInst = chart; });
       // ★★★ 1. 擊球型態品質對比圖 (Batted Ball Profile vs Team Average) ★★★
       const bbCanvas = document.getElementById('profileBattedBallChart');
       if (bbCanvas && bbCanvas.getContext) {
         const bbCtx = bbCanvas.getContext('2d');
-        if (profileBattedBallChartInst) profileBattedBallChartInst.destroy();
+
         const teamBipTotal = agg.players.reduce((sum, pl) => sum + (pl.bip || 0), 0) || 1;
         const teamLdRate = agg.players.reduce((sum, pl) => sum + (pl.ld || 0), 0) / teamBipTotal;
         const teamGbRate = agg.players.reduce((sum, pl) => sum + (pl.gb || 0), 0) / teamBipTotal;
         const teamFbRate = agg.players.reduce((sum, pl) => sum + (pl.fb || 0), 0) / teamBipTotal;
         const teamPuRate = agg.players.reduce((sum, pl) => sum + (pl.pu || 0), 0) / teamBipTotal;
 
-        profileBattedBallChartInst = new Chart(bbCtx, {
+        profileBattedBallChartInst = reuseChart(profileBattedBallChartInst, bbCtx, {
           type: 'bar',
           data: {
             labels: ['平飛 (LD%)', '滾地 (GB%)', '高飛 (FB%)', '沖天 (PU%)'],
@@ -6601,15 +6642,15 @@ function renderPlayerProfile(agg) {
               legend: { labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 } }
             }
           }
-        });
+        }, chart => { profileBattedBallChartInst = chart; });
       }
 
       // ★★★ 2. 廣角方向分佈極座標圖 (Directional Spray Polar Chart) ★★★
       const polarCanvas = document.getElementById('profileSprayPolarChart');
       if (polarCanvas && polarCanvas.getContext) {
         const polarCtx = polarCanvas.getContext('2d');
-        if (profileSprayPolarChartInst) profileSprayPolarChartInst.destroy();
-        profileSprayPolarChartInst = new Chart(polarCtx, {
+
+        profileSprayPolarChartInst = reuseChart(profileSprayPolarChartInst, polarCtx, {
           type: 'polarArea',
           data: {
             labels: ['拉打 (Pull)', '中線 (Center)', '推打 (Oppo)'],
@@ -6634,15 +6675,15 @@ function renderPlayerProfile(agg) {
               legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 } }
             }
           }
-        });
+        }, chart => { profileSprayPolarChartInst = chart; });
       }
 
       // ★★★ 3. 真實成績 vs. 預期期望對比圖 (Actual vs. Expected xStats) ★★★
       const expCanvas = document.getElementById('profileExpectedChart');
       if (expCanvas && expCanvas.getContext) {
         const expCtx = expCanvas.getContext('2d');
-        if (profileExpectedChartInst) profileExpectedChartInst.destroy();
-        profileExpectedChartInst = new Chart(expCtx, {
+
+        profileExpectedChartInst = reuseChart(profileExpectedChartInst, expCtx, {
           type: 'bar',
           data: {
             labels: ['打擊率 (BA)', '長打率 (SLG)', '加權上壘 (wOBA)'],
@@ -6676,7 +6717,7 @@ function renderPlayerProfile(agg) {
               legend: { labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 } }
             }
           }
-        });
+        }, chart => { profileExpectedChartInst = chart; });
       }
 
       // ★★★ 4. 渲染個人專屬球場落點噴流圖 (Interactive Spray Chart) ★★★
@@ -6699,7 +6740,7 @@ function renderPlayerProfile(agg) {
       const qCanvas = document.getElementById('quadrantChart');
       if (!qCanvas || !qCanvas.getContext) return;
       const ctx = qCanvas.getContext('2d');
-      if (quadrantChartInst) quadrantChartInst.destroy();
+
 
       const preset = document.getElementById('quadrantPresetSelect')?.value || 'obp_slg';
       const descEl = document.getElementById('quadrantDescText');
@@ -6749,7 +6790,7 @@ function renderPlayerProfile(agg) {
         return Number(v).toFixed(3);
       };
 
-      quadrantChartInst = new Chart(ctx, {
+      quadrantChartInst = reuseChart(quadrantChartInst, ctx, {
         type: 'scatter',
         data: {
           datasets: [{
@@ -6826,7 +6867,7 @@ function renderPlayerProfile(agg) {
             ctx.restore();
           }
         }]
-      });
+      }, chart => { quadrantChartInst = chart; });
     }
 
     
@@ -6837,7 +6878,7 @@ function renderPlayerProfile(agg) {
       const canvas = document.getElementById('luckRegressionChart');
       if (!canvas || !canvas.getContext) return;
       const ctx = canvas.getContext('2d');
-      if (luckRegressionChartInst) luckRegressionChartInst.destroy();
+
 
       // Actual average over the same scorebook sample as xBA; players without batted-ball types are left out.
       const trackedPlayers = pList.filter(p => p.tracked);
@@ -6856,7 +6897,7 @@ function renderPlayerProfile(agg) {
       const axisMax = values.length ? Math.max(0.05, Math.ceil((Math.max(...values) + 0.025) / 0.05) * 0.05) : 1;
       const lineData = [{ x: axisMin, y: axisMin }, { x: axisMax, y: axisMax }];
 
-      luckRegressionChartInst = new Chart(ctx, {
+      luckRegressionChartInst = reuseChart(luckRegressionChartInst, ctx, {
         type: 'scatter',
         data: {
           datasets: [
@@ -6921,7 +6962,7 @@ function renderPlayerProfile(agg) {
             }
           }
         }
-      });
+      }, chart => { luckRegressionChartInst = chart; });
       } finally { siteHooks.run('renderLuckRegressionChart', arguments); }
     }
     // 本隊場記各擊球型態的實際安打率（全壘打另計；樣本少時向一般值收斂），取代沒有資料依據的固定說法。
@@ -7079,8 +7120,6 @@ function renderCustomChart(agg) {
       const point = c => `${c.raw.name}：${labelOf(xKey)} ${formatMetric(xKey, c.raw.x)}、${labelOf(yKey)} ${formatMetric(yKey, c.raw.y)}`;
 
 
-      if (customChartInst) customChartInst.destroy();
-
 
       const xVals = pList.map(d => Number(d[xKey]) || 0);
       const yVals = pList.map(d => Number(d[yKey]) || 0);
@@ -7115,7 +7154,7 @@ function renderCustomChart(agg) {
         const maxZ = zVals.length ? Math.max(...zVals) : 0;
 
 
-        customChartInst = new Chart(ctx, {
+        customChartInst = reuseChart(customChartInst, ctx, {
           type: 'bubble',
           data: {
             datasets: [{
@@ -7146,10 +7185,10 @@ function renderCustomChart(agg) {
               y: { title: { display: true, text: `Y 軸：${labelOf(yKey)}`, color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
             }
           }
-        });
+        }, chart => { customChartInst = chart; });
       }
       else if (type === 'dual_axis') {
-        customChartInst = new Chart(ctx, {
+        customChartInst = reuseChart(customChartInst, ctx, {
           type: 'bar',
           data: {
             labels: pList.map(d => d.name),
@@ -7199,10 +7238,10 @@ function renderCustomChart(agg) {
               legend: { labels: { color: '#94a3b8', font: { size: 10 } } }
             }
           }
-        });
+        }, chart => { customChartInst = chart; });
       }
       else if (type === 'scatter') {
-        customChartInst = new Chart(ctx, {
+        customChartInst = reuseChart(customChartInst, ctx, {
           type: 'scatter',
           data: {
             datasets: [{
@@ -7223,10 +7262,10 @@ function renderCustomChart(agg) {
               y: { title: { display: true, text: labelOf(yKey), color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
             }
           }
-        });
+        }, chart => { customChartInst = chart; });
       }
       else {
-        customChartInst = new Chart(ctx, {
+        customChartInst = reuseChart(customChartInst, ctx, {
           type: 'bar',
           data: {
             labels: pList.map(d => d.name),
@@ -7246,7 +7285,7 @@ function renderCustomChart(agg) {
               x: { grid: { display: false } }
             }
           }
-        });
+        }, chart => { customChartInst = chart; });
       }
     }
 
@@ -7952,8 +7991,8 @@ function renderCustomChart(agg) {
       if (!currentP.tracked && pitcherOutProfileChartInst) { pitcherOutProfileChartInst.destroy(); pitcherOutProfileChartInst = null; }
       if (currentP.tracked && outCanvas && outCanvas.getContext) {
         const ctx = outCanvas.getContext('2d');
-        if (pitcherOutProfileChartInst) pitcherOutProfileChartInst.destroy();
-        pitcherOutProfileChartInst = new Chart(ctx, {
+
+        pitcherOutProfileChartInst = reuseChart(pitcherOutProfileChartInst, ctx, {
           type: 'doughnut',
           data: {
             labels: ['內野滾地刺殺 (GO)', '外野高飛接殺 (FO)', '兩好界外K (Foul-K)', '揮空三振 (K)', '雙殺守備 (DP)', '跑壘刺殺 (Out)'],
@@ -7984,7 +8023,7 @@ function renderCustomChart(agg) {
               }
             }
           }
-        });
+        }, chart => { pitcherOutProfileChartInst = chart; });
       }
 
       // 4. 繪製慢壘投手五維能力 PR 百分位雷達 (Pitcher 5-Tool Radar)
@@ -7993,7 +8032,7 @@ function renderCustomChart(agg) {
       if (!currentP.tracked && pitcherRadarChartInst) { pitcherRadarChartInst.destroy(); pitcherRadarChartInst = null; }
       if (currentP.tracked && radarCanvas && radarCanvas.getContext) {
         const ctx = radarCanvas.getContext('2d');
-        if (pitcherRadarChartInst) pitcherRadarChartInst.destroy();
+
         const trackedPitchers = pList.filter(p => p.tracked);
         const radarNote = document.getElementById('pitcherRadarNote');
         if (radarNote) radarNote.textContent = trackedPitchers.length < 5 ? `與 ${trackedPitchers.length} 位投手比較・人數少，PR 向 50 收斂` : `與 ${trackedPitchers.length} 位投手比較 0–100 PR`;
@@ -8004,7 +8043,7 @@ function renderCustomChart(agg) {
         const prBip = getPercentile(currentP.bipOutPct ?? 0, 'bipOutPct', trackedPitchers);
         const prIp = getPercentile(currentP.outs, 'outs', trackedPitchers);
 
-        pitcherRadarChartInst = new Chart(ctx, {
+        pitcherRadarChartInst = reuseChart(pitcherRadarChartInst, ctx, {
           type: 'radar',
           data: {
             labels: ['好球好投率 (ZCR)', '奪三振能力 (K%)', '界外K誘陷 (FKR)', '弱化擊球 (BIP Out%)', '吃局耐力 (IP)'],
@@ -8031,7 +8070,7 @@ function renderCustomChart(agg) {
             },
             plugins: { legend: { display: false } }
           }
-        });
+        }, chart => { pitcherRadarChartInst = chart; });
       }
 
       // 5. 渲染全隊投手數據總表
@@ -8126,56 +8165,21 @@ function renderCustomChart(agg) {
     };
 
     function renderAll() {
-      try { // 結束後執行各模組登記的後續繪製（siteHooks）
-      updateChienFilterButton();
-      const filteredLogs = getFilteredLogs();
-      const fullAgg = getAggregatedStats(filteredLogs);
-
-      // 簡承均超標過濾：僅對 1.全隊戰況與日誌 2.球員深度檔案 3.數據排行榜 4.賽伯計量實驗室 生效
-      const analysisLogs = includeChien ? filteredLogs : filteredLogs.filter(l => l.name !== '簡承均');
-      const analysisAgg = getAggregatedStats(analysisLogs);
-
-      // 1. 全隊戰況與日誌 (使用 analysisAgg 與 analysisLogs)
-      renderSummaryCards(analysisAgg);
-      renderSummaryTable(analysisAgg);
-      renderLogsTable(analysisLogs);
-
-      // 2. 球員深度能力檔案 (使用 analysisAgg，若簡承均被排除且當前選取為他，自動退回可用第一位選手)
-      if (!includeChien && selectedPlayerName === '簡承均' && analysisAgg.players.length > 0) {
-        selectedPlayerName = analysisAgg.players[0].name;
+        try {
+          updateChienFilterButton();
+          const filteredLogs=getFilteredLogs(),fullAgg=getAggregatedStats(filteredLogs);
+          const analysisLogs=includeChien?filteredLogs:filteredLogs.filter(l=>l.name!=='簡承均');
+          const analysisAgg=getAggregatedStats(analysisLogs);
+          if(!includeChien&&selectedPlayerName==='簡承均'&&analysisAgg.players.length)selectedPlayerName=analysisAgg.players[0].name;
+          if(isGuestPlayerName(selectedPlayerName)&&analysisAgg.players.length){const first=analysisAgg.players.find(p=>isOfficialTeamPlayer(p.name));selectedPlayerName=first?first.name:analysisAgg.players[0].name;}
+          populatePlayerSelect(analysisAgg.players);
+          // Preserve attendance/custom-lineup initialization without rendering hidden tables and charts.
+          renderLineupAnalysis(fullAgg,true);
+          window.PageRendering?.invalidate();
+          const panel=document.querySelector('#appWorkspace main > [id^="panel"]:not(.hidden)');
+          if(panel)renderCurrentTab('tab'+panel.id.slice(5),analysisAgg,fullAgg,analysisLogs);
+        }finally{siteHooks.run('renderAll',arguments);}
       }
-      if (isGuestPlayerName(selectedPlayerName) && analysisAgg.players.length > 0) {
-        const firstOfficial = analysisAgg.players.find(p => isOfficialTeamPlayer(p.name));
-        selectedPlayerName = firstOfficial ? firstOfficial.name : analysisAgg.players[0].name;
-      }
-      populatePlayerSelect(analysisAgg.players);
-      renderPlayerProfile(analysisAgg);
-      renderDiagnostics(analysisAgg);
-
-      // 3. 數據排行榜 (使用 analysisAgg)
-      renderLeaderboard(analysisAgg);
-
-      // 4. 賽伯計量實驗室 (使用 analysisAgg)
-      renderQuadrantChart(analysisAgg);
-      renderCustomChart(analysisAgg);
-      renderTeamSpatialLab(analysisAgg);
-      renderLuckRegressionChart(analysisAgg);
-
-      // 5. 雙雄攻守對決 (不受排除影響，仍可選取簡承均比較，使用 fullAgg)
-      renderComparison(fullAgg);
-
-      // 6. 棒次分析與推薦 (不受排除影響，簡承均為主力先發，使用 fullAgg)
-      renderLineupAnalysis(fullAgg);
-
-      // 7. 數位圖像場記與落點 (不受影響，比賽真實登打)
-      if (document.getElementById('panelScorebook') && !document.getElementById('panelScorebook').classList.contains('hidden')) {
-        renderScorebook();
-      }
-      if (document.getElementById('panelPitching') && !document.getElementById('panelPitching').classList.contains('hidden')) {
-        renderPitchingStudio();
-      }
-      } finally { siteHooks.run('renderAll', arguments); }
-    }
 
 
     document.getElementById('filterStartDate').addEventListener('change', () => {

@@ -339,7 +339,8 @@
       panel.classList.toggle('hidden', !on);
       button.className = on ? ACTIVE : INACTIVE;
       // Hidden, the page keeps no markup (about a hundred rows with photos); it re-renders when opened.
-      if (on) renderRecordsPage(); else if (panel.firstChild) panel.innerHTML = '';
+      if (window.PageRendering) window.PageRendering.cachedPanel(panel, on, renderRecordsPage);
+      else if (on) renderRecordsPage(); else if (panel.firstChild) panel.innerHTML = '';
     });
     button.addEventListener('click', () => switchMainTab('tabRecords'));
   }
@@ -347,8 +348,8 @@
   // ---------- Hooks ----------
   const after = (name, hook) => window.siteHooks.after(name, 'team-records', hook);
   after('renderPlayerProfile', agg => renderProfileRecords(agg.players.some(p => p.name === selectedPlayerName) ? selectedPlayerName : ''));
-  after('renderAll', () => { if (!document.getElementById(PAGE_ID)?.classList.contains('hidden')) renderRecordsPage(); });
-  try { renderProfileRecords(selectedPlayerName); } catch (error) { console.error('[team-records] init', error); }
+  after('renderAll', () => { const panel = document.getElementById(PAGE_ID); if (panel && !panel.classList.contains('hidden')) { if (window.PageRendering) window.PageRendering.cachedPanel(panel, true, renderRecordsPage); else renderRecordsPage(); } });
+  try { if (!document.getElementById('panelProfile')?.classList.contains('hidden')) renderProfileRecords(selectedPlayerName); } catch (error) { console.error('[team-records] init', error); }
 
   window.teamRecords = {MIN_RATE_PA, teamRecords, teamGameRecords, playerRecord, noKStreak, renderRecordsPage};
 })();

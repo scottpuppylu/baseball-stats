@@ -144,8 +144,8 @@
     column.append(block);
   }
   siteHooks.after('renderPlayerProfile','player-health',renderProfileHealth);
-  siteHooks.after('switchMainTab','player-health',tab => {if(tab==='tabHealth') render();});
-  siteHooks.after('renderAll','player-health',() => {if(!panel.classList.contains('hidden')) render();});
+  siteHooks.after('switchMainTab','player-health',tab => {if(tab==='tabHealth') {if(window.PageRendering) PageRendering.run('health-ui','',render);else render();}});
+  siteHooks.after('renderAll','player-health',() => {if(!panel.classList.contains('hidden')) {if(window.PageRendering) PageRendering.run('health-ui','',render);else render();}});
   window.addEventListener('player-health-status',state);
   render();
   renderProfileHealth(getAnalysisAgg());

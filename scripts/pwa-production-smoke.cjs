@@ -46,7 +46,7 @@ const built = require('./build-pwa.cjs').build(file => execFileSync('git', ['sho
       const page = await context.newPage();
       page.on('pageerror', error => report.errors.push(error.message));
       if (width === 390) {
-        for (const file of ['index.html', 'manifest.webmanifest', 'app-config.js', 'pwa.js', 'sw.js', 'ui-comfort.css', 'scorebook-lineup.js', 'player-health.js', 'player-health-store.js', 'player-health-ui.js']) {
+        for (const file of [...new Set(['index.html','manifest.webmanifest','sw.js',...[...built.files.keys()].filter(file=>/\.(?:js|css)$/.test(file))])]) {
           const response = await page.request.get(base + file + '?release-check=' + Date.now());
           const body = await response.text();
           const source = built.files.get(file).toString();

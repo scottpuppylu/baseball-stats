@@ -49,6 +49,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     const {context, page} = await open();
 
     // ---------- 8. Qualifying plate appearances ----------
+    await page.evaluate(()=>switchMainTab('tabOverview')); // cards update when their page becomes visible
     const q = await page.evaluate(() => {
       const agg = getAnalysisAgg();
       const minPa = rateQualifyingPa(agg.players);
@@ -91,7 +92,8 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
 
     // ---------- 10. Thresholds, per-3-out rates, data-based wording ----------
     const wording = await page.evaluate(() => {
-      const text = () => document.body.innerText;
+      // Audit the entire current page's wording, including sections whose layout is deferred offscreen.
+      const text = () => document.querySelector('main > [id^="panel"]:not(.hidden)').textContent;
       const pages = {};
       for (const t of ['Overview', 'Profile', 'Leaderboard', 'Analytics', 'Compare', 'Pitching', 'Glossary']) { switchMainTab('tab' + t); pages[t] = text(); }
       const agg = getAnalysisAgg();

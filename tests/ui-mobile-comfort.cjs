@@ -6,6 +6,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const os=require('node:os');
 const {chromium}=require('playwright');
+const {realizeSections,restoreSections}=require('./ui-wait.cjs');
 const url=process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa');
 const PAGES=[['Overview'],['Profile'],['Leaderboard'],['Analytics'],['Compare'],['Lineup'],['Scorebook','live'],['Scorebook','review'],['Scorebook','spray'],['Pitching'],['Records'],['Glossary']];
@@ -31,6 +32,7 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
         await page.evaluate(([t,s])=>{switchMainTab(`tab${t}`);if(s)switchScorebookSubTab(s);window.scrollTo(0,0);},[tab,sub]);
         await page.waitForTimeout(250);
         await settle(page); // page-reveal animations move and scale things; measure the settled layout
+        await realizeSections(page); // inspect fully realized content, including deferred analysis
         const r=await page.evaluate(()=>{
           const panel=document.querySelector('[id^=panel]:not(.hidden)');
           const shown=el=>{const s=getComputedStyle(el);if(s.display==='none'||s.visibility==='hidden')return false;const b=el.getBoundingClientRect();return b.width>0&&b.height>0&&!el.closest('.hidden');};
@@ -78,6 +80,7 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
         assert.ok(r.chips.every(c=>c.length<=11),`${width} ${name}: short chip labels`);
         pages[name]=r.chips.length;
         heights[name]=r;
+        await restoreSections(page);
       }
       // Density: compact header, content soon after it, and every long page clearly shorter than before the
       // density pass (390 px heights measured on the same fixture, 2026/10/10).
