@@ -288,7 +288,7 @@
     chip.style.left = `${left}px`;
     chip.style.top = `${Math.min(window.innerHeight - h - 10, top)}px`;
   }
-  window.addEventListener('scroll', () => { if (Math.abs(window.scrollY - chipY) > 40) hideChip(); }, {passive: true}); // a real scroll, not the nudge of opening
+  window.addEventListener('scroll', () => { if (chip && Math.abs(window.scrollY - chipY) > 40) hideChip(); }, {passive: true}); // a real scroll, not the nudge of opening
   window.siteHooks.after('switchMainTab', 'ui-app-chip', hideChip);
   document.addEventListener('pointerdown', event => { if (chip && !chip.contains(event.target) && !(event.target instanceof HTMLCanvasElement)) hideChip(); }, {passive: true});
   if (window.Chart && typeof Chart.register === 'function') {
@@ -326,6 +326,7 @@
   // Content panels on scene pages refract the scene (ui-theme.js lenses). Summary cards are re-rendered, so re-register.
   const registerPanels = () => {
     if (!window.flRefract) return;
+    window.flReleaseDetached?.();
     document.querySelectorAll('main section:not(.grid), main section.grid > div, #teamSummaryCards > div').forEach(el => {
       if (!el.parentElement.closest('main section:not(.grid)')) window.flRefract(el, true);
     });

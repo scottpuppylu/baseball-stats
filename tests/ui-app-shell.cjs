@@ -47,6 +47,7 @@ async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
       await page.goto(url);
       await page.waitForFunction(() => window.teamRecords && !syncStatusBadge.textContent.includes('連線同步中'));
       assert.equal(await page.evaluate(() => window.__bootProbe), true, 'the half-built page is hidden behind the splash');
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))); // shell removes the splash in its scheduled paint, before the 6s fallback
       assert.equal(await page.evaluate(() => document.documentElement.classList.contains('fl-booting')), false, 'the boot splash is gone once the shell is ready');
       // Home is the landing page, fully open, with live numbers and working links.
       assert.equal(await page$(page), 'Home');

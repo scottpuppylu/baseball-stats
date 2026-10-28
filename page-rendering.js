@@ -45,6 +45,7 @@
     pumping=(async()=>{
       while(work.length){
         await paint();await yieldTask();
+        if(document.documentElement.hasAttribute('data-fl-scrolling')){await new Promise(resolve=>setTimeout(resolve,32));continue;}
         const job=work.shift();if(job.cancelled)continue;
         if(!job.canvas.isConnected){cancel(job);continue;}
         if(job.canvas.closest('[id^="panel"]')?.classList.contains('hidden')){job.queued=false;job.observer?.observe(job.canvas);continue;}

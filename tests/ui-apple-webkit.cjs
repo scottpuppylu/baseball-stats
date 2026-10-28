@@ -8,6 +8,8 @@ const output = process.env.UI_QA_OUTPUT || os.tmpdir();
 const ready = page => page.waitForFunction(() => window.teamRecords && !/連線同步中/.test(syncStatusBadge.textContent) && !legacyMergeRunning);
 (async () => {
  const browser = await webkit.launch({headless:true});
+ let diagnosticPhase='startup',shuttingDown=false;
+ browser.on('disconnected',()=>{if(!shuttingDown)console.error('UNEXPECTED_WEBKIT_DISCONNECT phase='+diagnosticPhase);});
  const results = []; const checks = []; const errors = []; let externalRequests = 0; let offlineNavigationProbe;
  try {
   const probeContext=await browser.newContext();
@@ -20,7 +22,7 @@ const ready = page => page.waitForFunction(() => window.teamRecords && !/連線�
   for (const [width,height] of [[390,844],[844,390],[768,1024],[1024,768],[507,1024],[1440,900]]) {
    const context = await browser.newContext({viewport:{width,height},hasTouch:width<1280,acceptDownloads:true});
    await context.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//,r=>{externalRequests++;return r.abort();});
-   const page = await context.newPage(); page.on('pageerror',e=>errors.push(e.message));
+   const page = await context.newPage(); page.on('crash',()=>console.error('WEBKIT_PAGE_CRASH phase='+diagnosticPhase)); diagnosticPhase=width+'x'+height+' initial-load'; page.on('pageerror',e=>errors.push(e.message));
    page.on('dialog',d=>d.accept());
    await page.goto(base + '/baseball-stats/?pwa'); await ready(page);
    assert.equal(await page.locator('meta[name="apple-mobile-web-app-title"]').getAttribute('content'),'航太系壘');
@@ -44,7 +46,7 @@ const ready = page => page.waitForFunction(() => window.teamRecords && !/連線�
     assert.ok(JSON.parse(stored).innings[0].plateAppearances.length>0);
     await page.setViewportSize({width:844,height:390});
     assert.equal(await page.evaluate(()=>localStorage.getItem('rebas_active_game')),stored);
-    await page.reload(); await ready(page);
+    diagnosticPhase='scorer-restore-reload';await page.reload(); await ready(page);
     assert.equal(await page.evaluate(()=>JSON.stringify(activeGame)),stored);
     checks.push('date-input','real-scorebook-restore','rotation-preserves-game');
     // Downloads use the original export handlers, no duplicate statistics implementation.
@@ -70,19 +72,19 @@ const ready = page => page.waitForFunction(() => window.teamRecords && !/連線�
     assert.equal(await page.evaluate(()=>localStorage.getItem('rebas_active_game')),stored);
     checks.push('image-decode-crop-rotate-write','direct-github-success-failure-keeps-game');
     await page.waitForFunction(()=>window.__pwaRegistration?.active,null,{timeout:30000});
-    await page.reload();await ready(page);
+    diagnosticPhase='installed-cache-reload';await page.reload();await ready(page);
     await context.setOffline(true);
     await page.waitForFunction(()=>document.getElementById('uiOfflineBar'));
     assert.equal(await page.evaluate(()=>JSON.stringify(activeGame)),stored);
     if (offlineNavigationProbe === 'SUPPORTED') {
-      await page.reload();
+      diagnosticPhase='offline-navigation';await page.reload();
       await page.waitForFunction(()=>window.teamRecords && window.BASEBALL_OFFLINE_SHELL);
       assert.equal(await page.evaluate(()=>JSON.stringify(activeGame)),stored);
       checks.push('webkit-supported-harness-full-offline-navigation');
     }
     await context.setOffline(false);
     // Real 503 from both live endpoints exercises the worker fallback while the installed snapshot stays available.
-    await page.request.get(base+'/__preview/unavailable?enabled=1');
+    diagnosticPhase='worker-fallback-reload';await page.request.get(base+'/__preview/unavailable?enabled=1');
     await page.reload();
     await page.waitForFunction(()=>window.teamRecords&&window.BASEBALL_OFFLINE_SHELL&&document.getElementById('uiOfflineBar'));
     assert.equal(await page.evaluate(()=>JSON.stringify(activeGame)),stored);
@@ -102,5 +104,5 @@ const ready = page => page.waitForFunction(() => window.teamRecords && !/連線�
   const report={passed:true,engine:'Playwright WebKit '+browser.version(),offlineNavigationProbe,physicalIPhone:'UNVERIFIED',physicalIPad:'UNVERIFIED',physicalMac:'UNVERIFIED',results,checks,errors,externalRequests};
   fs.writeFileSync(path.join(output,'apple-webkit-result.json'),JSON.stringify(report,null,2));
   console.log(JSON.stringify(report));
- }finally{await browser.close();}
+ }finally{shuttingDown=true;await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -6,7 +6,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const os=require('node:os');
 const {chromium}=require('playwright');
-const {realizeSections,restoreSections}=require('./ui-wait.cjs');
+const {realizeSections,restoreSections,scrollSettled}=require('./ui-wait.cjs');
 const url=process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa');
 const PAGES=[['Overview'],['Profile'],['Leaderboard'],['Analytics'],['Compare'],['Lineup'],['Scorebook','live'],['Scorebook','review'],['Scorebook','spray'],['Pitching'],['Records'],['Glossary']];
@@ -198,6 +198,11 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
       await page.screenshot({path:path.join(output,`${width}-MobileLive.png`),fullPage:true});
       await page.evaluate(()=>{activeGame=window.activeGame=null;localStorage.removeItem('rebas_active_game');});
 
+      // First finish the actual one-time presentation work; a real render loop still fails the zero-mutation window.
+      await scrollSettled(page);
+      await page.evaluate(()=>PageRendering.settled());
+      await settle(page);
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       // Nothing keeps re-rendering while the page is idle.
       const idle=await page.evaluate(()=>new Promise(res=>{let n=0;const o=new MutationObserver(r=>{n+=r.length;});o.observe(document.getElementById('appWorkspace'),{subtree:true,attributes:true,childList:true});setTimeout(()=>{o.disconnect();res(n);},1200);}));
       assert.equal(idle,0,`${width}: no idle re-render loop`);

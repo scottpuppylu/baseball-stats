@@ -83,3 +83,23 @@ A 最終版本 `v261028.0748`：Chrome／WebKit 髒標記、圖表實例、紀�
 配對量測（桌面 Chrome headless、390×844、DPR1、CPU 4 倍降速、同一個全新 D4 fixture）：Analytics 首次切頁同步處理 544.1→31.7 ms，Profile 419.7→33.0 ms；再次切頁同步處理 Analytics 143.6→1.1 ms、Profile 180.6→3.9 ms，未新建圖表。首次切頁最差畫格 Analytics 766.6→366.6 ms、Records 522.2→283.4 ms、Profile 627.8→277.6 ms；未達所有目標。A 階段捲動有 7 格 >25 ms，待 B／C 後再量測；此處不宣稱實機或全部效能驗收通過。五種模型完整比對仍為零差異。
 
 A 完整回歸：33/33 組、158/158 單元全過（baseball-motion-a-complete-full-20261028）。針對測試保留全部原斷言；圖表互動等待實際可見圖表建立，WebKit 受控離線前等待 legacyMergeRunning 結束，不過濾 pageerror。正式站驗證擴為核對所有已發布 JS／CSS。11 個受保護資料檔與 Token 宣告不變，正式 data SHA 不變。
+
+A 已推送 `f62ff16`。
+
+## B：觸控玻璃與捲動
+
+- coarse pointer 裝置不建立 SVG 折射，保留 CSS blur／saturate 玻璃與原本控制項。
+- 捲動時 fl-scrolling 改用普通模糊，停止 150ms 後恢復；inline important 折射透過 CSS 變數覆寫，桌面也能暫停。延後圖表工作在捲動期間暫停，避免手勢中插入繪圖。
+- 星點放入固定 body::before 場景層；移除內容面板文字陰影，頂列／切換列等玻璃列仍保留。
+- 清理離開 DOM 的折射觀察器，回到快取頁面時由原 hooks 重新登記。
+- 版本 `v261028.0813`，含中文更新說明；新增 Chrome／WebKit、手機／平板／滑鼠裝置的玻璃、工具／抽屜、捲動及減少動態偏好檢查。
+
+B 補正：Windows 換行格式曾使觀察器清理接點與內容陰影移除漏套用，已正規化並增加實際 unobserve 驗證。CPU 4 倍的隔離捲動 trace 發現將折射變數設於 html 會造成約 104ms 的全頁 UpdateLayoutTree；改為只在頂列／導覽／抽屜等玻璃表面設定，避免將新變數繼承到所有數據節點。無浮動圖點卡時不讀取 scrollY。此前兩次 B 全跑均主動中止，以下以補正後完整回歸為準。
+
+B 最終捲動切換不在 html 設定繼承變數，也不使用依賴該根節點狀態的 CSS 規則；只對既有桌面 SVG 玻璃表面設定暫時的 inline 變數，觸控裝置沒有該工作。新生成的折射也會檢查是否正在捲動。四種引擎／尺寸的工具、抽屜、減少動態與實際 unobserve 針對檢查通過。相同舊量測腳本下最差捲動畫格仍為 72.3ms、8 格 >25ms，B 不宣稱達標；後續 C 仍須量測。
+
+B 最後補正：根節點只改 class 仍會觸發既有 `[class*=]` 選擇器對 div／span 的廣泛失效；trace 最差約 96ms。因此捲動狀態改為無 CSS 依賴的專用 `data-fl-scrolling` 屬性，仍維持 150ms 停止判斷與原玻璃效果。啟動測試在兩格正常 paint 後檢查 splash，閒置測試先等待捲動／圖表／有限動畫結束，再維持原 1200ms 內零變更斷言；新針對回歸 5/5 全過。Linux WebKit 增加 crash／unexpected disconnect 階段診斷，未過濾錯誤或停用合成。先前 B 全跑為 33/34（僅未等一次性呈現工作的 idle 檢查），以下以新的完整回歸為準。
+
+B 專用狀態屬性後的獨立量測（同舊腳本）：捲動最差 50.0ms、6 格 >25ms；抽屜 p95 5.7ms，整體最大仍有 127.8ms 尖峰。再次切頁同步處理 1.0–3.5ms、零新建圖表。量測仍未達所有動畫目標，保留原始結果供 C 比較。
+
+B 最終完整回歸：34/34 組、158/158 單元全過（baseball-motion-b-verified-full-20261028），包含原 1200ms 零變更閒置斷言、Chrome／WebKit 及 84 種版面。A CI `40607407623` 為 31/33，boot 尚未等待下一格及 Linux WebKit reload 關閉頁面，部署未執行；B 已補正常 paint 等待與非過濾式 crash 階段診斷，交後續 CI 再確認。
