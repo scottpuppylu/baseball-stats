@@ -353,11 +353,11 @@ table.ui-measure thead th img, table.ui-fold-table thead th img { display: none;
   /* Folded text: two lines, tap to open. */
   .ui-fold { cursor: pointer; }
   p.ui-fold:not(.ui-open) { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  /* Glossary on a phone is an index: term and a one-line formula; a tap shows the English name and the full text. */
-  #panelGlossary .ui-fold:not(.ui-open) p:first-of-type { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  /* Glossary on a phone is an index: the term and its plain one-line meaning (看什麼); a tap shows the formula and how to read it. */
+  #panelGlossary .ui-fold:not(.ui-open) p:first-of-type { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   #panelGlossary .ui-fold:not(.ui-open) p ~ p, #panelGlossary .ui-fold:not(.ui-open) > div:first-child > .font-mono { display: none; }
   #panelGlossary .ui-fold { padding: 9px 10px !important; }
-  #panelGlossary .grid > .ui-fold:not(.ui-open)::after { content: '點一下看英文名稱與完整說明'; display: block; color: #7dd3fc; font-size: 11px; margin-top: 2px; }
+  #panelGlossary .grid > .ui-fold:not(.ui-open)::after { content: '點一下看公式與怎麼判讀'; display: block; color: #7dd3fc; font-size: 11px; margin-top: 2px; }
   /* Custom lineup: two pickers per row. */
   #customLineupPickersContainer { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   #customLineupPickersContainer > * { margin: 0 !important; }

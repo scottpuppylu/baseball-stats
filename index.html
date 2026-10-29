@@ -60,7 +60,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261028.2334</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261029.1223</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -1783,10 +1783,10 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
             <div>
               <div class="flex items-center space-x-2.5">
-                <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">ENCYCLOPEDIA</span>
-                <h2 class="text-xl font-black text-white tracking-tight">專有名詞圖書館與統計公式手冊</h2>
+                <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">GLOSSARY</span>
+                <h2 class="text-xl font-black text-white tracking-tight">每個數據在看什麼</h2>
               </div>
-              <p class="text-xs text-slate-400 mt-1">完整收錄淡江航太系壘賽伯計量模型、慢速壘球專屬特化規程、進階破壞力推導與球探擊球指標全集</p>
+              <p class="text-xs text-slate-400 mt-1">每項先用最簡單的方式說明這個數據代表什麼，再列出公式和判讀方式。</p>
             </div>
             <div class="flex items-center space-x-2 text-xs font-mono text-slate-400">
               <span class="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-sky-400 font-bold">5 大分類・共 37 項說明</span>
@@ -1794,311 +1794,384 @@
           </div>
 
           <div class="space-y-8 text-xs text-slate-300 leading-relaxed">
-            <!-- 第一大類：基礎數據與打擊三圍 -->
             <div class="space-y-3.5">
               <div class="flex items-center space-x-2 border-b border-sky-800/50 pb-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
                 <h3 class="text-sm sm:text-base font-bold text-sky-300">一、基礎數據與打擊三圍</h3>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">打席 (PA) 與 打數 (AB)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">PA = AB + BB + SF | AB = PA - BB - SF</p>
-                  <p class="text-slate-400 text-[11px]">完成打擊輪次為 PA；扣除不計打數之保送 (BB) 與高飛犧牲打 (SF) 後為 AB。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">安打 (H) 與 長打 (XBH)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">H = 1H+2H+3H+HR | XBH = 2H+3H+HR</p>
-                  <p class="text-slate-400 text-[11px]">全場擊出安打之總和，與形成長程破壞之二安、三安與全壘打總數。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">四壞 (BB) 與 三振 (K)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">Base on Balls / Strikeouts</p>
-                  <p class="text-slate-400 text-[11px]">四壞保送獲取一壘壘包；三振包含揮空吞K、站著不動被三振與慢壘界外K。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">高飛犧牲打 (SF) 與 雙殺打 (DP)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">Sacrifice Fly / Double Play</p>
-                  <p class="text-slate-400 text-[11px]">外野高飛球被接殺但護送三壘跑者回本壘得分 (SF)；擊出滾地球形成雙殺 (DP)。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">得分 (R)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">Runs Scored</p>
-                  <p class="text-slate-400 text-[11px]">跑壘者踩過本壘板之得分數 (R)。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">打擊率 (AVG, Batting Average)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">H / AB</p>
-                  <p class="text-slate-400 text-[11px]">每打數擊出安打之頻率。慢速壘球中隊均水準約在 .500 上下。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">上壘率 (OBP, On-Base Percentage)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">(H + BB) / (AB + BB + SF)</p>
-                  <p class="text-slate-400 text-[11px]">打者站上打擊區「未製造出局數」之機率，慢壘排棒首要依據。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">長打率 (SLG, Slugging Percentage)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">TB / AB</p>
-                  <p class="text-slate-400 text-[11px]">平均每打數所推進之壘包數（壘打數 TB = 1H + 2×2H + 3×3H + 4×HR）。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">整體攻擊指數 (OPS)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">OBP + SLG</p>
-                  <p class="text-slate-400 text-[11px]">綜合衡量上壘穩定度與長打威脅之核心指標。慢壘中大於 1.200 即屬優異。</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">打席 (PA) 與 打數 (AB)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Plate Appearances / At Bats</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>上場打了幾次。PA 是全部打擊機會；AB 再扣掉保送和高飛犧牲打，是計算打擊率用的次數。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">PA = AB + BB + SF  |  AB = PA − BB − SF</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>PA 越多，其他比率越可信；打席很少時，比率容易忽高忽低。</p>
                 </div>
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">安打 (H) 與 長打 (XBH)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Hits / Extra-Base Hits</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>打出幾支安打，其中幾支是二壘安打以上的長打。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">H = 1H + 2H + 3H + HR  |  XBH = 2H + 3H + HR</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>H 看能不能把球打成安打，XBH 看打出去後能跑多遠。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">四壞 (BB) 與 三振 (K)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Base on Balls / Strikeouts</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>選到幾次保送、被三振幾次。</p>
+                  <p><span class="text-slate-400">定義：</span>三振包含揮空、站著不動被判好球，以及兩好球後打界外（界外K）。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>BB 多代表選球有耐心；K 多代表常白白送掉出局數。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">高飛犧牲打 (SF) 與 雙殺打 (DP)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Sacrifice Fly / Double Play</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>用一個出局換回一分的高飛球，以及一棒造成兩人出局的擊球。</p>
+                  <p><span class="text-slate-400">定義：</span>SF：外野飛球被接殺，但三壘跑者回本壘得分。DP：擊出的球讓兩人出局。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>SF 不算打數，不會拉低打擊率；DP 越少越好。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">得分 (R)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Runs Scored</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>自己跑回本壘幾次。</p>
+                  <p><span class="text-slate-400">定義：</span>跑者安全踩到本壘，就記 1 分。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>會受上壘能力、跑壘和後面棒次影響，適合用來看前段棒次。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">打擊率 (AVG)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Batting Average</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>打數中打成安打的比例。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">AVG = H / AB</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好，慢壘隊均約 .500。不計保送，也不分一安和全壘打。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">上壘率 (OBP)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">On-Base Percentage</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>每次上場沒有出局、成功上壘的比例，安打和保送都算。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OBP = (H + BB) / (AB + BB + SF)</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好，是排前段棒次最重要的依據。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">長打率 (SLG)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Slugging Percentage</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>平均每個打數能推進幾個壘包，看球打得多遠。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SLG = TB / AB（壘打數 TB = 1H + 2×2H + 3×3H + 4×HR）</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好。一安算 1 壘、全壘打算 4 壘，長打多的人會比較高。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">整體攻擊指數 (OPS)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">On-base Plus Slugging</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>把上壘能力和長打能力加在一起，用一個數字看整體攻擊力。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OPS = OBP + SLG</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好，慢壘 1.200 以上算優異。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
                     <span class="font-bold text-white text-sm">純長打率 (ISO)</span>
-                    <span class="font-mono text-[10px] text-emerald-400">Isolated Power</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Isolated Power</span>
                   </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">ISO = SLG - AVG</span></p>
-                  <p><span class="text-slate-400">意義：</span>完全過濾短程一壘安打的水分，純粹衡量擊出長打（二安、三安、全壘打）的淨長打破壞威力。慢壘高於 .250 屬頂級長打砲手。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>扣掉一壘安打後，還剩多少打遠的能力。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">ISO = SLG − AVG</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越像長打者，慢壘 .250 以上屬頂級。</p>
                 </div>
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-start justify-between gap-2">
                     <span class="font-bold text-white text-sm">場內安打率 (BABIP)</span>
-                    <span class="font-mono text-[10px] text-emerald-400">Batting Average on Balls In Play</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Batting Average on Balls In Play</span>
                   </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BABIP = (H - HR) / (AB - K - HR + SF)</span></p>
-                  <p><span class="text-slate-400">意義：</span>擊球員將球打入場內後形成安打的機率，反映擊球初速、落點穿透防線能力與跑壘速度。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>打進場內的球（不含全壘打）有多少變成安打。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BABIP = (H − HR) / (AB − K − HR + SF)</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>比平常高很多，可能是運氣好，也可能是擊球強、跑得快；樣本少時波動大，之後常會回到平均。</p>
                 </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm col-span-1 md:col-span-2">
-                  <div class="flex items-center justify-between">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
                     <span class="font-bold text-white text-sm">次級打擊率 (SecA)</span>
-                    <span class="font-mono text-[10px] text-emerald-400">Secondary Average</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Secondary Average</span>
                   </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SecA = (TB - H + BB) / AB</span></p>
-                  <p><span class="text-slate-400">意義：</span>評估打者「除了敲出一壘安打之外」藉由額外壘包推進（長打）與四壞選球所產生的獨立破壞產能，慢壘重砲指標。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>打擊率看不到的貢獻：長打多推進的壘包，加上保送。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SecA = (TB − H + BB) / AB</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好。打擊率不高但 SecA 高，代表靠長打和選球製造價值。</p>
                 </div>
               </div>
             </div>
-
-            <!-- 第二大類：綜合產值 -->
             <div class="space-y-3.5">
               <div class="flex items-center space-x-2 border-b border-emerald-800/50 pb-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                <h3 class="text-sm sm:text-base font-bold text-emerald-300">二、綜合產值（進階賽伯計量）</h3>
+                <h3 class="text-sm sm:text-base font-bold text-emerald-300">二、綜合產值（進階數據）</h3>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-start justify-between gap-2">
                     <span class="font-bold text-white text-sm">加權上壘率 (wOBA)</span>
-                    <span class="font-mono text-[10px] text-emerald-400">Weighted On-Base Average</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Weighted On-Base Average</span>
                   </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>按得分價值替保送、一安、二安、三安和全壘打加權，算出平均每打席的攻擊價值。</p>
                   <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA</span></p>
-                  <p><span class="text-slate-400">意義：</span>依據賽伯計量得分期望值賦予每個進攻事件精確線性權重，破除「將一安與全壘打視為同等上壘」之傳統盲點。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好。比上壘率公平，因為全壘打比保送更有價值。</p>
                 </div>
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-start justify-between gap-2">
                     <span class="font-bold text-white text-sm">加權得分創造 (wRC+)</span>
-                    <span class="font-mono text-[10px] text-emerald-400">Weighted Runs Created+</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Weighted Runs Created Plus</span>
                   </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>這名打者的攻擊產值，相當於全隊平均的幾 %。</p>
                   <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">wRC+ = (wOBA / Team_wOBA) × 100</span></p>
-                  <p><span class="text-slate-400">意義：</span>以全隊平均 wOBA 為基準（標準值為 100）的進攻產出指數。大於 100 代表優於全隊均值，是當代公認最客觀衡量打者真實進攻身價的黃金標準。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>100 是全隊平均；120 代表比平均多 20%，80 代表少 20%。最適合用來比較打者的攻擊力。</p>
                 </div>
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-start justify-between gap-2">
                     <span class="font-bold text-white text-sm">標準化攻擊指數 (OPS+)</span>
-                    <span class="font-mono text-[10px] text-emerald-400">OPS Plus</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">OPS Plus</span>
                   </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>用 OPS 和全隊平均比較。</p>
                   <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">OPS+ = (OPS / Team_OPS) × 100</span></p>
-                  <p><span class="text-slate-400">意義：</span>個人 OPS 相較於全隊平均的正規化百分比指數，100 為全隊平均線，能直觀評估相較於同隊隊友之攻擊優勢比例。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>100 是全隊平均。算法比 wRC+ 簡單，兩者的結論通常一致。</p>
                 </div>
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-start justify-between gap-2">
                     <span class="font-bold text-white text-sm">預估創造得分 (RC)</span>
-                    <span class="font-mono text-[10px] text-emerald-400">Runs Created</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Runs Created</span>
                   </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>估計這名打者總共幫球隊製造了幾分。</p>
                   <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">RC = (H + BB) × TB / (AB + BB)</span></p>
-                  <p><span class="text-slate-400">意義：</span>棒球統計之父 Bill James 經典模型。將「上壘因子 (H+BB)」乘上「壘包推進因子 (TB)」，量化評估該打者為球隊換取的實體總分數。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>是累積數，打得越多越高；出賽數不同的人，請改看每局創造得分。</p>
                 </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-amber-900/40 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-bold text-amber-300 text-sm">每局創造得分 (RC/3出局)</span>
-                    <span class="font-mono text-[10px] text-amber-400">Runs Created per 3 Outs</span>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">每局創造得分 (RC/3出局)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Runs Created per 3 Outs</span>
                   </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-amber-300 font-bold">RC/局 = (RC × 3) / (AB - H + SF)</span></p>
-                  <p><span class="text-slate-400">意義：</span>假設整個半局都由該打者一人打擊，用掉 3 個出局前預期能攻下的分數。本隊比賽是計時賽、局數不固定，所以用 3 個出局（一個半局）為基準，而不是棒球的 9 局 27 出局；與投手的每局保送、每局失分同一基準。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>如果一整局都由這名打者來打，預期能得幾分。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">RC/局 = (RC × 3) / (AB − H + SF)</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好。本隊是計時賽、局數不固定，所以用 3 個出局（一局）當單位，和投手的每局保送、每局失分同一基準。</p>
                 </div>
               </div>
             </div>
-
-            <!-- 第三大類：紀律、擊球品質與方向 -->
             <div class="space-y-3.5">
               <div class="flex items-center space-x-2 border-b border-amber-800/50 pb-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                 <h3 class="text-sm sm:text-base font-bold text-amber-300">三、紀律、擊球品質與方向</h3>
               </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">四壞率 (BB%) 與 三振率 (K%)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">BB/PA 與 K/PA</p>
-                  <p class="text-slate-400 text-[11px]">平均每打席獲得保送之比率，與每打席吞K之比率。慢壘中 K% 應盡量壓低於 5% 內。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">保送三振比 (BB/K)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">BB / K</p>
-                  <p class="text-slate-400 text-[11px]">選球好球帶耐性比例。大於 1.0 代表選球正向產出大於負向揮空吞K。</p>
-                </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">擊球掌握率 (Contact%)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">(AB - K) / AB</p>
-                  <p class="text-slate-400 text-[11px]">打者出棒擊入球場、避免吞下三振之機率。慢壘優秀打者應維持在 90% 以上。</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-sky-900/40 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-amber-300 text-sm">慢壘好球帶紀律指數 2.0 (SDI 2.0)</span>
-                    <span class="font-mono text-[10px] text-sky-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Softball Discipline Index 2.0</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">四壞率 (BB%) 與 三振率 (K%)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Walk Rate / Strikeout Rate</span>
                   </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-amber-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">SDI 2.0 = (BB - 1.0×界外K - 2.0×揮空K) / PA</span></p>
-                  <p><span class="text-slate-400">說明：</span>慢壘革命性好球帶模型！過去一律以 1.5 倍懲罰所有三振，但慢壘實戰中，打者在兩好球後的『界外三振 (界外K)』多為保護好球帶或纏鬥出棒，其擊球品質與對球路之辨識遠高於遭到投手愚弄之『揮空/站立三振 (-2.0x)』。SDI 2.0 給予兩者精確權重分流，更真實回饋高纏鬥力與零揮空的頂尖打者！</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>每次上場選到保送、被三振的比例。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BB% = BB / PA  |  K% = K / PA</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>BB% 越高越好，K% 越低越好；慢壘 K% 最好壓在 5% 以內。</p>
                 </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-sky-900/40 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-bold text-sky-300 text-sm">Statcast 擊球型態分佈 (LD% / GB% / FB% / PU%)</span>
-                    <span class="font-mono text-[10px] text-sky-400">Batted Ball Profile</span>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">保送三振比 (BB/K)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Walk-to-Strikeout Ratio</span>
                   </div>
-                  <p><span class="text-slate-400">定義：</span>場內擊球 (BIP) 中平飛 (LD)、滾地 (GB)、高飛 (FB) 與無效內野高飛 (PU) 的比例。</p>
-                  <p><span class="text-slate-400">意義：</span>平飛球 (LD%) 是慢壘得分的第一推動力；高飛球 (FB%) 是長打來源但過高容易被 4 位外野手接殺；內野高飛 (PU%) 則為幾乎 100% 出局之無效揮棒。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>保送和三振的比例，看選到的保送是否比被三振多。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BB / K</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>大於 1 代表保送比三振多，選球紀律好。</p>
                 </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-emerald-900/40 space-y-1.5 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-bold text-emerald-300 text-sm">預期打擊率 (xBA) 與 運氣因子</span>
-                    <span class="font-mono text-[10px] text-emerald-400">Expected Batting Average</span>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">擊球掌握率 (Contact%)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Contact Rate</span>
                   </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">xBA = Σ(擊球型態期望值) / AB | Luck = AVG - xBA</span></p>
-                  <p><span class="text-slate-400">意義：</span>MLB Statcast 旗艦指標。每一顆擊球依型態給安打期望值：採本隊場記各型態的實際安打率（全壘打另計；樣本少時向一般值 平飛 .68、滾地 .28、高飛 .38、內野飛球 .02 收斂），評估打者擊球品質。若 AVG > xBA 代表運氣極佳；若 AVG < xBA 代表強勁擊球運氣差被沒收。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>打數中把球打出去、沒被三振的比例。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">Contact% = (AB − K) / AB</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好，慢壘好打者約在 90% 以上。</p>
                 </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1 col-span-1 sm:col-span-2">
-                  <span class="font-bold text-amber-300 text-xs block">噴流落點方向 (Pull% / Center% / Oppo%)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">右打：左側拉打、右側推打；左打相反；中線不變</p>
-                  <p class="text-slate-400 text-[11px]">沿用落點 x &lt; .40、.40–.60、&gt; .60 的區間。優先採該打席記錄的實際打擊側，未記錄時使用「球員健康資料」的固定左／右打設定。左右開弓與未設定者若沒有逐打席側別，不猜測方向；百分比只計已判定樣本。球場圖保持實際落點，守備建議依實際左／右落點產生。</p>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">慢壘好球帶紀律指數 (SDI 2.0)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Softball Discipline Index 2.0</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>選球紀律的綜合分數：保送加分、三振扣分，揮空三振扣得比界外三振重。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">SDI 2.0 = (BB − 1.0×界外K − 2.0×揮空K) / PA</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好。兩好球後打界外出局，至少有碰到球；揮空或站著被三振代表沒跟上，所以扣兩倍。</p>
                 </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span class="font-bold text-white text-xs block">滾飛比 (GO / AO)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">滾地球出局 / 飛球出局</p>
-                  <p class="text-slate-400 text-[11px]">衡量打者出棒軌跡為下砍滾地還是仰角高飛球。數值過低通常伴隨較高飛球接殺率。</p>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">擊球型態分佈 (LD% / GB% / FB% / PU%)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Batted Ball Profile</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>打進場內的球裡，平飛、滾地、高飛和內野小飛球各佔多少。</p>
+                  <p><span class="text-slate-400">定義：</span>分母是場內擊球數 (BIP)，依場記記下的擊球型態計算。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>平飛球最容易變安打；高飛球是長打來源，但太多容易被 4 名外野手接殺；內野小飛球幾乎都會出局。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">預期數據 (xBA / xSLG / xwOBA) 與運氣因子</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Expected Stats</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>只看擊球型態，這名打者「應該」有多少打擊率、長打率和攻擊價值。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">xBA = Σ(各擊球型態的期望安打) / AB  |  運氣因子 = AVG − xBA</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>期望值採本隊場記各型態的實際安打率（樣本少時向一般值收斂：平飛 .68、滾地 .28、高飛 .38、內野飛球 .02；全壘打照實計；xwOBA 的二安、三安也照實際結果）。實際明顯高於預期是運氣偏好；明顯低於預期是打得好卻被接走，之後通常會回升。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">擊球方向 (Pull% / Center% / Oppo%)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Spray Direction</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>打出去的球往拉打邊、中間、推打邊各佔多少。</p>
+                  <p><span class="text-slate-400">定義：</span>右打者打向左邊是拉打、右邊是推打，左打者相反；落點 x &lt; .40、.40–.60、&gt; .60 分成三區。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>太偏向一邊，對手容易針對布陣。打擊側優先用該打席的紀錄，沒有就用「球員健康資料」的固定左／右打；左右開弓或未設定、又沒有逐打席紀錄的人不判斷方向，百分比只計已判斷的球。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">滾飛比 (GO/AO)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Ground Out / Air Out</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>出局時多半是滾地球還是飛球。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">GO/AO = 滾地球出局 / 飛球出局</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>數值偏低代表常被接殺飛球，可以檢查揮棒仰角是否太大。</p>
                 </div>
               </div>
             </div>
-
-            <!-- 第四大類：慢壘規則與本站模型 -->
             <div class="space-y-3.5">
               <div class="flex items-center space-x-2 border-b border-purple-800/50 pb-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
                 <h3 class="text-sm sm:text-base font-bold text-purple-300">四、慢壘規則與本站模型</h3>
               </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
-                <div class="bg-slate-950 p-4 rounded-xl border border-rose-900/40 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-rose-300 text-sm">界外三振規程 (Foul Strikeout, 界外K)</span>
-                    <span class="font-mono text-[10px] text-rose-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Slowpitch Rule</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">界外三振 (界外K)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Foul Strikeout</span>
                   </div>
-                  <p><span class="text-slate-400">規則：</span>兩好球後擊出任何界外球即判出局</p>
-                  <p><span class="text-slate-400">說明：</span>慢速壘球特有官方規則。打者在兩好球後（含開局 1 好 1 壞之兩好球情況），若擊出界外球無法形成界內，主審立即裁定打者出局，紀錄上計為 1 次三振（K）、1 打數（AB）與 1 打席（PA）。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>慢壘特有規則：兩好球後打出界外球，打者直接出局。</p>
+                  <p><span class="text-slate-400">紀錄：</span>記為 1 次三振、1 打數、1 打席。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>所以兩好球後要確保把球打進界內。本站把界外K和揮空三振分開記錄，SDI 和 sFIP 都會用到。</p>
                 </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-white text-sm">慢壘 10 人守備編制 (P, C, 1B, 2B, 3B, SS, LF, SF, RC, RF)</span>
-                    <span class="font-mono text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Fielding Roster</span>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">慢壘 10 人守備</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Fielding Positions</span>
                   </div>
-                  <p><span class="text-slate-400">守位：</span>投捕內野 6 人 + 外野 4 人（左外 LF、自由/左中 SF、右中 RC、右外 RF）</p>
-                  <p><span class="text-slate-400">說明：</span>慢壘擊球初速快且飛行距離遠，正規慢壘設有 4 位外野手。其中 SF（自由手/左中外野）通常由運動能力最強、覆蓋範圍最廣之選手擔綱，負責二游中線後方至深遠外野的大面積防區。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>慢壘場上有 10 名守備員，比棒球多一名外野手。</p>
+                  <p><span class="text-slate-400">守位：</span>投手 P、捕手 C、一壘 1B、二壘 2B、三壘 3B、游擊 SS；外野左外 LF、左中 SF、右中 RC、右外 RF。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>SF 通常由跑得最快、範圍最大的人守，負責左中外野的大片區域。</p>
                 </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-amber-900/40 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-amber-300 text-sm">慢壘指定打擊 (DH) 11 棒打線特化規程</span>
-                    <span class="font-mono text-[10px] text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">11-Batter Lineup</span>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">11 棒打線 (DH)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">11-Batter Lineup</span>
                   </div>
-                  <p><span class="text-slate-400">編制：</span>10 位守備員全打 (含投手 P) + 1 位純打擊 DH = 11 棒打線</p>
-                  <p><span class="text-slate-400">說明：</span>慢速壘球大專院校與系壘聯盟特化規程。實施 DH 制時，投手 (P) 依然必須親自打擊，打線擴編為 11 棒。被指派為 DH 之棒次專職打擊、免除守備體力消耗，極大化打線重砲清壘產能。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>打線可以有 11 棒：10 名守備員都要打擊，再加 1 名只打擊的指定打擊 (DH)。</p>
+                  <p><span class="text-slate-400">編制：</span>10 名守備員（含投手）＋ 1 名 DH。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>DH 不用守備，可以讓打擊好、守備較弱的人上場打擊。</p>
                 </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-purple-900/40 space-y-2 shadow-sm col-span-1 md:col-span-2">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-purple-300 text-sm">跑壘者出局 (Runner Out)</span>
-                    <span class="font-mono text-[10px] text-purple-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Baserunning Out</span>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">跑壘者出局</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Baserunning Out</span>
                   </div>
-                  <p><span class="text-slate-400">型態：</span>壘上跑者遭觸殺、刺殺、牽制出局、離壘過大遭捕手回傳刺殺、或跑壘妨礙守備</p>
-                  <p><span class="text-slate-400">說明：</span>出局數直接增加 1 點（+1 Out），並清除壘上遭出局之跑壘員。此時正在打擊區的打者打席並未結束，維持原球數與棒次繼續打擊，解決出局數與打席數脫節之記分盲點。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>打者還在打擊時，壘上跑者先被抓出局。</p>
+                  <p><span class="text-slate-400">型態：</span>觸殺、封殺、牽制、離壘過大被傳殺，或妨礙守備。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>出局數加 1、移除該名跑者，但打者的打席還沒結束，維持原球數繼續打。所以出局數不一定等於打席結果。</p>
                 </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-indigo-900/40 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-indigo-300 text-sm">計時賽排棒模型 (Timed-Game Batting Order)</span>
-                    <span class="font-mono text-[10px] text-indigo-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Markov + Clock</span>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">計時賽排棒模型</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Timed-Game Batting Order</span>
                   </div>
-                  <p><span class="text-slate-400">核心原則：</span>不套用固定的棒次角色，而是計算每種排法在 90 分鐘計時賽中的預期得分，選出最高者。</p>
-                  <p><span class="text-slate-400">說明：</span>The Book 指出最強的打者應放在 1、2、4 棒，因為前段打席較多；但最佳排法取決於比賽環境。模型逐打席計算出局數與壘上狀態，並依比賽時鐘決定能打幾局（時間到不開新局），再搜尋預期得分最高的棒次。本隊上壘率很高，長打者排在高上壘率打者之後時常更有利，因此最強打者不一定在第 2 棒；前段棒次之間的差距通常很小，可用「鎖定棒次」依教練判斷調整。</p>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>模擬每種棒次在 90 分鐘計時賽裡能得幾分，挑出得分最多的排法。</p>
+                  <p><span class="text-slate-400">方法：</span>逐打席模擬出局數和壘上狀況，並依比賽時鐘判斷能打幾局（時間到不開新局）。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>最強打者不一定排第 2 棒；前段棒次之間的差距通常很小，可以用「鎖定棒次」依教練判斷調整。</p>
                 </div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1 col-span-1 sm:col-span-2">
-                  <span class="font-bold text-emerald-300 text-xs block">五維能力 PR 百分位 (PR 0–100)</span>
-                  <p class="font-mono text-sky-400 text-[11px]">Percentile Rank：贏過的隊友比例 × 100</p>
-                  <p class="text-slate-400 text-[11px]">與滿 10 打席的隊友比較（同分算一半），個人檔案、雙人比較、投手與打擊診斷都用同一算法：擊球率 (AVG)、長打破壞 (ISO)、好球帶紀律 (SDI)、擊球掌握 (1-K%)、進攻產出 (wRC+)，90 以上為全隊頂尖。比較對象少於 5 人時（例如投手），PR 依人數向 50 收斂。</p>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">五維能力 PR 百分位 (PR 0–100)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Percentile Rank</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>這項能力贏過全隊幾 % 的隊友。</p>
+                  <p><span class="text-slate-400">算法：</span>PR = 贏過的隊友比例 × 100，同分算一半；只和滿 10 打席的隊友比較。</p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>50 是隊上中間，90 以上是全隊頂尖。五維是擊球率 (AVG)、長打 (ISO)、好球帶紀律 (SDI)、擊球掌握 (1 − K%)、進攻產出 (wRC+)。比較人數少於 5 人時（例如投手），PR 會往 50 收斂。</p>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-3.5">
+              <div class="flex items-center space-x-2 border-b border-teal-800/50 pb-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-400"></span>
+                <h3 class="text-sm sm:text-base font-bold text-teal-300">五、投手指標</h3>
+              </div>
+              <div class="p-3.5 bg-teal-950/20 border border-teal-800/40 rounded-xl text-teal-200/90 text-xs leading-relaxed">
+                <b class="text-teal-100">為什麼投手不看防禦率 (ERA)？</b>慢壘球速慢、拋物線出手，打者打擊率常在 .500 以上，被打安打很正常；失分又受守備和失誤影響很大，所以 ERA 看不出投手好壞。慢壘投手最重要的是少投保送，並讓打者打出容易處理的球。
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">慢壘獨立防禦率 (sFIP)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Slowpitch FIP</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>只看投手自己能控制的保送和三振，估計他的失分水準。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">sFIP = (3.0×BB − 2.0×揮空K − 1.5×界外K) / IP + 4.5</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越低越好。保送扣最重，揮空三振和界外K會降低數值；慢壘低於 3.50 屬王牌。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">好球帶好投率 (ZCR)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Zone Control Rate</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>面對的打者中，沒有被投成保送的比例。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">ZCR = (TBF − BB) / TBF</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好，頂尖投手在 93% 以上。慢壘保送等於直接送對手上壘。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">界外K誘陷率 (FKR)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Foul-K Ratio</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>投手的三振中，有多少是兩好球後讓打者打成界外而出局。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">FKR = 界外K / (揮空K + 界外K)</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>高代表擅長在兩好球後投出難打進界內的球。這是看三振怎麼來，不是越高越好的總評。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">場內擊球轉出局率 (BIP Out%)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Balls In Play Out Rate</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>被打進場內的球，有多少被守成出局。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BIP Out% = (GO + FO + 2×DP) / (GO + FO + 2×DP + 被安打)</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>越高越好，代表打者多打出容易處理的球；但其中也包含隊友的守備貢獻。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">每局保送與每局失分 (BB/3出局、R/3出局)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Walks / Runs per 3 Outs</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>投手平均每投一局（3 個出局）送出幾次保送、失掉幾分。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">BB/局 = (BB × 3) / 出局數  |  R/局 = (R × 3) / 出局數</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>都是越低越好。計時賽局數不固定，所以用 3 個出局當一局；失分也受守備影響，請搭配 sFIP 一起看。</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-bold text-white text-sm">投手滾飛出局比 (GO/AO)</span>
+                    <span class="font-mono text-[10px] text-slate-500 text-right">Ground-to-Air Ratio</span>
+                  </div>
+                  <p class="text-slate-100"><span class="text-sky-300 font-bold">看什麼：</span>投手抓到的出局多半是滾地球還是飛球。</p>
+                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-400">GO/AO = GO / FO</span></p>
+                  <p class="text-slate-300"><span class="text-slate-400">怎麼看：</span>大於 1.5 是滾地球型（雙殺多、長打少）；小於 0.8 是飛球型，比較要靠 4 名外野手的守備範圍。</p>
                 </div>
               </div>
             </div>
           </div>
-        <!-- 第五大類：投手指標 -->
-            <div class="space-y-3.5">
-              <div class="flex items-center space-x-2 border-b border-teal-800/50 pb-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-teal-400"></span>
-                <h3 class="text-sm sm:text-base font-bold text-teal-300">五、投手指標（慢速壘球投手賽伯計量）</h3>
-              </div>
-              <div class="p-3.5 bg-teal-950/20 border border-teal-800/40 rounded-xl text-teal-300/90 text-xs leading-relaxed mb-3">
-                <b class="text-teal-200">💡 慢壘科學核心原理：為什麼傳統棒球 ERA 在慢速壘球完全失效？</b><br>
-                慢速高拋壘球投出的球速僅 30~50 km/h，且強制拋物線弧度，聯盟打者平均打擊率高達 .500~.600，被擊出安打是物理常態。傳統防禦率 (ERA) 嚴重受到守備員範圍、失誤與外野漏接之劇烈污染，完全無法反映投手真實水準。慢壘投手的第一天職是<b>「極端壓制四壞保送」</b>與<b>「製造弱化出局」</b>！
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-slate-950 p-4 rounded-xl border border-teal-900/40 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-teal-300 text-sm">慢壘獨立防禦率 (sFIP)</span>
-                    <span class="font-mono text-[10px] text-teal-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Slowpitch FIP</span>
-                  </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-teal-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">sFIP = (3.0×BB - 2.0×K_swing - 1.5×K_foul) / IP + 4.5</span></p>
-                  <p><span class="text-slate-400">說明：</span>完全剝離守備隊友與安打運氣干擾，只評估投手個人完全掌控的事件：保送 (BB) 施加最大懲罰 (+3.0)，揮空三振給予強力獎勵 (-2.0)，兩好球界外誘殺給予顯著獎勵 (-1.5)。慢壘中低於 3.50 即屬超級神級王牌！</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-emerald-900/40 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-emerald-300 text-sm">好球帶好投率 (ZCR)</span>
-                    <span class="font-mono text-[10px] text-emerald-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Zone Control Rate</span>
-                  </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-emerald-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ZCR = 1 - (BB / TBF) = (TBF - BB) / TBF</span></p>
-                  <p><span class="text-slate-400">說明：</span>慢壘投手的核心天職！衡量面對打者時，能有效將球送進好球板或迫使打者出棒、避免奉送免費保送的機率。慢壘送保送等同於自爆大局，頂尖投手 ZCR 必須維持在 93% 以上。</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-amber-900/40 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-amber-300 text-sm">兩好球界外K誘陷率 (FKR)</span>
-                    <span class="font-mono text-[10px] text-amber-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Foul-K Ratio</span>
-                  </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-amber-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">FKR = K_foul / (K_swing + K_foul)</span></p>
-                  <p><span class="text-slate-400">說明：</span>慢速壘球專屬魔球戰術！慢壘官方規則規定兩好球後擊出界外球即判出局。頂級投手深諳心理戰，在兩好球後專門投出深遠外角或極高下墜弧度，誘騙打者出棒削成界外球強行抓出局！</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-sky-900/40 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-sky-300 text-sm">場內擊球轉出局率 (BIP Out%)</span>
-                    <span class="font-mono text-[10px] text-sky-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">BIP Out Conversion</span>
-                  </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-sky-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">BIP Out% = (GO + FO + DP) / (GO + FO + DP + Hits)</span></p>
-                  <p><span class="text-slate-400">說明：</span>慢壘被打進場內是必然。該指標衡量被打入場內的球有多少比例能被隊友抓下出局，反映了投手投球球質是否具有優異的「弱化擊球」效果（多形成軟弱滾地或無害沖天炮）。</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-white text-sm">每局四壞保送數 (BB/3出局)</span>
-                    <span class="font-mono text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Walks per 3 Outs</span>
-                  </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-white font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">BB/局 = (BB × 3) / Outs</span></p>
-                  <p><span class="text-slate-400">說明：</span>本隊比賽是計時賽、局數不固定，所以以 3 個出局（一局）為基準，衡量投手每投一局平均送出幾次保送；每局失分 (R/3出局) 同一基準。數值越低越好。</p>
-                </div>
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 shadow-sm">
-                  <div class="flex items-center justify-between">
-                    <span class="font-black text-white text-sm">投手滾飛出局比 (GO/AO)</span>
-                    <span class="font-mono text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Ground-to-Air Ratio</span>
-                  </div>
-                  <p><span class="text-slate-400">公式：</span><span class="font-mono text-white font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">GO/AO = GO / FO</span></p>
-                  <p><span class="text-slate-400">說明：</span>區分投手出局風格。大於 1.5 為滾地球重下沉型（內野雙殺多、長打威脅小）；小於 0.8 為高拋飛球型（考驗外野 4 人守備覆蓋）。</p>
-                </div>
-              </div>
-            </div>
-            </section>
+        </section>
       </div>
       <div id="panelHealth" class="hidden space-y-6"></div>
       <!-- 守備能力手動排名彈窗 (內部教練專用：支援各守位順位 1~3 排名與 GitHub 雲端同步) -->
@@ -3324,30 +3397,32 @@
 
 
     const leaderboardGlossary = {
-      wrc_plus: { title: "加權得分創造 (wRC+)", formula: "wRC+ = (wOBA / Team_wOBA) × 100", desc: "以全隊平均 wOBA 為基準的綜合進攻效率指數，透過加權上壘率反映真實得分效益。" },
-      ops: { title: "整體攻擊指數 (OPS)", formula: "OPS = OBP + SLG", desc: "結合上壘能力與長打破壞力的經典綜合指標。慢壘中高於 1.200 即屬優異。" },
-      ops_plus: { title: "標準化攻擊指數 (OPS+)", formula: "OPS+ = (OPS / Team_OPS) × 100", desc: "個人 OPS 相較於全隊平均的百分比指數，100 為隊均基準。" },
-      woba: { title: "加權上壘率 (wOBA)", formula: "wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA", desc: "依據得分期望值賦予各進攻事件精確線性權重之上壘指標。" },
-      rc: { title: "預估創造得分 (RC)", formula: "RC = (H + BB) × TB / (AB + BB)", desc: "評估球員在該時間區間內總共為球隊換取了多少實體分數。" },
-      rc_3: { title: "每局創造得分 (RC/3出局)", formula: "RC/局 = (RC × 3) / (AB - H + SF)", desc: "以 3 個出局（一個半局）為基準：假設整局都由該打者打擊，預期可得的分數。本隊為計時賽、局數不固定，因此不用棒球的 27 出局。" },
-      avg: { title: "打擊率 (AVG)", formula: "AVG = H / AB", desc: "每打數擊出安打的機率，慢壘隊均水準約在 .500 上下。" },
-      obp: { title: "上壘率 (OBP)", formula: "OBP = (H + BB) / (AB + BB + SF)", desc: "衡量打者站上打擊區「避免製造出局數」的機率。" },
-      slg: { title: "長打率 (SLG)", formula: "SLG = TB / AB", desc: "打者平均每打數所能推進的總壘包數。" },
-      iso: { title: "純長打率 (ISO)", formula: "ISO = SLG - AVG", desc: "過濾一壘安打水分，純粹衡量擊出長打的淨破壞力。" },
-      babip: { title: "場內安打率 (BABIP)", formula: "BABIP = (H - HR) / (AB - K - HR + SF)", desc: "擊球員將球擊入場內形成安打的機率。" },
-      seca: { title: "次級打擊率 (SecA)", formula: "SecA = (TB - H + BB) / AB", desc: "純粹衡量打者透過額外長打與保送獲取壘包之產能。" },
-      sdi: { title: "慢壘好球帶紀律指數 2.0 (SDI 2.0)", formula: "SDI 2.0 = (BB - 1.0×界外K - 2.0×揮空K) / PA", desc: "慢壘特化紀律模型：區分兩好球後的『界外纏鬥K (-1.0x)』與遭引誘之『揮空/站立三振 (-2.0x)』，更精準回饋選球耐心與擊球本領。" },
-      ld_pct: { title: "平飛球率 (LD%)", formula: "LD% = Line Drives / BIP", desc: "場內擊球中平飛球的比例。平飛球是最容易成為安打的擊球型態（各型態的實際安打率見個人檔案的擊球型態卡片）。" },
-      xba: { title: "預期打擊率 (xBA)", formula: "xBA = Σ(擊球型態期望值 + HR) / AB", desc: "排除運氣因素，根據擊球初速與飛行型態 (LD, GB, FB, PU) 推算之真實擊球品質期望打擊率。" },
-      xwoba: { title: "預期加權上壘率 (xwOBA)", formula: "xwOBA = 根據 Statcast 擊球型態推算之預期攻擊期望值", desc: "現代賽伯計量評估打者真實進攻破壞力的旗艦指標，完全過濾守備運氣。" },
-      contact_pct: { title: "擊球掌握率 (Contact%)", formula: "Contact% = (AB - K) / AB", desc: "打者成功將球擊出未吞三振的機率。" },
-      bb_pct: { title: "四壞保送率 (BB%)", formula: "BB% = BB / PA", desc: "平均每打席選到四壞保送的機率。" },
-      k_pct_asc: { title: "三振率 (K%) [低至高排序]", formula: "K% = K / PA", desc: "平均每打席吞下三振出局的機率，以低三振率優先排序。" },
-      bb_k_ratio: { title: "保送三振比 (BB/K)", formula: "BB/K = BB / K (K=0 則計為 BB 數)", desc: "選球控制比例，大於 1.0 代表選球正向產出多於無效揮空。" },
-      h: { title: "安打數 (H)", formula: "H = 1H + 2H + 3H + HR (自算)", desc: "擊出安打之總次數。" },
-      hr: { title: "全壘打數 (HR)", formula: "全壘打累計總支數", desc: "一棒清壘之最高進攻產物。" },
-      bb: { title: "四壞保送數 (BB)", formula: "四壞保送累計次數", desc: "選球耐性之計數展現。" },
-      pa: { title: "打席數 (PA)", formula: "PA = AB + BB + SF", desc: "打者完成完整打擊輪次的總次數。" }
+      wrc_plus: { title: "加權得分創造 (wRC+)", formula: "wRC+ = (wOBA / Team_wOBA) × 100", desc: "攻擊產值相當於全隊平均的幾 %。100 是平均，120 代表多 20%。" },
+      ops: { title: "整體攻擊指數 (OPS)", formula: "OPS = OBP + SLG", desc: "上壘能力加長打能力，一個數字看整體攻擊力。慢壘 1.200 以上算優異。" },
+      ops_plus: { title: "標準化攻擊指數 (OPS+)", formula: "OPS+ = (OPS / Team_OPS) × 100", desc: "用 OPS 和全隊平均比較，100 是全隊平均。" },
+      woba: { title: "加權上壘率 (wOBA)", formula: "wOBA = (0.69×BB + 0.89×1H + 1.27×2H + 1.62×3H + 2.10×HR) / PA", desc: "按得分價值替保送和各種安打加權，看平均每打席的攻擊價值。" },
+      rc: { title: "預估創造得分 (RC)", formula: "RC = (H + BB) × TB / (AB + BB)", desc: "估計這名打者總共幫球隊製造了幾分。打越多越高，屬累積數。" },
+      rc_3: { title: "每局創造得分 (RC/3出局)", formula: "RC/局 = (RC × 3) / (AB - H + SF)", desc: "如果一整局都由他來打，預期能得幾分。本隊為計時賽、局數不固定，所以用 3 個出局當一局。" },
+      avg: { title: "打擊率 (AVG)", formula: "AVG = H / AB", desc: "打數中打成安打的比例。慢壘隊均約 .500。" },
+      obp: { title: "上壘率 (OBP)", formula: "OBP = (H + BB) / (AB + BB + SF)", desc: "每次上場沒有出局、成功上壘的比例，排前段棒次的首要依據。" },
+      slg: { title: "長打率 (SLG)", formula: "SLG = TB / AB", desc: "平均每個打數推進幾個壘包，看球打得多遠。" },
+      iso: { title: "純長打率 (ISO)", formula: "ISO = SLG - AVG", desc: "扣掉一壘安打後還剩多少打遠的能力。慢壘 .250 以上屬頂級。" },
+      babip: { title: "場內安打率 (BABIP)", formula: "BABIP = (H - HR) / (AB - K - HR + SF)", desc: "打進場內的球有多少變成安打。偏高可能是運氣好，也可能是擊球強、跑得快。" },
+      seca: { title: "次級打擊率 (SecA)", formula: "SecA = (TB - H + BB) / AB", desc: "打擊率看不到的貢獻：長打多推進的壘包加上保送。" },
+      sdi: { title: "慢壘好球帶紀律指數 2.0 (SDI 2.0)", formula: "SDI 2.0 = (BB - 1.0×界外K - 2.0×揮空K) / PA", desc: "選球紀律分數：保送加分、三振扣分，揮空三振扣得比界外三振重。越高越好。" },
+      ld_pct: { title: "平飛球率 (LD%)", formula: "LD% = Line Drives / BIP", desc: "打進場內的球裡平飛球的比例。平飛球最容易變安打（各型態的實際安打率見個人檔案的擊球型態卡片）。" },
+      pull_pct: { title: "拉打率 (Pull%)", formula: "Pull% = 拉打邊落點 / 已判斷方向的擊球", desc: "打出去的球往拉打邊（右打者的左邊）的比例。太高時對手容易針對布陣。" },
+      oppo_pct: { title: "反向推打率 (Oppo%)", formula: "Oppo% = 推打邊落點 / 已判斷方向的擊球", desc: "打出去的球往推打邊（右打者的右邊）的比例。高代表能把球打向全場。" },
+      xba: { title: "預期打擊率 (xBA)", formula: "xBA = Σ(擊球型態期望值 + HR) / AB", desc: "只看擊球型態，這名打者「應該」有多少打擊率。實際明顯比預期高是運氣好，低是被接走。" },
+      xwoba: { title: "預期加權上壘率 (xwOBA)", formula: "xwOBA = wOBA，但一壘安打改用擊球型態的期望值", desc: "看攻擊價值有多少來自擊球品質：一壘安打改用期望值，長打仍照實際結果，所以只排除部分運氣。" },
+      contact_pct: { title: "擊球掌握率 (Contact%)", formula: "Contact% = (AB - K) / AB", desc: "打數中把球打出去、沒被三振的比例。慢壘好打者約 90% 以上。" },
+      bb_pct: { title: "四壞保送率 (BB%)", formula: "BB% = BB / PA", desc: "每次上場選到保送的比例，看選球耐心。" },
+      k_pct_asc: { title: "三振率 (K%) [低至高排序]", formula: "K% = K / PA", desc: "每次上場被三振的比例，越低越好，所以由低排到高。" },
+      bb_k_ratio: { title: "保送三振比 (BB/K)", formula: "BB/K = BB / K (K=0 則計為 BB 數)", desc: "保送和三振的比例。大於 1 代表保送比三振多。" },
+      h: { title: "安打數 (H)", formula: "H = 1H + 2H + 3H + HR (自算)", desc: "打出安打的總次數。" },
+      hr: { title: "全壘打數 (HR)", formula: "全壘打累計總支數", desc: "打出全壘打的總支數。" },
+      bb: { title: "四壞保送數 (BB)", formula: "四壞保送累計次數", desc: "選到保送的總次數。" },
+      pa: { title: "打席數 (PA)", formula: "PA = AB + BB + SF", desc: "上場打擊的總次數。打席越多，比率數據越可信。" }
     };
 
 
