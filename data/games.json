@@ -1,5 +1,1667 @@
 [
   {
+    "id": "game_20261031_7eaa4623aeb2445c72f06092f9e5eeaa",
+    "date": "2026-10-31",
+    "opponent": "友隊選手",
+    "tag": "系壘例行賽",
+    "hasDh": false,
+    "dhSlot": null,
+    "lineupPositions": [
+      "LF",
+      "SF",
+      "P",
+      "SS",
+      "2B",
+      "3B",
+      "RC",
+      "1B",
+      "RF",
+      "C"
+    ],
+    "startingPositions": [
+      "LF",
+      "SF",
+      "C",
+      "2B",
+      "SS",
+      "3B",
+      "RC",
+      "1B",
+      "RF",
+      "P"
+    ],
+    "positionChanges": [
+      {
+        "inning": 1,
+        "half": "top",
+        "timestamp": 1793414938766,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "林志豪",
+            "陳柏翰"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "C",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "P"
+          ],
+          "pitcherName": "陳柏翰"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "林志豪",
+            "陳柏翰"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        }
+      },
+      {
+        "inning": 1,
+        "half": "top",
+        "timestamp": 1793414954949,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "林志豪",
+            "陳柏翰"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "林志豪",
+            "陳柏翰"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "C",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "P"
+          ],
+          "pitcherName": "陳柏翰"
+        }
+      },
+      {
+        "inning": 1,
+        "half": "top",
+        "timestamp": 1793414960165,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "林志豪",
+            "陳柏翰"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "C",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "P"
+          ],
+          "pitcherName": "陳柏翰"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "林志豪",
+            "陳柏翰"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        }
+      },
+      {
+        "inning": 4,
+        "half": "top",
+        "timestamp": 1793416421744,
+        "reason": "代打／換人",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "林志豪",
+            "陳柏翰"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "林志豪",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        }
+      },
+      {
+        "inning": 4,
+        "half": "top",
+        "timestamp": 1793416436088,
+        "reason": "代打／換人",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "林志豪",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        }
+      },
+      {
+        "inning": 4,
+        "half": "top",
+        "timestamp": 1793416499738,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "SS",
+            "2B",
+            "P",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "陳威騏"
+        }
+      },
+      {
+        "inning": 4,
+        "half": "top",
+        "timestamp": 1793416509220,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "SS",
+            "2B",
+            "P",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "陳威騏"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        }
+      },
+      {
+        "inning": 4,
+        "half": "top",
+        "timestamp": 1793416574133,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "2B",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "2B",
+            "P",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "謝承祐"
+        }
+      },
+      {
+        "inning": 4,
+        "half": "top",
+        "timestamp": 1793416585298,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "2B",
+            "P",
+            "SS",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "謝承祐"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "2B",
+            "SS",
+            "P",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "陳威騏"
+        }
+      },
+      {
+        "inning": 5,
+        "half": "top",
+        "timestamp": 1793416899612,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "2B",
+            "SS",
+            "P",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "陳威騏"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "SS",
+            "2B",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        }
+      },
+      {
+        "inning": 5,
+        "half": "top",
+        "timestamp": 1793416943077,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "SS",
+            "2B",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "P",
+            "SF",
+            "SS",
+            "2B",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "簡承均"
+        }
+      },
+      {
+        "inning": 5,
+        "half": "top",
+        "timestamp": 1793416962475,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "P",
+            "SF",
+            "SS",
+            "2B",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "簡承均"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "SS",
+            "2B",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        }
+      },
+      {
+        "inning": 5,
+        "half": "top",
+        "timestamp": 1793417107150,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "SS",
+            "2B",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "RC",
+            "SS",
+            "2B",
+            "3B",
+            "P",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "田耕宇"
+        }
+      },
+      {
+        "inning": 5,
+        "half": "top",
+        "timestamp": 1793417111066,
+        "reason": "換投",
+        "before": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "RC",
+            "SS",
+            "2B",
+            "3B",
+            "P",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "田耕宇"
+        },
+        "after": {
+          "lineup": [
+            "劉憬翰",
+            "簡承均",
+            "盧宣嘉",
+            "謝承祐",
+            "陳威騏",
+            "洪銘駿",
+            "田耕宇",
+            "陳泓銘",
+            "吳侑宸",
+            "楊喬豐"
+          ],
+          "positions": [
+            "LF",
+            "SF",
+            "P",
+            "SS",
+            "2B",
+            "3B",
+            "RC",
+            "1B",
+            "RF",
+            "C"
+          ],
+          "pitcherName": "盧宣嘉"
+        }
+      }
+    ],
+    "ourRole": "後攻",
+    "lineup": [
+      "劉憬翰",
+      "簡承均",
+      "盧宣嘉",
+      "謝承祐",
+      "陳威騏",
+      "洪銘駿",
+      "田耕宇",
+      "陳泓銘",
+      "吳侑宸",
+      "楊喬豐"
+    ],
+    "startingLineup": [
+      "劉憬翰",
+      "簡承均",
+      "盧宣嘉",
+      "謝承祐",
+      "陳威騏",
+      "洪銘駿",
+      "田耕宇",
+      "陳泓銘",
+      "林志豪",
+      "陳柏翰"
+    ],
+    "substitutions": [
+      {
+        "inning": 4,
+        "half": "top",
+        "slot": 10,
+        "outPlayer": "陳柏翰",
+        "inPlayer": "楊喬豐",
+        "timestamp": 1793416421744
+      },
+      {
+        "inning": 4,
+        "half": "top",
+        "slot": 9,
+        "outPlayer": "林志豪",
+        "inPlayer": "吳侑宸",
+        "timestamp": 1793416436088
+      }
+    ],
+    "pitcherName": "盧宣嘉",
+    "currentInning": 5,
+    "currentHalf": "bottom",
+    "currentOuts": 3,
+    "currentBases": {
+      "first": null,
+      "second": null,
+      "third": null
+    },
+    "currentBatterIdx": 5,
+    "status": "in_progress",
+    "finalScore": {
+      "us": 1,
+      "opp": 8
+    },
+    "innings": [
+      {
+        "inningNum": 1,
+        "topBottom": "top",
+        "runs": 4,
+        "hits": 2,
+        "plateAppearances": [],
+        "defensiveEvents": [
+          {
+            "id": "def_1793414902434_kv2c",
+            "pitcher": "陳柏翰",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793414905800_ey2n",
+            "pitcher": "陳柏翰",
+            "type": "BB",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "投手投出四壞保送"
+          },
+          {
+            "id": "def_1793414906631_c7u8",
+            "pitcher": "陳柏翰",
+            "type": "BB",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "投手投出四壞保送"
+          },
+          {
+            "id": "def_1793414956030_1gh6",
+            "pitcher": "陳柏翰",
+            "type": "BB",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "投手投出四壞保送"
+          },
+          {
+            "id": "def_1793414962013_hvsz",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793415038758_9jq2",
+            "pitcher": "盧宣嘉",
+            "type": "RUN",
+            "runs": 2,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "對方進攻得分 (+2 分)"
+          },
+          {
+            "id": "def_1793415038905_vltz",
+            "pitcher": "盧宣嘉",
+            "type": "RUN",
+            "runs": 2,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "對方進攻得分 (+2 分)"
+          }
+        ]
+      },
+      {
+        "inningNum": 1,
+        "topBottom": "bottom",
+        "runs": 0,
+        "hits": 1,
+        "plateAppearances": [
+          {
+            "playId": "play_1793415123369",
+            "batterName": "劉憬翰",
+            "slot": 1,
+            "result": "1H",
+            "trajectory": "grounder",
+            "location": "SS",
+            "x": 0.381,
+            "y": 0.568,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "劉憬翰 擊出 SS 方向一壘安打"
+          },
+          {
+            "playId": "play_1793415159698",
+            "batterName": "簡承均",
+            "slot": 2,
+            "result": "FC",
+            "trajectory": "grounder",
+            "location": "3B",
+            "x": 0.369,
+            "y": 0.61,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 1,
+            "desc": "簡承均 野手選擇上壘，壘上跑者出局 (+1 出局)"
+          },
+          {
+            "playId": "play_1793415231877",
+            "batterName": "盧宣嘉",
+            "slot": 3,
+            "result": "FO",
+            "trajectory": "fly",
+            "location": "3B",
+            "x": 0.341,
+            "y": 0.601,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 2,
+            "desc": "盧宣嘉 擊出 3B 方向 FO"
+          },
+          {
+            "playId": "play_1793415263793",
+            "batterName": "謝承祐",
+            "slot": 4,
+            "result": "E",
+            "trajectory": "grounder",
+            "location": "P",
+            "x": 0.532,
+            "y": 0.689,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 2,
+            "desc": "謝承祐 擊出 P 方向 E"
+          },
+          {
+            "playId": "play_1793415316822",
+            "batterName": "陳威騏",
+            "slot": 5,
+            "result": "SF",
+            "trajectory": "grounder",
+            "location": "C",
+            "x": 0.502,
+            "y": 0.931,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "陳威騏 擊出 C 方向 SF"
+          }
+        ],
+        "defensiveEvents": []
+      },
+      {
+        "inningNum": 2,
+        "topBottom": "top",
+        "runs": 0,
+        "hits": 2,
+        "plateAppearances": [],
+        "defensiveEvents": [
+          {
+            "id": "def_1793415590660_wwef",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793415594023_ik7d",
+            "pitcher": "盧宣嘉",
+            "type": "FO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 1,
+            "desc": "外野高飛/平飛接殺 (+1 出局)"
+          },
+          {
+            "id": "def_1793415596573_ywrh",
+            "pitcher": "盧宣嘉",
+            "type": "GO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 2,
+            "desc": "內野滾地刺殺 (+1 出局)"
+          },
+          {
+            "id": "def_1793415597890_1bi5",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 2,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793415605239_0dp8",
+            "pitcher": "盧宣嘉",
+            "type": "FO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "外野高飛/平飛接殺 (+1 出局)"
+          }
+        ]
+      },
+      {
+        "inningNum": 2,
+        "topBottom": "bottom",
+        "runs": 0,
+        "hits": 1,
+        "plateAppearances": [
+          {
+            "playId": "play_1793415645837",
+            "batterName": "洪銘駿",
+            "slot": 6,
+            "result": "1H",
+            "trajectory": "grounder",
+            "location": "SF",
+            "x": 0.48,
+            "y": 0.387,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "洪銘駿 擊出 SF 方向一壘安打"
+          },
+          {
+            "playId": "play_1793415680167",
+            "batterName": "田耕宇",
+            "slot": 7,
+            "result": "BB",
+            "trajectory": "none",
+            "location": "C",
+            "x": 0.5,
+            "y": 0.93,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "田耕宇 選到四壞球保送上壘"
+          },
+          {
+            "playId": "play_1793415748713",
+            "batterName": "陳泓銘",
+            "slot": 8,
+            "result": "DP",
+            "trajectory": "line",
+            "location": "SS",
+            "x": 0.474,
+            "y": 0.52,
+            "runsScored": 0,
+            "outsAdded": 2,
+            "outsAtEnd": 2,
+            "desc": "陳泓銘 擊出雙殺打 (+2 出局)"
+          },
+          {
+            "playId": "play_1793415767846",
+            "batterName": "林志豪",
+            "slot": 9,
+            "result": "FO",
+            "trajectory": "popup",
+            "location": "C",
+            "x": 0.502,
+            "y": 0.909,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "林志豪 擊出 C 方向 FO"
+          }
+        ],
+        "defensiveEvents": []
+      },
+      {
+        "inningNum": 3,
+        "topBottom": "top",
+        "runs": 0,
+        "hits": 2,
+        "plateAppearances": [],
+        "defensiveEvents": [
+          {
+            "id": "def_1793415880607_jqeb",
+            "pitcher": "盧宣嘉",
+            "type": "GO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 1,
+            "desc": "內野滾地刺殺 (+1 出局)"
+          },
+          {
+            "id": "def_1793415932087_xqwm",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793415973783_f3za",
+            "pitcher": "盧宣嘉",
+            "type": "FO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 2,
+            "desc": "外野高飛/平飛接殺 (+1 出局)"
+          },
+          {
+            "id": "def_1793416011596_qxvj",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 2,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793416063576_ms0g",
+            "pitcher": "盧宣嘉",
+            "type": "GO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "內野滾地刺殺 (+1 出局)"
+          }
+        ]
+      },
+      {
+        "inningNum": 3,
+        "topBottom": "bottom",
+        "runs": 0,
+        "hits": 2,
+        "plateAppearances": [
+          {
+            "playId": "play_1793416186885",
+            "batterName": "陳柏翰",
+            "slot": 10,
+            "result": "BB",
+            "trajectory": "none",
+            "location": "C",
+            "x": 0.5,
+            "y": 0.93,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "陳柏翰 選到四壞球保送上壘"
+          },
+          {
+            "playId": "play_1793416221050",
+            "batterName": "劉憬翰",
+            "slot": 1,
+            "result": "FO",
+            "trajectory": "fly",
+            "location": "2B",
+            "x": 0.556,
+            "y": 0.529,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 1,
+            "desc": "劉憬翰 擊出 2B 方向 FO"
+          },
+          {
+            "playId": "play_1793416258665",
+            "batterName": "簡承均",
+            "slot": 2,
+            "result": "1H",
+            "trajectory": "grounder",
+            "location": "SS",
+            "x": 0.438,
+            "y": 0.48,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "簡承均 擊出 SS 方向一壘安打"
+          },
+          {
+            "playId": "play_1793416310495",
+            "batterName": "盧宣嘉",
+            "slot": 3,
+            "result": "FO",
+            "trajectory": "fly",
+            "location": "P",
+            "x": 0.489,
+            "y": 0.686,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 2,
+            "desc": "盧宣嘉 擊出 P 方向 FO"
+          },
+          {
+            "playId": "play_1793416347759",
+            "batterName": "謝承祐",
+            "slot": 4,
+            "result": "1H",
+            "trajectory": "grounder",
+            "location": "SS",
+            "x": 0.456,
+            "y": 0.541,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 2,
+            "desc": "謝承祐 擊出 SS 方向一壘安打"
+          },
+          {
+            "playId": "play_1793416400122",
+            "batterName": "陳威騏",
+            "slot": 5,
+            "result": "FO",
+            "trajectory": "grounder",
+            "location": "SS",
+            "x": 0.341,
+            "y": 0.568,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "陳威騏 擊出 SS 方向 FO"
+          }
+        ],
+        "defensiveEvents": []
+      },
+      {
+        "inningNum": 4,
+        "topBottom": "top",
+        "runs": 0,
+        "hits": 2,
+        "plateAppearances": [],
+        "defensiveEvents": [
+          {
+            "id": "def_1793416506133_uur2",
+            "pitcher": "陳威騏",
+            "type": "FO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 1,
+            "desc": "外野高飛/平飛接殺 (+1 出局)"
+          },
+          {
+            "id": "def_1793416512035_8ux7",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793416564597_pdc7",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793416575346_x8y6",
+            "pitcher": "謝承祐",
+            "type": "GO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 2,
+            "desc": "內野滾地刺殺 (+1 出局)"
+          },
+          {
+            "id": "def_1793416590314_hrjh",
+            "pitcher": "陳威騏",
+            "type": "FO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "外野高飛/平飛接殺 (+1 出局)"
+          }
+        ]
+      },
+      {
+        "inningNum": 4,
+        "topBottom": "bottom",
+        "runs": 0,
+        "hits": 1,
+        "plateAppearances": [
+          {
+            "playId": "play_1793416694788",
+            "batterName": "洪銘駿",
+            "slot": 6,
+            "result": "FO",
+            "trajectory": "fly",
+            "location": "3B",
+            "x": 0.293,
+            "y": 0.71,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 1,
+            "desc": "洪銘駿 擊出 3B 方向 FO"
+          },
+          {
+            "playId": "play_1793416757450",
+            "batterName": "田耕宇",
+            "slot": 7,
+            "result": "1H",
+            "trajectory": "grounder",
+            "location": "1B",
+            "x": 0.644,
+            "y": 0.653,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "田耕宇 擊出 1B 方向一壘安打"
+          },
+          {
+            "playId": "play_1793416788132",
+            "batterName": "陳泓銘",
+            "slot": 8,
+            "result": "FO",
+            "trajectory": "fly",
+            "location": "SF",
+            "x": 0.495,
+            "y": 0.381,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 2,
+            "desc": "陳泓銘 擊出 SF 方向 FO"
+          },
+          {
+            "playId": "play_1793416819380",
+            "batterName": "吳侑宸",
+            "slot": 9,
+            "result": "FO",
+            "trajectory": "grounder",
+            "location": "2B",
+            "x": 0.6,
+            "y": 0.55,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "吳侑宸 擊出 2B 方向 FO"
+          }
+        ],
+        "defensiveEvents": []
+      },
+      {
+        "inningNum": 5,
+        "topBottom": "top",
+        "runs": 4,
+        "hits": 4,
+        "plateAppearances": [],
+        "defensiveEvents": [
+          {
+            "id": "def_1793416900244_apvd",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793416944741_ki3m",
+            "pitcher": "簡承均",
+            "type": "FO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 1,
+            "desc": "外野高飛/平飛接殺 (+1 出局)"
+          },
+          {
+            "id": "def_1793416963406_dxyl",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793417032901_41kp",
+            "pitcher": "盧宣嘉",
+            "type": "BB",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "投手投出四壞保送"
+          },
+          {
+            "id": "def_1793417075515_o4yk",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793417077867_ykdv",
+            "pitcher": "盧宣嘉",
+            "type": "HIT",
+            "runs": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "被擊出安打"
+          },
+          {
+            "id": "def_1793417078584_9pue",
+            "pitcher": "盧宣嘉",
+            "type": "RUN",
+            "runs": 2,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "對方進攻得分 (+2 分)"
+          },
+          {
+            "id": "def_1793417108215_ycce",
+            "pitcher": "田耕宇",
+            "type": "FO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 2,
+            "desc": "外野高飛/平飛接殺 (+1 出局)"
+          },
+          {
+            "id": "def_1793417112846_ls5t",
+            "pitcher": "盧宣嘉",
+            "type": "RUN",
+            "runs": 1,
+            "outsAdded": 0,
+            "outsAtEnd": 2,
+            "desc": "對方進攻得分 (+1 分)"
+          },
+          {
+            "id": "def_1793417162995_rnqd",
+            "pitcher": "盧宣嘉",
+            "type": "FO",
+            "runs": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "外野高飛/平飛接殺 (+1 出局)"
+          }
+        ]
+      },
+      {
+        "inningNum": 5,
+        "topBottom": "bottom",
+        "runs": 1,
+        "hits": 3,
+        "plateAppearances": [
+          {
+            "playId": "play_1793417258470",
+            "batterName": "楊喬豐",
+            "slot": 10,
+            "result": "1H",
+            "trajectory": "grounder",
+            "location": "P",
+            "x": 0.432,
+            "y": 0.674,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 0,
+            "desc": "楊喬豐 擊出 P 方向一壘安打"
+          },
+          {
+            "playId": "play_1793417288084",
+            "batterName": "劉憬翰",
+            "slot": 1,
+            "result": "FO",
+            "trajectory": "fly",
+            "location": "SS",
+            "x": 0.387,
+            "y": 0.535,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 1,
+            "desc": "劉憬翰 擊出 SS 方向 FO"
+          },
+          {
+            "playId": "play_1793417302900",
+            "batterName": "簡承均",
+            "slot": 2,
+            "result": "1H",
+            "trajectory": "grounder",
+            "location": "SS",
+            "x": 0.287,
+            "y": 0.505,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "簡承均 擊出 SS 方向一壘安打"
+          },
+          {
+            "playId": "play_1793417324782",
+            "batterName": "盧宣嘉",
+            "slot": 3,
+            "result": "1H",
+            "trajectory": "grounder",
+            "location": "3B",
+            "x": 0.335,
+            "y": 0.634,
+            "runsScored": 0,
+            "outsAdded": 0,
+            "outsAtEnd": 1,
+            "desc": "盧宣嘉 擊出 3B 方向一壘安打"
+          },
+          {
+            "playId": "play_1793417354830",
+            "batterName": "謝承祐",
+            "slot": 4,
+            "result": "FC",
+            "trajectory": "grounder",
+            "location": "2B",
+            "x": 0.511,
+            "y": 0.499,
+            "runsScored": 0,
+            "outsAdded": 1,
+            "outsAtEnd": 2,
+            "desc": "謝承祐 野手選擇上壘，壘上跑者出局 (+1 出局)"
+          },
+          {
+            "playId": "play_1793417377380",
+            "batterName": "陳威騏",
+            "slot": 5,
+            "result": "GO",
+            "trajectory": "grounder",
+            "location": "P",
+            "x": 0.486,
+            "y": 0.674,
+            "runsScored": 1,
+            "outsAdded": 1,
+            "outsAtEnd": 3,
+            "desc": "陳威騏 擊出 P 方向 GO"
+          }
+        ],
+        "defensiveEvents": []
+      }
+    ]
+  },
+  {
     "id": "game_20261016_4140a5bd43ad9cd245311a4133c8d2d4",
     "date": "2026-10-16",
     "opponent": "運管",
