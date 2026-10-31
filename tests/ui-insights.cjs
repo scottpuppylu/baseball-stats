@@ -305,14 +305,34 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       await page.locator('[data-insight-image]').click();
       await page.waitForSelector('#insightImageModal img');
       const image=await page.evaluate(()=>{const img=document.querySelector('#insightImageModal img');return {w:img.naturalWidth,h:img.naturalHeight};});
-      assert.equal(image.w,1080);
-      // The team badge is drawn in the top-left corner (not the plain background colour).
-      const badge=await page.evaluate(()=>{
-        const canvas=teamInsights.drawGameImage(allGames.find(g=>g.id==='game_20260920_4922'));
-        const [r,g,b]=canvas.getContext('2d').getImageData(56+38,34+38,1,1).data;
-        return {r,g,b};
+      assert.deepEqual(image,{w:1080,h:1920},'an Instagram story (9:16)');
+      // Instagram covers the top (avatar, name, progress bar) and the bottom (reply bar): every text and the badge stay
+      // inside teamInsights.SAFE (just clear of both), for a normal game and for an 18-batter one (which scales down instead of losing rows).
+      const safe=await page.evaluate(()=>{
+        const proto=CanvasRenderingContext2D.prototype,fill=proto.fillText,draw=proto.drawImage;
+        const marks=[];
+        proto.fillText=function(t,x,y,...rest){const m=this.getTransform();marks.push({t:String(t),y:m.d*y+m.f});return fill.call(this,t,x,y,...rest);};
+        proto.drawImage=function(img,...rest){if(String(img.src||'').includes('logo')){const m=this.getTransform();marks.push({t:'logo',y:m.d*rest[1]+m.f});}return draw.call(this,img,...rest);};
+        const game=allGames.find(g=>g.id==='game_20260920_4922');
+        const big=JSON.parse(JSON.stringify(game));
+        const inn=big.innings.find(i=>(i.plateAppearances||[]).length);
+        for(let i=0;i<18;i++) inn.plateAppearances.push({batterName:'測試'+i,slot:i+1,result:['1H','2H','HR','BB','K','GO'][i%6]});
+        const out=[game,big].map(g=>{
+          marks.length=0;
+          const cv=teamInsights.drawGameImage(g),rows=teamInsights.gameSummary(g).rows,texts=marks.filter(m=>m.t!=='logo');
+          return {w:cv.width,h:cv.height,min:Math.min(...texts.map(m=>m.y)),max:Math.max(...texts.map(m=>m.y)),logo:marks.find(m=>m.t==='logo'),
+            names:rows.every(r=>texts.some(m=>m.t.startsWith(r.name))),columns:['打席','打數','安打','長打','保送','三振'].every(c=>texts.some(m=>m.t===c))};
+        });
+        proto.fillText=fill;proto.drawImage=draw;
+        return {out,zone:teamInsights.SAFE};
       });
-      assert.ok(!(badge.r===11&&badge.g===17&&badge.b===32),`badge pixels drawn (${JSON.stringify(badge)})`);
+      assert.ok(safe.zone.top>=150&&safe.zone.bottom<=1740,'the safe zone clears Instagram\'s avatar row and reply bar');
+      for(const s of safe.out){
+        assert.deepEqual([s.w,s.h],[1080,1920]);
+        assert.ok(s.min>=safe.zone.top&&s.max<=safe.zone.bottom,`text stays in the story safe zone (${s.min}–${s.max})`);
+        assert.ok(s.logo&&s.logo.y>=safe.zone.top,'the badge is drawn, below Instagram\'s avatar row');
+        assert.ok(s.names&&s.columns,'every batter and every box-score column is on the image');
+      }
       // MVP: independent recalculation, tie rules, no MVP without a positive contribution, and the card in the corner.
       const mvp=await page.evaluate(()=>{
         let num=0,pa=0;
@@ -346,7 +366,6 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       assert.equal(mvp.flat,null,'no MVP when nobody beats the team average');
       assert.ok(mvp.gold>800,`MVP card drawn in the bottom-right corner (${mvp.gold} gold pixels)`);
       assert.ok(mvp.gold>mvp.goldLeft*3,'the card sits on the right, not the left');
-      assert.ok(image.h>1000);
       const summary=await page.evaluate(()=>{const s=teamInsights.gameSummary(allGames.find(g=>g.id==='game_20260920_4922'));return {pa:s.rows.reduce((a,r)=>a+r.pa,0),h:s.rows.reduce((a,r)=>a+r.h,0)};});
       const review=await page.evaluate(()=>{const cells=[...document.querySelectorAll('#gameReviewDetailContainer tr')].find(tr=>tr.textContent.includes('合計')).querySelectorAll('td');return {pa:Number(cells[2].textContent),h:Number(cells[4].textContent)};});
       assert.deepEqual(summary,review,'image totals match the review box score');
