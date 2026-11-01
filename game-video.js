@@ -243,7 +243,17 @@
   }
   // The opening with the badge plays at 1.2× (2.4 s → 2 s); plays at PLAY_SPEED. HOLD_T: the finished postgame card stays still.
   const TITLE_T = 0.8, END_T = 0.75, INTRO_T = 2.0, HOLD_T = 10;
-  const PLAY_SPEED = 1.75; // plays always run at 1.75× (the same pace as the 3D viewer), whatever the length
+  const PLAY_SPEED = 1.75; // plays run at 1.75× (the same pace as the 3D viewer) unless the postgame video has to fit 60 s
+  // The postgame video stays within 60 s (one IG story clip): up to 66 s the final card's hold is shortened (10 s → 4 s);
+  // beyond that the hold is 4 s and the plays speed up until it fits. fixed: everything but the plays and the hold.
+  // Only the postgame video (an IG story) follows this; the player history video keeps 1.75× at any length.
+  const MAX_T = 60, MIN_HOLD_T = 4;
+  function fitLength(fixed, playTotal) {
+    const over = fixed + playTotal / PLAY_SPEED + HOLD_T - MAX_T;
+    if (over <= 0) return {speed: PLAY_SPEED, hold: HOLD_T};
+    if (over <= HOLD_T - MIN_HOLD_T) return {speed: PLAY_SPEED, hold: HOLD_T - over};
+    return {speed: playTotal / Math.max(1, MAX_T - fixed - MIN_HOLD_T), hold: MIN_HOLD_T};
+  }
 
   async function prepareAssets(game) {
     const logo = loadImage('assets/logo-256.webp'), scene = loadImage('assets/bg-orbit-portrait.webp');
@@ -260,12 +270,13 @@
 
   function buildGameVideo(game, assets) {
     const plan = gamePlan(game);
-    const speed = PLAY_SPEED;
-    const segments = [{type: 'intro', len: INTRO_T}];
-    for (const inn of plan.innings) segments.push({type: 'inning', inn, len: TITLE_T + inn.plays.reduce((a, p) => a + p.length, 0) / speed + END_T});
     const card = document.createElement('canvas');
     window.teamInsights.drawGameImage(game, {mvpPhoto: assets.mvpPhoto, canvas: card, reveal: 0});
-    const outroLen = (card.revealEnd || 5) + HOLD_T;
+    const playTotal = plan.innings.reduce((a, inn) => a + inn.plays.reduce((b, p) => b + p.length, 0), 0);
+    const {speed, hold} = fitLength(INTRO_T + plan.innings.length * (TITLE_T + END_T) + (card.revealEnd || 5), playTotal);
+    const segments = [{type: 'intro', len: INTRO_T}];
+    for (const inn of plan.innings) segments.push({type: 'inning', inn, len: TITLE_T + inn.plays.reduce((a, p) => a + p.length, 0) / speed + END_T});
+    const outroLen = (card.revealEnd || 5) + hold;
     segments.push({type: 'outro', len: outroLen});
     let at = 0;
     for (const s of segments) { s.start = at; at += s.len; }
@@ -380,7 +391,7 @@
         });
       }
     }
-    return {duration, draw, speed, segments: segments.map(s => ({type: s.type, len: s.len}))};
+    return {duration, draw, speed, hold, segments: segments.map(s => ({type: s.type, len: s.len}))};
   }
 
   // ---------- Player history video ----------
@@ -543,7 +554,7 @@
           <button type="button" data-gv="share" class="bg-sky-600 hover:bg-sky-500 text-white text-sm font-bold rounded-lg py-2.5">分享影片</button>
           <button type="button" data-gv="download" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold rounded-lg py-2.5">下載影片</button>
         </div>
-        <p class="text-[11px] text-slate-500">IG 限動規格 1080×1920、30fps，長 ${Math.round(result.duration)} 秒；超過 60 秒時 IG 會自動分段。</p>
+        <p class="text-[11px] text-slate-500">IG 限動規格 1080×1920、30fps，長 ${Math.round(result.duration)} 秒${result.duration > 60.5 ? '；超過 60 秒時 IG 會自動分段' : ''}。</p>
       </div>`;
     sheet.querySelector('h3').textContent = title;
     sheet.querySelector('video').src = url;
@@ -571,5 +582,5 @@
     return result;
   }
 
-  window.gameVideo = {makeGameVideo, gameVideoFor, showResult, makePlayerVideo, buildGameVideo, buildPlayerVideo, prepareAssets, encode, muxMp4, withProgress, download, share, W, H, FPS, SAFE};
+  window.gameVideo = {makeGameVideo, gameVideoFor, showResult, makePlayerVideo, buildGameVideo, buildPlayerVideo, fitLength, prepareAssets, encode, muxMp4, withProgress, download, share, W, H, FPS, SAFE};
 })();

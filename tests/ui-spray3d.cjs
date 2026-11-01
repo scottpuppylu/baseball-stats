@@ -89,8 +89,17 @@ const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
       allGames.pop();
       return {full: full.duration, less: less.duration, intro: full.segments[0].type, outro: full.segments.at(-1).type};
     }, gameId);
-    assert.ok(length.full > length.less, `more plate appearances, a longer video (${length.full} > ${length.less})`);
+    assert.ok(length.full >= length.less && length.full <= 60.01, `more plate appearances, a longer video up to 60 s (${length.full} ≥ ${length.less})`);
     assert.deepEqual([length.intro, length.outro], ['intro', 'outro']);
+    // Fitting 60 s: up to 66 s the final card's hold is cut; beyond that the hold is 4 s and the plays speed up.
+    const fit = await page.evaluate(() => [[20, 35], [20, 63], [20, 70], [20, 126]].map(([fixed, plays]) => {
+      const f = gameVideo.fitLength(fixed, plays);
+      return {...f, total: fixed + plays / f.speed + f.hold};
+    }));
+    assert.deepEqual([fit[0].speed, fit[0].hold], [1.75, 10], 'a short game keeps 1.75× and a 10 s hold');
+    assert.ok(fit[1].speed === 1.75 && Math.abs(fit[1].hold - 4) < 1e-9 && Math.abs(fit[1].total - 60) < 1e-9, `66 s → hold cut to 4 s (${JSON.stringify(fit[1])})`);
+    assert.ok(fit[2].hold === 4 && fit[2].speed > 1.75 && Math.abs(fit[2].total - 60) < 1e-9, `over 66 s → faster plays (${JSON.stringify(fit[2])})`);
+    assert.ok(Math.abs(fit[3].total - 60) < 1e-9 && fit[3].speed === 3.5, `long game fits 60 s (${JSON.stringify(fit[3])})`);
 
     // The mound sits at the centre of the square.
     const mound = await page.evaluate(() => { const c = document.querySelector('#profileSprayChartSvg circle'); return [+c.getAttribute('cx'), +c.getAttribute('cy')]; });
