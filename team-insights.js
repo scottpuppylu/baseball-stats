@@ -797,7 +797,7 @@
     if (records.hitStreaks.length) chips.push({label: '連續安打', color: IMG.sky, body: records.hitStreaks.join('、')});
     if (records.onBaseStreaks.length) chips.push({label: '連續上壘', color: IMG.sky, body: records.onBaseStreaks.join('、')});
 
-    const canvas = document.createElement('canvas');
+    const canvas = options.canvas || document.createElement('canvas'); // the video reuses one canvas for every frame
     canvas.width = W;
     canvas.height = H;
     const c = canvas.getContext('2d');
@@ -883,82 +883,109 @@
     c.translate(W * (1 - k) / 2, SAFE.top + (zoneH - contentH * k) / 2);
     c.scale(k, k);
 
+    // The video's ending animates this card: options.reveal is the time (s) since it appeared, and each part fades and
+    // rises in turn, the score counting up and the MVP card arriving last. Without it everything is drawn at once.
+    const R = options.reveal;
+    const at = (start, dur = 0.5) => (R == null ? 1 : Math.max(0, Math.min(1, (R - start) / dur)));
+    const ease = u => 1 - Math.pow(1 - u, 3);
+    const section = (u, draw) => {
+      if (u <= 0) return;
+      if (u >= 1) { draw(); return; }
+      const e = ease(u);
+      c.save(); c.globalAlpha *= e; c.translate(0, (1 - e) * 28); draw(); c.restore();
+    };
+    const count = (v, start) => (R == null ? v : Math.round(v * ease(at(start, 0.9))));
+    const T = {hero: 0, score: 0.3, line: 0.75, box: 1.05, row: 0.07};
+    T.total = T.box + 0.2 + s.rows.length * T.row;
+    T.band = T.total + 0.3;
+    T.mvp = T.band + 0.25 + chips.length * 0.15;
+    T.foot = T.mvp + 0.7;
+    canvas.revealEnd = T.foot + 1.2;
+
     // Hero: badge, title, date and event across the top; the score (or the team's hits) below.
-    panel(P, HERO.y, W - P * 2, HERO.h, 32);
-    const logoSize = 64;
-    const hx = P + 32;
-    if (logoLoaded()) c.drawImage(LOGO, hx, HERO.y + 22, logoSize, logoSize);
-    const tx = logoLoaded() ? hx + logoSize + 16 : hx;
-    title(TEAM_NAME, tx, HERO.y + 52, 28);
-    c.save(); c.font = font(13, 600); c.letterSpacing = '4px'; c.fillStyle = IMG.muted; c.textAlign = 'left'; c.fillText('賽後成績 · POSTGAME', tx, HERO.y + 78); c.restore();
-    const tag = gameLabel(game.tag || '');
-    if (tag) {
-      const tw = width(tag, 18, 600) + 30;
-      round(W - P - 32 - tw, HERO.y + 56, tw, 34, 17); c.fillStyle = IMG.glassHi; c.fill(); c.lineWidth = 1; c.strokeStyle = IMG.line; c.stroke();
-      text(tag, W - P - 32 - tw / 2, HERO.y + 79, 18, IMG.sky, 'center', 600);
-    }
-    text(game.date || '', W - P - 32, HERO.y + 44, 26, IMG.ink, 'right', 600);
-    c.fillStyle = 'rgba(255,255,255,0.12)'; c.fillRect(P + 28, HERO.y + 106, W - P * 2 - 56, 1.5);
     const ourName = TEAM_NAME.replace('系壘', '');
     const oppName = game.opponent || '對手';
     const shorten = (str, max) => (str.length > max ? `${str.slice(0, max)}…` : str);
-    title(shorten(ourName, 6), P + 40, HERO.y + 184, 42);
-    text(game.ourRole ? `${game.ourRole}・本隊` : '本隊', P + 40, HERO.y + 224, 19, IMG.muted, 'left', 600);
-    title(shorten(oppName, 6), W - P - 40, HERO.y + 184, 42, IMG.ink, 'right');
-    text('對手', W - P - 40, HERO.y + 224, 19, IMG.muted, 'right', 600);
-    if (scored) {
-      text(String(score.us), W / 2 - 34, HERO.y + 208, 116, IMG.ink, 'right', 600);
-      text(':', W / 2, HERO.y + 192, 72, IMG.dim, 'center', 400);
-      text(String(score.opp), W / 2 + 34, HERO.y + 208, 116, IMG.ink, 'left', 600);
-      round(W / 2 - 66, HERO.y + 228, 132, 40, 20); c.fillStyle = result[1] + '2e'; c.fill(); c.lineWidth = 1.5; c.strokeStyle = result[1] + 'aa'; c.stroke();
-      text(`${result[0]}・FINAL`, W / 2, HERO.y + 256, 20, result[1], 'center', 700);
-    } else {
-      text(`${teamHits}`, W / 2 - 8, HERO.y + 200, 104, IMG.ink, 'right', 600);
-      title('安打', W / 2 + 4, HERO.y + 194, 38);
-      text(`${teamXbh} 支長打・比分未記錄`, W / 2, HERO.y + 254, 21, IMG.muted, 'center', 600);
-    }
+    section(at(T.hero), () => {
+      panel(P, HERO.y, W - P * 2, HERO.h, 32);
+      const logoSize = 64;
+      const hx = P + 32;
+      if (logoLoaded()) c.drawImage(LOGO, hx, HERO.y + 22, logoSize, logoSize);
+      const tx = logoLoaded() ? hx + logoSize + 16 : hx;
+      title(TEAM_NAME, tx, HERO.y + 52, 28);
+      c.save(); c.font = font(13, 600); c.letterSpacing = '4px'; c.fillStyle = IMG.muted; c.textAlign = 'left'; c.fillText('賽後成績 · POSTGAME', tx, HERO.y + 78); c.restore();
+      const tag = gameLabel(game.tag || '');
+      if (tag) {
+        const tw = width(tag, 18, 600) + 30;
+        round(W - P - 32 - tw, HERO.y + 56, tw, 34, 17); c.fillStyle = IMG.glassHi; c.fill(); c.lineWidth = 1; c.strokeStyle = IMG.line; c.stroke();
+        text(tag, W - P - 32 - tw / 2, HERO.y + 79, 18, IMG.sky, 'center', 600);
+      }
+      text(game.date || '', W - P - 32, HERO.y + 44, 26, IMG.ink, 'right', 600);
+      c.fillStyle = 'rgba(255,255,255,0.12)'; c.fillRect(P + 28, HERO.y + 106, W - P * 2 - 56, 1.5);
+      title(shorten(ourName, 6), P + 40, HERO.y + 184, 42);
+      text(game.ourRole ? `${game.ourRole}・本隊` : '本隊', P + 40, HERO.y + 224, 19, IMG.muted, 'left', 600);
+      title(shorten(oppName, 6), W - P - 40, HERO.y + 184, 42, IMG.ink, 'right');
+      text('對手', W - P - 40, HERO.y + 224, 19, IMG.muted, 'right', 600);
+      if (scored) {
+        text(String(count(score.us, T.score)), W / 2 - 34, HERO.y + 208, 116, IMG.ink, 'right', 600);
+        text(':', W / 2, HERO.y + 192, 72, IMG.dim, 'center', 400);
+        text(String(count(score.opp, T.score)), W / 2 + 34, HERO.y + 208, 116, IMG.ink, 'left', 600);
+        section(at(T.score + 0.8, 0.35), () => {
+          round(W / 2 - 66, HERO.y + 228, 132, 40, 20); c.fillStyle = result[1] + '2e'; c.fill(); c.lineWidth = 1.5; c.strokeStyle = result[1] + 'aa'; c.stroke();
+          text(`${result[0]}・FINAL`, W / 2, HERO.y + 256, 20, result[1], 'center', 700);
+        });
+      } else {
+        text(`${count(teamHits, T.score)}`, W / 2 - 8, HERO.y + 200, 104, IMG.ink, 'right', 600);
+        title('安打', W / 2 + 4, HERO.y + 194, 38);
+        text(`${teamXbh} 支長打・比分未記錄`, W / 2, HERO.y + 254, 21, IMG.muted, 'center', 600);
+      }
+    });
 
     // Line score: runs by inning, or our hits by inning when no score was kept.
-    panel(P, LINE.y, W - P * 2, LINE.h, 24);
-    const innings = Array.from({length: s.maxInning}, (_, i) => i + 1);
-    const nameW = 200, totalsW = scored ? 150 : 90;
-    const colW = (W - P * 2 - 40 - nameW - totalsW) / innings.length;
-    const ix = i => P + 20 + nameW + i * colW + colW / 2;
-    const headY = LINE.y + 42;
-    text(scored ? '局' : '每局安打', P + 28, headY, 18, IMG.dim, 'left', 600);
-    innings.forEach((n, i) => text(n, ix(i), headY, 19, IMG.dim, 'center', 600));
-    const rX = P + 20 + nameW + innings.length * colW;
-    if (scored) {
-      text('R', rX + 40, headY, 19, IMG.redSoft, 'center', 700);
-      text('H', rX + 110, headY, 19, IMG.dim, 'center', 600);
-      const ours = {name: ourName, runs: s.ourRuns, r: score.us, h: teamHits, us: true};
-      const opp = {name: oppName, runs: s.oppRuns, r: score.opp, h: '-', us: false};
-      (game.ourRole === '先攻' ? [ours, opp] : [opp, ours]).forEach((team, row) => {
-        const y = headY + 46 + row * 46;
-        if (team.us) { round(P + 12, y - 32, W - P * 2 - 24, 44, 14); c.fillStyle = 'rgba(255,255,255,0.06)'; c.fill(); }
-        text(shorten(team.name, 6), P + 28, y, 23, team.us ? IMG.ink : IMG.soft, 'left', 700);
-        innings.forEach((n, i) => text(team.runs[n] ?? 0, ix(i), y, 24, IMG.soft, 'center', 400));
-        round(rX + 14, y - 30, 52, 40, 12); c.fillStyle = 'rgba(255,107,129,0.16)'; c.fill();
-        text(team.r, rX + 40, y, 27, IMG.ink, 'center', 700);
-        text(team.h, rX + 110, y, 24, IMG.soft, 'center', 400);
-      });
-    } else {
-      const y = headY + 48;
-      round(P + 12, y - 32, W - P * 2 - 24, 44, 14); c.fillStyle = 'rgba(255,255,255,0.06)'; c.fill();
-      text(shorten(ourName, 6), P + 28, y, 23, IMG.ink, 'left', 700);
-      innings.forEach((n, i) => { const v = s.ourHits[n]; text(v ?? '–', ix(i), y, 24, v ? IMG.green : IMG.dim, 'center', v ? 700 : 400); });
-      text('H', rX + 45, headY, 19, IMG.dim, 'center', 600);
-      text(teamHits, rX + 45, y, 27, IMG.ink, 'center', 700);
-    }
+    section(at(T.line), () => {
+      panel(P, LINE.y, W - P * 2, LINE.h, 24);
+      const innings = Array.from({length: s.maxInning}, (_, i) => i + 1);
+      const nameW = 200, totalsW = scored ? 150 : 90;
+      const colW = (W - P * 2 - 40 - nameW - totalsW) / innings.length;
+      const ix = i => P + 20 + nameW + i * colW + colW / 2;
+      const headY = LINE.y + 42;
+      text(scored ? '局' : '每局安打', P + 28, headY, 18, IMG.dim, 'left', 600);
+      innings.forEach((n, i) => text(n, ix(i), headY, 19, IMG.dim, 'center', 600));
+      const rX = P + 20 + nameW + innings.length * colW;
+      if (scored) {
+        text('R', rX + 40, headY, 19, IMG.redSoft, 'center', 700);
+        text('H', rX + 110, headY, 19, IMG.dim, 'center', 600);
+        const ours = {name: ourName, runs: s.ourRuns, r: score.us, h: teamHits, us: true};
+        const opp = {name: oppName, runs: s.oppRuns, r: score.opp, h: '-', us: false};
+        (game.ourRole === '先攻' ? [ours, opp] : [opp, ours]).forEach((team, row) => {
+          const y = headY + 46 + row * 46;
+          if (team.us) { round(P + 12, y - 32, W - P * 2 - 24, 44, 14); c.fillStyle = 'rgba(255,255,255,0.06)'; c.fill(); }
+          text(shorten(team.name, 6), P + 28, y, 23, team.us ? IMG.ink : IMG.soft, 'left', 700);
+          innings.forEach((n, i) => text(team.runs[n] ?? 0, ix(i), y, 24, IMG.soft, 'center', 400));
+          round(rX + 14, y - 30, 52, 40, 12); c.fillStyle = 'rgba(255,107,129,0.16)'; c.fill();
+          text(team.r, rX + 40, y, 27, IMG.ink, 'center', 700);
+          text(team.h, rX + 110, y, 24, IMG.soft, 'center', 400);
+        });
+      } else {
+        const y = headY + 48;
+        round(P + 12, y - 32, W - P * 2 - 24, 44, 14); c.fillStyle = 'rgba(255,255,255,0.06)'; c.fill();
+        text(shorten(ourName, 6), P + 28, y, 23, IMG.ink, 'left', 700);
+        innings.forEach((n, i) => { const v = s.ourHits[n]; text(v ?? '–', ix(i), y, 24, v ? IMG.green : IMG.dim, 'center', v ? 700 : 400); });
+        text('H', rX + 45, headY, 19, IMG.dim, 'center', 600);
+        text(teamHits, rX + 45, y, 27, IMG.ink, 'center', 700);
+      }
+    });
 
-    // Box score: every batter and substitute, then the totals.
-    panel(P, BOX.y, W - P * 2, BOX.h, 24);
+    // Box score: every batter and substitute, then the totals; in the video the rows arrive one by one.
     const cols = [['棒', P + 34, 'center'], ['打者', P + 74, 'left'], ['打席', 520, 'center'], ['打數', 610, 'center'], ['安打', 700, 'center'], ['長打', 790, 'center'], ['保送', 880, 'center'], ['三振', 970, 'center']];
     const fs = Math.round(rowH * 0.52); // row text follows the row height
     const base = i => BOX.y + 12 + i * rowH + rowH * 0.66; // text baseline of row i (0 = header)
-    round(P + 12, BOX.y + 12, W - P * 2 - 24, rowH - 4, 14); c.fillStyle = 'rgba(255,255,255,0.07)'; c.fill();
-    cols.forEach(([label, x, align]) => text(label, x, base(0) - 2, Math.min(19, fs - 4), IMG.muted, align, 600));
-    s.rows.forEach((r, i) => {
+    section(at(T.box), () => {
+      panel(P, BOX.y, W - P * 2, BOX.h, 24);
+      round(P + 12, BOX.y + 12, W - P * 2 - 24, rowH - 4, 14); c.fillStyle = 'rgba(255,255,255,0.07)'; c.fill();
+      cols.forEach(([label, x, align]) => text(label, x, base(0) - 2, Math.min(19, fs - 4), IMG.muted, align, 600));
+    });
+    s.rows.forEach((r, i) => section(at(T.box + 0.2 + i * T.row, 0.35), () => {
       const top = BOX.y + 12 + (i + 1) * rowH, y = base(i + 1);
       const isMvp = mvp && r.name === mvp.name;
       if (isMvp) {
@@ -972,42 +999,65 @@
         const color = j === 2 && v > 0 ? IMG.green : j === 3 && v > 0 ? IMG.amber : j === 5 && v > 0 ? IMG.redSoft : IMG.soft;
         text(v, cols[j + 2][1], y, fs, color, 'center', (j === 2 || j === 3) && v > 0 ? 700 : 400);
       });
+    }));
+    section(at(T.total), () => {
+      const totalTop = BOX.y + 12 + (s.rows.length + 1) * rowH;
+      c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(P + 20, totalTop, W - P * 2 - 40, 1.5);
+      title('合計', cols[1][1], base(s.rows.length + 1), fs);
+      [totals.pa, totals.ab, totals.h, totals.xb, totals.bb, totals.k].forEach((v, j) => text(v, cols[j + 2][1], base(s.rows.length + 1), fs, IMG.ink, 'center', 700));
     });
-    const totalTop = BOX.y + 12 + (s.rows.length + 1) * rowH;
-    c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(P + 20, totalTop, W - P * 2 - 40, 1.5);
-    title('合計', cols[1][1], base(s.rows.length + 1), fs);
-    [totals.pa, totals.ab, totals.h, totals.xb, totals.bb, totals.k].forEach((v, j) => text(v, cols[j + 2][1], base(s.rows.length + 1), fs, IMG.ink, 'center', 700));
 
     // Highlights (or the team's batting line) on the left, the MVP on the right.
     if (chips.length) {
       let cy = BAND.y;
       chips.forEach((ch, i) => {
         const h = i === chips.length - 1 ? BAND.y + BAND.h - cy : chipH(chipLines[i]);
-        panel(P, cy, leftW, h, 22);
-        round(P + 18, cy + 16, width(ch.label, 18, 700) + 28, 34, 17); c.fillStyle = ch.color + '26'; c.fill(); c.lineWidth = 1; c.strokeStyle = ch.color + '80'; c.stroke();
-        text(ch.label, P + 32, cy + 39, 18, ch.color, 'left', 700);
-        chipLines[i].forEach((line, j) => text(line, P + 22, cy + 84 + j * 34, 23, IMG.soft, 'left', 600));
+        const y0 = cy;
+        section(at(T.band + i * 0.15), () => {
+          panel(P, y0, leftW, h, 22);
+          round(P + 18, y0 + 16, width(ch.label, 18, 700) + 28, 34, 17); c.fillStyle = ch.color + '26'; c.fill(); c.lineWidth = 1; c.strokeStyle = ch.color + '80'; c.stroke();
+          text(ch.label, P + 32, y0 + 39, 18, ch.color, 'left', 700);
+          chipLines[i].forEach((line, j) => text(line, P + 22, y0 + 84 + j * 34, 23, IMG.soft, 'left', 600));
+        });
         cy += h + 14;
       });
     } else {
-      panel(P, BAND.y, leftW, BAND.h, 22);
-      text('全隊打擊', P + 26, BAND.y + 46, 19, IMG.muted, 'left', 600);
-      const avg = totals.ab ? (totals.h / totals.ab).toFixed(3).replace(/^0/, '') : '—';
-      const tiles = [['安打', totals.h, IMG.green], ['長打', totals.xb, IMG.amber], ['保送', totals.bb, IMG.sky], ['打擊率', avg, IMG.ink]];
-      const tw = (leftW - 52) / tiles.length;
-      tiles.forEach(([label, v, color], i) => {
-        const x = P + 26 + i * tw + tw / 2;
-        text(v, x, BAND.y + 150, 52, color, 'center', 600);
-        text(label, x, BAND.y + 194, 19, IMG.muted, 'center', 600);
+      section(at(T.band), () => {
+        panel(P, BAND.y, leftW, BAND.h, 22);
+        text('全隊打擊', P + 26, BAND.y + 46, 19, IMG.muted, 'left', 600);
+        const avg = totals.ab ? (totals.h / totals.ab).toFixed(3).replace(/^0/, '') : '—';
+        const tiles = [['安打', totals.h, IMG.green], ['長打', totals.xb, IMG.amber], ['保送', totals.bb, IMG.sky], ['打擊率', avg, IMG.ink]];
+        const tw = (leftW - 52) / tiles.length;
+        tiles.forEach(([label, v, color], i) => {
+          const x = P + 26 + i * tw + tw / 2;
+          text(v, x, BAND.y + 150, 52, color, 'center', 600);
+          text(label, x, BAND.y + 194, 19, IMG.muted, 'center', 600);
+        });
       });
     }
-    if (mvp) drawMvpCard(c, text, round, mvp, W - P - CARD_W, BAND.y, CARD_W, BAND.h, tagLines, options.mvpPhoto); // as tall as the highlights beside it
+    if (mvp) {
+      const mx = W - P - CARD_W;
+      section(at(T.mvp, 0.6), () => drawMvpCard(c, text, round, mvp, mx, BAND.y, CARD_W, BAND.h, tagLines, options.mvpPhoto)); // as tall as the highlights beside it
+      // In the video a band of light sweeps across the card once it has landed.
+      const u = R == null ? 0 : (R - T.mvp - 0.55) / 0.8;
+      if (u > 0 && u < 1) {
+        c.save();
+        round(mx, BAND.y, CARD_W, BAND.h, 28); c.clip();
+        const sx = mx - 200 + (CARD_W + 400) * u;
+        const g = c.createLinearGradient(sx - 120, BAND.y, sx + 120, BAND.y + BAND.h);
+        g.addColorStop(0, 'rgba(255,240,200,0)'); g.addColorStop(0.5, 'rgba(255,240,200,0.22)'); g.addColorStop(1, 'rgba(255,240,200,0)');
+        c.fillStyle = g; c.fillRect(mx, BAND.y, CARD_W, BAND.h);
+        c.restore();
+      }
+    }
 
     // Footer.
-    const fy = BAND.y + BAND.h + 16;
-    c.fillStyle = 'rgba(255,255,255,0.14)'; c.fillRect(P, fy, W - P * 2, 1.5);
-    title(`${TEAM_NAME} 數據中心`, W / 2, fy + 30, 20, IMG.soft, 'center');
-    text('長打含二壘安打、三壘安打、全壘打', W / 2, fy + 52, 15, IMG.dim, 'center', 400);
+    section(at(T.foot), () => {
+      const fy = BAND.y + BAND.h + 16;
+      c.fillStyle = 'rgba(255,255,255,0.14)'; c.fillRect(P, fy, W - P * 2, 1.5);
+      title(`${TEAM_NAME} 數據中心`, W / 2, fy + 30, 20, IMG.soft, 'center');
+      text('長打含二壘安打、三壘安打、全壘打', W / 2, fy + 52, 15, IMG.dim, 'center', 400);
+    });
     c.restore();
     return canvas;
   }
@@ -1106,10 +1156,11 @@
         </div>
         <div class="overflow-auto rounded-lg border border-slate-800"><img alt="賽後成績圖預覽" class="w-full block"></div>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" data-insight="share" class="bg-sky-600 hover:bg-sky-500 text-white text-sm font-bold rounded-lg py-2.5">分享</button>
-          <button type="button" data-insight="download" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold rounded-lg py-2.5">下載圖片</button>
+          <button type="button" data-insight="share" class="bg-sky-600 hover:bg-sky-500 text-white text-sm font-bold rounded-lg py-2.5">分享圖片</button>
+          <button type="button" data-insight="download" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold rounded-lg py-2.5">${window.gameVideo ? '下載圖片＋影片' : '下載圖片'}</button>
+          ${window.gameVideo ? '<button type="button" data-insight="video" class="col-span-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-bold rounded-lg py-2.5">🎬 賽後影片（預覽／分享）</button>' : ''}
         </div>
-        <p class="text-[11px] text-slate-500">IG 限動規格 1080×1920，上方留給 IG 頭像、下方留給回覆列。手機上按「分享」可直接發 IG 限動或傳 LINE；不支援時請用「下載圖片」。</p>
+        <p class="text-[11px] text-slate-500">IG 限動規格 1080×1920，上方留給 IG 頭像、下方留給回覆列。手機上按「分享」可直接發 IG 限動或傳 LINE；不支援時請用「下載」。賽後影片在這台裝置上製作，依打席數約 1 分鐘。</p>
       </div>`;
     modal.querySelector('img').src = canvas.toDataURL('image/png');
     document.body.appendChild(modal);
@@ -1122,6 +1173,15 @@
         link.href = canvas.toDataURL('image/png');
         link.download = filename;
         link.click();
+        // The game's video comes with the image.
+        if (window.gameVideo) {
+          const video = await window.gameVideo.gameVideoFor(gameId);
+          if (video) window.gameVideo.download(video.blob, video.filename);
+        }
+      }
+      if (action === 'video' && window.gameVideo) {
+        const video = await window.gameVideo.gameVideoFor(gameId);
+        if (video) window.gameVideo.showResult(video, `${game.date} vs ${game.opponent || '對手'} 賽後影片`);
       }
       if (action === 'share') {
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));

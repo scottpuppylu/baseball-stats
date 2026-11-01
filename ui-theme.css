@@ -1231,3 +1231,22 @@ html.ui-flight #scoreSubPanelLive.ui-finalizing { opacity: .55; filter: saturate
 /* Tailwind's .transition (140 elements) also animates box-shadow, filter and backdrop-filter, which repaint every frame;
    keep the cheap ones. */
 html.ui-flight .transition { transition-property: color, background-color, border-color, opacity, transform; }
+
+/* 3D batted-ball viewer (spray3d.js): clear glass chips, a quiet launch button on each spray chart, and the top bar. */
+.s3-chip { font-size: 12px; font-weight: 700; color: #cbd5e1; padding: 6px 11px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); white-space: nowrap; transition: background-color .15s, border-color .15s, color .15s; }
+.s3-chip:hover { background: rgba(255,255,255,0.08); }
+.s3-chip.s3-on { color: #f8fafc; border-color: rgba(125,211,252,0.6); background: rgba(56,189,248,0.16); }
+.s3-chip.s3-primary { color: #f8fafc; border-color: rgba(52,211,153,0.55); background: rgba(16,185,129,0.18); }
+.s3-launch { position: absolute; right: 8px; bottom: 8px; z-index: 2; font-size: 12px; font-weight: 700; color: #ecfdf5; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(52,211,153,0.55); background: rgba(6,20,14,0.72); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.s3-launch:hover { background: rgba(16,185,129,0.3); }
+.s3-stage { background: #05070b; }
+.s3-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: rgba(6,9,14,0.72); border: 1px solid rgba(255,255,255,0.14); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.s3-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: 0; }
+.s3-out { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.45); }
+.s3-out.s3-out-on { background: #f43f5e; border-color: #f43f5e; }
+/* Phones: each group of controls is one row you swipe sideways; tablets and up let the rows wrap. Chips are finger-sized. */
+.s3-row { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 1px; }
+.s3-row::-webkit-scrollbar { display: none; }
+.s3-row > * { flex-shrink: 0; }
+.s3-chip { min-height: 36px; }
+@media (min-width: 640px) { .s3-row { flex-wrap: wrap; overflow: visible; } .s3-chip { min-height: 32px; } }

@@ -60,7 +60,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261031.1341</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261101.1952</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -1338,31 +1338,31 @@
                     <div class="relative w-full max-w-[380px] mx-auto aspect-square select-none">
                       <svg id="interactiveFieldSvg" viewBox="0 0 400 400" class="w-full h-full rounded-xl cursor-crosshair border border-slate-800/80 bg-[#0d1712]">
                         <rect width="400" height="400" fill="#0d1712" />
-                        <!-- 深遠外野草皮扇形與全壘打牆 (頂部弧度拉至 y=45，確保 LF/SF/RC/RF 四個外野守位完全在牆內) -->
-                        <path d="M 20 145 A 215 215 0 0 1 380 145 L 200 375 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />
+                        <!-- 外野草皮扇形與全壘打牆：界外線夾角 90 度，一路延伸到牆 -->
+                        <path d="M 4.1 174.1 A 215 215 0 0 1 395.9 174.1 L 200 370 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />
                         <!-- 兩側界內白線 (Foul Lines) -->
-                        <line x1="200" y1="370" x2="16" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
-                        <line x1="200" y1="370" x2="384" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                        <line x1="200" y1="370" x2="4.1" y2="174.1" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
+                        <line x1="200" y1="370" x2="395.9" y2="174.1" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
                         <!-- 內野紅土區 (Infield Dirt Fan) -->
-                        <path d="M 115 285 A 95 95 0 0 1 285 285 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
+                        <path d="M 93.9 263.9 A 107.8 107.8 0 0 1 306.1 263.9 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
                         <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
-                        <!-- 內野壘線 (45度鑽石) -->
-                        <polygon points="200,370 280,285 200,200 120,285" fill="none" stroke="#e2e8f0" stroke-width="2" />
+                        <!-- 內野壘線：四個壘包圍成正方形，一、三壘在界外線上（界外線夾角 90 度） -->
+                        <polygon points="200,370 282.5,287.5 200,205 117.5,287.5" fill="none" stroke="#e2e8f0" stroke-width="2" />
                         <!-- 投手板 -->
                         <rect x="194" y="258" width="12" height="4" fill="#ffffff" rx="1" />
                         <!-- 本壘板 (5邊形) -->
                         <polygon points="196,368 204,368 205,372 200,377 195,372" fill="#ffffff" />
                         <!-- 一壘、二壘、三壘壘包 -->
-                        <polygon points="280,280 285,285 280,290 275,285" fill="#ffffff" />
-                        <polygon points="200,195 205,200 200,205 195,200" fill="#ffffff" />
-                        <polygon points="120,280 125,285 120,290 115,285" fill="#ffffff" />
+                        <polygon points="282.5,282.5 287.5,287.5 282.5,292.5 277.5,287.5" fill="#ffffff" />
+                        <polygon points="200,200 205,205 200,210 195,205" fill="#ffffff" />
+                        <polygon points="117.5,282.5 122.5,287.5 117.5,292.5 112.5,287.5" fill="#ffffff" />
                         <!-- 10 個守備位置文字與圖示 (完全位於全壘打牆內綠色草皮甜蜜區) -->
                         <g id="svgPosLabels" class="text-[10px] font-mono font-bold select-none pointer-events-none fill-slate-300">
                           <text x="200" y="392" text-anchor="middle" fill="#94a3b8">C 捕手</text>
                           <text x="200" y="275" text-anchor="middle" fill="#f59e0b">P 投手</text>
-                          <text x="298" y="285" text-anchor="start" fill="#cbd5e1">1B</text>
+                          <text x="298" y="291" text-anchor="start" fill="#cbd5e1">1B</text>
                           <text x="245" y="212" text-anchor="start" fill="#cbd5e1">2B</text>
-                          <text x="102" y="285" text-anchor="end" fill="#cbd5e1">3B</text>
+                          <text x="102" y="291" text-anchor="end" fill="#cbd5e1">3B</text>
                           <text x="155" y="212" text-anchor="end" fill="#cbd5e1">SS</text>
                           <text x="85" y="165" text-anchor="middle" fill="#38bdf8">LF 左外</text>
                           <text x="155" y="115" text-anchor="middle" fill="#34d399">SF 自由</text>
@@ -6128,16 +6128,16 @@ window.toggleDiagnosticsCollapse = function() {
 
     // 落點球場底圖：五個落點圖共用（實況記分的互動球場另有自己的標示）。帶 data-field-base 的 svg 於載入時補上。
     const FIELD_BASE_SVG = '<rect width="400" height="400" fill="#0d1712" />'
-      + '<path d="M 20 145 A 215 215 0 0 1 380 145 L 200 375 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />'
-      + '<line x1="200" y1="370" x2="16" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />'
-      + '<line x1="200" y1="370" x2="384" y2="140" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />'
-      + '<path d="M 115 285 A 95 95 0 0 1 285 285 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />'
+      + '<path d="M 4.1 174.1 A 215 215 0 0 1 395.9 174.1 L 200 370 Z" fill="#14291c" stroke="#22c55e" stroke-width="2.5" />'
+      + '<line x1="200" y1="370" x2="4.1" y2="174.1" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />'
+      + '<line x1="200" y1="370" x2="395.9" y2="174.1" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />'
+      + '<path d="M 93.9 263.9 A 107.8 107.8 0 0 1 306.1 263.9 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />'
       + '<circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />'
-      + '<polygon points="200,370 280,285 200,200 120,285" fill="none" stroke="#e2e8f0" stroke-width="2" />';
+      + '<polygon points="200,370 282.5,287.5 200,205 117.5,287.5" fill="none" stroke="#e2e8f0" stroke-width="2" />';
     const FIELD_LABELS_SVG = '<g class="text-[9px] font-mono font-bold select-none pointer-events-none fill-slate-400">'
       + '<text x="200" y="390" text-anchor="middle">C</text><text x="200" y="275" text-anchor="middle" fill="#f59e0b">P</text>'
-      + '<text x="295" y="285" text-anchor="start">1B</text><text x="245" y="215" text-anchor="start">2B</text>'
-      + '<text x="105" y="285" text-anchor="end">3B</text><text x="155" y="215" text-anchor="end">SS</text>'
+      + '<text x="297" y="291" text-anchor="start">1B</text><text x="245" y="215" text-anchor="start">2B</text>'
+      + '<text x="103" y="291" text-anchor="end">3B</text><text x="155" y="215" text-anchor="end">SS</text>'
       + '<text x="85" y="165" text-anchor="middle" fill="#38bdf8">LF</text><text x="155" y="115" text-anchor="middle" fill="#34d399">SF</text>'
       + '<text x="245" y="115" text-anchor="middle" fill="#34d399">RC</text><text x="315" y="165" text-anchor="middle" fill="#38bdf8">RF</text></g>';
     document.querySelectorAll('svg[data-field-base]').forEach(svg => {
@@ -11026,6 +11026,8 @@ function renderCustomChart(agg) {
   <script src="player-health-ui.js"></script>
   <script src="changelog.js"></script>
   <script src="team-insights.js?v=20261011-audit2"></script>
+  <script src="spray3d.js"></script>
+  <script src="game-video.js"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
   <script src="lineup-recommender.js?v=20261011-auditfixes"></script>
   <script src="player-diagnostics.js?v=20261010-diag3"></script>
