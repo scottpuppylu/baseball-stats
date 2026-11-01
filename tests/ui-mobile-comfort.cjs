@@ -83,7 +83,9 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
       // Density: compact header, content soon after it, and every long page clearly shorter than before the
       // density pass (390 px heights measured on the same fixture, 2026/10/10).
       if(width===390) {
-        const BEFORE={Overview:2851,Profile:6757,Leaderboard:2249,Analytics:5183,Compare:5120,Lineup:7667,'Scorebook-live':1924,'Scorebook-review':2588,Pitching:2255,Glossary:7906};
+        // Scorebook-review is no longer a scorebook sub-page: 2026/11/02 moved it into 賽事分析 (the whole game page), so its
+        // old ceiling does not apply.
+        const BEFORE={Overview:2851,Profile:6757,Leaderboard:2249,Analytics:5183,Compare:5120,Lineup:7667,'Scorebook-live':1924,Pitching:2255,Glossary:7906};
         for(const [name,before] of Object.entries(BEFORE)) {
           // 2026/10/18 explicitly replaces the compact multi-column setup with a vertical
           // lineup and a new field. Bound that new content separately; keep the old density

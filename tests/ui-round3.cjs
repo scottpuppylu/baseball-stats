@@ -136,7 +136,7 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     assert.deepEqual(hooks.after.renderPlayerProfile, ['player-health', 'team-insights', 'team-records']);
     assert.deepEqual(hooks.after.switchMainTab, ['player-health', 'game-analysis', 'team-records', 'ui-app', 'ui-app', 'ui-app-tools', 'ui-app', 'ui-app-chip', 'ui-app-lens']); // ui-app: Home, 版本紀錄, tools panel, back button, chart card
     assert.deepEqual(hooks.after.renderLineupAnalysis, ['lineup-recommender']);
-    assert.deepEqual(hooks.replaced, {calculateRecommendedLineup: 'lineup-recommender', renderDiagnostics: 'player-diagnostics'});
+    assert.deepEqual(hooks.replaced, {calculateRecommendedLineup: 'lineup-recommender', renderDiagnostics: 'player-diagnostics', switchScorebookSubTab: 'game-analysis'});
     const source = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     assert.doesNotMatch(source, /\brbi\b|selectRbi|currentSelectedRbi/, 'no RBI leftovers');
     assert.doesNotMatch(source, /\bprompt\(|\balert\(/, 'no prompt() or alert()');

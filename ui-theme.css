@@ -1302,9 +1302,29 @@ html.ui-flight .transition { transition-property: color, background-color, borde
 .ga-play { position: relative; z-index: 1; font-size: 15px; font-weight: 800; color: #ecfdf5; padding: 12px 20px; border-radius: 999px; border: 1px solid rgba(52,211,153,0.6); background: rgba(16,185,129,0.25); }
 .ga-media-note { position: relative; z-index: 1; font-size: 11px; color: #cbd5e1; }
 .s3-chip[disabled] { opacity: 0.4; cursor: not-allowed; }
-/* Live scorebook: who made the play (separate from the pitcher), picked before an out. */
-.fl-fielder-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; margin-bottom: 8px; }
-.fl-fielder-row::-webkit-scrollbar { display: none; }
-.fl-fielder { flex: 0 0 auto; display: inline-flex; flex-direction: column; align-items: center; gap: 1px; min-width: 64px; padding: 6px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: #e2e8f0; font-size: 13px; font-weight: 700; }
-.fl-fielder small { font-size: 10px; color: #94a3b8; font-weight: 600; }
-.fl-fielder.fl-on { border-color: rgba(125,211,252,0.7); background: rgba(56,189,248,0.18); color: #fff; }
+/* 賽事分析 picker: the current game with older / newer, and a searchable list grouped by month (scales to many games). */
+.ga-current { display: flex; align-items: center; gap: 8px; }
+.ga-step { flex: 0 0 44px; height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: #e2e8f0; font-size: 22px; line-height: 1; }
+.ga-step[disabled] { opacity: 0.3; }
+.ga-current-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 10px; border-radius: 14px; border: 1px solid rgba(125,211,252,0.35); background: rgba(56,189,248,0.08); text-align: center; }
+.ga-current-info small { font-size: 11px; color: #94a3b8; }
+.ga-current-info b { font-size: 16px; color: #f8fafc; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ga-current-info span { font-size: 13px; font-weight: 700; }
+.ga-browse { display: flex; flex-direction: column; gap: 8px; }
+.ga-browse-list { max-height: min(60vh, 520px); overflow-y: auto; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.18); -webkit-overflow-scrolling: touch; }
+.ga-month-head { position: sticky; top: 0; z-index: 1; padding: 6px 12px; font-size: 11px; font-weight: 700; color: #94a3b8; background: rgba(10,12,16,0.92); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.ga-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 8px 12px; text-align: left; border-top: 1px solid rgba(255,255,255,0.05); }
+.ga-row.ga-on { background: rgba(56,189,248,0.12); }
+.ga-row-date { flex: 0 0 3.2em; font-size: 13px; font-weight: 700; color: #cbd5e1; font-variant-numeric: tabular-nums; }
+.ga-row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.ga-row-main b { font-size: 14px; color: #f1f5f9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ga-row-main small { font-size: 11px; color: #94a3b8; }
+.ga-row-res { flex: 0 0 auto; font-size: 13px; font-weight: 700; white-space: nowrap; }
+/* The video download is the main action on the page. */
+.ga-download { display: block; width: 100%; max-width: 360px; margin: 0 auto; padding: 14px; border-radius: 16px; font-size: 16px; font-weight: 800; color: #ecfdf5; border: 1px solid rgba(52,211,153,0.65); background: linear-gradient(180deg, rgba(16,185,129,0.42), rgba(5,150,105,0.32)); box-shadow: 0 8px 24px rgba(16,185,129,0.18); }
+.ga-more > summary { cursor: pointer; list-style: none; display: flex; align-items: baseline; flex-wrap: wrap; }
+.ga-more > summary::-webkit-details-marker { display: none; }
+.ga-more > summary::after { content: '展開 ▾'; margin-left: auto; font-size: 12px; color: #7dd3fc; }
+.ga-more[open] > summary::after { content: '收合 ▴'; }
+/* Inside 賽事分析 the moved review keeps its controls; the postgame image lives in 其他下載 instead of the review's badge. */
+#panelGames #gaReviewSection [data-insight-image] { display: none; }

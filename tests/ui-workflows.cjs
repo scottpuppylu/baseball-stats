@@ -113,7 +113,8 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     assert.deepEqual(cloudLineup.lineupPositions,game.lineupPositions,'positions survive finish and cloud retry');
     assert.deepEqual(cloudLineup.startingPositions,game.startingPositions,'starting positions preserved');
     assert.deepEqual(cloudLineup.positionChanges,game.positionChanges,'fielding history preserved');
-    await page.locator('#reviewGameSelect').selectOption(gameId);
+    // The review lives in 賽事分析 now; its picker chooses the game.
+    await page.evaluate(id => { switchScorebookSubTab('review'); gameAnalysis.choose(id); }, gameId);
     await click(page,'button[onclick="toggleEditCurrentReviewGame()"]');
     await page.locator('#editGameOpponent').fill(`覆盤修改-${width}`);
     await page.evaluate(() => { window.__previewFailWrites = true; });
@@ -126,6 +127,7 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     await page.waitForFunction(() => !document.querySelector('#editGameOpponent'));
     assert.match(await page.locator('#reviewGameSelect').textContent(),new RegExp(`覆盤修改-${width}`));
     await page.screenshot({path:path.join(output,`${width}-Review.png`)});
+    await page.evaluate(() => switchMainTab('tabScorebook'));
     await click(page,'#btnScoreSubSpray');
     const point = page.locator('#sprayPointsContainer circle').first();
     await point.evaluate(element => element.scrollIntoView({block:'center'}));

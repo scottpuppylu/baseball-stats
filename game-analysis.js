@@ -106,16 +106,63 @@
   const outsDots = n => `<span class="ga-outs" aria-label="${n} 出局">${[0, 1, 2].map(i => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`;
   const empty = text => `<p class="text-xs text-slate-500">${text}</p>`;
 
-  function picker(games) {
-    return `<div class="ga-picker" role="listbox" aria-label="選擇比賽">${games.map(g => {
-      const s = g.finalScore || {us: 0, opp: 0}, scored = typeof isGameScoreRecorded === 'function' ? isGameScoreRecorded(g) : true;
-      const res = !scored ? ['未記比分', '#94a3b8'] : s.us > s.opp ? ['勝', '#22c55e'] : s.us < s.opp ? ['敗', '#fb7185'] : ['和', '#fbbf24'];
-      return `<button type="button" class="ga-game${g.id === currentId ? ' ga-on' : ''}" data-ga-game="${esc(g.id)}" role="option" aria-selected="${g.id === currentId}">
-          <span class="text-[11px] text-slate-400">${esc((g.date || '').slice(5).replace('-', '/'))} · ${esc(tagLabel(g.tag))}</span>
-          <span class="text-sm font-bold text-slate-100 truncate">vs ${esc(g.opponent || '對手')}</span>
-          <span class="text-xs font-bold" style="color:${res[1]}">${scored ? `${s.us} : ${s.opp} ` : ''}${res[0]}</span>
+  // ---------- Game picker: the current game with older / newer, and a searchable list grouped by month ----------
+  const pick = {open: false, q: '', year: 'all', tag: 'all', result: 'all'};
+  const RESULTS = {win: ['勝', '#22c55e'], loss: ['敗', '#fb7185'], tie: ['和', '#fbbf24'], none: ['未記比分', '#94a3b8'], live: ['進行中', '#38bdf8']};
+  function resultOf(g) {
+    if (g.status === 'in_progress') return 'live';
+    const s = g.finalScore || {us: 0, opp: 0};
+    if (typeof isGameScoreRecorded === 'function' && !isGameScoreRecorded(g)) return 'none';
+    return s.us > s.opp ? 'win' : s.us < s.opp ? 'loss' : 'tie';
+  }
+  const scoreText = g => (['none', 'live'].includes(resultOf(g)) ? '' : `${(g.finalScore || {}).us} : ${(g.finalScore || {}).opp} `);
+  function filtered(games) {
+    const q = pick.q.trim().toLowerCase();
+    return games.filter(g => (pick.year === 'all' || (g.date || '').startsWith(pick.year))
+      && (pick.tag === 'all' || tagLabel(g.tag) === pick.tag)
+      && (pick.result === 'all' || resultOf(g) === pick.result)
+      && (!q || `${g.date} ${(g.date || '').slice(5).replace('-', '/')} ${g.opponent || ''} ${tagLabel(g.tag)}`.toLowerCase().includes(q)));
+  }
+  function browseList(games) {
+    const list = filtered(games);
+    if (!list.length) return '<p class="text-xs text-slate-500 py-3 text-center">沒有符合的比賽，試試別的關鍵字或篩選。</p>';
+    const months = [];
+    for (const g of list) {
+      const key = (g.date || '').slice(0, 7);
+      if (!months.length || months[months.length - 1].key !== key) months.push({key, games: []});
+      months[months.length - 1].games.push(g);
+    }
+    return months.map(m => `<div class="ga-month"><p class="ga-month-head">${esc(m.key.slice(0, 4))} 年 ${Number(m.key.slice(5, 7))} 月 · ${m.games.length} 場</p>${m.games.map(g => {
+      const [label, color] = RESULTS[resultOf(g)];
+      return `<button type="button" class="ga-row${g.id === currentId ? ' ga-on' : ''}" data-ga-game="${esc(g.id)}" aria-current="${g.id === currentId}">
+          <span class="ga-row-date">${esc((g.date || '').slice(5).replace('-', '/'))}</span>
+          <span class="ga-row-main"><b>vs ${esc(g.opponent || '對手')}</b><small>${esc(tagLabel(g.tag))}</small></span>
+          <span class="ga-row-res" style="color:${color}">${esc(scoreText(g))}${label}</span>
         </button>`;
-    }).join('')}</div>`;
+    }).join('')}</div>`).join('');
+  }
+  function pickerSection(games) {
+    const i = games.findIndex(g => g.id === currentId), g = games[i];
+    const [label, color] = RESULTS[resultOf(g)];
+    const chips = (kind, values) => values.map(([v, text]) => `<button type="button" class="s3-chip${pick[kind] === v ? ' s3-on' : ''}" data-ga-filter="${kind}:${esc(v)}">${esc(text)}</button>`).join('');
+    const years = [...new Set(games.map(x => (x.date || '').slice(0, 4)).filter(Boolean))];
+    const tags = [...new Set(games.map(x => tagLabel(x.tag)))];
+    return `<section data-ga-part="picker" class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-3">
+        <div class="flex items-center justify-between gap-2"><h2 class="text-base sm:text-lg font-black text-white">選擇比賽</h2>
+          <button type="button" class="s3-chip" data-ga="browse" aria-expanded="${pick.open}">${pick.open ? '收合列表' : `全部比賽（${games.length} 場）`}</button></div>
+        <div class="ga-current">
+          <button type="button" class="ga-step" data-ga-step="1" aria-label="上一場（較舊）"${i >= games.length - 1 ? ' disabled' : ''}>‹</button>
+          <div class="ga-current-info"><small>${esc(g.date)} · ${esc(tagLabel(g.tag))}</small><b>vs ${esc(g.opponent || '對手')}</b><span style="color:${color}">${esc(scoreText(g))}${label}</span></div>
+          <button type="button" class="ga-step" data-ga-step="-1" aria-label="下一場（較新）"${i <= 0 ? ' disabled' : ''}>›</button>
+        </div>
+        ${pick.open ? `<div class="ga-browse">
+          <input type="search" data-ga-search value="${esc(pick.q)}" placeholder="搜尋對手、日期或賽事（例如 運管、10/31）" class="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 text-sm" aria-label="搜尋比賽">
+          <div class="s3-row">${chips('year', [['all', '全部年份'], ...years.map(y => [y, `${y} 年`])])}</div>
+          <div class="s3-row">${chips('tag', [['all', '全部賽事'], ...tags.map(t => [t, t])])}</div>
+          <div class="s3-row">${chips('result', [['all', '全部結果'], ['win', '勝'], ['loss', '敗'], ['tie', '和'], ['none', '未記比分'], ['live', '進行中']])}</div>
+          <div class="ga-browse-list" role="list">${browseList(games)}</div>
+        </div>` : ''}
+      </section>`;
   }
 
   function hero(a) {
@@ -132,7 +179,8 @@
         <div class="ga-stats">${stat(a.batting.length, '打席')}${stat(a.hits, '安打', '#22c55e')}${stat(avg, '打擊率')}${stat(a.batting.filter(p => ['2H', '3H', 'HR'].includes(p.result)).length, '長打', '#f3c766')}${stat(a.batting.filter(p => p.result === 'BB').length, '保送', '#cbd5e1')}${stat(a.mvp ? esc(a.mvp.name) : '—', 'MVP', '#fbbf24')}</div>
         <div class="flex flex-wrap gap-2">
           ${window.spray3d ? '<button type="button" class="s3-chip s3-primary" data-ga="replay">🎬 3D 擊球重播</button>' : ''}
-          <button type="button" class="s3-chip" data-ga="review">📋 場記覆盤</button>
+          <button type="button" class="s3-chip" data-ga="download-video">⬇ 下載賽後影片</button>
+          <button type="button" class="s3-chip" data-ga="review">📋 場記覆盤與編輯</button>
         </div>
       </div>`;
   }
@@ -177,10 +225,10 @@
       <tbody>${first ? row(true, TEAM) + row(false, a.game.opponent || '對手') : row(false, a.game.opponent || '對手') + row(true, TEAM)}</tbody></table></div>`;
   }
 
-  // The pitcher a half-inning starts with: the first name recorded on two events in a row, otherwise the name with the most
-  // walks, hits and runs against it (outs count less: a scorer sometimes notes the fielder there).
+  // Older records sometimes carry a fielder's name on a single out (the pitcher menu was switched to whoever caught the
+  // ball, 2026/10/31). A name is the pitcher when it is on an event only a pitcher has (hit, walk, run, strikeout) or on
+  // two events in a row; the half-inning starts with the first such name.
   const FIELDED = ['GO', 'FO', 'DP', 'RUNNER_OUT'];
-  // A name is the pitcher when it is on an event only a pitcher has (hit, walk, run, strikeout) or on two events in a row.
   const pitches = (defs, i) => !FIELDED.includes(defs[i].type) || (defs[i + 1] && defs[i + 1].pitcher === defs[i].pitcher);
   function startingPitcher(defs) {
     for (let i = 0; i < defs.length; i++) if (defs[i].pitcher && pitches(defs, i)) return defs[i].pitcher;
@@ -212,7 +260,6 @@
             if (pitches(h.defs, i)) { change = `<span class="ga-note w-full">🔁 換投：${esc(current)} → ${esc(d.pitcher)}</span>`; current = d.pitcher; }
             else note = `・${d.pitcher}`;
           }
-          if (d.fielder) note = `・${d.fielder}`;
           return `${change}${chip(`${d.type === 'RUN' && d.runs ? `失 ${d.runs} 分` : label}${note}`, color)}`;
         }).join('')}</div>` : empty('這半局沒有防守事件紀錄。');
       }
@@ -271,26 +318,34 @@
   const media = new Map(); // game id + record → {image: {url, blob}, video: {url, result}}
   const mediaKey = g => `${g.id}|${JSON.stringify(g.innings)}|${JSON.stringify(g.finalScore)}`;
   const fileBase = g => `淡江航太系壘_${g.date}_vs_${g.opponent || '對手'}`.replace(/[\\/:*?"<>|\s]+/g, '_');
-  function mediaSections(g) {
+  function videoSection(g) {
+    if (!window.gameVideo) return '';
     const m = media.get(mediaKey(g)) || {};
-    const image = section('賽後分析圖', '本場賽後成績圖（IG 限動 1080×1920），可直接下載或分享。', `
-      <div class="ga-media"><img data-ga-card alt="賽後成績圖" class="ga-card-img"${m.image ? ` src="${m.image.url}"` : ''}>${m.image ? '' : '<p class="ga-media-wait">正在產生成績圖…</p>'}</div>
-      <div class="flex flex-wrap gap-2">
-        <button type="button" class="s3-chip s3-primary" data-ga="download-image">下載圖片</button>
-        <button type="button" class="s3-chip" data-ga="share-image">分享圖片</button>
-        <button type="button" class="s3-chip" data-ga="image">放大檢視</button>
-      </div>`);
     const ready = !!m.video;
-    const video = window.gameVideo ? section('賽後影片', '每局每個打席的 3D 動畫，最後是賽後成績卡；IG 限動規格、30fps，長度依打席數決定。', `
+    return section('賽後影片', '每局每個打席的 3D 動畫，最後是賽後成績卡；IG 限動規格、30fps。下載後可直接發限動。', `
       <div class="ga-media">${ready
         ? `<video class="ga-video" controls playsinline muted autoplay loop src="${m.video.url}"></video>`
         : `<div class="ga-video-wait">${m.image ? `<img class="ga-card-img ga-dim" src="${m.image.url}" alt="">` : ''}<button type="button" class="ga-play" data-ga="make-video">▶ 製作並播放賽後影片</button><p class="ga-media-note">影片在這台裝置上製作，不會上傳。</p></div>`}</div>
-      <div class="flex flex-wrap gap-2">
-        <button type="button" class="s3-chip s3-primary" data-ga="download-video"${ready ? '' : ' disabled'}>下載影片</button>
-        <button type="button" class="s3-chip" data-ga="share-video"${ready ? '' : ' disabled'}>分享影片</button>
-        <button type="button" class="s3-chip" data-ga="download-both">下載圖片＋影片</button>
-      </div>${ready ? `<p class="text-[11px] text-slate-500">長 ${Math.round(m.video.result.duration)} 秒；超過 60 秒時 IG 會自動分段。</p>` : ''}`) : '';
-    return image + video;
+      <button type="button" class="ga-download" data-ga="download-video">⬇ 下載賽後影片</button>
+      <div class="flex flex-wrap gap-2 justify-center">
+        <button type="button" class="s3-chip" data-ga="share-video">分享影片</button>
+      </div>${ready ? `<p class="text-[11px] text-slate-500 text-center">長 ${Math.round(m.video.result.duration)} 秒；超過 60 秒時 IG 會自動分段。</p>` : ''}`, 'data-ga-part="body"');
+  }
+  // The postgame image is still here, folded at the end: the video is what people should share.
+  function extrasSection(g) {
+    const m = media.get(mediaKey(g)) || {};
+    return `<section data-ga-part="extras" class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl">
+        <details class="ga-more"><summary><h2 class="inline text-base sm:text-lg font-black text-white">其他下載</h2><span class="text-xs text-slate-400 ml-2">賽後分析圖（圖片）</span></summary>
+          <div class="space-y-3 pt-3">
+            <div class="ga-media"><img data-ga-card alt="賽後成績圖" class="ga-card-img"${m.image ? ` src="${m.image.url}"` : ''}>${m.image ? '' : '<p class="ga-media-wait">正在產生成績圖…</p>'}</div>
+            <div class="flex flex-wrap gap-2 justify-center">
+              <button type="button" class="s3-chip" data-ga="download-image">下載圖片</button>
+              <button type="button" class="s3-chip" data-ga="share-image">分享圖片</button>
+              <button type="button" class="s3-chip" data-ga="download-both">下載圖片＋影片</button>
+              <button type="button" class="s3-chip" data-ga="image">放大檢視</button>
+            </div>
+          </div>
+        </details></section>`;
   }
   // The card is drawn once per version of the game and kept while the page is open.
   async function ensureImage(g) {
@@ -334,33 +389,49 @@
       if (v) render();
       return;
     }
-    const v = media.get(mediaKey(g))?.video;
+    const v = media.get(mediaKey(g))?.video || ((act === 'download-video' || act === 'share-video') ? await ensureVideo(g) : null);
     if (!v) return;
+    if (!document.querySelector('#panelGames video.ga-video')) render();
     if (act === 'download-video') gameVideo.download(v.result.blob, v.result.filename);
     if (act === 'share-video') await shareFile(v.result.blob, v.result.filename, `${title} 賽後影片`);
   }
 
   // ---------- Page ----------
+  // The page is direct child sections (the section bar reads them): the picker, the analysis, the scorebook review moved
+  // here from 場記 (it keeps its own markup and editing code, so it is never re-rendered by this file), and the extras.
+  let reviewSection = null;
+  function allGamesNewest() {
+    return (typeof allGames !== 'undefined' ? allGames : []).slice()
+      .sort((a, b) => (b.date || '').localeCompare(a.date || '') || String(b.id).localeCompare(String(a.id)));
+  }
   function render() {
     const panel = document.getElementById(PAGE_ID);
     if (!panel) return;
-    const games = finishedGames();
-    if (!games.length) { panel.innerHTML = section('賽事分析', '', empty('還沒有已完成的場記比賽。完成一場比賽後，這裡會自動出現詳細分析。')); return; }
-    if (!games.some(g => g.id === currentId)) currentId = games[0].id;
+    panel.querySelectorAll('[data-ga-part]').forEach(el => el.remove());
+    const games = allGamesNewest();
+    if (!games.length) {
+      panel.insertAdjacentHTML('afterbegin', section('賽事分析', '', empty('還沒有場記比賽。完成一場比賽後，這裡會自動出現詳細分析。'), 'data-ga-part="body"'));
+      return;
+    }
+    if (!games.some(g => g.id === currentId)) currentId = (games.find(g => g.status !== 'in_progress') || games[0]).id;
+    // The review below follows the chosen game.
+    if (typeof renderSelectedGameReview === 'function' && typeof selectedReviewGameId !== 'undefined' && selectedReviewGameId !== currentId) renderSelectedGameReview(currentId);
     const a = analyse(games.find(g => g.id === currentId));
     const moments = keyMoments(a);
-    panel.innerHTML = [
-      section('選擇比賽', `共 ${games.length} 場已完成的比賽，最新的在最前面。`, picker(games)),
-      section('比賽總覽', '', hero(a)),
-      mediaSections(a.game),
-      section('關鍵時刻', '這場比賽最值得記住的打席與半局。', moments.length ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${moments.map(m => `<div class="ga-moment" style="border-color:${m.color}55"><span class="text-xl">${m.icon}</span><div><b class="text-sm" style="color:${m.color}">${esc(m.title)}</b><p class="text-xs text-slate-300 mt-0.5">${esc(m.text)}</p></div></div>`).join('')}</div>` : empty('這場比賽沒有特別的紀錄。')),
-      section('比分走勢', a.scored ? '每個半局結束後的比分。' : '', scoreChart(a) + lineScore(a)),
-      section('逐局經過', '依時間順序列出每個打席與防守事件；圓點是打席結束時的出局數。', `<div class="space-y-3">${timeline(a)}</div>`),
-      section('打者表現', '每位打者依序的打席結果。', batters(a)),
-      section('擊球與出局', '本場擊球落點、擊球型態與出局方式。', battedBalls(a)),
-      section('投手與防守', '', pitching(a))
-    ].join('');
-    // The card appears as soon as it is drawn (fonts, badge and photo first).
+    const part = 'data-ga-part="body"';
+    panel.insertAdjacentHTML('afterbegin', pickerSection(games));
+    reviewSection.insertAdjacentHTML('beforebegin', [
+      section('比賽總覽', '', hero(a), part),
+      videoSection(a.game),
+      section('關鍵時刻', '這場比賽最值得記住的打席與半局。', moments.length ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${moments.map(m => `<div class="ga-moment" style="border-color:${m.color}55"><span class="text-xl">${m.icon}</span><div><b class="text-sm" style="color:${m.color}">${esc(m.title)}</b><p class="text-xs text-slate-300 mt-0.5">${esc(m.text)}</p></div></div>`).join('')}</div>` : empty('這場比賽沒有特別的紀錄。'), part),
+      section('比分走勢', a.scored ? '每個半局結束後的比分。' : '', scoreChart(a) + lineScore(a), part),
+      section('逐局經過', '依時間順序列出每個打席與防守事件；圓點是打席結束時的出局數。', `<div class="space-y-3">${timeline(a)}</div>`, part),
+      section('打者表現', '每位打者依序的打席結果。', batters(a), part),
+      section('擊球與出局', '本場擊球落點、擊球型態與出局方式。', battedBalls(a), part),
+      section('投手與防守', '', pitching(a), part)
+    ].join(''));
+    reviewSection.insertAdjacentHTML('afterend', extrasSection(a.game));
+    // The card is drawn in the background: the video's poster and the image in 其他下載.
     const game = a.game;
     if (!media.get(mediaKey(game))?.image) ensureImage(game).then(img => {
       if (!img || currentId !== game.id) return;
@@ -370,6 +441,13 @@
       if (wait && !wait.querySelector('img')) wait.insertAdjacentHTML('afterbegin', `<img class="ga-card-img ga-dim" src="${img.url}" alt="">`);
     }).catch(error => console.error('[game-analysis] image', error));
   }
+  function choose(id) {
+    if (!id) return;
+    pick.open = false;
+    currentId = id;
+    render();
+    document.getElementById(PAGE_ID)?.querySelector('[data-ga-part="picker"]')?.scrollIntoView({block: 'nearest'});
+  }
   function open(gameId) {
     if (gameId) currentId = gameId;
     switchMainTab('tabGames');
@@ -378,7 +456,8 @@
   const nav = document.getElementById('mainNavigation');
   const scorebookButton = document.getElementById('btnTabScorebook');
   const glossaryPanel = document.getElementById('panelGlossary');
-  if (nav && scorebookButton && glossaryPanel && !document.getElementById(PAGE_ID)) {
+  const reviewPanel = document.getElementById('scoreSubPanelReview');
+  if (nav && scorebookButton && glossaryPanel && reviewPanel && !document.getElementById(PAGE_ID)) {
     const button = document.createElement('button');
     button.type = 'button';
     button.id = 'btnTabGames';
@@ -392,42 +471,85 @@
     panel.id = PAGE_ID;
     panel.className = 'hidden space-y-6';
     glossaryPanel.before(panel);
+    // 歷史賽事覆盤 (with its editor) moves here from 場記; the picker above replaces its game list.
+    reviewSection = document.createElement('section');
+    reviewSection.id = 'gaReviewSection';
+    reviewSection.className = 'bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4';
+    reviewSection.innerHTML = '<div><h2 class="text-base sm:text-lg font-black text-white">場記覆盤與編輯</h2><p class="text-xs text-slate-400 mt-1">本場完整場記；按「編輯」可修改打席、守備事件與比分，按儲存後才會寫入。</p></div>';
+    reviewSection.appendChild(reviewPanel);
+    reviewPanel.classList.remove('hidden');
+    reviewPanel.querySelector('#reviewGameSelect')?.parentElement?.classList.add('hidden');
+    panel.appendChild(reviewSection);
+    // 場記's own tab switch rewrites the button's classes, so it is hidden with a style.
+    const oldReviewTab = document.getElementById('btnScoreSubReview');
+    if (oldReviewTab) oldReviewTab.style.display = 'none';
+    // Any way into 歷史賽事覆盤 (a finished game, an old link) opens this page; 實況 and 噴流圖 switch as before, and the
+    // moved review stays visible here.
+    const switchSub = window.switchScorebookSubTab;
+    window.siteHooks.replace('switchScorebookSubTab', 'game-analysis', subTab => {
+      if (subTab !== 'review') { switchSub(subTab); reviewPanel.classList.remove('hidden'); return; }
+      if (typeof renderGameReview === 'function') renderGameReview();
+      open(typeof selectedReviewGameId !== 'undefined' ? selectedReviewGameId : null);
+    });
+
     panel.addEventListener('click', event => {
-      const game = event.target.closest('[data-ga-game]');
-      if (game) { currentId = game.dataset.gaGame; render(); panel.querySelector('.ga-on')?.scrollIntoView({block: 'nearest', inline: 'center'}); return; }
+      const row = event.target.closest('[data-ga-game]');
+      if (row) { choose(row.dataset.gaGame); return; }
+      const step = event.target.closest('[data-ga-step]');
+      if (step) {
+        const games = allGamesNewest(), i = games.findIndex(g => g.id === currentId), next = games[i + Number(step.dataset.gaStep)];
+        if (next) choose(next.id);
+        return;
+      }
+      const filter = event.target.closest('[data-ga-filter]');
+      if (filter) {
+        const [kind, value] = filter.dataset.gaFilter.split(':');
+        pick[kind] = value;
+        const games = allGamesNewest();
+        panel.querySelectorAll('[data-ga-filter]').forEach(b => b.classList.toggle('s3-on', b.dataset.gaFilter === `${b.dataset.gaFilter.split(':')[0]}:${pick[b.dataset.gaFilter.split(':')[0]]}`));
+        const list = panel.querySelector('.ga-browse-list');
+        if (list) list.innerHTML = browseList(games);
+        return;
+      }
       const act = event.target.closest('[data-ga]')?.dataset.ga;
+      if (act === 'browse') {
+        pick.open = !pick.open;
+        const old = panel.querySelector('[data-ga-part="picker"]');
+        old.insertAdjacentHTML('beforebegin', pickerSection(allGamesNewest()));
+        old.remove();
+        if (pick.open) panel.querySelector('[data-ga-search]')?.focus({preventScroll: true});
+        return;
+      }
       const g = (typeof allGames !== 'undefined' ? allGames : []).find(x => x.id === currentId);
       if (!act || !g) return;
       if (act === 'replay') spray3d.open({title: `${g.date} vs ${g.opponent || '對手'} 3D 擊球重播`, gameId: g.id});
       if (act === 'image') teamInsights.openImageModal(g.id);
-      if (act === 'video') gameVideo.gameVideoFor(g.id).then(v => v && gameVideo.showResult(v, `${g.date} vs ${g.opponent || '對手'} 賽後影片`));
       if (['download-image', 'share-image', 'make-video', 'download-both', 'download-video', 'share-video'].includes(act)) { mediaAction(act, g); return; }
-      if (act === 'review') { switchMainTab('tabScorebook'); switchScorebookSubTab('review'); if (typeof renderSelectedGameReview === 'function') renderSelectedGameReview(g.id); }
+      if (act === 'review') reviewSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+    });
+    panel.addEventListener('input', event => {
+      if (!event.target.matches('[data-ga-search]')) return;
+      pick.q = event.target.value;
+      const list = panel.querySelector('.ga-browse-list');
+      if (list) list.innerHTML = browseList(allGamesNewest());
     });
     // After the site's own switch (which, for an id it does not know, hides every page and resets every button).
     window.siteHooks.after('switchMainTab', 'game-analysis', tabId => {
       const on = tabId === 'tabGames';
       panel.classList.toggle('hidden', !on);
       button.className = on ? ACTIVE : INACTIVE;
-      if (on) render(); else if (panel.firstChild) panel.innerHTML = '';
+      // Hidden, the page keeps only the review (its editor may hold unsaved changes); the rest is rebuilt when opened.
+      if (on) render(); else panel.querySelectorAll('[data-ga-part]').forEach(el => el.remove());
     });
     button.addEventListener('click', () => switchMainTab('tabGames'));
   }
-  // The game review links here.
-  function addReviewLink(gameId) {
-    const group = document.querySelector('#reviewGameSummaryBadge > div');
-    if (!group || (typeof isEditingReviewGame !== 'undefined' && isEditingReviewGame) || group.querySelector('[data-game-analysis]')) return;
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.dataset.gameAnalysis = gameId;
-    button.className = 'bg-violet-950/60 hover:bg-violet-900/80 border border-violet-600/70 text-violet-200 text-xs px-3 py-1 rounded-lg transition font-bold';
-    button.textContent = '📊 賽事分析';
-    button.addEventListener('click', () => open(gameId));
-    group.appendChild(button);
-  }
-  window.siteHooks.after('renderSelectedGameReview', 'game-analysis', addReviewLink);
+  // The review switching games (its own controls, or after an edit) moves the analysis with it.
+  window.siteHooks.after('renderSelectedGameReview', 'game-analysis', gameId => {
+    if (!gameId || gameId === currentId) return;
+    currentId = gameId;
+    if (!document.getElementById(PAGE_ID)?.classList.contains('hidden')) render();
+  });
   window.siteHooks.after('renderAll', 'game-analysis', () => { if (!document.getElementById(PAGE_ID)?.classList.contains('hidden')) render(); });
-  try { if (typeof selectedReviewGameId !== 'undefined' && selectedReviewGameId) addReviewLink(selectedReviewGameId); } catch (error) { console.error('[game-analysis] init', error); }
 
-  window.gameAnalysis = {analyse, keyMoments, finishedGames, render, open};
+  window.gameAnalysis = {analyse, keyMoments, finishedGames, render, open, choose, current: () => currentId};
 })();

@@ -302,7 +302,9 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
       });
       assert.deepEqual(excluded,{without:true,back:true},'form board follows the 簡承均 setting');
       await page.evaluate(()=>{switchMainTab('tabScorebook');switchScorebookSubTab('review');renderSelectedGameReview('game_20260920_4922');});
-      await page.locator('[data-insight-image]').click();
+      // 歷史賽事覆盤 now opens 賽事分析, where the postgame image sits in 其他下載.
+      await page.locator('#panelGames .ga-more > summary').click();
+      await page.locator('#panelGames [data-ga="image"]').click();
       await page.waitForSelector('#insightImageModal img');
       const image=await page.evaluate(()=>{const img=document.querySelector('#insightImageModal img');return {w:img.naturalWidth,h:img.naturalHeight};});
       assert.deepEqual(image,{w:1080,h:1920},'an Instagram story (9:16)');

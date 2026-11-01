@@ -98,7 +98,8 @@ const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 
     // 賽事分析: the third page of 比賽, reached from the game review, with every plate appearance in order.
     await page.evaluate(id => { switchMainTab('tabScorebook'); switchScorebookSubTab('review'); renderSelectedGameReview(id); }, gameId);
-    await page.locator(`[data-game-analysis="${gameId}"]`).click();
+    // The old way into the review (場記 → 歷史賽事覆盤) opens this page with that game.
+    await page.evaluate(() => switchScorebookSubTab('review'));
     await page.waitForSelector('#panelGames .ga-hero');
     const analysis = await page.evaluate(id => {
       const g = allGames.find(x => x.id === id);
@@ -106,42 +107,71 @@ const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
       const halves = g.innings.length;
       return {visible: !document.getElementById('panelGames').classList.contains('hidden'), sections: document.querySelectorAll('#panelGames > section').length,
         rows: document.querySelectorAll('#panelGames .ga-pa').length, pas, halves: document.querySelectorAll('#panelGames .ga-half').length, expectedHalves: halves,
-        picked: document.querySelector('#panelGames .ga-on')?.dataset.gaGame, active: document.getElementById('btnTabGames').classList.contains('tab-active')};
+        picked: gameAnalysis.current(), active: document.getElementById('btnTabGames').classList.contains('tab-active'),
+        review: !!document.querySelector('#panelGames #gaReviewSection #gameReviewDetailContainer') && document.getElementById('scoreSubPanelReview').offsetParent !== null,
+        oldTab: getComputedStyle(document.getElementById('btnScoreSubReview')).display};
     }, gameId);
     assert.ok(analysis.visible && analysis.active, 'the page and its button are on');
-    assert.equal(analysis.sections, 10, 'summary, postgame image, postgame video and the seven analysis sections plus the picker');
+    assert.equal(analysis.sections, 11, 'picker, summary, video, six analysis sections, the moved review and 其他下載');
+    assert.ok(analysis.review, 'the scorebook review (with its editor) is on this page');
+    assert.equal(analysis.oldTab, 'none', '場記 no longer shows its own review tab');
     // The postgame card appears on the page.
-    await page.waitForSelector('#panelGames .ga-card-img[src]', {timeout: 20000});
+    await page.waitForSelector('#panelGames .ga-card-img[src]', {state: 'attached', timeout: 20000});
 
-    // Pitcher and fielder are separate: the live pad records the picked fielder with the pitcher on the mound, and the
-    // review editor offers to fix a fielder typed into the pitcher column.
-    const fielder = await page.evaluate(() => {
+    // Defense records only the pitcher. A mid-half-inning pitcher change asks first (on 10/31 the menu was switched to the
+    // fielder for single outs), and the review editor offers to put a wrong one-off name back.
+    const pitcher = await page.evaluate(() => {
       const saved = localStorage.getItem('rebas_active_game');
-      activeGame = window.activeGame = {id: 'fielder-test', lineup: ['甲', '乙', '丙'], lineupPositions: ['P', 'SS', 'LF'], pitcherName: '甲', innings: [], currentInning: 1, currentHalf: 'top', currentOuts: 0, finalScore: {us: 0, opp: 0}, ourRole: '後攻'};
+      activeGame = window.activeGame = {id: 'pitcher-test', lineup: ['甲', '乙', '丙'], lineupPositions: ['P', 'SS', 'LF'], pitcherName: '甲', innings: [], currentInning: 1, currentHalf: 'top', currentOuts: 0, finalScore: {us: 0, opp: 0}, ourRole: '後攻'};
       updateLivePitcherCard();
-      const chips = [...document.querySelectorAll('#defenseFielderChips [data-fielder]')].map(b => b.dataset.pos + b.dataset.fielder);
-      document.querySelector('#defenseFielderChips [data-fielder="乙"]').click();
-      recordDefenseEvent('GO');
+      const noFielderRow = !document.getElementById('defenseFielderChips');
       recordDefenseEvent('FO');
-      const evts = activeGame.innings[0].defensiveEvents.map(e => [e.type, e.pitcher, e.fielder || null]);
+      // Undoing an earlier event recounts the outs of the ones after it.
+      recordDefenseEvent('HIT'); recordDefenseEvent('GO');
+      deleteDefenseEvent(activeGame.innings[0].defensiveEvents[0].id);
+      const recount = {outs: activeGame.currentOuts, atEnd: activeGame.innings[0].defensiveEvents.map(e => e.outsAtEnd)};
+      const asked = [];
+      const confirmBefore = window.confirm;
+      window.confirm = message => { asked.push(message); return false; };
+      changeDefensePitcher('乙');
+      // A position change that moves P mid-half-inning asks too.
+      changeLiveLineupPosition(1, 'P');
+      window.confirm = confirmBefore;
+      // Entering a defensive half with a different pitcher than last time warns.
+      activeGame.pitcherName = '乙';
+      switchInningNext(); switchInningNext();
+      const warned = /請確認登板投手/.test(document.getElementById('globalToastContainer')?.textContent || '');
+      activeGame.pitcherName = '甲'; activeGame.lineupPositions = ['P', 'SS', 'LF'];
+      const after = {pitcher: activeGame.pitcherName, positions: activeGame.lineupPositions.join(), event: Object.keys(activeGame.innings[0].defensiveEvents[0]).sort().join()};
       window.activeGame = null; activeGame = null;
       if (saved == null) localStorage.removeItem('rebas_active_game'); else localStorage.setItem('rebas_active_game', saved);
-      const fixes = suggestFielderFixes([{type: 'HIT', pitcher: 'A'}, {type: 'FO', pitcher: 'X'}, {type: 'HIT', pitcher: 'A'}, {type: 'GO', pitcher: 'Y'},
+      const fixes = suggestPitcherFixes([{type: 'HIT', pitcher: 'A'}, {type: 'FO', pitcher: 'X'}, {type: 'HIT', pitcher: 'A'}, {type: 'GO', pitcher: 'Y'},
         {type: 'BB', pitcher: 'B'}, {type: 'HIT', pitcher: 'B'}]);
-      return {chips, evts, fixes};
+      return {noFielderRow, asked: asked.length, mentions: /只記登板投手/.test(asked[0] || ''), after, fixes, recount, warned};
     });
-    assert.deepEqual(fielder.chips, ['P甲', 'SS乙', 'LF丙']);
-    assert.deepEqual(fielder.evts, [['GO', '甲', '乙'], ['FO', '甲', null]], 'the fielder goes with one out, the pitcher stays');
-    assert.deepEqual(fielder.fixes, {1: {pitcher: 'A', fielder: 'X'}, 3: {pitcher: 'A', fielder: 'Y'}}, 'one-off names on outs are flagged; a real change (B, B) is not');
+    assert.ok(pitcher.noFielderRow, 'no fielder row: defense does not record who handled the ball');
+    assert.deepEqual([pitcher.asked, pitcher.mentions], [2, true], 'a mid-half-inning pitcher change asks first (menu and position change)');
+    assert.deepEqual(pitcher.recount, {outs: 1, atEnd: [0, 1]}, 'undoing an earlier out recounts the later events');
+    assert.ok(pitcher.warned, 'a different pitcher at the start of a defensive half is flagged');
+    assert.deepEqual(pitcher.after, {pitcher: '甲', positions: 'P,SS,LF', event: 'desc,id,outsAdded,outsAtEnd,pitcher,runs,type'}, 'cancelled: pitcher and positions untouched; the event has no fielder field');
+    assert.deepEqual(pitcher.fixes, {1: {pitcher: 'A', wrong: 'X'}, 3: {pitcher: 'A', wrong: 'Y'}}, 'one-off names on outs are flagged; a real change (B, B) is not');
     assert.equal(analysis.rows, analysis.pas, 'every plate appearance in the play-by-play');
     assert.equal(analysis.halves, analysis.expectedHalves, 'every half-inning');
     assert.equal(analysis.picked, gameId, 'the game from the review is selected');
     // Another game from the picker.
-    const other = await page.evaluate(() => document.querySelector('#panelGames [data-ga-game]:not(.ga-on)')?.dataset.gaGame);
-    if (other) {
-      await page.locator(`#panelGames [data-ga-game="${other}"]`).click();
-      assert.equal(await page.evaluate(() => document.querySelector('#panelGames .ga-on').dataset.gaGame), other);
-    }
+    // Older game with the arrow; then the list, searched by date, picks a game and the review follows.
+    // Whichever arrow is enabled (the oldest game has no older one).
+    const step = await page.evaluate(() => document.querySelector('#panelGames [data-ga-step="1"]').disabled ? '-1' : '1');
+    await page.locator(`#panelGames [data-ga-step="${step}"]`).click();
+    const older = await page.evaluate(() => ({id: gameAnalysis.current(), review: selectedReviewGameId}));
+    assert.equal(older.review, older.id, 'the review follows the picker');
+    await page.locator('#panelGames [data-ga="browse"]').click();
+    const target = await page.evaluate(() => allGames.find(g => g.id !== gameAnalysis.current()));
+    await page.fill('#panelGames [data-ga-search]', target.date.slice(5).replace('-', '/'));
+    const listed = await page.evaluate(() => [...document.querySelectorAll('#panelGames .ga-browse-list [data-ga-game]')].map(b => b.dataset.gaGame));
+    assert.ok(listed.includes(target.id), 'search by date finds the game');
+    await page.locator(`#panelGames .ga-browse-list [data-ga-game="${target.id}"]`).click();
+    assert.deepEqual(await page.evaluate(() => [gameAnalysis.current(), selectedReviewGameId, !!document.querySelector('#panelGames .ga-browse')]), [target.id, target.id, false]);
 
     assert.deepEqual(errors, []);
     console.log(JSON.stringify({passed: true, plays: replay.plays, clip: `${clip.w}x${clip.h} ${clip.ext}`, video: Math.round(length.full)}));

@@ -111,6 +111,17 @@ function alignLineupPitcher(name) {
 function changeLiveLineupPosition(index, position) {
   if (!activeGame || !Number.isInteger(index) || index < 0 || index >= activeGame.lineup.length) return;
   if (position && !POSITIONS.some(p => p.key === position) && !(activeGame.hasDh && position === 'DH')) return;
+  // Moving P to someone else in the middle of a half-inning changes who is credited with the next events: ask first
+  // (on 10/31 the pitcher was switched for single outs; see changeDefensePitcher).
+  const trial = [...activeGame.lineupPositions];
+  swapLineupPosition(trial, index, position);
+  const nextPitcher = trial.includes('P') ? activeGame.lineup[trial.indexOf('P')] : null;
+  const half = (activeGame.innings || []).find(i => i.inningNum === activeGame.currentInning && i.topBottom === activeGame.currentHalf);
+  if (activeGame.pitcherName && nextPitcher && nextPitcher !== activeGame.pitcherName && (half?.defensiveEvents || []).length
+      && !confirm(`這個守位調整會把登板投手從 ${activeGame.pitcherName} 改成 ${nextPitcher}。確定要在半局中途換投嗎？`)) {
+    renderLiveScorer();
+    return;
+  }
   const before = gameDefenseSnapshot();
   swapLineupPosition(activeGame.lineupPositions, index, position);
   const pitcherIndex = activeGame.lineupPositions.indexOf('P');

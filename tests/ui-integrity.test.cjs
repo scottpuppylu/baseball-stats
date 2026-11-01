@@ -29,13 +29,15 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 // 2026/11/01 (requested): the scorebook drops the 內野飛球 type and the located 界外K result buttons (two handlers, two ids).
-// 2026/11/01 (requested): defensive events record the fielder apart from the pitcher (a fielder row on the live pad, a
-// 處理球員 column with a one-tap fix in the review editor; two ids, no new handlers).
+// 2026/11/01 (requested): changing the pitcher mid-half-inning asks first (on 10/31 the pitcher menu had been switched to
+// the fielder for single outs, which rewrote the pitcher and the field positions); the review editor offers to put a wrong
+// one-off pitcher name back. Defense records only the pitcher (no fielder: defense has no landing points). Undo recounts every remaining record's outs;
+// entering a defensive half with a different pitcher than the last one warns.
 const BASELINE = {
-  "script": "5b3774ce6a4d5fe40408ab2878548cecfe0cc8445c765c6b518b05db401bca47",
+  "script": "fb898bfd33253d7a90f4d1f0837db03d259ba76cdb86d347bc8f49c30ff227c9",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
-  "idCount": 287,
-  "ids": "62572619356e8bee66a9ca0e0687d3efe7dead0caecfa285cb1cac348ff91a5f"
+  "idCount": 285,
+  "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"
 };
 test('business script is byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
