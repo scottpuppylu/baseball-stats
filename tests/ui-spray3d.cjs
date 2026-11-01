@@ -109,7 +109,30 @@ const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
         picked: document.querySelector('#panelGames .ga-on')?.dataset.gaGame, active: document.getElementById('btnTabGames').classList.contains('tab-active')};
     }, gameId);
     assert.ok(analysis.visible && analysis.active, 'the page and its button are on');
-    assert.equal(analysis.sections, 8);
+    assert.equal(analysis.sections, 10, 'summary, postgame image, postgame video and the seven analysis sections plus the picker');
+    // The postgame card appears on the page.
+    await page.waitForSelector('#panelGames .ga-card-img[src]', {timeout: 20000});
+
+    // Pitcher and fielder are separate: the live pad records the picked fielder with the pitcher on the mound, and the
+    // review editor offers to fix a fielder typed into the pitcher column.
+    const fielder = await page.evaluate(() => {
+      const saved = localStorage.getItem('rebas_active_game');
+      activeGame = window.activeGame = {id: 'fielder-test', lineup: ['甲', '乙', '丙'], lineupPositions: ['P', 'SS', 'LF'], pitcherName: '甲', innings: [], currentInning: 1, currentHalf: 'top', currentOuts: 0, finalScore: {us: 0, opp: 0}, ourRole: '後攻'};
+      updateLivePitcherCard();
+      const chips = [...document.querySelectorAll('#defenseFielderChips [data-fielder]')].map(b => b.dataset.pos + b.dataset.fielder);
+      document.querySelector('#defenseFielderChips [data-fielder="乙"]').click();
+      recordDefenseEvent('GO');
+      recordDefenseEvent('FO');
+      const evts = activeGame.innings[0].defensiveEvents.map(e => [e.type, e.pitcher, e.fielder || null]);
+      window.activeGame = null; activeGame = null;
+      if (saved == null) localStorage.removeItem('rebas_active_game'); else localStorage.setItem('rebas_active_game', saved);
+      const fixes = suggestFielderFixes([{type: 'HIT', pitcher: 'A'}, {type: 'FO', pitcher: 'X'}, {type: 'HIT', pitcher: 'A'}, {type: 'GO', pitcher: 'Y'},
+        {type: 'BB', pitcher: 'B'}, {type: 'HIT', pitcher: 'B'}]);
+      return {chips, evts, fixes};
+    });
+    assert.deepEqual(fielder.chips, ['P甲', 'SS乙', 'LF丙']);
+    assert.deepEqual(fielder.evts, [['GO', '甲', '乙'], ['FO', '甲', null]], 'the fielder goes with one out, the pitcher stays');
+    assert.deepEqual(fielder.fixes, {1: {pitcher: 'A', fielder: 'X'}, 3: {pitcher: 'A', fielder: 'Y'}}, 'one-off names on outs are flagged; a real change (B, B) is not');
     assert.equal(analysis.rows, analysis.pas, 'every plate appearance in the play-by-play');
     assert.equal(analysis.halves, analysis.expectedHalves, 'every half-inning');
     assert.equal(analysis.picked, gameId, 'the game from the review is selected');

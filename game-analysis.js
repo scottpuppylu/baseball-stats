@@ -132,8 +132,6 @@
         <div class="ga-stats">${stat(a.batting.length, '打席')}${stat(a.hits, '安打', '#22c55e')}${stat(avg, '打擊率')}${stat(a.batting.filter(p => ['2H', '3H', 'HR'].includes(p.result)).length, '長打', '#f3c766')}${stat(a.batting.filter(p => p.result === 'BB').length, '保送', '#cbd5e1')}${stat(a.mvp ? esc(a.mvp.name) : '—', 'MVP', '#fbbf24')}</div>
         <div class="flex flex-wrap gap-2">
           ${window.spray3d ? '<button type="button" class="s3-chip s3-primary" data-ga="replay">🎬 3D 擊球重播</button>' : ''}
-          ${window.teamInsights ? '<button type="button" class="s3-chip" data-ga="image">🖼️ 賽後成績圖</button>' : ''}
-          ${window.gameVideo ? '<button type="button" class="s3-chip" data-ga="video">🎞️ 賽後影片</button>' : ''}
           <button type="button" class="s3-chip" data-ga="review">📋 場記覆盤</button>
         </div>
       </div>`;
@@ -181,11 +179,12 @@
 
   // The pitcher a half-inning starts with: the first name recorded on two events in a row, otherwise the name with the most
   // walks, hits and runs against it (outs count less: a scorer sometimes notes the fielder there).
+  const FIELDED = ['GO', 'FO', 'DP', 'RUNNER_OUT'];
+  // A name is the pitcher when it is on an event only a pitcher has (hit, walk, run, strikeout) or on two events in a row.
+  const pitches = (defs, i) => !FIELDED.includes(defs[i].type) || (defs[i + 1] && defs[i + 1].pitcher === defs[i].pitcher);
   function startingPitcher(defs) {
-    for (let i = 0; i + 1 < defs.length; i++) if (defs[i].pitcher && defs[i].pitcher === defs[i + 1].pitcher) return defs[i].pitcher;
-    const score = new Map();
-    for (const d of defs) if (d.pitcher) score.set(d.pitcher, (score.get(d.pitcher) || 0) + (['HIT', 'BB', 'RUN', 'K', '界外K'].includes(d.type) ? 2 : 1));
-    return [...score.entries()].sort((x, y) => y[1] - x[1])[0]?.[0] || '';
+    for (let i = 0; i < defs.length; i++) if (defs[i].pitcher && pitches(defs, i)) return defs[i].pitcher;
+    return defs[0]?.pitcher || '';
   }
   // Every half-inning, in order.
   function timeline(a) {
@@ -210,10 +209,10 @@
           const [label, color] = DEF[d.type] || [d.desc || d.type, '#94a3b8'];
           let change = '', note = '';
           if (d.pitcher && current && d.pitcher !== current) {
-            const next = h.defs[i + 1];
-            if (next && next.pitcher === d.pitcher) { change = `<span class="ga-note w-full">🔁 換投：${esc(current)} → ${esc(d.pitcher)}</span>`; current = d.pitcher; }
+            if (pitches(h.defs, i)) { change = `<span class="ga-note w-full">🔁 換投：${esc(current)} → ${esc(d.pitcher)}</span>`; current = d.pitcher; }
             else note = `・${d.pitcher}`;
           }
+          if (d.fielder) note = `・${d.fielder}`;
           return `${change}${chip(`${d.type === 'RUN' && d.runs ? `失 ${d.runs} 分` : label}${note}`, color)}`;
         }).join('')}</div>` : empty('這半局沒有防守事件紀錄。');
       }
@@ -268,6 +267,79 @@
       <p class="text-[11px] text-slate-500">依場記的防守事件計算；面對打席不含單獨記錄的失分事件。</p>`;
   }
 
+  // ---------- Postgame image and video, on the page ----------
+  const media = new Map(); // game id + record → {image: {url, blob}, video: {url, result}}
+  const mediaKey = g => `${g.id}|${JSON.stringify(g.innings)}|${JSON.stringify(g.finalScore)}`;
+  const fileBase = g => `淡江航太系壘_${g.date}_vs_${g.opponent || '對手'}`.replace(/[\\/:*?"<>|\s]+/g, '_');
+  function mediaSections(g) {
+    const m = media.get(mediaKey(g)) || {};
+    const image = section('賽後分析圖', '本場賽後成績圖（IG 限動 1080×1920），可直接下載或分享。', `
+      <div class="ga-media"><img data-ga-card alt="賽後成績圖" class="ga-card-img"${m.image ? ` src="${m.image.url}"` : ''}>${m.image ? '' : '<p class="ga-media-wait">正在產生成績圖…</p>'}</div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="s3-chip s3-primary" data-ga="download-image">下載圖片</button>
+        <button type="button" class="s3-chip" data-ga="share-image">分享圖片</button>
+        <button type="button" class="s3-chip" data-ga="image">放大檢視</button>
+      </div>`);
+    const ready = !!m.video;
+    const video = window.gameVideo ? section('賽後影片', '每局每個打席的 3D 動畫，最後是賽後成績卡；IG 限動規格、30fps，長度依打席數決定。', `
+      <div class="ga-media">${ready
+        ? `<video class="ga-video" controls playsinline muted autoplay loop src="${m.video.url}"></video>`
+        : `<div class="ga-video-wait">${m.image ? `<img class="ga-card-img ga-dim" src="${m.image.url}" alt="">` : ''}<button type="button" class="ga-play" data-ga="make-video">▶ 製作並播放賽後影片</button><p class="ga-media-note">影片在這台裝置上製作，不會上傳。</p></div>`}</div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="s3-chip s3-primary" data-ga="download-video"${ready ? '' : ' disabled'}>下載影片</button>
+        <button type="button" class="s3-chip" data-ga="share-video"${ready ? '' : ' disabled'}>分享影片</button>
+        <button type="button" class="s3-chip" data-ga="download-both">下載圖片＋影片</button>
+      </div>${ready ? `<p class="text-[11px] text-slate-500">長 ${Math.round(m.video.result.duration)} 秒；超過 60 秒時 IG 會自動分段。</p>` : ''}`) : '';
+    return image + video;
+  }
+  // The card is drawn once per version of the game and kept while the page is open.
+  async function ensureImage(g) {
+    const key = mediaKey(g), m = media.get(key) || {};
+    if (m.image) return m.image;
+    if (!window.teamInsights) return null;
+    const assets = window.gameVideo ? await gameVideo.prepareAssets(g) : {mvpPhoto: null};
+    const canvas = teamInsights.drawGameImage(g, {mvpPhoto: assets.mvpPhoto});
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    m.image = {blob, url: URL.createObjectURL(blob)};
+    media.set(key, m);
+    return m.image;
+  }
+  async function ensureVideo(g) {
+    const key = mediaKey(g), m = media.get(key) || {};
+    if (m.video) return m.video;
+    const result = await gameVideo.gameVideoFor(g.id);
+    if (!result) return null;
+    m.video = {result, url: URL.createObjectURL(result.blob)};
+    media.set(key, m);
+    return m.video;
+  }
+  async function shareFile(blob, name, title) {
+    const file = new File([blob], name, {type: blob.type});
+    if (navigator.canShare && navigator.canShare({files: [file]})) { try { await navigator.share({files: [file], title}); } catch (error) { /* cancelled */ } return; }
+    gameVideo.download(blob, name);
+    if (typeof showToast === 'function') showToast('此裝置不支援直接分享，已改為下載');
+  }
+  async function mediaAction(act, g) {
+    const title = `${g.date} vs ${g.opponent || '對手'}`;
+    if (act === 'download-image' || act === 'share-image') {
+      const img = await ensureImage(g);
+      if (!img) return;
+      if (act === 'download-image') gameVideo.download(img.blob, `${fileBase(g)}.png`); else await shareFile(img.blob, `${fileBase(g)}.png`, title);
+      return;
+    }
+    if (act === 'make-video' || act === 'download-both') {
+      if (act === 'download-both') { const img = await ensureImage(g); if (img) gameVideo.download(img.blob, `${fileBase(g)}.png`); }
+      const v = await ensureVideo(g);
+      if (v && act === 'download-both') gameVideo.download(v.result.blob, v.result.filename);
+      if (v) render();
+      return;
+    }
+    const v = media.get(mediaKey(g))?.video;
+    if (!v) return;
+    if (act === 'download-video') gameVideo.download(v.result.blob, v.result.filename);
+    if (act === 'share-video') await shareFile(v.result.blob, v.result.filename, `${title} 賽後影片`);
+  }
+
   // ---------- Page ----------
   function render() {
     const panel = document.getElementById(PAGE_ID);
@@ -280,6 +352,7 @@
     panel.innerHTML = [
       section('選擇比賽', `共 ${games.length} 場已完成的比賽，最新的在最前面。`, picker(games)),
       section('比賽總覽', '', hero(a)),
+      mediaSections(a.game),
       section('關鍵時刻', '這場比賽最值得記住的打席與半局。', moments.length ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${moments.map(m => `<div class="ga-moment" style="border-color:${m.color}55"><span class="text-xl">${m.icon}</span><div><b class="text-sm" style="color:${m.color}">${esc(m.title)}</b><p class="text-xs text-slate-300 mt-0.5">${esc(m.text)}</p></div></div>`).join('')}</div>` : empty('這場比賽沒有特別的紀錄。')),
       section('比分走勢', a.scored ? '每個半局結束後的比分。' : '', scoreChart(a) + lineScore(a)),
       section('逐局經過', '依時間順序列出每個打席與防守事件；圓點是打席結束時的出局數。', `<div class="space-y-3">${timeline(a)}</div>`),
@@ -287,6 +360,15 @@
       section('擊球與出局', '本場擊球落點、擊球型態與出局方式。', battedBalls(a)),
       section('投手與防守', '', pitching(a))
     ].join('');
+    // The card appears as soon as it is drawn (fonts, badge and photo first).
+    const game = a.game;
+    if (!media.get(mediaKey(game))?.image) ensureImage(game).then(img => {
+      if (!img || currentId !== game.id) return;
+      panel.querySelectorAll('[data-ga-card]').forEach(el => { el.src = img.url; });
+      panel.querySelectorAll('.ga-media-wait').forEach(el => el.remove());
+      const wait = panel.querySelector('.ga-video-wait');
+      if (wait && !wait.querySelector('img')) wait.insertAdjacentHTML('afterbegin', `<img class="ga-card-img ga-dim" src="${img.url}" alt="">`);
+    }).catch(error => console.error('[game-analysis] image', error));
   }
   function open(gameId) {
     if (gameId) currentId = gameId;
@@ -319,6 +401,7 @@
       if (act === 'replay') spray3d.open({title: `${g.date} vs ${g.opponent || '對手'} 3D 擊球重播`, gameId: g.id});
       if (act === 'image') teamInsights.openImageModal(g.id);
       if (act === 'video') gameVideo.gameVideoFor(g.id).then(v => v && gameVideo.showResult(v, `${g.date} vs ${g.opponent || '對手'} 賽後影片`));
+      if (['download-image', 'share-image', 'make-video', 'download-both', 'download-video', 'share-video'].includes(act)) { mediaAction(act, g); return; }
       if (act === 'review') { switchMainTab('tabScorebook'); switchScorebookSubTab('review'); if (typeof renderSelectedGameReview === 'function') renderSelectedGameReview(g.id); }
     });
     // After the site's own switch (which, for an id it does not know, hides every page and resets every button).

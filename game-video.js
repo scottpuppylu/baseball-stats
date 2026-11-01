@@ -241,7 +241,9 @@
     }
     return {innings, scored, total: all.length};
   }
-  const TITLE_T = 1.0, END_T = 0.95, INTRO_T = 2.2, HOLD_T = 5; // HOLD_T: the finished postgame card stays still this long
+  // The opening with the badge plays at 1.2× (2.4 s → 2 s); plays at PLAY_SPEED. HOLD_T: the finished postgame card stays still.
+  const TITLE_T = 0.8, END_T = 0.75, INTRO_T = 2.0, HOLD_T = 10;
+  const PLAY_SPEED = 1.75; // plays always run at 1.75× (the same pace as the 3D viewer), whatever the length
 
   async function prepareAssets(game) {
     const logo = loadImage('assets/logo-256.webp'), scene = loadImage('assets/bg-orbit-portrait.webp');
@@ -258,10 +260,7 @@
 
   function buildGameVideo(game, assets) {
     const plan = gamePlan(game);
-    const playTime = plan.innings.reduce((a, inn) => a + inn.plays.reduce((b, p) => b + p.length, 0), 0);
-    const fixed = INTRO_T + plan.innings.length * (TITLE_T + END_T) + 9;
-    // Plays run at 1.3×, and long games up to 1.5×, so the video stays close to a minute.
-    const speed = clamp(playTime / Math.max(10, 60 - fixed), 1.3, 1.5);
+    const speed = PLAY_SPEED;
     const segments = [{type: 'intro', len: INTRO_T}];
     for (const inn of plan.innings) segments.push({type: 'inning', inn, len: TITLE_T + inn.plays.reduce((a, p) => a + p.length, 0) / speed + END_T});
     const card = document.createElement('canvas');
@@ -341,7 +340,7 @@
         header(c, P, plan.scored ? {us: 0, opp: 0} : null);
         drawStage(c, stage);
         P.panel(40, 1366, 1000, 340, 30);
-        const a = ease(u / 0.6);
+        const a = ease(u / 0.5); // the badge settles at the opening's 1.2× pace
         overlay(c, P, Math.min(1, u / 0.3) * (1 - clamp((u - INTRO_T + 0.4) / 0.4)), cy => {
           if (ok(assets.logo)) { const s = 180 * (0.85 + 0.15 * a); c.drawImage(assets.logo, W / 2 - s / 2, cy - 230, s, s); }
           P.title('賽後重播', W / 2, cy + 40, 72, INK, 'center');
@@ -395,8 +394,7 @@
       g.plays.push(p);
     }
     byGame.forEach(g => { g.plays = window.spray3d.plan(g.plays); });
-    const playTime = byGame.reduce((a, g) => a + g.plays.reduce((b, p) => b + p.length, 0), 0);
-    const speed = clamp(playTime / Math.max(10, 60 - INTRO_T - byGame.length * 1.2 - 7), 1.3, 1.6);
+    const speed = PLAY_SPEED;
     const segments = [{type: 'intro', len: INTRO_T}];
     for (const g of byGame) segments.push({type: 'game', g, len: 1.2 + g.plays.reduce((a, p) => a + p.length, 0) / speed});
     segments.push({type: 'summary', len: 7});
@@ -435,7 +433,7 @@
         drawStage(c, stage);
         P.panel(40, 1366, 1000, 340, 30);
         // The team badge and the title over the field, as in the game video's opening.
-        const a = ease(u / 0.6);
+        const a = ease(u / 0.5); // the badge settles at the opening's 1.2× pace
         overlayStage(c, Math.min(1, u / 0.3) * (1 - clamp((u - INTRO_T + 0.4) / 0.4)), cy => {
           if (ok(assets.logo)) { const s = 180 * (0.85 + 0.15 * a); c.drawImage(assets.logo, W / 2 - s / 2, cy - 230, s, s); }
           P.title('個人擊球回顧', W / 2, cy + 40, 72, INK, 'center');

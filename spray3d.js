@@ -95,7 +95,7 @@
   // ---------- Flight and running ----------
   const RUN_LEG = 0.62; // seconds per base
   const STRIKEOUTS = ['K', '界外K', 'K_FOUL'];
-  const PACE = 1.3; // the viewer plays at 1.3× (its 1× button means this pace)
+  const PACE = 1.75; // the viewer plays at 1.75× (its 1× button means this pace)
   // Path of the ball: positions over time, plus when it lands and what happens there.
   function planBall(pa) {
     if (!hasFlight(pa)) return null;

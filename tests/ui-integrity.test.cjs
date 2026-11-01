@@ -29,11 +29,13 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
 // 2026/11/01 (requested): the scorebook drops the 內野飛球 type and the located 界外K result buttons (two handlers, two ids).
+// 2026/11/01 (requested): defensive events record the fielder apart from the pitcher (a fielder row on the live pad, a
+// 處理球員 column with a one-tap fix in the review editor; two ids, no new handlers).
 const BASELINE = {
-  "script": "bed62889a46018a619de2dc0a28a10bfc7399e2f7929594db1afc6727ef2fa65",
+  "script": "5b3774ce6a4d5fe40408ab2878548cecfe0cc8445c765c6b518b05db401bca47",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
-  "idCount": 285,
-  "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"
+  "idCount": 287,
+  "ids": "62572619356e8bee66a9ca0e0687d3efe7dead0caecfa285cb1cac348ff91a5f"
 };
 test('business script is byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];

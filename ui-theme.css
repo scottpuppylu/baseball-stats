@@ -1292,3 +1292,19 @@ html.ui-flight .transition { transition-property: color, background-color, borde
 .ga-bar > div i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: rgba(148,163,184,0.45); }
 .ga-bar > div i.ga-bar-hit { background: #22c55e; }
 .ga-bar b { text-align: right; color: #f1f5f9; }
+/* 賽事分析: the postgame card and video shown on the page (story-shaped, never wider than a phone). */
+.ga-media { position: relative; display: flex; justify-content: center; }
+.ga-card-img, .ga-video { display: block; width: 100%; max-width: 360px; aspect-ratio: 9 / 16; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); background: #05070b; object-fit: cover; }
+.ga-media-wait { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #94a3b8; }
+.ga-video-wait { position: relative; width: 100%; max-width: 360px; aspect-ratio: 9 / 16; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: #05070b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.ga-video-wait .ga-card-img { position: absolute; inset: 0; max-width: none; border: 0; border-radius: 0; }
+.ga-dim { filter: brightness(0.38) blur(1px); }
+.ga-play { position: relative; z-index: 1; font-size: 15px; font-weight: 800; color: #ecfdf5; padding: 12px 20px; border-radius: 999px; border: 1px solid rgba(52,211,153,0.6); background: rgba(16,185,129,0.25); }
+.ga-media-note { position: relative; z-index: 1; font-size: 11px; color: #cbd5e1; }
+.s3-chip[disabled] { opacity: 0.4; cursor: not-allowed; }
+/* Live scorebook: who made the play (separate from the pitcher), picked before an out. */
+.fl-fielder-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; margin-bottom: 8px; }
+.fl-fielder-row::-webkit-scrollbar { display: none; }
+.fl-fielder { flex: 0 0 auto; display: inline-flex; flex-direction: column; align-items: center; gap: 1px; min-width: 64px; padding: 6px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: #e2e8f0; font-size: 13px; font-weight: 700; }
+.fl-fielder small { font-size: 10px; color: #94a3b8; font-weight: 600; }
+.fl-fielder.fl-on { border-color: rgba(125,211,252,0.7); background: rgba(56,189,248,0.18); color: #fff; }

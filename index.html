@@ -60,7 +60,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261101.2127</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261101.2247</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -1535,6 +1535,8 @@
                     <h3>投手與守備快捷登打</h3>
                     <span>點一下即記錄出局、上壘或失分</span>
                   </div>
+                  <p class="fl-def-label">處理球員（選填：先點處理這球的守備員，再按出局）</p>
+                  <div id="defenseFielderChips" class="fl-fielder-row"></div>
                   <p class="fl-def-label">出局</p>
                   <div class="fl-def-grid fl-def-outs">
                     <button onclick="recordDefenseEvent('GO')" class="fl-def-btn" data-tone="out"><b>滾地刺殺</b><small>+1 出局</small></button>
@@ -8900,8 +8902,29 @@ function renderCustomChart(agg) {
     }
 
     // 我方防守：更新投手資訊卡 (支援場上調換、場下板凳隊員與非隊員支援直接登板)
+    // 處理球員：記錄出局時另外記下由誰處理這球（不影響登板投手）。點一下選取、再點取消；記完一筆出局就清除。
+    let selectedDefenseFielder = null;
+    const FIELDER_OUTS = ['GO', 'FO', 'DP', 'RUNNER_OUT'];
+    function renderDefenseFielderChips() {
+      const box = document.getElementById('defenseFielderChips');
+      if (!box || !activeGame) return;
+      const lineup = activeGame.lineup || [], positions = activeGame.lineupPositions || [];
+      const order = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'SF', 'RC', 'RF'];
+      const fielders = lineup.map((name, i) => ({name, pos: positions[i]})).filter(f => f.name && f.pos && f.pos !== 'DH')
+        .sort((a, b) => order.indexOf(a.pos) - order.indexOf(b.pos));
+      box.innerHTML = fielders.map(f => `<button type="button" class="fl-fielder${selectedDefenseFielder && selectedDefenseFielder.name === f.name ? ' fl-on' : ''}" aria-pressed="${!!(selectedDefenseFielder && selectedDefenseFielder.name === f.name)}" data-fielder="${escHtml(f.name)}" data-pos="${escHtml(f.pos)}"><small>${escHtml(f.pos)}</small>${escHtml(f.name)}</button>`).join('')
+        || '<span class="text-[11px] text-slate-500">先在歐打單設定守位，這裡就會列出守備員。</span>';
+    }
+    document.addEventListener('click', event => {
+      const chip = event.target.closest('#defenseFielderChips [data-fielder]');
+      if (!chip) return;
+      const picked = {name: chip.dataset.fielder, pos: chip.dataset.pos};
+      selectedDefenseFielder = selectedDefenseFielder && selectedDefenseFielder.name === picked.name ? null : picked;
+      renderDefenseFielderChips();
+    });
     function updateLivePitcherCard() {
       renderLiveLineupCard();
+      renderDefenseFielderChips();
       const pTitle = document.getElementById('defensePitcherNameTitle');
       const pAvatar = document.getElementById('defensePitcherAvatar');
       const pSelect = document.getElementById('defensePitcherSelect');
@@ -9157,6 +9180,8 @@ function renderCustomChart(agg) {
         outsAtEnd: activeGame.currentOuts,
         desc: descMap[eventType] || eventType
       };
+      if (selectedDefenseFielder && FIELDER_OUTS.includes(eventType)) { newEvt.fielder = selectedDefenseFielder.name; newEvt.fielderPos = selectedDefenseFielder.pos; }
+      if (FIELDER_OUTS.includes(eventType)) { selectedDefenseFielder = null; renderDefenseFielderChips(); }
       curInning.defensiveEvents.push(newEvt);
 
       localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
@@ -9217,7 +9242,7 @@ function renderCustomChart(agg) {
         return `
           <tr class="hover:bg-slate-900 transition">
             <td class="p-2.5 text-center text-slate-500">${i + 1}</td>
-            <td class="p-2.5 text-white font-bold">#${NAME_TO_JERSEY[e.pitcher] ?? ''} ${e.pitcher}</td>
+            <td class="p-2.5 text-white font-bold">#${NAME_TO_JERSEY[e.pitcher] ?? ''} ${e.pitcher}${e.fielder ? ` <span class="text-slate-400 font-normal">· 處理：${escHtml(e.fielder)}</span>` : ''}</td>
             <td class="p-2.5 text-center">${typeBadge}</td>
             <td class="p-2.5 text-center text-emerald-400 font-bold">${e.outsAdded ? '+' + e.outsAdded : '-'}</td>
             <td class="p-2.5 text-center text-rose-400 font-bold">${e.runs ? '+' + e.runs : '-'}</td>
@@ -10574,8 +10599,10 @@ function renderCustomChart(agg) {
         `).join('');
 
         // ★★★ 守備半局與投手投球事件列 ★★★
+        const fixes = suggestFielderFixes(defEvents);
         const defRows = defEvents.map((evt, defIdx) => {
           const curPitcher = evt.pitcher || defaultPitcher;
+          const fix = fixes[defIdx];
           return `
             <tr class="hover:bg-slate-900 transition">
               <td class="p-2 text-center text-slate-500">${defIdx + 1}</td>
@@ -10583,6 +10610,13 @@ function renderCustomChart(agg) {
                 <select id="edit_def_pitcher_${innIdx}_${defIdx}" class="bg-slate-900 border border-teal-700 text-teal-300 font-bold text-xs rounded px-2 py-1">
                   ${curPitcher ? '' : '<option value="" selected>— 未指定投手 —</option>'}
                   ${allPlayers.map(pl => `<option value="${pl}" ${pl === curPitcher ? 'selected' : ''}>#${NAME_TO_JERSEY[pl] ?? ''} ${pl}</option>`).join('')}
+                </select>
+                ${fix ? `<button type="button" data-fielder-fix="${innIdx}_${defIdx}" data-fix-pitcher="${escHtml(fix.pitcher)}" data-fix-fielder="${escHtml(fix.fielder)}" class="block mt-1 text-[11px] text-amber-300 hover:text-amber-200">↺ 可能填成處理球員：投手改回 ${escHtml(fix.pitcher)}，${escHtml(fix.fielder)} 改為處理球員</button>` : ''}
+              </td>
+              <td class="p-2">
+                <select id="edit_def_fielder_${innIdx}_${defIdx}" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1">
+                  <option value="" ${evt.fielder ? '' : 'selected'}>—</option>
+                  ${allPlayers.map(pl => `<option value="${pl}" ${pl === evt.fielder ? 'selected' : ''}>#${NAME_TO_JERSEY[pl] ?? ''} ${pl}</option>`).join('')}
                 </select>
               </td>
               <td class="p-2 text-center">
@@ -10657,6 +10691,7 @@ function renderCustomChart(agg) {
                     <tr>
                       <th class="p-2 text-center w-10">序號</th>
                       <th class="p-2 text-teal-300">登板投手</th>
+                      <th class="p-2">處理球員</th>
                       <th class="p-2 text-center">事件類別</th>
                       <th class="p-2 text-center">增加出局</th>
                       <th class="p-2 text-center">失分</th>
@@ -10665,7 +10700,7 @@ function renderCustomChart(agg) {
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-800">
-                    ${defRows || '<tr><td colspan="7" class="p-4 text-center text-slate-500">本半局尚無守備事件，請點擊右上角「+ 新增投手/守備事件」補登</td></tr>'}
+                    ${defRows || '<tr><td colspan="8" class="p-4 text-center text-slate-500">本半局尚無守備事件，請點擊右上角「+ 新增投手/守備事件」補登</td></tr>'}
                   </tbody>
                 </table>
               </div>
@@ -10810,6 +10845,33 @@ function renderCustomChart(agg) {
     const FIELD_LOCATIONS = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'SF', 'RC', 'RF'];
     // Copies everything typed in the review editor into the game object (also used before adding or deleting a row,
     // so re-rendering the form does not throw away values not yet saved).
+    // 守備事件的投手欄若只在單一出局事件出現別的名字（前後都是同一位投手），多半是把處理球員填進了投手欄。
+    // 一個名字算是投手：出現在只有投手會有的事件（安打、保送、失分、三振），或連續兩個事件都是他。
+    function suggestFielderFixes(events) {
+      const OUTS = ['GO', 'FO', 'DP', 'RUNNER_OUT'];
+      const pitches = (e, i) => !OUTS.includes(e.type) || (events[i + 1] && events[i + 1].pitcher === e.pitcher);
+      let current = '';
+      for (let i = 0; i < events.length && !current; i++) if (events[i].pitcher && pitches(events[i], i)) current = events[i].pitcher;
+      const fixes = {};
+      events.forEach((e, i) => {
+        if (!e.pitcher || !current || e.pitcher === current) return;
+        if (pitches(e, i)) { current = e.pitcher; return; } // a real pitching change
+        if (!e.fielder) fixes[i] = {pitcher: current, fielder: e.pitcher};
+      });
+      return fixes;
+    }
+    window.suggestFielderFixes = suggestFielderFixes;
+    // 點「可能填成處理球員」：只改表單，按儲存才寫入。
+    document.addEventListener('click', event => {
+      const btn = event.target.closest('[data-fielder-fix]');
+      if (!btn) return;
+      const key = btn.dataset.fielderFix;
+      const p = document.getElementById(`edit_def_pitcher_${key}`), f = document.getElementById(`edit_def_fielder_${key}`);
+      if (p) p.value = btn.dataset.fixPitcher;
+      if (f) f.value = btn.dataset.fixFielder;
+      btn.textContent = '✓ 已改好，記得按儲存';
+      btn.disabled = true;
+    });
     function applyReviewFormToGame(game) {
       const oppInput = document.getElementById('editGameOpponent');
       const dateInput = document.getElementById('editGameDate');
@@ -10857,6 +10919,8 @@ function renderCustomChart(agg) {
             const dInput = document.getElementById(`edit_def_desc_${innIdx}_${defIdx}`);
 
             if (pSel) evt.pitcher = pSel.value;
+            const fSel = document.getElementById(`edit_def_fielder_${innIdx}_${defIdx}`);
+            if (fSel) { if (fSel.value) evt.fielder = fSel.value; else { delete evt.fielder; delete evt.fielderPos; } }
             if (tSel) evt.type = tSel.value;
             if (oInput) evt.outsAdded = parseInt(oInput.value, 10) || 0;
             if (rInput) evt.runs = parseInt(rInput.value, 10) || 0;
