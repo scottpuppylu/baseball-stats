@@ -1069,8 +1069,8 @@
             "playId": "play_1793415316822",
             "batterName": "陳威騏",
             "slot": 5,
-            "result": "SF",
-            "trajectory": "grounder",
+            "result": "FO",
+            "trajectory": "fly",
             "location": "C",
             "x": 0.502,
             "y": 0.931,
@@ -1470,7 +1470,7 @@
       {
         "inningNum": 5,
         "topBottom": "top",
-        "runs": 4,
+        "runs": 3,
         "hits": 4,
         "plateAppearances": [],
         "defensiveEvents": [
