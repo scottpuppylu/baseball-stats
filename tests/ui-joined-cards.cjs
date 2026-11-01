@@ -10,7 +10,7 @@ const problems = [];
     const p = await c.newPage();
     await p.goto(url);
     await p.waitForFunction(() => window.teamRecords && !syncStatusBadge.textContent.includes('連線同步中'));
-    for (const page of ['Home','Overview','Analytics','Pitching','Records','Profile','Leaderboard','Compare','Health','Lineup','Scorebook','Glossary','Changelog']) {
+    for (const page of ['Home','Overview','Analytics','Pitching','Records','Profile','Leaderboard','Compare','Health','Lineup','Scorebook','Games','Glossary','Changelog']) {
       await p.evaluate(pg => uiNavigation.openPage(pg), page);
       await p.waitForTimeout(700);
       const found = await p.evaluate(() => {

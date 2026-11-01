@@ -18,7 +18,8 @@
   const hasFlight = pa => Number.isFinite(pa.x) && Number.isFinite(pa.y) && pa.trajectory && pa.trajectory !== 'none';
 
   // Plays for one player ('all' for the team) in the header's date range, or every plate appearance of one game.
-  function collectPlays({player = 'all', gameId = null} = {}) {
+  // all: also plate appearances without a landing point (walks, strikeouts) outside a single game, for the player video.
+  function collectPlays({player = 'all', gameId = null, all = false} = {}) {
     const out = [];
     const games = (typeof allGames !== 'undefined' ? allGames : []).slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     for (const game of games) {
@@ -29,7 +30,7 @@
           if (typeof isRunnerOutPlay === 'function' && isRunnerOutPlay(pa)) continue;
           if (player !== 'all' && pa.batterName !== player) continue;
           const flight = !archived && hasFlight(pa);
-          if (!gameId && !flight) continue; // outside a single game only batted balls with a landing point are shown
+          if (!gameId && !all && !flight) continue; // outside a single game only batted balls with a landing point are shown
           out.push({batterName: pa.batterName, slot: pa.slot, result: pa.result, trajectory: flight ? pa.trajectory : 'none',
             x: flight ? pa.x : null, y: flight ? pa.y : null, location: pa.location, outsAtEnd: pa.outsAtEnd, outsAdded: pa.outsAdded,
             inningNum: inn.inningNum, gameId: game.id, gameDate: game.date, opponent: game.opponent});
@@ -44,7 +45,7 @@
   const FENCE = {cx: 0, cz: 107.4, r: 215, a0: Math.atan2(88.5, -195.9), a1: Math.atan2(88.5, 195.9)}; // where the 45° foul lines meet the wall
   const FOUL_L = toWorld(4.1, 174.1), FOUL_R = toWorld(395.9, 174.1); // 90° apart
   const BASES = [{x: 0, z: 0}, toWorld(282.5, 287.5), toWorld(200, 205), toWorld(117.5, 287.5)]; // a square, first and third on the foul lines
-  const MOUND = toWorld(200, 260);
+  const MOUND = toWorld(200, 287.5); // the centre of the square diamond
   const WALL_H = 9;
   const fenceAt = a => ({x: FENCE.cx + FENCE.r * Math.cos(a), z: FENCE.cz + FENCE.r * Math.sin(a)});
   // Distance from home to the fence along a direction (unit dx, dz).
@@ -93,6 +94,8 @@
 
   // ---------- Flight and running ----------
   const RUN_LEG = 0.62; // seconds per base
+  const STRIKEOUTS = ['K', '界外K', 'K_FOUL'];
+  const PACE = 1.3; // the viewer plays at 1.3× (its 1× button means this pace)
   // Path of the ball: positions over time, plus when it lands and what happens there.
   function planBall(pa) {
     if (!hasFlight(pa)) return null;
@@ -169,7 +172,9 @@
     const decided = !ball ? runStart + (bases ? bases * legT : 0.45) : ball.out ? (ball.throwAt ?? ball.landAt) : Math.max(ball.total, runStart + bases * legT);
     const runEnd = bases ? runStart + bases * legT : ball ? runStart + legT : decided;
     const done = Math.max(decided, runEnd);
-    return {pa, ball, bases, runStart, legT, decided, done, length: done + 1.1};
+    // A strikeout stays a little longer so its big K can land and leave before the next batter.
+    const strikeout = STRIKEOUTS.includes(pa.result);
+    return {pa, ball, bases, runStart, legT, decided, done, strikeout, length: done + (strikeout ? 1.6 : 1.1)};
   }
   function runnerAt(play, t) {
     const {bases, runStart, legT} = play;
@@ -282,6 +287,37 @@
       poly([{x: -4, z: 2}, {x: 4, z: 2}, {x: 4, z: -1}, {x: 0, z: -4}, {x: -4, z: -1}], '#f8fafc');
     }
 
+    // A big red K in the middle of the field: it springs in as the batter is rung up (a slight overshoot, a soft glow and
+    // a ring that opens outward), holds, then lifts away and is fully gone before the play ends.
+    function drawStrikeout(play, t, w, h, k) {
+      const start = play.decided - 0.2, end = play.length - 0.15;
+      if (t < start || t > end) return;
+      const u = Math.min(1, (t - start) / 0.42);
+      const back = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+      const out = Math.max(0, Math.min(1, (t - (end - 0.38)) / 0.38));
+      const scale = (0.55 + 0.45 * back(u)) * (1 + 0.1 * out);
+      const alpha = Math.min(1, u * 2.2) * (1 - out);
+      if (alpha <= 0) return;
+      const cx = w / 2, cy = h * 0.4, size = Math.min(w, h) * 0.34;
+      c.save();
+      c.globalAlpha = alpha * 0.55;
+      const glow = c.createRadialGradient(cx, cy, 0, cx, cy, size * 1.1);
+      glow.addColorStop(0, 'rgba(244,63,94,0.5)'); glow.addColorStop(1, 'rgba(244,63,94,0)');
+      c.fillStyle = glow; c.fillRect(cx - size * 1.2, cy - size * 1.2, size * 2.4, size * 2.4);
+      // The ring opens once, as the K arrives.
+      if (u < 1) { c.globalAlpha = alpha * (1 - u); c.strokeStyle = '#fb7185'; c.lineWidth = 3 * k; c.beginPath(); c.arc(cx, cy, size * (0.45 + 0.55 * u), 0, 7); c.stroke(); }
+      c.globalAlpha = alpha;
+      c.translate(cx, cy); c.scale(scale, scale);
+      c.font = `900 ${size}px ${MINCHO}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+      const fill = c.createLinearGradient(0, -size / 2, 0, size / 2);
+      fill.addColorStop(0, '#ff7a8c'); fill.addColorStop(1, '#e11d48');
+      c.shadowColor = 'rgba(244,63,94,0.75)'; c.shadowBlur = 26 * k;
+      c.fillStyle = fill; c.fillText('K', 0, 0);
+      c.shadowBlur = 0; c.lineWidth = 1.5 * k; c.strokeStyle = 'rgba(255,255,255,0.55)'; c.strokeText('K', 0, 0);
+      c.font = `700 ${size * 0.13}px ${SANS}`; c.fillStyle = '#fecdd3';
+      c.fillText(play.pa.result === 'K' ? '三振' : '界外三振', 0, size * 0.62);
+      c.restore();
+    }
     function pill(text, x, y, color, k, size = 13) {
       c.font = `700 ${size * k}px ${SANS}`;
       const w = c.measureText(text).width + 16 * k, h = (size + 10) * k;
@@ -363,7 +399,8 @@
       drawBall(play.ball, t, color, k, fade, false);
       if (play.ball && t > play.ball.landAt) drawLanding(play.ball, color, k, fade, Math.max(0, 1 - (t - play.ball.landAt) / 0.6));
       drawRunner(play, t, k, fade);
-      if (t > play.decided && opts.labels !== false) {
+      if (play.strikeout) drawStrikeout(play, t, w, h, k);
+      if (t > play.decided && opts.labels !== false && !play.strikeout) {
         const anchor = play.ball ? (play.ball.out ? play.ball.land : play.ball.end) : runnerAt(play, t);
         const q = ground(anchor.x, anchor.z, 14);
         pill(LABEL[play.pa.result] || play.pa.result, q.x, q.y, color, k);
@@ -605,7 +642,7 @@
       if (!viewer || viewer.modal !== modal) return;
       const dt = Math.min(0.1, (now - last) / 1000); last = now;
       if (state.playing && !document.hidden) {
-        state.time = Math.min(state.length, state.time + dt * state.speed);
+        state.time = Math.min(state.length, state.time + dt * state.speed * PACE);
         if (state.time >= state.length) { state.playing = false; syncPlay(); }
       }
       idle += dt;

@@ -64,6 +64,7 @@
     Compare: ['雙人比較', '兩位球員並列比較指標、逐場近況與擊球方向。'],
     Lineup: ['打線安排', '確認出席與守位，推薦或自訂完整打線。'],
     Scorebook: ['比賽場記', '即時記分、換人換投、賽事覆盤與落點分析。'],
+    Games: ['賽事分析', '一場比賽發生的所有事：關鍵時刻、比分走勢、逐局經過、打者與投手表現。'],
     Pitching: ['投手分析', '查看投球事件、出局結構與隊內投手指標。'],
     Records: ['生涯紀錄', '生涯排行、單場與連續紀錄、里程碑與趣味紀錄。'],
     Glossary: ['指標說明', '查閱各項數據的定義、公式與判讀方式。'],
@@ -83,11 +84,11 @@
     ['', ['Home']],
     ['球隊數據', ['Overview', 'Analytics', 'Pitching', 'Records']],
     ['球員', ['Profile', 'Leaderboard', 'Compare', 'Health']],
-    ['比賽', ['Lineup', 'Scorebook']],
+    ['比賽', ['Lineup', 'Scorebook', 'Games']],
     ['參考', ['Glossary', 'Changelog']]
   ];
   const SUB_LABELS = {Overview: '總覽', Analytics: '分析', Pitching: '投手', Records: '紀錄', Profile: '檔案', Leaderboard: '排行', Compare: '比較',
-    Health: '健康', Lineup: '打線', Scorebook: '場記', Glossary: '指標說明', Changelog: '版本紀錄'};
+    Health: '健康', Lineup: '打線', Scorebook: '場記', Games: '賽事分析', Glossary: '指標說明', Changelog: '版本紀錄'};
   const groupOf = key => NAV_GROUPS.find(([, keys]) => keys.includes(key)) || NAV_GROUPS[0];
   const ICON = path => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
   const TABS = [

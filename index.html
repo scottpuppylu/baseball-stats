@@ -60,7 +60,7 @@
           <span class="text-sm sm:text-lg md:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent truncate whitespace-nowrap">淡江航太系壘</span>
           <span class="hidden md:inline text-xs text-slate-500">|</span>
           <span class="hidden md:inline text-xs text-sky-400/90 font-medium font-mono">系統建構：盧宣嘉</span>
-          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261101.1952</span>
+          <span class="bg-slate-900 text-slate-300 border border-slate-700/80 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0">v261101.2127</span>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[62%] sm:max-w-none">
@@ -1345,11 +1345,11 @@
                         <line x1="200" y1="370" x2="395.9" y2="174.1" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />
                         <!-- 內野紅土區 (Infield Dirt Fan) -->
                         <path d="M 93.9 263.9 A 107.8 107.8 0 0 1 306.1 263.9 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />
-                        <circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />
+                        <circle cx="200" cy="287.5" r="40" fill="#38241c" opacity="0.6" />
                         <!-- 內野壘線：四個壘包圍成正方形，一、三壘在界外線上（界外線夾角 90 度） -->
                         <polygon points="200,370 282.5,287.5 200,205 117.5,287.5" fill="none" stroke="#e2e8f0" stroke-width="2" />
                         <!-- 投手板 -->
-                        <rect x="194" y="258" width="12" height="4" fill="#ffffff" rx="1" />
+                        <rect x="194" y="285.5" width="12" height="4" fill="#ffffff" rx="1" />
                         <!-- 本壘板 (5邊形) -->
                         <polygon points="196,368 204,368 205,372 200,377 195,372" fill="#ffffff" />
                         <!-- 一壘、二壘、三壘壘包 -->
@@ -1359,7 +1359,7 @@
                         <!-- 10 個守備位置文字與圖示 (完全位於全壘打牆內綠色草皮甜蜜區) -->
                         <g id="svgPosLabels" class="text-[10px] font-mono font-bold select-none pointer-events-none fill-slate-300">
                           <text x="200" y="392" text-anchor="middle" fill="#94a3b8">C 捕手</text>
-                          <text x="200" y="275" text-anchor="middle" fill="#f59e0b">P 投手</text>
+                          <text x="200" y="306" text-anchor="middle" fill="#f59e0b">P 投手</text>
                           <text x="298" y="291" text-anchor="start" fill="#cbd5e1">1B</text>
                           <text x="245" y="212" text-anchor="start" fill="#cbd5e1">2B</text>
                           <text x="102" y="291" text-anchor="end" fill="#cbd5e1">3B</text>
@@ -1370,7 +1370,7 @@
                           <text x="315" y="165" text-anchor="middle" fill="#38bdf8">RF 右外</text>
                         </g>
                         <!-- 動態定位準心 (Target Crosshair & Ripple) -->
-                        <g id="fieldTargetMarker" class="transition-all duration-150" transform="translate(200, 260)">
+                        <g id="fieldTargetMarker" class="transition-all duration-150" transform="translate(200, 287.5)">
                           <circle cx="0" cy="0" r="14" fill="none" stroke="#f59e0b" stroke-width="2" class="animate-ping" opacity="0.75" />
                           <circle cx="0" cy="0" r="6" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5" />
                           <line x1="-12" y1="0" x2="12" y2="0" stroke="#f59e0b" stroke-width="1.5" />
@@ -1414,11 +1414,10 @@
                     <!-- 擊球型態 (Trajectory) -->
                     <div class="border-t border-slate-800 pt-3">
                       <span class="text-xs font-bold text-slate-300 block mb-1.5">擊球型態 (Batted Ball)：</span>
-                      <div class="grid grid-cols-4 gap-1.5 text-xs" id="trajectoryButtonGroup">
+                      <div class="grid grid-cols-3 gap-1.5 text-xs" id="trajectoryButtonGroup">
                         <button onclick="selectTrajectory('grounder')" id="traj_grounder" class="py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium transition">滾地球</button>
                         <button onclick="selectTrajectory('line')" id="traj_line" class="py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium transition">平飛球</button>
                         <button onclick="selectTrajectory('fly')" id="traj_fly" class="py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium transition">高飛球</button>
-                        <button onclick="selectTrajectory('popup')" id="traj_popup" class="py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium transition">內野飛球</button>
                       </div>
                     </div>
 
@@ -1432,13 +1431,12 @@
                         <button onclick="selectOutcome('3H')" id="res_3H" class="py-2 rounded-lg border border-purple-600/70 bg-purple-950/40 text-purple-300 hover:bg-purple-900/60 transition">3H 三安</button>
                         <button onclick="selectOutcome('HR')" id="res_HR" class="py-2 rounded-lg border border-amber-500/80 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60 transition">HR 全壘打</button>
                       </div>
-                      <!-- 出局類 (含慢壘特有界外K) -->
-                      <div class="grid grid-cols-5 gap-1.5 text-xs font-medium font-mono">
+                      <!-- 出局類（界外K用上方「一鍵直覺記錄」，不需落點） -->
+                      <div class="grid grid-cols-4 gap-1.5 text-xs font-medium font-mono">
                         <button onclick="selectOutcome('GO')" id="res_GO" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">GO 滾地刺</button>
                         <button onclick="selectOutcome('FO')" id="res_FO" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">FO 飛球殺</button>
                         <button onclick="selectOutcome('LO')" id="res_LO" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">LO 平飛殺</button>
                         <button onclick="selectOutcome('SF')" id="res_SF" class="py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">SF 高飛犧</button>
-                        <button onclick="selectOutcome('界外K')" id="res_界外K" class="py-1.5 rounded-lg border border-rose-700/80 bg-rose-950/50 text-amber-300 font-bold hover:bg-rose-900/70 transition" title="慢壘兩好球後擊出界外球出局 (+1 出局)">🛑 界外K</button>
                       </div>
                       <!-- 其他上壘與雙殺 -->
                       <div class="grid grid-cols-3 gap-1.5 text-xs font-medium font-mono">
@@ -6132,10 +6130,10 @@ window.toggleDiagnosticsCollapse = function() {
       + '<line x1="200" y1="370" x2="4.1" y2="174.1" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />'
       + '<line x1="200" y1="370" x2="395.9" y2="174.1" stroke="#f8fafc" stroke-width="2" stroke-dasharray="4,2" />'
       + '<path d="M 93.9 263.9 A 107.8 107.8 0 0 1 306.1 263.9 L 200 370 Z" fill="#2d1d17" stroke="#9a3412" stroke-width="1.5" />'
-      + '<circle cx="200" cy="260" r="45" fill="#38241c" opacity="0.6" />'
+      + '<circle cx="200" cy="287.5" r="40" fill="#38241c" opacity="0.6" />'
       + '<polygon points="200,370 282.5,287.5 200,205 117.5,287.5" fill="none" stroke="#e2e8f0" stroke-width="2" />';
     const FIELD_LABELS_SVG = '<g class="text-[9px] font-mono font-bold select-none pointer-events-none fill-slate-400">'
-      + '<text x="200" y="390" text-anchor="middle">C</text><text x="200" y="275" text-anchor="middle" fill="#f59e0b">P</text>'
+      + '<text x="200" y="390" text-anchor="middle">C</text><text x="200" y="306" text-anchor="middle" fill="#f59e0b">P</text>'
       + '<text x="297" y="291" text-anchor="start">1B</text><text x="245" y="215" text-anchor="start">2B</text>'
       + '<text x="103" y="291" text-anchor="end">3B</text><text x="155" y="215" text-anchor="end">SS</text>'
       + '<text x="85" y="165" text-anchor="middle" fill="#38bdf8">LF</text><text x="155" y="115" text-anchor="middle" fill="#34d399">SF</text>'
@@ -8406,7 +8404,7 @@ function renderCustomChart(agg) {
 
     const POS_CANONICAL_COORDS = window.POS_CANONICAL_COORDS = {
       'C':  { x: 0.50, y: 0.94, px: 200, py: 375, label: '捕手 (C)' },
-      'P':  { x: 0.50, y: 0.65, px: 200, py: 260, label: '投手 (P)' },
+      'P':  { x: 0.50, y: 0.719, px: 200, py: 287.5, label: '投手 (P)' },
       '1B': { x: 0.71, y: 0.70, px: 285, py: 280, label: '一壘 (1B)' },
       '2B': { x: 0.60, y: 0.55, px: 240, py: 220, label: '二壘 (2B)' },
       '3B': { x: 0.29, y: 0.70, px: 115, py: 280, label: '三壘 (3B)' },
@@ -8424,17 +8422,17 @@ function renderCustomChart(agg) {
 
     let currentScorebookSubTab = 'live'; // 'live', 'review', 'spray'
     let currentFieldTargetPos = 'P';
-    let currentFieldCoords = { x: 0.50, y: 0.65 };
+    let currentFieldCoords = { x: 0.50, y: 0.719 };
     // 打擊結果不預設：記錄員必須親手點選，避免忘了選結果時被記成一壘安打。
     let currentPlayInput = window.currentPlayInput = {
       result: null,
-      trajectory: 'grounder',
+      trajectory: null,
       location: 'P',
       x: 0.50,
-      y: 0.65,
+      y: 0.719,
       runsScored: 0
     };
-    let currentSelectedTraj = 'grounder'; // 'grounder', 'line', 'fly', 'popup', 'none'
+    let currentSelectedTraj = null; // 'grounder', 'line', 'fly' or 'none' (walks and strikeouts); picked for every plate appearance
     let currentSelectedOutcome = null;
     let currentSelectedRuns = 0;
 
@@ -9348,7 +9346,7 @@ function renderCustomChart(agg) {
       currentPlayInput.location = posKey;
       const posCoords = {
         'C': [200, 375],
-        'P': [200, 260],
+        'P': [200, 287.5],
         '1B': [285, 280],
         '2B': [240, 220],
         '3B': [115, 280],
@@ -9390,9 +9388,34 @@ function renderCustomChart(agg) {
       });
     }
 
+    // A ground-ball out is always a ground ball; a fly out, line out or sacrifice fly never is. The first type listed is
+    // picked for the scorer when the chosen result rules out the current one.
+    const TRAJECTORY_RULES = { GO: ['grounder'], FO: ['fly', 'line'], LO: ['line', 'fly'], SF: ['fly', 'line'] };
+    const TRAJECTORY_NAMES = { grounder: '滾地球', line: '平飛球', fly: '高飛球' };
+    function trajectoryAllowed(result, traj) {
+      const allowed = TRAJECTORY_RULES[result];
+      return !allowed || !traj || traj === 'none' || allowed.includes(traj);
+    }
+    function applyTrajectoryLocks() {
+      const allowed = TRAJECTORY_RULES[currentPlayInput.result];
+      ['grounder', 'line', 'fly'].forEach(t => {
+        const btn = document.getElementById(`traj_${t}`);
+        if (!btn) return;
+        const locked = !!allowed && !allowed.includes(t);
+        btn.disabled = locked;
+        btn.classList.toggle('opacity-40', locked);
+        btn.classList.toggle('cursor-not-allowed', locked);
+        btn.title = locked ? `${currentPlayInput.result} 不可能是${TRAJECTORY_NAMES[t]}` : '';
+      });
+    }
     window.selectTrajectory = function(traj) {
+      if (traj && !trajectoryAllowed(currentPlayInput.result, traj)) {
+        showToast(`${currentPlayInput.result} 不可能是${TRAJECTORY_NAMES[traj]}，請改選擊球型態或打擊結果。`, 'error');
+        return;
+      }
       currentPlayInput.trajectory = traj;
-      ['grounder', 'line', 'fly', 'popup'].forEach(t => {
+      currentSelectedTraj = traj;
+      ['grounder', 'line', 'fly'].forEach(t => {
         const btn = document.getElementById(`traj_${t}`);
         if (btn) {
           if (t === traj) {
@@ -9402,6 +9425,7 @@ function renderCustomChart(agg) {
           }
         }
       });
+      applyTrajectoryLocks();
     };
 
     window.selectOutcome = function(outc) {
@@ -9415,7 +9439,11 @@ function renderCustomChart(agg) {
           else if (outc === 'HR') selectFieldPosition('SF');
         }
       }
-      const allOutcomes = ['1H', '2H', '3H', 'HR', 'GO', 'FO', 'LO', 'SF', 'E', 'FC', 'DP', '界外K'];
+      // The type follows the result's rule (GO → ground ball; FO, LO, SF → never a ground ball).
+      const allowedTypes = TRAJECTORY_RULES[outc];
+      if (allowedTypes && !allowedTypes.includes(currentPlayInput.trajectory)) selectTrajectory(allowedTypes[0]);
+      else applyTrajectoryLocks();
+      const allOutcomes = ['1H', '2H', '3H', 'HR', 'GO', 'FO', 'LO', 'SF', 'E', 'FC', 'DP'];
       allOutcomes.forEach(o => {
         const btn = document.getElementById(`res_${o}`);
         if (btn) {
@@ -9540,6 +9568,14 @@ function renderCustomChart(agg) {
         showToast('請先選擇打擊結果（安打、出局或其他），再送出此打席。', 'error');
         return;
       }
+      if (!currentPlayInput.trajectory) {
+        showToast('請先選擇擊球型態（滾地球、平飛球或高飛球），再送出此打席。', 'error');
+        return;
+      }
+      if (!trajectoryAllowed(currentPlayInput.result, currentPlayInput.trajectory)) {
+        showToast(`${currentPlayInput.result} 不可能是${TRAJECTORY_NAMES[currentPlayInput.trajectory]}，請修正擊球型態。`, 'error');
+        return;
+      }
 
       const idx = activeGame.currentBatterIdx;
       const batterName = activeGame.lineup[idx];
@@ -9623,7 +9659,7 @@ function renderCustomChart(agg) {
       // 登打完成後重置打席輸入，避免上一打席狀態（例如三振/保送之捕手 C）殘留污染下一打席
       currentPlayInput = window.currentPlayInput = {
         result: null,
-        trajectory: 'grounder',
+        trajectory: null,
         location: '2B',
         x: 0.60,
         y: 0.55,
@@ -9631,7 +9667,7 @@ function renderCustomChart(agg) {
       };
       updateFieldTargetDisplay();
       selectOutcome(null);
-      selectTrajectory('grounder');
+      selectTrajectory(null);
       selectRunsScored(0);
 
       activeGame.currentBatterIdx = (activeGame.currentBatterIdx + 1) % activeGame.lineup.length;
@@ -10520,7 +10556,7 @@ function renderCustomChart(agg) {
             </td>
             <td class="p-2 text-center">
               <select id="edit_play_traj_${innIdx}_${playIdx}" class="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded px-2 py-1">
-                ${['grounder', 'line', 'fly', 'popup', 'none'].map(t => `<option value="${t}" ${t === p.trajectory ? 'selected' : ''}>${t}</option>`).join('')}
+                ${['grounder', 'line', 'fly', ...(p.trajectory === 'popup' ? ['popup'] : []), 'none'].map(t => `<option value="${t}" ${t === p.trajectory ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
             </td>
             <td class="p-2 text-center">
@@ -11028,6 +11064,7 @@ function renderCustomChart(agg) {
   <script src="team-insights.js?v=20261011-audit2"></script>
   <script src="spray3d.js"></script>
   <script src="game-video.js"></script>
+  <script src="game-analysis.js"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
   <script src="lineup-recommender.js?v=20261011-auditfixes"></script>
   <script src="player-diagnostics.js?v=20261010-diag3"></script>

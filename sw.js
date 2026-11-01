@@ -25,10 +25,31 @@ self.addEventListener('install', event => {
     if (!RELEASE) throw new Error('Release must be built before deployment');
     try {
       const cache = await caches.open(CACHE);
-      for (const entry of RELEASE.files) {
+      // Files that did not change are taken from a release already complete on this device (checked against this
+      // release's hash, so a stale copy is never reused); only the rest are downloaded, several at a time. A release
+      // usually changes a few scripts, so the update is ready in seconds instead of re-downloading every file.
+      const installed = [];
+      for (const key of await caches.keys()) {
+        if (!key.startsWith('tkaero-shell-') || key === CACHE) continue;
+        const old = await caches.open(key);
+        if (await old.match(absolute('__complete'))) installed.push(old);
+      }
+      const reuse = async entry => {
+        if (entry.file === 'index.html') return null; // stored rewritten for offline use, always fetched fresh
+        for (const old of installed) {
+          const hit = await old.match(absolute(entry.url));
+          if (hit) { try { return await verified(hit, entry.sha256); } catch (_) { /* changed: download it */ } }
+        }
+        return null;
+      };
+      const store = async entry => {
+        const kept = await reuse(entry);
+        if (kept) return cache.put(absolute(entry.url), kept);
         const response = await verified(await fetch(absolute(entry.url), {cache: 'no-store'}), entry.sha256);
         await cache.put(absolute(entry.url), entry.file === 'index.html' ? await offlinePage(response) : response);
-      }
+      };
+      const queue = RELEASE.files.slice();
+      await Promise.all(Array.from({length: 6}, async () => { while (queue.length) await store(queue.shift()); }));
       await cache.put(absolute('__complete'), new Response(VERSION));
     } catch (error) { await caches.delete(CACHE); throw error; }
   })());

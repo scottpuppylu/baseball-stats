@@ -37,7 +37,7 @@ fs.mkdirSync(output,{recursive:true});
           assert.ok(header.height<=80,`slim top bar (${header.height})`);
           assert.ok(workspace.x<40,'collapsed drawer must release content width');
           await drawer.click();
-          for(const name of ['Home','Overview','Analytics','Pitching','Records','Profile','Leaderboard','Compare','Health','Lineup','Scorebook','Glossary','Changelog']) assert.ok(await page.locator(`#btnTab${name}`).isVisible(),name);
+          for(const name of ['Home','Overview','Analytics','Pitching','Records','Profile','Leaderboard','Compare','Health','Lineup','Scorebook','Games','Glossary','Changelog']) assert.ok(await page.locator(`#btnTab${name}`).isVisible(),name);
           // Drawer title: small badge beside 所有功能, never the desktop sidebar's large centred badge (it was clipped).
           const title=await page.evaluate(()=>{const s=getComputedStyle(document.getElementById('mainNavigation'),'::before');return {content:s.content,bg:s.backgroundImage,size:s.backgroundSize,height:parseFloat(s.height)};});
           assert.equal(title.content,'"所有功能"');

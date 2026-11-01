@@ -77,6 +77,27 @@ const cloud = (page, file) => page.evaluate(async file => {
     const afterPlay = await L.page.evaluate(() => ({plays: activeGame.innings[0].plateAppearances.map(p => p.result), result: currentPlayInput.result,
       ringed: document.querySelectorAll('[id^="res_"].ring-2').length}));
     assert.deepEqual(afterPlay, {plays: ['GO'], result: null, ringed: 0}, 'recorded, then the result is cleared again');
+    // The batted-ball type is cleared too, the result rules lock impossible types, and 內野飛球 / located 界外K are gone.
+    const guard = await L.page.evaluate(() => {
+      const locked = () => ['grounder', 'line', 'fly'].filter(t => document.getElementById(`traj_${t}`).disabled);
+      const out = {afterRecord: currentPlayInput.trajectory, popup: !!document.getElementById('traj_popup'), foulK: !!document.getElementById('res_界外K'),
+        recordedType: activeGame.innings[0].plateAppearances[0].trajectory};
+      selectOutcome('FO'); out.fo = {type: currentPlayInput.trajectory, locked: locked()};
+      selectTrajectory('grounder'); out.foGrounder = currentPlayInput.trajectory;
+      selectOutcome('LO'); out.lo = currentPlayInput.trajectory;
+      selectOutcome('GO'); out.go = {type: currentPlayInput.trajectory, locked: locked()};
+      selectOutcome('1H'); out.hit = locked();
+      selectOutcome(null); selectTrajectory(null);
+      return out;
+    });
+    assert.deepEqual(guard, {afterRecord: null, popup: false, foulK: false, recordedType: 'grounder',
+      fo: {type: 'fly', locked: ['grounder']}, foGrounder: 'fly', lo: 'fly', go: {type: 'grounder', locked: ['line', 'fly']}, hit: []});
+    // A located result needs a batted-ball type.
+    await L.page.locator('#res_1H').click();
+    await L.page.locator('button[onclick="submitBattedBallPlay()"]').click();
+    assert.equal(await L.page.evaluate(() => activeGame.innings[0].plateAppearances.length), 1, 'no type, nothing recorded');
+    assert.match(await toasts(L.page), /請先選擇擊球型態/);
+    await L.page.evaluate(() => selectOutcome(null));
     await L.page.locator('button[onclick="recordQuickStrikeout(\'K\')"]').click();
     await L.page.locator('button[onclick="recordQuickStrikeout(\'界外K\')"]').click();
     assert.equal(await L.page.evaluate(() => activeGame.currentOuts), 3);

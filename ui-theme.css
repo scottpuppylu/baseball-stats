@@ -1006,7 +1006,7 @@ html.fl-booting body::after {
 html.ui-flight body[data-page]::before { content: none; }
 html.ui-flight body[data-page="Overview"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-overview.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-overview .8s var(--fl-ease) both; }
 @keyframes fl-scene-overview { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Analytics"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-analytics.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-analytics .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Analytics"]::before, html.ui-flight body[data-page="Games"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-analytics.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-analytics .8s var(--fl-ease) both; }
 @keyframes fl-scene-analytics { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
 html.ui-flight body[data-page="Pitching"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-pitching.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-pitching .8s var(--fl-ease) both; }
 @keyframes fl-scene-pitching { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
@@ -1028,7 +1028,7 @@ html.ui-flight body[data-page="Profile"]::before { content: ""; position: fixed;
 @keyframes fl-scene-profile { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
 @media (orientation: portrait) {
   html.ui-flight body[data-page="Overview"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-overview-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Analytics"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-analytics-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Analytics"]::before, html.ui-flight body[data-page="Games"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-analytics-portrait.webp") center / cover no-repeat, #0a0b0e; }
   html.ui-flight body[data-page="Pitching"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-pitching-portrait.webp") center / cover no-repeat, #0a0b0e; }
   html.ui-flight body[data-page="Records"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-records-portrait.webp") center / cover no-repeat, #0a0b0e; }
   html.ui-flight body[data-page="Leaderboard"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-leaderboard-portrait.webp") center / cover no-repeat, #0a0b0e; }
@@ -1250,3 +1250,45 @@ html.ui-flight .transition { transition-property: color, background-color, borde
 .s3-row > * { flex-shrink: 0; }
 .s3-chip { min-height: 36px; }
 @media (min-width: 640px) { .s3-row { flex-wrap: wrap; overflow: visible; } .s3-chip { min-height: 32px; } }
+
+/* 賽事分析 (game-analysis.js): game picker, summary, timeline and batter cards in the site's clear glass. */
+.ga-picker { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.ga-picker::-webkit-scrollbar { display: none; }
+.ga-game { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 132px; max-width: 170px; padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); text-align: left; transition: background-color .15s, border-color .15s; }
+.ga-game.ga-on { border-color: rgba(125,211,252,0.65); background: rgba(56,189,248,0.12); }
+.ga-hero { display: flex; flex-direction: column; gap: 14px; }
+.ga-score { font-size: 44px; line-height: 1; font-weight: 600; color: #f3f5f8; font-variant-numeric: tabular-nums; }
+.ga-score span { color: #64748b; margin: 0 6px; font-weight: 400; }
+.ga-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 640px) { .ga-stats { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.ga-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 12px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.07); }
+.ga-stat b { font-size: 20px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.ga-stat span { font-size: 11px; color: #94a3b8; }
+.ga-chip { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+.ga-outs { display: inline-flex; gap: 3px; margin-left: auto; flex: 0 0 auto; }
+.ga-outs i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.35); }
+.ga-outs i.on { background: #f43f5e; border-color: #f43f5e; }
+.ga-moment { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 14px; border: 1px solid; background: rgba(255,255,255,0.03); }
+.ga-key { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.ga-line, .ga-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.ga-line th, .ga-line td, .ga-table th, .ga-table td { padding: 7px 6px; text-align: center; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.06); white-space: nowrap; }
+.ga-line thead th, .ga-table thead th { color: #94a3b8; font-weight: 600; font-size: 12px; }
+.ga-line tbody th, .ga-table tbody th { text-align: left; color: #f1f5f9; font-weight: 700; }
+.ga-line tr.ga-us { background: rgba(56,189,248,0.07); }
+.ga-line .ga-total { color: #fff; font-weight: 700; }
+.ga-half { padding: 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.025); display: flex; flex-direction: column; gap: 8px; }
+.ga-half-ours { border-color: rgba(56,189,248,0.22); background: rgba(56,189,248,0.04); }
+.ga-half-head { display: flex; align-items: center; gap: 8px; }
+.ga-inning { font-size: 13px; font-weight: 800; color: #f8fafc; padding: 2px 9px; border-radius: 8px; background: rgba(255,255,255,0.08); white-space: nowrap; }
+.ga-note { font-size: 12px; color: #c4b5fd; }
+.ga-pa { display: flex; align-items: center; gap: 8px; padding: 6px 2px; border-top: 1px solid rgba(255,255,255,0.05); }
+.ga-slot { width: 24px; height: 24px; flex: 0 0 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: 700; color: #fda4af; background: rgba(255,255,255,0.06); }
+.ga-name { flex: 0 0 auto; font-size: 14px; font-weight: 700; color: #f1f5f9; min-width: 4.2em; }
+.ga-how { flex: 1 1 auto; min-width: 0; font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ga-batter { padding: 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); }
+.ga-batter.ga-mvp { border-color: rgba(251,191,36,0.45); background: rgba(251,191,36,0.06); }
+.ga-bar { display: grid; grid-template-columns: 4.5em 1fr 3.5em; align-items: center; gap: 8px; font-size: 12px; color: #cbd5e1; }
+.ga-bar > div { position: relative; height: 10px; border-radius: 6px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.ga-bar > div i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: rgba(148,163,184,0.45); }
+.ga-bar > div i.ga-bar-hit { background: #22c55e; }
+.ga-bar b { text-align: right; color: #f1f5f9; }

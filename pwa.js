@@ -100,11 +100,17 @@
     }
     try {
       const registration = await navigator.serviceWorker.register('sw.js', {scope: './', updateViaCache: 'none'});
+      // Right after a deployment the CDN can briefly serve a mix of old and new files, so an install that fails its
+      // checks is retried by itself a few times before the person is told.
+      const RETRY = [3000, 10000, 30000];
+      let failures = 0;
       const watch = worker => worker && worker.addEventListener('statechange', () => {
-        if (worker.state === 'installed' && navigator.serviceWorker.controller) { bar('uiUpdateErrorBar', null); offerUpdate(worker); }
+        if (worker.state === 'installed' && navigator.serviceWorker.controller) { failures = 0; bar('uiUpdateErrorBar', null); offerUpdate(worker); }
         if (worker.state === 'redundant') {
+          if (registration.waiting || registration.active === worker) return; // replaced by a newer release, not a failure
+          if (failures < RETRY.length) { setTimeout(() => registration.update().catch(() => {}), RETRY[failures++]); return; }
           const el = bar('uiUpdateErrorBar', '<span>更新未完整下載或驗證失敗，已保留原版本與本機資料。</span><button type="button">重試檢查</button>', 'warn');
-          el.querySelector('button').onclick = () => { bar('uiUpdateErrorBar', null); registration.update().catch(() => {}); };
+          el.querySelector('button').onclick = () => { failures = 0; bar('uiUpdateErrorBar', null); registration.update().catch(() => {}); };
         }
       });
       if (registration.waiting && navigator.serviceWorker.controller) offerUpdate(registration.waiting);
@@ -122,16 +128,22 @@
         location.reload();
       });
       let lastCheck = 0;
+      // Asks the server for a new release (at most every 15 s); never redraws the bar, so a tap on it is not lost.
+      const poll = () => {
+        if (document.visibilityState === 'hidden' || navigator.onLine === false || Date.now() - lastCheck < 15000) return;
+        lastCheck = Date.now(); registration.update().catch(() => {});
+      };
       const check = () => {
         if (document.visibilityState === 'hidden' || navigator.onLine === false) return;
         if (registration.waiting && Date.now() >= deferredUntil) offerUpdate(registration.waiting);
-        if (Date.now() - lastCheck < 15000) return;
-        lastCheck = Date.now(); registration.update().catch(() => {});
+        poll();
       };
       document.addEventListener('visibilitychange', check);
       window.addEventListener('pageshow', check);
       window.addEventListener('focus', check);
       window.addEventListener('online', check);
+      // Using the site (tapping between pages) also checks, so a release is noticed while the page stays open.
+      document.addEventListener('pointerdown', poll, {passive: true, capture: true});
       setInterval(check, 60000);
       check();
       window.__pwaRegistration = registration;

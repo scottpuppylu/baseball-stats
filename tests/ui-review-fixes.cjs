@@ -58,7 +58,7 @@ const state=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('rebas_activ
       switchMainTab('tabOverview');
       return {nav,lb:groupsOf('leaderboardMetricSelect'),x:groupsOf('customXVar'),y:groupsOf('customYVar'),compareGroups,compareRows,profile,glossary,cards};
     });
-    assert.deepEqual(order.nav,['Home','[球隊數據]','Overview','Analytics','Pitching','Records','[球員]','Profile','Leaderboard','Compare','Health','[比賽]','Lineup','Scorebook','[參考]','Glossary','Changelog'],'navigation groups and order');
+    assert.deepEqual(order.nav,['Home','[球隊數據]','Overview','Analytics','Pitching','Records','[球員]','Profile','Leaderboard','Compare','Health','[比賽]','Lineup','Scorebook','Games','[參考]','Glossary','Changelog'],'navigation groups and order');
     const TAX=['綜合產值','打擊三圍與長打','紀律與接觸','擊球品質與方向（場記擊球型態）','基礎累積'];
     assert.deepEqual(order.lb,TAX,'leaderboard menu uses the shared groups');
     for(const g of [order.x,order.y]) assert.deepEqual(g,TAX.filter(t=>g.includes(t)),'custom chart menus use the shared groups in the same order');

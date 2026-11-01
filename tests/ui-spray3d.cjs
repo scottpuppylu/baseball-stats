@@ -20,6 +20,8 @@ const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
     const gameId = await page.evaluate(() => { const g = allGames[0]; switchMainTab('tabScorebook'); switchScorebookSubTab('review'); renderSelectedGameReview(g.id); return g.id; });
     await page.locator(`[data-spray3d-game="${gameId}"]`).click();
     await page.waitForSelector('#spray3dModal canvas');
+    // The top bar is filled by the first animation frame.
+    await page.waitForFunction(() => document.querySelector('#spray3dModal .s3-hud').textContent.trim().length > 0);
 
     const replay = await page.evaluate(id => {
       const v = spray3d.viewer(), g = allGames.find(x => x.id === id);
@@ -89,6 +91,34 @@ const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
     }, gameId);
     assert.ok(length.full > length.less, `more plate appearances, a longer video (${length.full} > ${length.less})`);
     assert.deepEqual([length.intro, length.outro], ['intro', 'outro']);
+
+    // The mound sits at the centre of the square.
+    const mound = await page.evaluate(() => { const c = document.querySelector('#profileSprayChartSvg circle'); return [+c.getAttribute('cx'), +c.getAttribute('cy')]; });
+    assert.deepEqual(mound, [200, 287.5], 'mound halfway from home to second');
+
+    // 賽事分析: the third page of 比賽, reached from the game review, with every plate appearance in order.
+    await page.evaluate(id => { switchMainTab('tabScorebook'); switchScorebookSubTab('review'); renderSelectedGameReview(id); }, gameId);
+    await page.locator(`[data-game-analysis="${gameId}"]`).click();
+    await page.waitForSelector('#panelGames .ga-hero');
+    const analysis = await page.evaluate(id => {
+      const g = allGames.find(x => x.id === id);
+      const pas = g.innings.flatMap(i => i.plateAppearances || []).length;
+      const halves = g.innings.length;
+      return {visible: !document.getElementById('panelGames').classList.contains('hidden'), sections: document.querySelectorAll('#panelGames > section').length,
+        rows: document.querySelectorAll('#panelGames .ga-pa').length, pas, halves: document.querySelectorAll('#panelGames .ga-half').length, expectedHalves: halves,
+        picked: document.querySelector('#panelGames .ga-on')?.dataset.gaGame, active: document.getElementById('btnTabGames').classList.contains('tab-active')};
+    }, gameId);
+    assert.ok(analysis.visible && analysis.active, 'the page and its button are on');
+    assert.equal(analysis.sections, 8);
+    assert.equal(analysis.rows, analysis.pas, 'every plate appearance in the play-by-play');
+    assert.equal(analysis.halves, analysis.expectedHalves, 'every half-inning');
+    assert.equal(analysis.picked, gameId, 'the game from the review is selected');
+    // Another game from the picker.
+    const other = await page.evaluate(() => document.querySelector('#panelGames [data-ga-game]:not(.ga-on)')?.dataset.gaGame);
+    if (other) {
+      await page.locator(`#panelGames [data-ga-game="${other}"]`).click();
+      assert.equal(await page.evaluate(() => document.querySelector('#panelGames .ga-on').dataset.gaGame), other);
+    }
 
     assert.deepEqual(errors, []);
     console.log(JSON.stringify({passed: true, plays: replay.plays, clip: `${clip.w}x${clip.h} ${clip.ext}`, video: Math.round(length.full)}));

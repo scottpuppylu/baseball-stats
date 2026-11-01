@@ -28,11 +28,12 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // overwriting them, no preset batting result and no recording after three outs, no invented pitching numbers or
 // hard-coded pitcher, and the review editor resets outs when an event type changes (one new onchange handler).
 // The v1-v4 baselines and authorized-diff chain remain in git history; see docs/UI_QA.md.
+// 2026/11/01 (requested): the scorebook drops the 內野飛球 type and the located 界外K result buttons (two handlers, two ids).
 const BASELINE = {
-  "script": "f0e08eac1000ee03b388646dd1f1b77b8c078b59be2843817674afad9c977b49",
-  "handlers": "0528cb136b3834a2318417e68ff7eb16d854422d202a43cc815eef56681bb219",
-  "idCount": 287,
-  "ids": "e1b62e847fd8004849d2c7337c37dad708f6922e32e6108cd2110d0b0ed9b4a8"
+  "script": "bed62889a46018a619de2dc0a28a10bfc7399e2f7929594db1afc6727ef2fa65",
+  "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
+  "idCount": 285,
+  "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"
 };
 test('business script is byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];

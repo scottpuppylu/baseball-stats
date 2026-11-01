@@ -201,6 +201,17 @@
     c.beginPath(); c.roundRect(STAGE.x, STAGE.y, STAGE.w, STAGE.h, 30); c.lineWidth = 1.5; c.strokeStyle = LINE; c.stroke();
   }
   const K = 2.3; // line and label scale inside the 1000 px stage
+  // A dark veil over the stage with centred content (titles over the field).
+  function overlayStage(c, alpha, lines) {
+    if (alpha <= 0) return;
+    c.save(); c.globalAlpha = alpha;
+    c.beginPath(); c.roundRect(STAGE.x, STAGE.y, STAGE.w, STAGE.h, 30);
+    const g = c.createLinearGradient(0, STAGE.y, 0, STAGE.y + STAGE.h);
+    g.addColorStop(0, 'rgba(4,6,10,0.25)'); g.addColorStop(0.5, 'rgba(4,6,10,0.72)'); g.addColorStop(1, 'rgba(4,6,10,0.25)');
+    c.fillStyle = g; c.fill();
+    lines(STAGE.y + STAGE.h / 2);
+    c.restore();
+  }
   function renderScene(stage, state, dt, director = true) {
     if (director) window.spray3d.glide(stage.engine.view, window.spray3d.shot(state, false), dt);
     return stage.engine.draw(state, STAGE.w, STAGE.h, {scale: K, pad: {l: 30, r: 30, t: 60, b: 30}});
@@ -230,7 +241,7 @@
     }
     return {innings, scored, total: all.length};
   }
-  const TITLE_T = 1.0, END_T = 0.95, INTRO_T = 2.2, HOLD_T = 4; // HOLD_T: the finished postgame card stays still this long
+  const TITLE_T = 1.0, END_T = 0.95, INTRO_T = 2.2, HOLD_T = 5; // HOLD_T: the finished postgame card stays still this long
 
   async function prepareAssets(game) {
     const logo = loadImage('assets/logo-256.webp'), scene = loadImage('assets/bg-orbit-portrait.webp');
@@ -375,7 +386,8 @@
 
   // ---------- Player history video ----------
   function buildPlayerVideo(player, assets) {
-    const all = window.spray3d.collectPlays({player});
+    const all = window.spray3d.collectPlays({player, all: true}); // every plate appearance, strikeouts and walks too
+    const balls = all.filter(p => p.trajectory && p.trajectory !== 'none');
     const byGame = [];
     for (const p of all) {
       let g = byGame[byGame.length - 1];
@@ -396,8 +408,9 @@
     const jersey = typeof NAME_TO_JERSEY !== 'undefined' && NAME_TO_JERSEY[player] !== undefined ? `#${NAME_TO_JERSEY[player]}` : '';
     const hits = all.filter(p => ['1H', '2H', '3H', 'HR'].includes(p.result)).length;
     const xbh = all.filter(p => ['2H', '3H', 'HR'].includes(p.result)).length;
-    const counts = ['line', 'grounder', 'fly', 'popup'].map(k => [k, all.filter(p => p.trajectory === k).length]);
-    const planned = window.spray3d.plan(all);
+    const counts = ['line', 'grounder', 'fly', 'popup'].map(k => [k, balls.filter(p => p.trajectory === k).length]);
+    const strikeouts = all.filter(p => ['K', '界外K', 'K_FOUL'].includes(p.result)).length, walks = all.filter(p => p.result === 'BB').length;
+    const planned = window.spray3d.plan(balls);
 
     function head(c, P) {
       P.panel(40, 172, 1000, 150, 30);
@@ -407,7 +420,7 @@
       c.restore();
       P.title(player, 210, 244, 50);
       P.text([jersey, '擊球落點紀錄'].filter(Boolean).join(' · '), 210, 292, 24, MUTED, 'left', 600);
-      P.text(`${all.length} 球 · ${hits} 安打`, 1010, 268, 30, SOFT, 'right', 600);
+      P.text(`${all.length} 打席 · ${hits} 安打`, 1010, 268, 30, SOFT, 'right', 600);
     }
     let prevT = 0;
     function draw(c, t) {
@@ -421,8 +434,17 @@
         renderScene(stage, {plays: [], mode: 'all', time: u}, dt);
         drawStage(c, stage);
         P.panel(40, 1366, 1000, 340, 30);
-        P.title('個人擊球回顧', W / 2, 1500, 56, INK, 'center');
-        P.text(`${byGame.length} 場比賽 · ${all.length} 顆擊球`, W / 2, 1570, 28, MUTED, 'center', 600);
+        // The team badge and the title over the field, as in the game video's opening.
+        const a = ease(u / 0.6);
+        overlayStage(c, Math.min(1, u / 0.3) * (1 - clamp((u - INTRO_T + 0.4) / 0.4)), cy => {
+          if (ok(assets.logo)) { const s = 180 * (0.85 + 0.15 * a); c.drawImage(assets.logo, W / 2 - s / 2, cy - 230, s, s); }
+          P.title('個人擊球回顧', W / 2, cy + 40, 72, INK, 'center');
+          c.save(); c.font = `600 22px ${SANS}`; c.letterSpacing = '8px'; c.fillStyle = MUTED; c.textAlign = 'center'; c.fillText('PLAYER REPLAY', W / 2, cy + 92); c.restore();
+        });
+        c.save(); c.globalAlpha = a;
+        P.title(player, W / 2, 1500, 56, INK, 'center');
+        P.text(`${byGame.length} 場比賽 · ${all.length} 個打席 · ${balls.length} 顆擊球`, W / 2, 1570, 28, MUTED, 'center', 600);
+        c.restore();
         return;
       }
       if (seg.type === 'game') {
@@ -437,7 +459,7 @@
           P.text(sit.inning, 1004, 1432, 26, MUTED, 'right', 600);
           P.text(sit.hit, 76, 1530, 34, SOFT, 'left', 600);
           if (sit.decided) P.pill(sit.result, 76, 1620, 32, window.spray3d.COLOR[pa.result] || window.spray3d.COLOR.out);
-          P.text(`第 ${shown.index + 1} / ${seg.g.plays.length} 球`, 1004, 1620, 22, DIM, 'right', 600);
+          P.text(`第 ${shown.index + 1} / ${seg.g.plays.length} 打席`, 1004, 1620, 22, DIM, 'right', 600);
         }
         return;
       }
@@ -447,9 +469,9 @@
       P.panel(40, 1366, 1000, 340, 30);
       const a = ease(u / 0.6);
       c.save(); c.globalAlpha = a;
-      const tiles = [['擊球', all.length, INK], ['安打', hits, '#22c55e'], ['長打', xbh, '#f3c766']];
+      const tiles = [['打席', all.length, INK], ['安打', hits, '#22c55e'], ['長打', xbh, '#f3c766']];
       tiles.forEach(([label, v, color], i) => { const x = W / 2 + (i - 1) * 280; P.text(v, x, 1490, 76, color, 'center', 600); P.text(label, x, 1536, 24, MUTED, 'center', 600); });
-      P.text(counts.filter(([, n]) => n).map(([k, n]) => `${window.spray3d.TRAJ[k]} ${n}`).join(' · '), W / 2, 1640, 28, SOFT, 'center', 600);
+      P.text([...counts.filter(([, n]) => n).map(([k, n]) => `${window.spray3d.TRAJ[k]} ${n}`), strikeouts ? `三振 ${strikeouts}` : '', walks ? `保送 ${walks}` : ''].filter(Boolean).join(' · '), W / 2, 1640, 28, SOFT, 'center', 600);
       c.restore();
     }
     return {duration: at, draw, speed, segments: segments.map(s => ({type: s.type, len: s.len}))};
