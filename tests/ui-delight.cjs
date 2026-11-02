@@ -27,11 +27,10 @@ const page$ = page => page.evaluate(() => document.body.dataset.page);
       assert.deepEqual(title, {text: '淡江航太系壘', label: '淡江航太系壘', chars: 6}, 'title split for the blur-in, text unchanged');
       assert.equal(await page.locator('.fl-hero > canvas.fl-stars').count(), 1, 'star field behind the hero');
       assert.ok(await page.locator('.fl-cta.fl-star-border').count() === 1 && await page.locator('.fl-eyebrow.fl-shiny').count() === 1);
-      await page.waitForTimeout(1800); // count-up ends on the exact original numbers
-      const telemetry = await page.locator('.fl-telemetry').textContent();
-      assert.match(telemetry, /打擊率[\s\S]*\.\d{3}/);
+      // The count-up ends on the exact original numbers (waits for it: CI machines are slower).
       const expected = await page.evaluate(() => { const a = getAnalysisAgg(); return [a.teamAvg, a.teamObp].map(v => v.toFixed(3).replace(/^0(?=\.)/, '')); });
-      for (const v of expected) assert.ok(telemetry.includes(v), `telemetry shows ${v}`);
+      await page.waitForFunction(values => { const t = document.querySelector('.fl-telemetry')?.textContent || ''; return values.every(v => t.includes(v)); }, expected, {timeout: 6000});
+      assert.match(await page.locator('.fl-telemetry').textContent(), /打擊率[\s\S]*\.\d{3}/);
 
       // ---------- Clawd: lives behind the glass, never talks, never on 比賽場記 ----------
       await page.waitForFunction(() => window.flClawd);
