@@ -560,7 +560,7 @@ html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][cl
 }
 /* Below desktop width the eyebrow sits above its title instead of squeezing it. */
 @media (max-width: 1279px) {
-  html.ui-flight :has(> span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"]) { flex-wrap: wrap; row-gap: 6px; }
+  html.ui-flight .ui-has-eyebrow { flex-wrap: wrap; row-gap: 6px; } /* marked by ui-comfort.js (a :has() rule here slowed every restyle) */
   html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"] { flex-basis: 100%; margin-left: 0 !important; }
 }
 
@@ -1203,7 +1203,7 @@ html.ui-flight h3 { letter-spacing: .03em !important; }
 html.ui-flight :is(p, li, dd, figcaption) { text-wrap: pretty; line-break: strict; }
 /* Small filter chips (spray filters) and stat-card footers: each label stays on one line and the row wraps instead (phones, tablets). */
 html.ui-flight main button.text-xs.py-1 { white-space: nowrap; flex-shrink: 0; }
-html.ui-flight main .justify-between:has(> div > button.text-xs.py-1) { flex-wrap: wrap; row-gap: 10px; }
+html.ui-flight main .justify-between.ui-has-chips { flex-wrap: wrap; row-gap: 10px; }
 html.ui-flight main div.flex.justify-between.font-mono { flex-wrap: wrap; column-gap: 10px; row-gap: 2px; }
 html.ui-flight main div.flex.justify-between.font-mono:not(.flex-col) > span:not(.block) { white-space: nowrap; }
 html.ui-flight main .flex.justify-between:not(.flex-col) > span:not(.block):is([class*="text-[10px]"], [class*="text-[11px]"]):not(:only-child) { white-space: nowrap; flex-shrink: 0; margin-left: 10px; }
@@ -1403,12 +1403,12 @@ html.ui-flight .fl-step > button {
   background: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03)) !important; border: 0 !important;
   box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .14) !important;
 }
-html.ui-flight :has(> #playerSelect) > #playerSelect { min-width: 0; }
+html.ui-flight .fl-player-row > #playerSelect { min-width: 0; }
 @media (max-width: 767px) {
   /* Phones: the photo, the name list and the arrows explain themselves; the label would squeeze the name. */
-  html.ui-flight :has(> #playerSelect) > label { display: none; }
-  html.ui-flight :has(> #playerSelect) { column-gap: 8px; }
-  html.ui-flight :has(> #playerSelect) > * { margin-left: 0 !important; }
+  html.ui-flight .fl-player-row > label { display: none; }
+  html.ui-flight .fl-player-row { column-gap: 8px; }
+  html.ui-flight .fl-player-row > * { margin-left: 0 !important; }
   html.ui-flight .fl-step > button { width: 42px; height: 42px; }
 }
 /* ---------- Pull to refresh (installed app) ---------- */
@@ -1422,32 +1422,79 @@ html.ui-flight #flPull svg { width: 20px; height: 20px; }
 html.ui-flight #flPull.is-ready { color: var(--fl-accent); }
 html.ui-flight #flPull.is-busy svg { animation: fl-spin .8s linear infinite; }
 @keyframes fl-spin { to { rotate: 360deg; } }
-/* ---------- Clawd: lives behind the glass (z-index set per scene in ui-delight.js) ---------- */
-html.ui-flight #flClawd {
-  position: fixed; left: 0; top: 0; width: 66px; height: 54px; padding: 0; margin: 0; border: 0 !important; background: none !important; box-shadow: none !important;
-  cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; --fl-look: 0;
+/* ---------- Feel: a light under the finger on the tab bar (it also slides between tabs), home cards tilt to the mouse ---------- */
+html.ui-flight .ui-mobile-nav { touch-action: none; } /* sliding along the bar picks a tab instead of scrolling the page */
+html.ui-flight .fl-tab-glow {
+  position: absolute; left: -56px; top: 3px; bottom: 3px; width: 112px; z-index: 0; pointer-events: none; opacity: 0; border-radius: 22px;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .3), rgba(190, 215, 255, .11) 55%, rgba(255, 255, 255, 0));
+  transition: opacity .4s var(--fl-ease);
 }
-html.ui-flight #flClawd svg { display: block; width: 66px; height: 54px; overflow: visible; filter: drop-shadow(0 5px 6px rgba(0, 0, 0, .5)); pointer-events: none; }
+html.ui-flight .fl-tab-glow.is-on { opacity: 1; transition-duration: .08s; }
+@media (hover: hover) and (pointer: fine) {
+  html.ui-flight #panelHome .fl-card { transition: transform .7s var(--fl-spring), filter .3s var(--fl-ease); }
+  html.ui-flight #panelHome .fl-card.fl-tilting { transition: transform .12s ease-out, filter .3s var(--fl-ease); }
+}
+@media (prefers-reduced-motion: reduce) { html.ui-flight .fl-tab-glow { display: none; } }
+/* ---------- Clawd: a pixel creature that lives behind the glass (z-index set per scene in ui-delight.js) ----------
+   Pixel art (36 × 30, 2 px per pixel): its own CSS motions move whole pixels in steps, and use the individual transform
+   properties (translate / rotate) so they compose with the script's transform (drag swing, bounces, spins). */
+html.ui-flight #flClawd {
+  position: fixed; left: 0; top: 0; width: 72px; height: 60px; padding: 0; margin: 0; border: 0 !important; background: none !important; box-shadow: none !important;
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; --fl-look: 0;
+}
+html.ui-flight #flClawd.is-held { cursor: grabbing; }
+html.ui-flight #flClawd svg { display: block; width: 72px; height: 60px; overflow: visible; filter: drop-shadow(0 5px 6px rgba(0, 0, 0, .5)); pointer-events: none; image-rendering: pixelated; }
+html.ui-flight #flClawd.is-held svg { filter: drop-shadow(0 16px 14px rgba(0, 0, 0, .4)); }
 html.ui-flight #flClawd[data-flip="1"] svg { scale: -1 1; }
+html.ui-flight #flClawd[data-flip="1"] .cl-ae { scale: -1 1; transform-box: fill-box; transform-origin: center; }
 html.ui-flight #flClawd.is-upside svg { rotate: 180deg; }
 html.ui-flight #flClawd.is-sideways svg { rotate: 90deg; }
+html.ui-flight #flClawd.is-sideways-r svg { rotate: -90deg; }
 html.ui-flight #flClawd.is-passing { pointer-events: none; }
-html.ui-flight #flClawd.is-near svg { scale: 2.6; filter: blur(1.6px) drop-shadow(0 12px 16px rgba(0, 0, 0, .55)); transform-origin: 50% 100%; }
-html.ui-flight #flClawd.is-near[data-flip="1"] svg { scale: -2.6 2.6; }
-html.ui-flight #flClawd .cl-eyes { translate: calc(var(--fl-look) * 1px) 0; transition: translate .18s steps(1, end); animation: fl-cl-blink 3.8s infinite; transform-box: fill-box; transform-origin: 50% 50%; }
-html.ui-flight #flClawd .cl-body { animation: fl-cl-breathe 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
-html.ui-flight #flClawd.is-walking .cl-body { animation: fl-cl-bob .3s ease-in-out infinite; }
-html.ui-flight #flClawd.is-walking .cl-leg { animation: fl-cl-step .3s steps(2, jump-none) infinite; }
-html.ui-flight #flClawd.is-walking .cl-leg-b { animation-delay: -.15s; }
-html.ui-flight #flClawd .cl-cap { animation: fl-cl-breathe 2.4s ease-in-out infinite; transform-box: view-box; transform-origin: 50% 39%; }
-html.ui-flight #flClawd.is-walking .cl-cap { animation: fl-cl-bob .3s ease-in-out infinite; }
-@keyframes fl-cl-blink { 0%, 44%, 48%, 100% { transform: scaleY(1); } 46% { transform: scaleY(.1); } }
-@keyframes fl-cl-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(.4px); } }
-@keyframes fl-cl-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
-@keyframes fl-cl-step { 0% { transform: translateY(0); } 100% { transform: translateY(-2px); } }
+html.ui-flight #flClawd.is-near svg { scale: 2.4; filter: blur(1.6px) drop-shadow(0 12px 16px rgba(0, 0, 0, .55)); transform-origin: 50% 100%; }
+html.ui-flight #flClawd.is-near[data-flip="1"] svg { scale: -2.4 2.4; }
+html.ui-flight #flClawd .cl-rig { transform-box: view-box; transform-origin: 18px 28px; }
+html.ui-flight #flClawd :is(.cl-body, .cl-face, .cl-wear, .cl-arm) { animation: fl-cl-breathe 2.4s steps(1, end) infinite; }
+html.ui-flight #flClawd.is-walking .cl-rig { animation: fl-cl-bob .32s steps(1, end) infinite; }
+html.ui-flight #flClawd.is-walking :is(.cl-body, .cl-face, .cl-wear, .cl-arm) { animation: none; }
+html.ui-flight #flClawd.is-sleeping :is(.cl-body, .cl-face, .cl-wear, .cl-arm) { animation-duration: 3.6s; }
+html.ui-flight #flClawd.is-petted .cl-rig { animation: fl-cl-wiggle .44s steps(1, end) infinite; }
+html.ui-flight #flClawd .cl-eyes { translate: calc(var(--fl-look) * 1px) 0; animation: fl-cl-blink 4.2s steps(1, end) infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+html.ui-flight #flClawd:is([data-face="heart"], [data-face="star"], [data-face="dizzy"], [data-face="closed"], [data-face="squint"]) .cl-eyes { animation: none; }
+html.ui-flight #flClawd[data-face="dizzy"] .cl-eyes { animation: fl-cl-woozy .5s steps(1, end) infinite; }
+html.ui-flight #flClawd[data-face="heart"] .cl-eyes { animation: fl-cl-pulse .6s steps(1, end) infinite; }
+html.ui-flight #flClawd .cl-blush { opacity: 0; transition: opacity .3s; }
+html.ui-flight #flClawd.is-blush .cl-blush { opacity: 1; }
+html.ui-flight #flClawd.is-walking .cl-leg { animation: fl-cl-step .32s steps(1, end) infinite; }
+html.ui-flight #flClawd.is-walking .cl-leg-b { animation-delay: -.16s; }
+html.ui-flight #flClawd.is-held .cl-leg { animation: fl-cl-step .24s steps(1, end) infinite; }
+html.ui-flight #flClawd.is-held .cl-leg-b { animation-delay: -.12s; }
+html.ui-flight #flClawd.is-waving .cl-arm-r { animation: fl-cl-wave .3s steps(1, end) infinite; }
+html.ui-flight #flClawd .cl-wand-star { animation: fl-cl-twinkle 1.2s steps(1, end) infinite; }
+html.ui-flight #flClawd .cl-bubble { animation: fl-cl-fizz 1.2s steps(3, end) infinite; }
+html.ui-flight #flClawd .cl-flame { animation: fl-cl-flame .16s steps(1, end) infinite; }
+@keyframes fl-cl-blink { 0%, 100% { scale: 1 1; } 46% { scale: 1 .34; } 49% { scale: 1 1; } }
+@keyframes fl-cl-breathe { 0%, 100% { translate: 0 0; } 50% { translate: 0 .5px; } }
+@keyframes fl-cl-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -1px; } }
+@keyframes fl-cl-wiggle { 0%, 100% { translate: -.5px 0; } 50% { translate: .5px -.5px; } }
+@keyframes fl-cl-step { 0%, 100% { translate: 0 0; } 50% { translate: 0 -1px; } }
+@keyframes fl-cl-wave { 0%, 100% { translate: 0 0; } 50% { translate: 0 -2px; } }
+@keyframes fl-cl-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@keyframes fl-cl-fizz { from { translate: 0 0; opacity: 1; } to { translate: 0 -3px; opacity: 0; } }
+@keyframes fl-cl-flame { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes fl-cl-woozy { 0%, 100% { translate: -1px 0; } 50% { translate: 1px 0; } }
+@keyframes fl-cl-pulse { 0%, 100% { translate: 0 0; } 50% { translate: 0 -1px; } }
+/* Its little effects: sparks, pixel hearts / stars / Zzz, confetti, poofs. */
 html.ui-flight .fl-clawd-spark { position: fixed; z-index: 99; width: 6px; height: 6px; border-radius: 2px; pointer-events: none; background: #f2a283; box-shadow: 0 0 8px rgba(242, 162, 131, .9); }
 html.ui-flight .fl-clawd-spark:nth-child(even) { background: #9fc0ff; box-shadow: 0 0 8px rgba(130, 170, 255, .9); }
-@media print { html.ui-flight #flClawd, html.ui-flight #flPull { display: none !important; } }
+html.ui-flight .fl-clawd-fx { position: fixed; z-index: 99; pointer-events: none; display: block; }
+html.ui-flight .fl-clawd-fx svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .45)); }
+html.ui-flight .fl-clawd-heart { width: 15px; height: 12px; }
+html.ui-flight .fl-clawd-star { width: 11px; height: 11px; }
+html.ui-flight .fl-clawd-z { width: 11px; height: 11px; }
+html.ui-flight .fl-clawd-confetti { width: 7px; height: 10px; border-radius: 1.5px; }
+html.ui-flight .fl-clawd-poof { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 70%); }
+@media print { html.ui-flight #flClawd, html.ui-flight #flPull, html.ui-flight .fl-clawd-fx, html.ui-flight .fl-clawd-spark { display: none !important; } }
 @media (prefers-reduced-motion: reduce) {
   html.ui-flight .fl-eyebrow.fl-shiny, html.ui-flight .fl-cta.fl-star-border::before, html.ui-flight .fl-cta.fl-star-border::after { animation: none; }
   html.ui-flight .fl-cta.fl-star-border::after { display: none; }

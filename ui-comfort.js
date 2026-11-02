@@ -285,16 +285,18 @@
     });
   }
   columnSelect.addEventListener('change', () => { customColumns = true; applyColumns(); updateTableHints(); });
-  function updateTableHints() {
+  function updateTableHints() { readTableHints()(); }
+  function readTableHints() {
     const panel = currentPanel(), marks = [];
     scrollAreas.forEach(area => {
       if (!area.isConnected) { scrollAreas.delete(area); return; }
       if (!panel.contains(area)) return; // hidden pages are measured when shown
       marks.push([area.previousElementSibling, area.clientWidth > 0 && area.scrollWidth > area.clientWidth + 2]);
     });
-    marks.forEach(([hint, on]) => hint?.classList.toggle('is-overflowing', on)); // all reads first, then the writes: one layout
+    return () => marks.forEach(([hint, on]) => hint?.classList.toggle('is-overflowing', on)); // all reads first, then the writes: one layout
   }
-  function enhanceTables() {
+  // measure = false: only the DOM work (before the first paint of a page, when a layout read would hold that paint back).
+  function enhanceTables(measure = true) {
     applyColumns();
     currentPanel().querySelectorAll('table').forEach(table => {
       const area = table.closest('.overflow-x-auto');
@@ -309,14 +311,27 @@
       area.before(hint);
       scrollAreas.add(area);
     });
-    updateTableHints();
+    if (measure) updateTableHints();
+  }
+  // Containers the stylesheet styles by what they hold get a class instead of a CSS :has() rule: a broad :has()
+  // made every style recalculation of the page two to four times slower on phones.
+  const EYEBROW = 'span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"]';
+  const CHIP = 'main .justify-between > div > button.text-xs.py-1';
+  const within = (root, selector) => [...(root.matches(selector) ? [root] : []), ...root.querySelectorAll(selector)];
+  function markHolders(root = workspace) { // only the new content: this runs on every change while the page renders
+    within(root, EYEBROW).forEach(span => span.parentElement?.classList.add('ui-has-eyebrow'));
+    within(root, CHIP).forEach(b => b.parentElement.parentElement.classList.add('ui-has-chips'));
+    document.getElementById('compareSpraySvgA')?.closest('.grid > div')?.parentElement.classList.add('ui-has-spray-pair');
   }
   let scheduled = false;
-  new MutationObserver(() => {
+  new MutationObserver(records => {
+    // At once (writes only): the layout must be right the moment new content lands.
+    records.forEach(r => r.addedNodes.forEach(node => { if (node.nodeType === 1) markHolders(node); }));
     if (scheduled) return;
     scheduled = true;
-    requestAnimationFrame(() => { scheduled = false; enhanceTables(); });
+    requestAnimationFrame(() => { scheduled = false; enhanceTables(false); }); // measured after the paint (queueComfort)
   }).observe(workspace, { childList: true, subtree: true });
+  markHolders();
   // Hidden pages are handled when they are shown (their tables have no size until then).
   window.addEventListener('resize', () => {
     if (!customColumns) { columnSelect.value = window.innerWidth < 768 ? 'core' : 'all'; applyColumns(); }
@@ -475,7 +490,8 @@
   // Wide tables keep the player column in view while scrolling sideways (single-row headers only,
   // so grouped headers never get a mismatched sticky cell). A narrow first column (slot / rank) also
   // keeps the next column, which is then the name.
-  function stickyColumns() {
+  function readStickyColumns() {
+    const writes = [];
     currentPanel().querySelectorAll('.ui-table-scroll table').forEach(table => {
       const area = table.closest('.ui-table-scroll');
       const multiRowHead = table.tHead && table.tHead.rows.length > 1;
@@ -490,10 +506,13 @@
         two = one && two;
       }
       // Decide first, then write once: class changes re-run this observer.
-      if (table.classList.contains('ui-sticky-cols') !== one) table.classList.toggle('ui-sticky-cols', one);
-      if (table.classList.contains('ui-sticky-two') !== two) table.classList.toggle('ui-sticky-two', two);
-      if (two) table.style.setProperty('--ui-sticky-left', `${Math.round(left)}px`);
+      writes.push(() => {
+        if (table.classList.contains('ui-sticky-cols') !== one) table.classList.toggle('ui-sticky-cols', one);
+        if (table.classList.contains('ui-sticky-two') !== two) table.classList.toggle('ui-sticky-two', two);
+        if (two) table.style.setProperty('--ui-sticky-left', `${Math.round(left)}px`);
+      });
     });
+    return () => writes.forEach(write => write()); // every table read first: one layout for the whole page
   }
   // ---------- Phone density: fold long text, drop decorative labels ----------
   // Section descriptions and glossary explanations fold to a couple of lines; a tap opens them.
@@ -587,7 +606,10 @@
   };
   // Group header rows (one cell across the table) separate sections; they are not data rows.
   const bodyRows = table => [...(table.tBodies[0]?.rows || [])].filter(row => !row.classList.contains('ui-row-detail') && !row.classList.contains('ui-group-row'));
+  // Runs in phases across all the page's tables (read all, then write all), so a page with many tables costs a few
+  // layouts instead of a few per table.
   function foldTables() {
+    const jobs = [];
     currentPanel().querySelectorAll('.ui-table-scroll table').forEach(table => {
       const area = table.closest('.ui-table-scroll');
       const rows = bodyRows(table);
@@ -598,35 +620,46 @@
       const intact = (!table.classList.contains('ui-fold-table') || rows.every(row => row.querySelector('.ui-col-folded'))) &&
         (!table.classList.contains('ui-card-table') || rows.every(row => row.cells.length === 1 || row.cells[0].dataset.label !== undefined));
       if (table.dataset.uiFoldSig === signature && intact) return;
+      const hint = area.previousElementSibling?.classList.contains('ui-table-hint') ? area.previousElementSibling : null;
+      jobs.push({table, area, rows, labels, areaWidth, signature, hint});
+    });
+    if (!jobs.length) return;
+    jobs.forEach(({table, signature, hint}) => {
       table.dataset.uiFoldSig = signature;
       table.querySelectorAll('.ui-col-folded').forEach(cell => cell.classList.remove('ui-col-folded'));
       table.querySelectorAll('.ui-row-detail').forEach(row => row.remove());
       table.classList.remove('ui-fold-table', 'ui-card-table', 'ui-wrap-table');
-      // The overview summary has its own column picker (重點表現／全部欄位…), which already fits a phone.
-      const usable = phone() && !table.closest('#viewSummary') && labels.length >= 3 && table.tHead.rows.length === 1 && rows.length > 0 &&
-        !table.querySelector('input, select, textarea') && rows.every(row => row.cells.length === labels.length) && area.scrollWidth > area.clientWidth + 4;
-      const hint = area.previousElementSibling?.classList.contains('ui-table-hint') ? area.previousElementSibling : null;
       if (hint) hint.textContent = '左右滑動查看完整欄位';
+    });
+    jobs.forEach(job => { job.overflow = job.area.scrollWidth > job.area.clientWidth + 4; });
+    const asCards = ({table, rows, labels}) => {
+      // One or two rows (a single pitcher, a summary): every value as a labelled card.
+      table.classList.add('ui-card-table');
+      rows.forEach(row => [...row.cells].forEach((cell, i) => { cell.dataset.label = labels[i]; }));
+    };
+    const wrapTry = [], measure = [];
+    const next = job => (job.rows.length <= 2 ? asCards(job) : measure.push(job));
+    jobs.forEach(job => {
+      const {table, rows, labels} = job;
       // An empty table (a single message row) needs no wide header on a phone.
       if (phone() && rows.length && rows.every(row => row.cells.length === 1 && row.cells[0].colSpan > 1)) { table.classList.add('ui-card-table'); return; }
+      // The overview summary has its own column picker (重點表現／全部欄位…), which already fits a phone.
+      const usable = phone() && !table.closest('#viewSummary') && labels.length >= 3 && table.tHead.rows.length === 1 && rows.length > 0 &&
+        !table.querySelector('input, select, textarea') && rows.every(row => row.cells.length === labels.length) && job.overflow;
       if (!usable) return;
       // Small tables first try to fit by letting text wrap; nothing is folded if that works.
-      if (labels.length <= 5) {
-        table.classList.add('ui-wrap-table');
-        if (area.scrollWidth <= area.clientWidth + 2) return;
-        table.classList.remove('ui-wrap-table');
-      }
-      if (rows.length <= 2) {
-        // One or two rows (a single pitcher, a summary): every value as a labelled card.
-        table.classList.add('ui-card-table');
-        rows.forEach(row => [...row.cells].forEach((cell, i) => { cell.dataset.label = labels[i]; }));
-        return;
-      }
-      table.classList.add('ui-measure'); // natural column widths, without the table's desktop min-width
-      // Column width = its data, but never so narrow that a short header (「全壘打」) breaks into one character per line.
-      const headerRoom = label => Math.min(64, label.length * 12 + 16);
-      const widths = labels.map((label, i) => Math.max(headerRoom(label), ...rows.map(row => row.cells[i].getBoundingClientRect().width)));
-      table.classList.remove('ui-measure');
+      if (labels.length <= 5) wrapTry.push(job); else next(job);
+    });
+    wrapTry.forEach(({table}) => table.classList.add('ui-wrap-table'));
+    wrapTry.forEach(job => { job.fits = job.area.scrollWidth <= job.area.clientWidth + 2; });
+    wrapTry.forEach(job => { if (!job.fits) { job.table.classList.remove('ui-wrap-table'); next(job); } });
+    if (!measure.length) return;
+    // Column width = its data, but never so narrow that a short header (「全壘打」) breaks into one character per line.
+    const headerRoom = label => Math.min(64, label.length * 12 + 16);
+    measure.forEach(({table}) => table.classList.add('ui-measure')); // natural column widths, without the table's desktop min-width
+    measure.forEach(job => { job.widths = job.labels.map((label, i) => Math.max(headerRoom(label), ...job.rows.map(row => row.cells[i].getBoundingClientRect().width))); });
+    measure.forEach(({table}) => table.classList.remove('ui-measure'));
+    measure.forEach(({table, rows, labels, widths, areaWidth, hint}) => {
       // A slot / rank first column always brings the name next to it; the name column wraps at about 120px.
       const slotFirst = widths[0] < 72 || /^(棒次|名次|#|排名)$/.test(labels[0]);
       const identity = slotFirst && labels.length > 3 ? [0, 1] : [0];
@@ -724,7 +757,13 @@
     if (comfortQueued) return;
     comfortQueued = true;
     // After the frame has painted: layout is then clean, so these reads cost nothing extra (the page is still fading in).
-    requestAnimationFrame(() => setTimeout(() => { comfortQueued = false; enhanceTables(); densify(); buildSections(); foldTables(); stickyColumns(); }, 0));
+    requestAnimationFrame(() => setTimeout(() => {
+      comfortQueued = false;
+      enhanceTables(false); densify(); foldTables();
+      const sticky = readStickyColumns(), hints = readTableHints(); // one layout for both
+      sticky(); hints();
+      buildSections();
+    }, 0));
   };
   window.addEventListener('resize', placeDateToggle);
   placeDateToggle();

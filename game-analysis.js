@@ -354,6 +354,7 @@
     if (!window.teamInsights) return null;
     const assets = window.gameVideo ? await gameVideo.prepareAssets(g) : {mvpPhoto: null};
     const canvas = teamInsights.drawGameImage(g, {mvpPhoto: assets.mvpPhoto});
+    await new Promise(resolve => setTimeout(resolve, 0)); // drawing and encoding in separate tasks: taps get answered in between
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     m.image = {blob, url: URL.createObjectURL(blob)};
     media.set(key, m);
@@ -431,15 +432,17 @@
       section('投手與防守', '', pitching(a), part)
     ].join(''));
     reviewSection.insertAdjacentHTML('afterend', extrasSection(a.game));
-    // The card is drawn in the background: the video's poster and the image in 其他下載.
+    // The card is drawn in the background once the page has settled (not during the switch): the video's poster and
+    // the image in 其他下載.
     const game = a.game;
-    if (!media.get(mediaKey(game))?.image) ensureImage(game).then(img => {
+    const whenIdle = fn => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(fn, {timeout: 2000}) : fn()), 600);
+    if (!media.get(mediaKey(game))?.image) whenIdle(() => currentId === game.id && ensureImage(game).then(img => {
       if (!img || currentId !== game.id) return;
       panel.querySelectorAll('[data-ga-card]').forEach(el => { el.src = img.url; });
       panel.querySelectorAll('.ga-media-wait').forEach(el => el.remove());
       const wait = panel.querySelector('.ga-video-wait');
       if (wait && !wait.querySelector('img')) wait.insertAdjacentHTML('afterbegin', `<img class="ga-card-img ga-dim" src="${img.url}" alt="">`);
-    }).catch(error => console.error('[game-analysis] image', error));
+    }).catch(error => console.error('[game-analysis] image', error)));
   }
   function choose(id) {
     if (!id) return;

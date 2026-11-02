@@ -362,8 +362,8 @@ table.ui-measure thead th img, table.ui-fold-table thead th img { display: none;
   #customLineupPickersContainer { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   #customLineupPickersContainer > * { margin: 0 !important; }
   /* Two-player spray charts side by side, as a comparison should be. */
-  .grid:has(> div #compareSpraySvgA) { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
-  .grid:has(> div #compareSpraySvgA) > div { padding: 6px !important; }
+  .grid.ui-has-spray-pair { grid-template-columns: 1fr 1fr !important; gap: 6px !important; } /* marked by ui-comfort.js */
+  .grid.ui-has-spray-pair > div { padding: 6px !important; }
   :is(#compareSprayStatsA, #compareSprayStatsB) { grid-template-columns: 1fr 1fr; }
   :is(#compareSprayTitleA, #compareSprayTitleB) { font-size: 11px; }
   /* Game-log summary cards: two per row (the trend or third card spans the row). */
