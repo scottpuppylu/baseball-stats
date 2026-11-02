@@ -25,7 +25,8 @@ for (const name of ['logs', 'games', 'avatars', 'tags', 'defense', 'guests', 'he
 put('data', 'data/legacy-main.json', Buffer.from(JSON.stringify(Object.fromEntries([...branches.main].map(([file, data]) => [file, shaOf(data)])), null, 2)));
 
 const injection = `<script>
-window.BASEBALL_APP_CONFIG = new URLSearchParams(location.search).has('pwa') ? {} : {serviceWorker: false};
+// Clawd (the easter-egg creature, ui-delight.js) wanders over the page; it stays off unless a test opens ?clawd.
+window.BASEBALL_APP_CONFIG = Object.assign(new URLSearchParams(location.search).has('pwa') ? {} : {serviceWorker: false}, {easterEgg: new URLSearchParams(location.search).has('clawd')});
 window.__previewWrites = [];
 window.__previewFailWrites = false;
 window.__previewErrors = [];
@@ -152,7 +153,7 @@ const previewServer = http.createServer(async (req, res) => {
     const relative = path.relative(root, filename).split(path.sep).join('/');
     let content = release.files.get(relative) || fs.readFileSync(filename);
     if (relative === corruptFile) content = Buffer.from('/* interrupted or stale deployment */');
-    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.woff2':'font/woff2', '.webmanifest':'application/manifest+json'};
+    const mime = {'.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.svg':'image/svg+xml', '.woff2':'font/woff2', '.webmanifest':'application/manifest+json'};
     res.writeHead(200, {'Content-Type': mime[path.extname(filename)] || 'application/octet-stream', 'Cache-Control': 'no-store'});
     res.end(content);
   } catch (error) {

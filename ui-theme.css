@@ -1328,3 +1328,127 @@ html.ui-flight .transition { transition-property: color, background-color, borde
 .ga-more[open] > summary::after { content: '收合 ▴'; }
 /* Inside 賽事分析 the moved review keeps its controls; the postgame image lives in 其他下載 instead of the review's badge. */
 #panelGames #gaReviewSection [data-insight-image] { display: none; }
+
+/* =====================================================================================================
+   DELIGHT (2026/11/02, ui-delight.js): star field, blur-in title, orbiting light on the main button, shiny eyebrow,
+   card spotlight, search, previous/next player, pull to refresh, and Clawd (the little orange creature).
+   Ideas from reactbits.dev, written for this site. All motion stops for "reduce motion".
+   ===================================================================================================== */
+@property --fl-orbit { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+html.ui-flight .fl-hero > .fl-stars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+html.ui-flight .fl-hero > :not(.fl-stars) { position: relative; z-index: 1; }
+html.ui-flight .fl-hero-title .fl-ch { display: inline-block; }
+/* Shiny eyebrow: a slow highlight sweeping across the letters (the base colour is unchanged, so it stays readable). */
+html.ui-flight .fl-eyebrow.fl-shiny {
+  color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(105deg, var(--fl-ink-2) 0 42%, #ffffff 50%, var(--fl-ink-2) 58% 100%);
+  background-size: 260% 100%; background-position: 100% 0; animation: fl-shine 5.2s cubic-bezier(.45, 0, .25, 1) 1.2s infinite;
+}
+@keyframes fl-shine { 0% { background-position: 100% 0; } 45%, 100% { background-position: 0 0; } }
+/* Star border: a point of light orbits the main button. */
+html.ui-flight .fl-cta.fl-star-border { position: relative; isolation: isolate; }
+html.ui-flight .fl-cta.fl-star-border::before {
+  content: ''; position: absolute; inset: -2px; border-radius: inherit; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--fl-orbit), transparent 0 64%, rgba(150, 200, 255, .25) 74%, rgba(190, 220, 255, .95) 84%, #ffffff 87%, rgba(255, 210, 165, .85) 90%, transparent 97%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: fl-orbit 4.6s linear infinite;
+}
+html.ui-flight .fl-cta.fl-star-border::after {
+  content: ''; position: absolute; inset: -10px; z-index: -1; border-radius: inherit; pointer-events: none; filter: blur(14px); opacity: .55;
+  background: conic-gradient(from var(--fl-orbit), transparent 0 72%, rgba(150, 200, 255, .7) 84%, transparent 96%);
+  animation: fl-orbit 4.6s linear infinite;
+}
+@keyframes fl-orbit { to { --fl-orbit: 360deg; } }
+/* Spotlight that follows the mouse on home cards. */
+@media (hover: hover) and (pointer: fine) {
+  html.ui-flight :is(.fl-card, .fl-tile) { position: relative; }
+  html.ui-flight :is(.fl-card, .fl-tile)::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .35s var(--fl-ease);
+    background: radial-gradient(260px circle at var(--fl-mx, 50%) var(--fl-my, 0%), rgba(255, 255, 255, .1), rgba(150, 200, 255, .04) 40%, transparent 70%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+  }
+  html.ui-flight :is(.fl-card, .fl-tile):hover::after { opacity: 1; }
+}
+/* ---------- Search ---------- */
+html.ui-flight .fl-search-backdrop { position: fixed; inset: 0; z-index: 94; background: rgba(4, 5, 8, .5); -webkit-backdrop-filter: blur(6px) brightness(.8); backdrop-filter: blur(6px) brightness(.8); }
+html.ui-flight #flSearch {
+  position: fixed; z-index: 95; left: 50%; top: calc(env(safe-area-inset-top) + 72px); translate: -50% 0; width: min(640px, calc(100vw - 24px));
+  display: flex; flex-direction: column; max-height: min(70vh, 620px); border-radius: 26px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(36, 40, 50, .66), rgba(18, 21, 27, .78)) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(160%) brightness(.7); backdrop-filter: blur(22px) saturate(160%) brightness(.7);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .16), 0 40px 80px -30px rgba(0, 0, 0, .95);
+  --fl-lens-defocus: 9; --fl-lens-tone: saturate(160%) brightness(.55);
+}
+html.ui-flight .fl-search-box { display: flex; align-items: center; gap: 10px; padding: 12px 14px 12px 18px; border-bottom: 1px solid rgba(255, 255, 255, .1); }
+html.ui-flight .fl-search-box > svg { width: 20px; height: 20px; color: var(--fl-ink-2); flex-shrink: 0; }
+html.ui-flight #flSearch input { flex: 1; min-width: 0; min-height: 44px; font-size: 17px; background: transparent !important; border: 0 !important; box-shadow: none !important; color: var(--fl-ink) !important; padding: 0; }
+html.ui-flight #flSearch input:focus { outline: none !important; box-shadow: none !important; }
+html.ui-flight .fl-search-close { min-height: 40px; padding: 6px 12px; border-radius: 12px; color: var(--fl-accent); font-size: 15px; font-weight: 600; background: none !important; border: 0 !important; }
+html.ui-flight .fl-search-list { overflow-y: auto; padding: 8px; overscroll-behavior: contain; }
+html.ui-flight .fl-search-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 10px 12px; border-radius: 16px; text-align: left; color: var(--fl-ink); background: none !important; border: 0 !important; }
+html.ui-flight .fl-search-item.is-active { background: rgba(255, 255, 255, .1) !important; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18); }
+@media (hover: hover) { html.ui-flight .fl-search-item:hover { background: rgba(255, 255, 255, .07) !important; } }
+html.ui-flight .fl-search-kind { padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--fl-accent); background: rgba(124, 192, 255, .12); }
+html.ui-flight .fl-search-kind[data-kind="球員"] { color: var(--fl-green); background: rgba(111, 219, 166, .12); }
+html.ui-flight .fl-search-kind[data-kind="比賽"] { color: var(--fl-amber); background: rgba(243, 199, 102, .12); }
+html.ui-flight .fl-search-label { font-size: 16px; font-weight: 600; letter-spacing: .03em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html.ui-flight .fl-search-sub { color: var(--fl-ink-3); font-size: 13px; white-space: nowrap; }
+html.ui-flight .fl-search-empty { margin: 14px; color: var(--fl-ink-3); text-align: center; }
+html.ui-flight .fl-search-hint { margin: 0; padding: 8px 18px 12px; color: var(--fl-ink-3); font-size: 12px; letter-spacing: .06em; }
+@media (pointer: coarse) { html.ui-flight .fl-search-hint { display: none; } }
+/* ---------- 球員檔案: previous / next player ---------- */
+html.ui-flight .fl-step { display: inline-flex; gap: 6px; flex-shrink: 0; }
+html.ui-flight .fl-step > button {
+  width: 44px; height: 44px; border-radius: 14px; font-size: 24px; line-height: 1; color: var(--fl-ink);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03)) !important; border: 0 !important;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .14) !important;
+}
+html.ui-flight :has(> #playerSelect) > #playerSelect { min-width: 0; }
+@media (max-width: 767px) {
+  /* Phones: the photo, the name list and the arrows explain themselves; the label would squeeze the name. */
+  html.ui-flight :has(> #playerSelect) > label { display: none; }
+  html.ui-flight :has(> #playerSelect) { column-gap: 8px; }
+  html.ui-flight :has(> #playerSelect) > * { margin-left: 0 !important; }
+  html.ui-flight .fl-step > button { width: 42px; height: 42px; }
+}
+/* ---------- Pull to refresh (installed app) ---------- */
+html.ui-flight #flPull {
+  position: fixed; z-index: 96; left: 50%; top: calc(env(safe-area-inset-top) + 8px); width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center; color: var(--fl-ink); opacity: 0; transform: translate(-50%, -60px); pointer-events: none;
+  background: linear-gradient(180deg, rgba(40, 44, 54, .7), rgba(20, 23, 29, .8)); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .25), 0 10px 24px -10px rgba(0, 0, 0, .9); transition: opacity .2s, transform .3s var(--fl-ease);
+}
+html.ui-flight #flPull svg { width: 20px; height: 20px; }
+html.ui-flight #flPull.is-ready { color: var(--fl-accent); }
+html.ui-flight #flPull.is-busy svg { animation: fl-spin .8s linear infinite; }
+@keyframes fl-spin { to { rotate: 360deg; } }
+/* ---------- Clawd: lives behind the glass (z-index set per scene in ui-delight.js) ---------- */
+html.ui-flight #flClawd {
+  position: fixed; left: 0; top: 0; width: 66px; height: 54px; padding: 0; margin: 0; border: 0 !important; background: none !important; box-shadow: none !important;
+  cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; --fl-look: 0;
+}
+html.ui-flight #flClawd svg { display: block; width: 66px; height: 54px; overflow: visible; filter: drop-shadow(0 5px 6px rgba(0, 0, 0, .5)); pointer-events: none; }
+html.ui-flight #flClawd[data-flip="1"] svg { scale: -1 1; }
+html.ui-flight #flClawd.is-upside svg { rotate: 180deg; }
+html.ui-flight #flClawd.is-sideways svg { rotate: 90deg; }
+html.ui-flight #flClawd.is-passing { pointer-events: none; }
+html.ui-flight #flClawd.is-near svg { scale: 2.6; filter: blur(1.6px) drop-shadow(0 12px 16px rgba(0, 0, 0, .55)); transform-origin: 50% 100%; }
+html.ui-flight #flClawd.is-near[data-flip="1"] svg { scale: -2.6 2.6; }
+html.ui-flight #flClawd .cl-eyes { translate: calc(var(--fl-look) * 1px) 0; transition: translate .18s steps(1, end); animation: fl-cl-blink 3.8s infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+html.ui-flight #flClawd .cl-body { animation: fl-cl-breathe 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+html.ui-flight #flClawd.is-walking .cl-body { animation: fl-cl-bob .3s ease-in-out infinite; }
+html.ui-flight #flClawd.is-walking .cl-leg { animation: fl-cl-step .3s steps(2, jump-none) infinite; }
+html.ui-flight #flClawd.is-walking .cl-leg-b { animation-delay: -.15s; }
+html.ui-flight #flClawd .cl-cap { animation: fl-cl-breathe 2.4s ease-in-out infinite; transform-box: view-box; transform-origin: 50% 39%; }
+html.ui-flight #flClawd.is-walking .cl-cap { animation: fl-cl-bob .3s ease-in-out infinite; }
+@keyframes fl-cl-blink { 0%, 44%, 48%, 100% { transform: scaleY(1); } 46% { transform: scaleY(.1); } }
+@keyframes fl-cl-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(.4px); } }
+@keyframes fl-cl-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
+@keyframes fl-cl-step { 0% { transform: translateY(0); } 100% { transform: translateY(-2px); } }
+html.ui-flight .fl-clawd-spark { position: fixed; z-index: 99; width: 6px; height: 6px; border-radius: 2px; pointer-events: none; background: #f2a283; box-shadow: 0 0 8px rgba(242, 162, 131, .9); }
+html.ui-flight .fl-clawd-spark:nth-child(even) { background: #9fc0ff; box-shadow: 0 0 8px rgba(130, 170, 255, .9); }
+@media print { html.ui-flight #flClawd, html.ui-flight #flPull { display: none !important; } }
+@media (prefers-reduced-motion: reduce) {
+  html.ui-flight .fl-eyebrow.fl-shiny, html.ui-flight .fl-cta.fl-star-border::before, html.ui-flight .fl-cta.fl-star-border::after { animation: none; }
+  html.ui-flight .fl-cta.fl-star-border::after { display: none; }
+}
