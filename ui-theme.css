@@ -1004,40 +1004,40 @@ html.fl-booting body::after {
    a fixed full-screen layer that fades in on page change; content panels are liquid glass over it. Portrait crops for phones
    and portrait tablets. Home keeps its hero; 場記 stays plain so nothing competes with live scoring. ---------- */
 html.ui-flight body[data-page]::before { content: none; }
-html.ui-flight body[data-page="Overview"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-overview.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-overview .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Overview"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-overview.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-overview .8s var(--fl-ease) both; }
 @keyframes fl-scene-overview { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Analytics"]::before, html.ui-flight body[data-page="Games"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-analytics.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-analytics .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Analytics"]::before, html.ui-flight body[data-page="Games"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-analytics.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-analytics .8s var(--fl-ease) both; }
 @keyframes fl-scene-analytics { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Pitching"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-pitching.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-pitching .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Pitching"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-pitching.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-pitching .8s var(--fl-ease) both; }
 @keyframes fl-scene-pitching { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Records"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-records.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-records .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Records"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-records.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-records .8s var(--fl-ease) both; }
 @keyframes fl-scene-records { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Leaderboard"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-leaderboard.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-leaderboard .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Leaderboard"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-leaderboard.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-leaderboard .8s var(--fl-ease) both; }
 @keyframes fl-scene-leaderboard { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Compare"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-compare.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-compare .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Compare"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-compare.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-compare .8s var(--fl-ease) both; }
 @keyframes fl-scene-compare { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Health"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-health.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-health .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Health"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-health.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-health .8s var(--fl-ease) both; }
 @keyframes fl-scene-health { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Lineup"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-lineup.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-lineup .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Lineup"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-lineup.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-lineup .8s var(--fl-ease) both; }
 @keyframes fl-scene-lineup { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Glossary"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-glossary.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-glossary .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Glossary"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-glossary.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-glossary .8s var(--fl-ease) both; }
 @keyframes fl-scene-glossary { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Changelog"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-changelog.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-changelog .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Changelog"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-changelog.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-changelog .8s var(--fl-ease) both; }
 @keyframes fl-scene-changelog { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
-html.ui-flight body[data-page="Profile"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-profile.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-profile .8s var(--fl-ease) both; }
+html.ui-flight body[data-page="Profile"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-profile.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-profile .8s var(--fl-ease) both; }
 @keyframes fl-scene-profile { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
 @media (orientation: portrait) {
-  html.ui-flight body[data-page="Overview"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-overview-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Analytics"]::before, html.ui-flight body[data-page="Games"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-analytics-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Pitching"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-pitching-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Records"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-records-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Leaderboard"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-leaderboard-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Compare"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-compare-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Health"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-health-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Lineup"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-lineup-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Glossary"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-glossary-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Changelog"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-changelog-portrait.webp") center / cover no-repeat, #0a0b0e; }
-  html.ui-flight body[data-page="Profile"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .5) 55%, rgba(10, 11, 14, .66)), url("assets/bg-profile-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Overview"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-overview-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Analytics"]::before, html.ui-flight body[data-page="Games"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-analytics-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Pitching"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-pitching-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Records"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-records-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Leaderboard"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-leaderboard-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Compare"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-compare-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Health"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-health-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Lineup"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-lineup-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Glossary"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-glossary-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Changelog"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-changelog-portrait.webp") center / cover no-repeat, #0a0b0e; }
+  html.ui-flight body[data-page="Profile"]::before { background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-profile-portrait.webp") center / cover no-repeat, #0a0b0e; }
 }
 @media (prefers-reduced-motion: reduce) { html.ui-flight body[data-page]::before { animation: none !important; } }
 /* Liquid-glass panels: depth-of-field defocus of the scene, a light-catching rim, and (ui-app.js) refraction for panels up
@@ -1068,11 +1068,11 @@ html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook
    use a lighter defocus; live refraction on content panels is for mouse devices (ui-theme.js), bars keep theirs. */
 html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(main section:not(.grid), main section.grid > div, #teamSummaryCards > div) {
   background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .015) 38%, rgba(255, 255, 255, .025)) padding-box,
-    linear-gradient(rgba(10, 12, 16, .24), rgba(10, 12, 16, .24)) padding-box,
-    linear-gradient(155deg, rgba(255, 255, 255, .42), rgba(170, 205, 255, .14) 25%, rgba(255, 255, 255, .05) 55%, rgba(255, 210, 170, .12) 82%, rgba(255, 255, 255, .28)) border-box !important;
-  -webkit-backdrop-filter: blur(22px) saturate(160%) brightness(.7); backdrop-filter: blur(22px) saturate(160%) brightness(.7);
-  --fl-lens-defocus: 9; --fl-lens-tone: saturate(160%) brightness(.7);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+    linear-gradient(rgba(10, 12, 16, .1), rgba(10, 12, 16, .1)) padding-box,
+    linear-gradient(155deg, rgba(255, 255, 255, .46), rgba(170, 205, 255, .16) 25%, rgba(255, 255, 255, .05) 55%, rgba(255, 210, 170, .13) 82%, rgba(255, 255, 255, .3)) border-box !important;
+  -webkit-backdrop-filter: blur(12px) saturate(170%) brightness(.66); backdrop-filter: blur(12px) saturate(170%) brightness(.66);
+  --fl-lens-defocus: 6; --fl-lens-tone: saturate(170%) brightness(.66);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 0 10px rgba(0, 0, 0, .25);
 }
 html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]):not(button):not(input):not(select):not(textarea) {
   background: linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .025)) !important;
@@ -1080,7 +1080,7 @@ html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook
 }
 @media (pointer: coarse) {
   html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(main section:not(.grid), main section.grid > div, #teamSummaryCards > div) {
-    -webkit-backdrop-filter: blur(16px) saturate(155%) brightness(.68); backdrop-filter: blur(16px) saturate(155%) brightness(.68);
+    -webkit-backdrop-filter: blur(10px) saturate(165%) brightness(.64); backdrop-filter: blur(10px) saturate(165%) brightness(.64);
   }
 }
 /* Small controls sit on glass already: no backdrop blur of their own (dozens per page were the main GPU cost). */
@@ -1422,6 +1422,18 @@ html.ui-flight #flPull svg { width: 20px; height: 20px; }
 html.ui-flight #flPull.is-ready { color: var(--fl-accent); }
 html.ui-flight #flPull.is-busy svg { animation: fl-spin .8s linear infinite; }
 @keyframes fl-spin { to { rotate: 360deg; } }
+/* ---------- Pages: the space scene behind each page drifts toward its planet as the page scrolls (scroll-driven, on the
+   compositor, no script). The entry fade is the same for every scene; translate / scale leave its transform alone. ---------- */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    html.ui-flight:not(.fl-full-layout) body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"])::before {
+      animation: fl-scene-in 1.1s var(--fl-ease) both, fl-scene-drift linear both;
+      animation-timeline: auto, scroll(root block);
+    }
+  }
+}
+@keyframes fl-scene-in { from { opacity: 0; transform: scale(1.1); } to { opacity: 1; transform: none; } }
+@keyframes fl-scene-drift { from { translate: 0 0; scale: 1; } to { translate: 0 -5vh; scale: 1.16; } }
 /* ---------- Feel: a light under the finger on the tab bar (it also slides between tabs), home cards tilt to the mouse ---------- */
 html.ui-flight .ui-mobile-nav { touch-action: none; } /* sliding along the bar picks a tab instead of scrolling the page */
 html.ui-flight .fl-tab-glow {

@@ -17,7 +17,8 @@ fs.mkdirSync(output,{recursive:true});
         const errors=[];
         page.on('pageerror',error=>errors.push(error.message));
         await page.goto(process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321');
-        await page.waitForFunction(()=>document.getElementById('uiDrawerToggle') && Array.isArray(window.__previewWrites));
+        // The page shows once the app shell has arranged it (boot.js); before that every control is still hidden behind the splash.
+        await page.waitForFunction(()=>document.getElementById('uiDrawerToggle') && Array.isArray(window.__previewWrites) && !document.documentElement.classList.contains('fl-booting'));
         const drawer=page.locator('#uiDrawerToggle');
         if(touch) {
           assert.ok(await drawer.isVisible());

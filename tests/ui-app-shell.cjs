@@ -5,7 +5,8 @@ const {chromium, webkit} = require('playwright');
 const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
 const page$ = page => page.evaluate(() => document.body.dataset.page);
-const settle = page => page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect && a.effect.getComputedTiming().endTime !== Infinity).map(a => a.finished.catch(() => {}))));
+// Time-based animations only: a scroll-driven one (the page scene's drift) finishes only at the end of the page.
+const settle = page => page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect && a.effect.getComputedTiming().endTime !== Infinity && a.timeline === document.timeline).map(a => a.finished.catch(() => {}))));
 async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
   // Real input: a touchscreen tap on touch devices, a mouse click otherwise (a scripted click has wrong offsets in WebKit).
   const point = await page.evaluate(({chartVar, index}) => {

@@ -1,12 +1,14 @@
 // ui-delight.js — small moments of delight on top of the app shell (ui-app.js), plus a few flow shortcuts.
 // Effects are written for this site (ideas from reactbits.dev: Blur Text, Count Up, Shiny Text, Star Border, Spotlight
-// Card, Magnet, Galaxy/Particles, Scroll Reveal), in plain JS + CSS so they cost almost nothing on phones:
+// Card, Magnet, Galaxy/Particles, Scroll Reveal, Animated Content), in plain JS + CSS so they cost almost nothing on phones:
 //   Home      twinkling star field with shooting stars behind the hero, the team name settling in from a blur, numbers
 //             counting up, an orbiting light around the main button, bands revealed on scroll, a spotlight on cards.
 //   Clawd     a little orange pixel creature (an homage to Claude's mascot) that lives in the site, in a different
 //             outfit and mood each visit (most often the team's blue AE cap): it peeks out from behind the liquid glass,
 //             floats down on a balloon, hops and dashes past, rides a rocket, naps; it can be tapped, petted, dragged and
 //             thrown. It never talks. Never on 比賽場記: scoring needs full attention.
+//   Pages     every page's title settles from a blur and its sections fade in as they scroll into view; the space scene
+//             behind each page drifts toward the planet as the page scrolls (ui-theme.css, scroll-driven, no script).
 //   Feel      the glass answers the finger: a light follows it on the phone tab bar (slide along the bar to pick a tab),
 //             the glass thumbs stretch like liquid as they glide, home cards tilt toward the mouse.
 //   Flow      search for any page / player / game (⌘K, Ctrl+K or "/" and the 🔍 button); previous/next player on 球員檔案
@@ -200,11 +202,42 @@
       revealBands(panel);
     }
   }
+  // ---------- Every other page: the title settles from a blur (Blur Text); sections further down fade in as they
+  // scroll into view (Animated Content). Opacity and blur only, so nothing moves under a measurement or a finger. ----------
+  let sectionReveal = null;
+  function revealSections(fresh) {
+    sectionReveal?.disconnect();
+    sectionReveal = null;
+    const key = page();
+    if (reduce.matches || testLayout() || !('IntersectionObserver' in window) || key === 'Home' || key === 'Scorebook') return;
+    const panel = document.getElementById(`panel${key}`);
+    if (!panel) return;
+    const title = document.getElementById('uiPageTitle');
+    if (fresh && title) play(title, [{opacity: 0, filter: 'blur(10px)', letterSpacing: '.2em'}, {opacity: 1, filter: 'blur(0)', letterSpacing: '.08em'}], {duration: 620, easing: EASE});
+    const seen = new WeakSet();
+    let first = true;
+    sectionReveal = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (seen.has(e.target)) return;
+        if (first && e.isIntersecting) { seen.add(e.target); return; } // already on screen when the page opened: the page reveal covers it
+        if (!e.isIntersecting) return;
+        seen.add(e.target);
+        sectionReveal?.unobserve(e.target);
+        play(e.target, [{opacity: 0, filter: 'blur(6px)'}, {opacity: 1, filter: 'blur(0)'}], {duration: 560, easing: EASE});
+      });
+      first = false;
+    }, {rootMargin: '0px 0px 8% 0px'});
+    panel.querySelectorAll(':scope > section, :scope > div > section').forEach(section => sectionReveal.observe(section));
+  }
   window.siteHooks.after('switchMainTab', 'ui-delight', tabId => {
     if (tabId === 'tabHome') requestAnimationFrame(() => enhanceHome(true));
     else if (stars) stars.stop();
+    requestAnimationFrame(() => revealSections(true));
   });
-  window.siteHooks.after('renderAll', 'ui-delight', () => { if (page() === 'Home') requestAnimationFrame(() => enhanceHome(false)); });
+  window.siteHooks.after('renderAll', 'ui-delight', () => {
+    if (page() === 'Home') requestAnimationFrame(() => enhanceHome(false));
+    else requestAnimationFrame(() => revealSections(false));
+  });
   if (page() === 'Home') requestAnimationFrame(() => enhanceHome(true));
 
   // =====================================================================================================

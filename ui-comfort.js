@@ -771,6 +771,6 @@
   window.addEventListener('resize', queueComfort);
 
   updateNavigation();
-  enhanceTables();
+  enhanceTables(false); // measured by queueComfort once the page has painted (the start-up splash still covers it now)
   queueComfort();
 })();

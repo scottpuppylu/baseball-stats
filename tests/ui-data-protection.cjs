@@ -21,7 +21,11 @@ async function device(browser, width = 1280) {
   const page = await context.newPage();
   page.setDefaultTimeout(15000);
   const errors = [];
-  page.on('pageerror', e => errors.push(e.message));
+  // WebKit logs a request that a reload cancels as "Fetch API cannot load … due to access control checks." at the line
+  // that sent it, and Playwright's WebKit reports that log as a page error, although the page handles the failed request
+  // (it happened 1 run in 3, whenever the reload landed during the startup reads). Only that exact message is ignored.
+  const cancelledByReload = message => /^Fetch API cannot load https?:\/\/127\.0\.0\.1:\d+\/__mock-api\/\S+ due to access control checks\.$/.test(message);
+  page.on('pageerror', e => { if (!cancelledByReload(e.message)) errors.push(e.message); });
   await page.goto(url);
   await ready(page);
   await page.evaluate(() => localCache.ready);

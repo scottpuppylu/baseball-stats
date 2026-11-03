@@ -173,9 +173,18 @@
     return {sim, chosenByName: byName, models, team, historicalPaMap, targetSize};
   }
 
+  // Only the shown 打線 page needs the model's order. Every data load re-renders that page while it is hidden (its
+  // attendance and custom lineup are used elsewhere), and the model search took most of the start-up time on phones.
+  // So a hidden re-render takes the original quick ordering and the model runs when the page is opened (before it is
+  // painted). Direct calls (帶入推薦打線 from the scorebook setup) always get the model's order.
+  const lineupPanel = document.getElementById('panelLineup');
+  const lineupHidden = () => !lineupPanel || lineupPanel.classList.contains('hidden');
+  let rendering = 0, deferred = false;
+
   function recommend(players) {
     const targetSize = isDhEnabled ? 11 : 10;
     if (!players || !players.length) return {items: [], hasDh: isDhEnabled, targetSize};
+    if (rendering && lineupHidden()) { deferred = true; lastResult = null; return legacyRecommend(players); }
     const {sim, chosenByName, models, historicalPaMap} = optimise(players);
     const rawBatters = sim.names.map(n => chosenByName.get(n));
     const assigned = rawBatters.length ? matchPositionsForLineup(rawBatters, isDhEnabled) : {};
@@ -207,6 +216,17 @@
     return {items, hasDh: isDhEnabled, targetSize, model: sim};
   }
   window.siteHooks.replace('calculateRecommendedLineup', 'lineup-recommender', recommend);
+  const renderLineupPage = window.renderLineupAnalysis;
+  window.siteHooks.replace('renderLineupAnalysis', 'lineup-recommender', function (...args) {
+    rendering++;
+    try { return renderLineupPage.apply(this, args); } finally { rendering--; }
+  });
+  // Synchronously as the page opens, so it is ready before it is painted (and for any code reading it right after).
+  window.siteHooks.after('switchMainTab', 'lineup-recommender', () => {
+    if (!deferred || lineupHidden()) return;
+    deferred = false;
+    renderLineupAnalysis(getFullAgg());
+  });
   window.calculateLegacyRecommendedLineup = legacyRecommend;
 
   // Same model for any order (the custom lineup analyzer): expected runs, PA and third-PA chance per slot,

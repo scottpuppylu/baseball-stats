@@ -429,7 +429,9 @@ def render_planet(img, cx, cy, r, light, surface, bump=0.0, limb_dark=0.0, atmos
     Lambert lighting with a soft terminator, bump from the height field, optional limb darkening, night lights
     and a scattering halo. Antialiased edge."""
     h, w, _ = img.shape
-    res = sphere_points(w, h, cx, cy, r, margin=int(r * .02) + 6)
+    # The halo must fade out completely inside the drawn box; a box cut through it left a straight horizontal edge.
+    halo_room = int(atmosphere[1] * 14) if atmosphere is not None else 0
+    res = sphere_points(w, h, cx, cy, r, margin=max(int(r * .02) + 6, halo_room))
     if res is None:
         return
     (y0, y1, x0, x1), u, v, rr = res
@@ -467,7 +469,7 @@ def render_planet(img, cx, cy, r, light, surface, bump=0.0, limb_dark=0.0, atmos
         region += (halo + rim)[..., None] * np.array(colour, np.float32)
 
 
-def earth_v2(img, cx, cy, r, light, city=True, cloud_scale=1.0, seed=7):
+def earth_v2(img, cx, cy, r, light, city=True, cloud_scale=1.0, seed=7, atmo=None):
     """Night-side Earth seen near the limb: dark oceans and land, thin clouds, warm city lights, blue scattering rim."""
     f = r / 260.0 * cloud_scale  # feature size ~260 px of arc
     def surface(px, py, pz):
@@ -479,11 +481,13 @@ def earth_v2(img, cx, cy, r, light, city=True, cloud_scale=1.0, seed=7):
     def night(px, py, pz):
         if not city:
             return np.zeros(px.shape + (3,), np.float32)
-        n = fbm3(px * f * 4, py * f * 4, pz * f * 4, 4, 1.0, .6, seed + 21)
+        # City lights are small, scattered points seen from orbit, clustered by a broader density field.
+        n = fbm3(px * f * 14, py * f * 14, pz * f * 14, 3, 1.0, .6, seed + 21)
+        cluster = fbm3(px * f * 2.5, py * f * 2.5, pz * f * 2.5, 3, 1.0, .5, seed + 33)
         land = fbm3(px * f, py * f, pz * f, 5, 1.0, .55, seed) > .52
-        lights = np.clip((n - .62) * 6, 0, 1) ** 2 * land
+        lights = np.clip((n - .66) * 8, 0, 1) ** 2 * np.clip((cluster - .45) * 3, 0, 1) * land
         return lights[..., None] * np.array([1.0, .72, .38], np.float32) * .7
-    render_planet(img, cx, cy, r, light, surface, bump=.6, night=night, atmosphere=((.35, .65, 1.0), max(8, r * .006), 1.0))
+    render_planet(img, cx, cy, r, light, surface, bump=.6, night=night, atmosphere=((.35, .65, 1.0), atmo or max(8, r * .006), 1.0))
 
 
 def mars_v2(w, h, seed, portrait):
@@ -611,13 +615,22 @@ def saturn_v2(w, h, seed, portrait):
 
 
 def orbit_v2(w, h, seed, portrait):
+    # Earth from low orbit: the limb is a clearly curved arc (radius about the image width), and the atmosphere is a thin
+    # shell around it (about 1.5 % of the radius) whose glow follows the curve and is brightest toward the rising sun.
     rng = np.random.default_rng(seed)
     img = space(rng, w, h)
-    r = (w * 2.6) if not portrait else (w * 3.4)
-    cx, horizon = w * .42, h * (.78 if not portrait else .6)
-    sun_x = w * (.82 if not portrait else .76)
-    earth_v2(img, cx, horizon + r, r, (.55, .18, -.05))
-    sy = horizon + r - math.sqrt(max(r ** 2 - (sun_x - cx) ** 2, 0))
+    r = w * (1.15 if not portrait else 1.05)
+    cx, horizon = w * (.42 if not portrait else .45), h * (.74 if not portrait else .58)
+    sun_x = w * (.82 if not portrait else .78)
+    cy = horizon + r
+    earth_v2(img, cx, cy, r, (.55, .18, -.05), atmo=r * .012)
+    # A wider, fainter layer of scattered light above the bright rim, also concentric with the planet.
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) - r
+    toward_sun = np.clip(((xx - cx) * (sun_x - cx) + (yy - cy) * (-r)) / (np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) * math.hypot(sun_x - cx, r) + 1e-3), 0, 1) ** 6
+    shell = np.where(d > 0, np.exp(-d / (r * .03)), 0) * (.12 + .5 * toward_sun)
+    img += shell[..., None] * np.array([.3, .55, 1.0], np.float32) * .55
+    sy = cy - math.sqrt(max(r ** 2 - (sun_x - cx) ** 2, 0))
     glow(img, sun_x, sy, min(w, h) * .045, (1.0, .9, .72), .65)
     return img, rng
 
