@@ -25,6 +25,8 @@ const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
       });
       await page.evaluate(() => switchMainTab('tabProfile'));
       await page.waitForTimeout(900);
+      // A slower machine (CI) builds the chip row a little later: wait for it instead of reading too early.
+      if (width < 1280) await page.waitForFunction(() => document.body.classList.contains('ui-tabbed') && document.querySelector('.ui-section-bar button[aria-selected="true"]'), null, {timeout: 15000}).catch(() => {});
       let s = await state();
       if (width >= 1280) {
         assert.equal(s.tabbed, false, 'desktop keeps the long page');
