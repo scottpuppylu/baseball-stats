@@ -105,7 +105,7 @@
     const streakCell = (label, now, best) => `<div class="bg-slate-900/70 rounded-lg p-2 text-center">
         <div class="text-[10px] text-slate-400">${label}</div>
         <div class="font-mono font-black text-lg ${now >= 3 ? 'text-amber-300' : 'text-white'}">${now}<span class="text-xs text-slate-400 font-semibold"> 場</span></div>
-        <div class="text-[10px] text-slate-500">本期最長 ${best} 場</div>
+        <div class="text-[10px] text-slate-500">最長 ${best} 場</div>
       </div>`;
     return `<div class="grid grid-cols-1 md:grid-cols-3 gap-3" data-records>
       <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 space-y-2">
@@ -193,12 +193,12 @@
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3">
-          ${recent ? `<div class="text-[11px] text-slate-400">近 ${recentCount} 場（${recent.pa} 打席）AVG / OBP / SLG</div>
+          ${recent ? `<div class="text-[11px] text-slate-400 ui-pair"><span>近 ${recentCount} 場（${recent.pa} 打席）</span><span class="ui-pair-unit">AVG / OBP / SLG</span></div>
           <div class="font-mono font-black text-white text-lg">${line(recent)}</div>
           <div class="text-xs mt-1">${trend}</div>` : '<div class="text-xs text-slate-400">此範圍只有年度彙總，沒有單場紀錄可看近況。</div>'}
         </div>
         <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3">
-          <div class="text-[11px] text-slate-400">本期全部（${season.pa} 打席）AVG / OBP / SLG</div>
+          <div class="text-[11px] text-slate-400 ui-pair"><span>本期全部（${season.pa} 打席）</span><span class="ui-pair-unit">AVG / OBP / SLG</span></div>
           <div class="font-mono font-black text-slate-200 text-lg">${line(season)}</div>
           <div class="text-xs mt-1 text-slate-400">OPS ${rate(season.ops)}</div>
         </div>
@@ -283,7 +283,7 @@
         <b class="text-sm" style="color:${color}">${esc(name)}</b>
         ${better ? '<span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-600/50 rounded px-1.5 py-0.5">近況較熱</span>' : ''}
       </div>
-      ${recent ? `<div class="text-[11px] text-slate-400">近 ${recentCount} 場（${recent.pa} 打席）AVG / OBP / SLG</div>
+      ${recent ? `<div class="text-[11px] text-slate-400 ui-pair"><span>近 ${recentCount} 場（${recent.pa} 打席）</span><span class="ui-pair-unit">AVG / OBP / SLG</span></div>
       <div class="font-mono font-black text-white text-base">${line(recent)}<span class="text-xs text-slate-400 font-semibold">　OPS ${rate(recent.ops)}</span></div>
       <div class="text-xs">${trend}</div>` : '<div class="text-xs text-slate-400">只有年度彙總，沒有單場紀錄可看近況。</div>'}
       <div class="text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">本期 ${played.length} 場${games.length > played.length ? '＋年度彙總' : ''}・${season.pa} 打席　${line(season)}　OPS ${rate(season.ops)}</div>
@@ -370,7 +370,7 @@
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3" data-h2h-shared>
-          <div class="text-[11px] text-slate-400">同場出賽 ${shared.length} 場・單場 OPS 較高</div>
+          <div class="text-[11px] text-slate-400 ui-pair"><span>同場出賽 ${shared.length} 場</span><span class="ui-pair-unit">單場 OPS 較高</span></div>
           ${shared.length ? `<div class="font-mono font-black text-lg"><span style="color:${COLORS.a}">${winsA}</span><span class="text-slate-500"> : </span><span style="color:${COLORS.b}">${winsB}</span>${shared.length - winsA - winsB ? `<span class="text-xs text-slate-400 font-semibold">　平 ${shared.length - winsA - winsB}</span>` : ''}</div>
           <div class="text-[11px] text-slate-500">${esc(a)} 對 ${esc(b)}</div>` : '<div class="text-xs text-slate-400 mt-1">此範圍內兩人沒有同場出賽紀錄。</div>'}
         </div>
@@ -527,12 +527,12 @@
     section.innerHTML = `${head}
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3" data-team-recent>
-          <div class="text-[11px] text-slate-400">全隊近 ${recentGames.length} 場（${recent.pa} 打席）AVG / OBP / SLG</div>
+          <div class="text-[11px] text-slate-400 ui-pair"><span>全隊近 ${recentGames.length} 場（${recent.pa} 打席）</span><span class="ui-pair-unit">AVG / OBP / SLG</span></div>
           <div class="font-mono font-black text-white text-lg">${line(recent)}</div>
-          <div class="text-xs mt-1">OPS ${rate(recent.ops)}　${trend}</div>
+          <div class="text-xs mt-1 flex flex-col gap-0.5 whitespace-nowrap"><span>OPS ${rate(recent.ops)}</span>${trend}</div>
         </div>
         <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3" data-team-season>
-          <div class="text-[11px] text-slate-400">全隊本期 ${games.length} 場（${season.pa} 打席）AVG / OBP / SLG</div>
+          <div class="text-[11px] text-slate-400 ui-pair"><span>全隊本期 ${games.length} 場（${season.pa} 打席）</span><span class="ui-pair-unit">AVG / OBP / SLG</span></div>
           <div class="font-mono font-black text-slate-200 text-lg">${line(season)}</div>
           <div class="text-xs mt-1 text-slate-400">OPS ${rate(season.ops)}${scored.length ? `　場記戰績 ${record.w} 勝 ${record.l} 敗${record.t ? ` ${record.t} 和` : ''}・得失分 ${record.rs}:${record.ra}` : ''}</div>
         </div>

@@ -147,7 +147,7 @@
     const chips = (kind, values) => values.map(([v, text]) => `<button type="button" class="s3-chip${pick[kind] === v ? ' s3-on' : ''}" data-ga-filter="${kind}:${esc(v)}">${esc(text)}</button>`).join('');
     const years = [...new Set(games.map(x => (x.date || '').slice(0, 4)).filter(Boolean))];
     const tags = [...new Set(games.map(x => tagLabel(x.tag)))];
-    return `<section data-ga-part="picker" class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl space-y-3">
+    return `<div data-ga-part="picker" class="ga-picker-block space-y-3">
         <div class="flex items-center justify-between gap-2"><h2 class="text-base sm:text-lg font-black text-white">選擇比賽</h2>
           <button type="button" class="s3-chip" data-ga="browse" aria-expanded="${pick.open}">${pick.open ? '收合列表' : `全部比賽（${games.length} 場）`}</button></div>
         <div class="ga-current">
@@ -162,7 +162,7 @@
           <div class="s3-row">${chips('result', [['all', '全部結果'], ['win', '勝'], ['loss', '敗'], ['tie', '和'], ['none', '未記比分'], ['live', '進行中']])}</div>
           <div class="ga-browse-list" role="list">${browseList(games)}</div>
         </div>` : ''}
-      </section>`;
+      </div>`;
   }
 
   function hero(a) {
@@ -275,8 +275,9 @@
       const isMvp = a.mvp && a.mvp.name === r.name;
       const xb = r.h2 + r.h3 + r.hr;
       return `<div class="ga-batter${isMvp ? ' ga-mvp' : ''}">
-          <div class="flex items-center gap-2"><span class="ga-slot">${r.isSub ? '替' : r.slot}</span><b class="text-sm text-white">${esc(r.name)}</b>${isMvp ? '<span class="text-[11px] text-amber-300">🏆 MVP</span>' : ''}
-            <span class="ml-auto text-xs text-slate-300">${r.ab} 打數 ${r.h} 安${xb ? `・${xb} 長打` : ''}${r.bb ? `・${r.bb} 保送` : ''}${r.k ? `・${r.k} 三振` : ''}</span></div>
+          <div class="flex items-center gap-2.5"><span class="ga-slot">${r.isSub ? '替' : r.slot}</span>
+            <div class="min-w-0"><div class="flex items-center gap-2 whitespace-nowrap"><b class="text-sm text-white">${esc(r.name)}</b>${isMvp ? '<span class="text-[11px] text-amber-300">🏆 MVP</span>' : ''}</div>
+            <div class="ga-batter-line text-xs text-slate-400 whitespace-nowrap">${r.ab} 打數 ${r.h} 安${xb ? `・${xb} 長打` : ''}${r.bb ? `・${r.bb} 保送` : ''}${r.k ? `・${r.k} 三振` : ''}</div></div></div>
           <div class="flex flex-wrap gap-1.5 mt-2">${list.map(p => chip(`${p.inning}局 ${SHORT[p.result] || p.result}`, colorOf(p.result))).join('')}</div>
         </div>`;
     }).join('')}</div>`;
@@ -319,22 +320,22 @@
   const mediaKey = g => `${g.id}|${JSON.stringify(g.innings)}|${JSON.stringify(g.finalScore)}`;
   const fileBase = g => `淡江航太系壘_${g.date}_vs_${g.opponent || '對手'}`.replace(/[\\/:*?"<>|\s]+/g, '_');
   function videoSection(g) {
-    if (!window.gameVideo) return '';
+    if (!window.gameVideo) return section('影片與分享', '', extrasBlock(g), 'data-ga-part="body"');
     const m = media.get(mediaKey(g)) || {};
     const ready = !!m.video;
-    return section('賽後影片', '每局每個打席的 3D 動畫，最後是賽後成績卡；IG 限動規格、30fps。下載後可直接發限動。', `
+    return section('影片與分享', '每局每個打席的 3D 動畫，最後是賽後成績卡；IG 限動規格、30fps。下載後可直接發限動。', `
       <div class="ga-media">${ready
         ? `<video class="ga-video" controls playsinline muted autoplay loop src="${m.video.url}"></video>`
         : `<div class="ga-video-wait">${m.image ? `<img class="ga-card-img ga-dim" src="${m.image.url}" alt="">` : ''}<button type="button" class="ga-play" data-ga="make-video">▶ 製作並播放賽後影片</button><p class="ga-media-note">影片在這台裝置上製作，不會上傳。</p></div>`}</div>
       <button type="button" class="ga-download" data-ga="download-video">⬇ 下載賽後影片</button>
       <div class="flex flex-wrap gap-2 justify-center">
         <button type="button" class="s3-chip" data-ga="share-video">分享影片</button>
-      </div>${ready ? `<p class="text-[11px] text-slate-500 text-center">長 ${Math.round(m.video.result.duration)} 秒；超過 60 秒時 IG 會自動分段。</p>` : ''}`, 'data-ga-part="body"');
+      </div>${ready ? `<p class="text-[11px] text-slate-500 text-center">長 ${Math.round(m.video.result.duration)} 秒；超過 60 秒時 IG 會自動分段。</p>` : ''}${extrasBlock(g)}`, 'data-ga-part="body"');
   }
-  // The postgame image is still here, folded at the end: the video is what people should share.
-  function extrasSection(g) {
+  // The postgame image, folded under the video: the video is what people should share.
+  function extrasBlock(g) {
     const m = media.get(mediaKey(g)) || {};
-    return `<section data-ga-part="extras" class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl">
+    return `<div class="ga-extras pt-2">
         <details class="ga-more"><summary><h2 class="inline text-base sm:text-lg font-black text-white">其他下載</h2><span class="text-xs text-slate-400 ml-2">賽後分析圖（圖片）</span></summary>
           <div class="space-y-3 pt-3">
             <div class="ga-media"><img data-ga-card alt="賽後成績圖" class="ga-card-img"${m.image ? ` src="${m.image.url}"` : ''}>${m.image ? '' : '<p class="ga-media-wait">正在產生成績圖…</p>'}</div>
@@ -345,7 +346,7 @@
               <button type="button" class="s3-chip" data-ga="image">放大檢視</button>
             </div>
           </div>
-        </details></section>`;
+        </details></div>`;
   }
   // The card is drawn once per version of the game and kept while the page is open.
   async function ensureImage(g) {
@@ -398,8 +399,10 @@
   }
 
   // ---------- Page ----------
-  // The page is direct child sections (the section bar reads them): the picker, the analysis, the scorebook review moved
-  // here from 場記 (it keeps its own markup and editing code, so it is never re-rendered by this file), and the extras.
+  // The page: the game picker on top (a block, so it stays in view above the section tabs on phones), then direct child
+  // sections the section bar reads: 比賽總覽 (result, key moments, how the score went), 逐局經過, 打者表現, 擊球與出局,
+  // 投手與防守, 影片與分享 (video, then the image), and last the scorebook review moved here from 場記 (it keeps its own
+  // markup and editing code, so it is never re-rendered by this file).
   let reviewSection = null;
   function allGamesNewest() {
     return (typeof allGames !== 'undefined' ? allGames : []).slice()
@@ -421,17 +424,15 @@
     const moments = keyMoments(a);
     const part = 'data-ga-part="body"';
     panel.insertAdjacentHTML('afterbegin', pickerSection(games));
+    const sub = (title, note, body) => `<div class="ga-sub"><h3 class="text-base font-black text-white">${title}</h3>${note ? `<p class="text-xs text-slate-400 mt-1">${note}</p>` : ''}<div class="mt-3">${body}</div></div>`;
     reviewSection.insertAdjacentHTML('beforebegin', [
-      section('比賽總覽', '', hero(a), part),
-      videoSection(a.game),
-      section('關鍵時刻', '這場比賽最值得記住的打席與半局。', moments.length ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${moments.map(m => `<div class="ga-moment" style="border-color:${m.color}55"><span class="text-xl">${m.icon}</span><div><b class="text-sm" style="color:${m.color}">${esc(m.title)}</b><p class="text-xs text-slate-300 mt-0.5">${esc(m.text)}</p></div></div>`).join('')}</div>` : empty('這場比賽沒有特別的紀錄。'), part),
-      section('比分走勢', a.scored ? '每個半局結束後的比分。' : '', scoreChart(a) + lineScore(a), part),
+      section('比賽總覽', '', hero(a) + sub('關鍵時刻', '這場比賽最值得記住的打席與半局。', moments.length ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${moments.map(m => `<div class="ga-moment" style="border-color:${m.color}55"><span class="text-xl">${m.icon}</span><div><b class="text-sm" style="color:${m.color}">${esc(m.title)}</b><p class="text-xs text-slate-300 mt-0.5">${esc(m.text)}</p></div></div>`).join('')}</div>` : empty('這場比賽沒有特別的紀錄。')) + sub('比分走勢', a.scored ? '每個半局結束後的比分。' : '', scoreChart(a) + lineScore(a)), part),
       section('逐局經過', '依時間順序列出每個打席與防守事件；圓點是打席結束時的出局數。', `<div class="space-y-3">${timeline(a)}</div>`, part),
       section('打者表現', '每位打者依序的打席結果。', batters(a), part),
       section('擊球與出局', '本場擊球落點、擊球型態與出局方式。', battedBalls(a), part),
-      section('投手與防守', '', pitching(a), part)
+      section('投手與防守', '', pitching(a), part),
+      videoSection(a.game)
     ].join(''));
-    reviewSection.insertAdjacentHTML('afterend', extrasSection(a.game));
     // The card is drawn in the background once the page has settled (not during the switch): the video's poster and
     // the image in 其他下載.
     const game = a.game;

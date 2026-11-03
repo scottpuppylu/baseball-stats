@@ -98,7 +98,7 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     await page.waitForFunction(() => document.querySelector('#globalToastContainer')?.textContent.includes('完賽資料尚未完整同步'));
     await tab(page,'Overview',mobile);
     await tab(page,'Scorebook',mobile);
-    await click(page,'#btnScoreSubLive');
+    assert.equal(await page.locator('#btnScoreSubLive').isVisible(),false,'場記 has no sub-page switch any more (one view: the live scorer)');
     assert.equal((await state(page)).status,'in_progress');
     assert.ok(await page.locator('#activeGameContainer').isVisible(),'live scorer remains reachable after failed finish');
     assert.ok(await page.locator('button[onclick="finishActiveGameAndSyncLogs()"]').isVisible(),'finish retry still visible');
@@ -127,9 +127,9 @@ async function state(page) { return page.evaluate(() => JSON.parse(localStorage.
     await page.waitForFunction(() => !document.querySelector('#editGameOpponent'));
     assert.match(await page.locator('#reviewGameSelect').textContent(),new RegExp(`覆盤修改-${width}`));
     await page.screenshot({path:path.join(output,`${width}-Review.png`)});
-    await page.evaluate(() => switchMainTab('tabScorebook'));
-    await click(page,'#btnScoreSubSpray');
-    const point = page.locator('#sprayPointsContainer circle').first();
+    // The spray chart lives in 數據分析 → 全隊落點 (場記 no longer has its own copy): tapping a point shows its detail.
+    await tab(page,'Analytics',mobile);
+    const point = page.locator('#teamSpatialPointsContainer circle').first();
     await point.evaluate(element => element.scrollIntoView({block:'center'}));
     await point.click({force:true});
     assert.ok(await page.locator('.ui-touch-detail').isVisible());

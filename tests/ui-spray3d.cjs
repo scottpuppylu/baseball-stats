@@ -121,7 +121,7 @@ const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
         oldTab: getComputedStyle(document.getElementById('btnScoreSubReview')).display};
     }, gameId);
     assert.ok(analysis.visible && analysis.active, 'the page and its button are on');
-    assert.equal(analysis.sections, 11, 'picker, summary, video, six analysis sections, the moved review and 其他下載');
+    assert.equal(analysis.sections, 7, '比賽總覽 (with key moments and the score), four analysis sections, 影片與分享 and the moved review; the picker heads the page');
     assert.ok(analysis.review, 'the scorebook review (with its editor) is on this page');
     assert.equal(analysis.oldTab, 'none', '場記 no longer shows its own review tab');
     // The postgame card appears on the page.

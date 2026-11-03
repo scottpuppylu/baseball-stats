@@ -92,8 +92,29 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
           // lineup and a new field. Bound that new content separately; keep the old density
           // ceiling for every other page and the rest of the scorer.
           const measured=heights[name].total-(name==='Scorebook-live'?heights[name].lineupHeight:0);
-          assert.ok(measured<=before*0.9,`${name}: ${measured}px vs ${before}px before (new lineup accounted separately)`);
+          // Since 2026/11/03 a phone reads long pages one section at a time (section tabs, measured below). Laid out in full
+          // the page may hold a little more (labels set as deliberate two-line labels instead of breaking anywhere), but it
+          // never grows past where it was before the density pass.
+          assert.ok(measured<=before,`${name}: ${measured}px vs ${before}px before (new lineup accounted separately)`);
         }
+        // What a phone shows: one section at a time. The longest section of each page stays well under the old page.
+        const tabbed=await context.newPage();
+        await tabbed.goto(`${url}/?tabs`);
+        await tabbed.waitForFunction(()=>window.PlayerDiagnostics&&allLogs.some(l=>String(l.id).startsWith('log_game_'))&&!document.documentElement.classList.contains('fl-booting'));
+        for(const [name,before] of Object.entries(BEFORE)) {
+          if(name.startsWith('Scorebook')) continue; // 場記 stays one page (the scorer sees everything); bounded above
+          const longest=await tabbed.evaluate(async key=>{
+            switchMainTab(`tab${key}`);
+            await new Promise(r=>setTimeout(r,700));
+            const chips=[...document.querySelectorAll('.ui-section-bar button')];
+            if(!document.body.classList.contains('ui-tabbed')||!chips.length) return document.documentElement.scrollHeight;
+            let max=0;
+            for(const chip of chips){chip.click();await new Promise(r=>setTimeout(r,250));max=Math.max(max,document.documentElement.scrollHeight);}
+            return max;
+          },name);
+          assert.ok(longest<=before*0.9,`${name}: longest section ${longest}px vs ${before}px page before (tabbed phone layout)`);
+        }
+        await tabbed.close();
         assert.ok([10,11].includes(heights['Scorebook-live'].lineupRows.length));
         assert.ok(heights['Scorebook-live'].lineupRows.every(h=>h>=88&&h<=140),'vertical lineup rows stay readable and bounded');
         assert.ok(heights['Scorebook-live'].lineupHeight<=2000,'vertical setup plus field stays bounded');

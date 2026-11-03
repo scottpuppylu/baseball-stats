@@ -204,97 +204,114 @@
       revealBands(panel);
     }
   }
-  // ---------- Every other page, like Apple's pages: the title rises in, and as each section scrolls into view the things
-  // in it (cards, tables, charts) rise and fade in one after another. Transform and opacity only, so the compositor runs
-  // it and nothing waits on the page's scripts; the sections themselves stay put (section jumps land exactly). Off with
-  // "reduce motion", during 比賽場記, and in the isolated test preview unless ?motion (it measures layouts mid-flight). ----------
+  // ---------- Every other page, like Apple's pages: as you scroll, the things on the page come in one after another, each
+  // kind its own way (React Bits: Animated Content, Fade Content, Animated List, Scroll Float):
+  //   cards rise; wide cards tilt up from the page; charts zoom out of the dark; a two-column grid slides in from both
+  //   sides; a table rises and its rows slide in; section titles float up.
+  // Smooth on phones: things below the screen are hidden in advance (nothing that is already showing ever blinks out and
+  // back), each moving element gets its own compositor layer only while it moves, and only transform and opacity change
+  // (no text is rewritten: counting numbers read oddly in Chinese). The sections themselves stay put, so section jumps
+  // land exactly. Off with "reduce motion", during 比賽場記, and in the isolated test preview unless ?motion. ----------
   const motion = config.motion !== false;
   let sectionReveal = null;
-  // Decrypted Text: the page title resolves out of scrambled glyphs, left to right (screen readers get the real title).
-  const GLYPHS = '01#%*+=/<>▮▯░▒ABCDEFGHJKLMNPQRSTUVWXYZ';
-  function decrypt(el) {
-    const final = el.textContent;
-    if (!final || final.length > 14) return;
-    el.setAttribute('aria-label', final);
-    const chars = [...final], t0 = performance.now(), per = 38, settle = 260;
-    let written = el.textContent;
-    const step = now => {
-      if (!el.isConnected || el.textContent !== written) { el.removeAttribute('aria-label'); return; } // retitled meanwhile
-      const k = now - t0, fixed = Math.floor(Math.max(0, k - settle) / per);
-      const text = chars.map((c, i) => (i < fixed || c === ' ' ? c : GLYPHS[Math.floor(Math.random() * GLYPHS.length)])).join('');
-      el.textContent = written = fixed >= chars.length ? final : text;
-      if (fixed < chars.length) requestAnimationFrame(step); else el.removeAttribute('aria-label');
-    };
-    requestAnimationFrame(step);
+  const ENTER = {
+    rise: ['translate3d(0, 64px, 0) scale(.92)', 1000],
+    tilt: ['perspective(1100px) translate3d(0, 70px, 0) rotateX(24deg) scale(.94)', 1150],
+    zoom: ['scale(.78)', 1100],
+    left: ['translate3d(-56px, 36px, 0) rotate(-2deg)', 1000],
+    right: ['translate3d(56px, 36px, 0) rotate(2deg)', 1000],
+    row: ['translate3d(-44px, 0, 0)', 760],
+    title: ['translate3d(0, 34px, 0)', 900]
+  };
+  const SMOOTH = 'cubic-bezier(.16, 1, .3, 1)';
+  // Which entrance an element gets.
+  function kindOf(el, index, siblings) {
+    if (el.matches('h2, h3') || el.querySelector(':scope > h2, :scope > h3, :scope > div > h2')) return 'title';
+    if (el.querySelector('canvas, svg[viewBox]') && !el.querySelector('table')) return 'zoom';
+    if (siblings === 2 || (siblings > 2 && siblings <= 4)) return index % 2 ? 'right' : 'left';
+    if (el.offsetWidth > window.innerWidth * .7 && el.offsetHeight > 160) return 'tilt';
+    return 'rise';
   }
-  // Scroll Float: a section title rises in character by character (stretched, then springing back), then is put back as
-  // plain text so its gradient and the page's own updates work as before.
-  function floatTitle(h) {
-    if (!h || h.dataset.flFloat || h.children.length || h.textContent.length > 40) return;
-    const text = h.textContent;
-    h.dataset.flFloat = '1';
-    h.setAttribute('aria-label', text);
-    h.classList.add('fl-floating');
-    h.innerHTML = [...text].map(c => `<span class="fl-fch" aria-hidden="true">${c === ' ' ? '&nbsp;' : esc(c)}</span>`).join('');
-    const spans = [...h.children];
-    const runs = spans.map((sp, i) => play(sp, [
-      {opacity: 0, transform: 'translateY(120%) scale(.7, 2.3)'},
-      {opacity: 1, transform: 'none'}
-    ], {duration: 760, delay: i * 30, easing: 'cubic-bezier(.68, -.55, .27, 1.55)', fill: 'backwards'}));
-    Promise.all(runs.map(a => (a ? a.finished : null)).filter(Boolean)).catch(() => {}).then(() => {
-      if (!h.isConnected || h.dataset.flFloat !== '1' || h.textContent !== text) return;
-      h.textContent = text;
-      h.classList.remove('fl-floating');
-      h.removeAttribute('aria-label');
-    });
+  // Hidden in advance, below the screen: the pre-state is the first frame of its entrance.
+  const prepared = new Set();
+  function release() { // shows everything still waiting (re-render, page change, printing): nothing stays hidden
+    prepared.forEach(el => { if (el.dataset.flEnter) { delete el.dataset.flEnter; el.style.opacity = ''; el.style.transform = ''; el.style.transformOrigin = ''; } });
+    prepared.clear();
   }
-  // Animated List: a table's first rows slide in one after another.
-  const listIn = table => [...(table.tBodies[0]?.rows || [])].slice(0, 10).forEach((row, i) => play(row,
-    [{opacity: 0, transform: 'translateX(-18px)'}, {opacity: 1, transform: 'none'}], {duration: 520, delay: 120 + i * 45, easing: EASE, fill: 'backwards'}));
-  function revealSections(fresh) {
+  window.addEventListener('beforeprint', release);
+  function prepare(el, kind) {
+    prepared.add(el);
+    el.dataset.flEnter = kind;
+    el.style.opacity = '0';
+    el.style.transform = ENTER[kind][0];
+    el.style.transformOrigin = kind === 'tilt' ? '50% 100%' : kind === 'zoom' ? '50% 50%' : '';
+  }
+  function enter(el, delay) {
+    const kind = el.dataset.flEnter;
+    if (!kind) return;
+    delete el.dataset.flEnter;
+    prepared.delete(el);
+    const [from, duration] = ENTER[kind];
+    el.style.willChange = 'transform, opacity'; // its own layer while it moves: the compositor runs it, scrolling never waits
+    const run = play(el, [{opacity: 0, transform: from}, {opacity: 1, transform: 'none'}], {duration, delay, easing: SMOOTH, fill: 'both'});
+    el.style.opacity = ''; el.style.transform = ''; el.style.transformOrigin = '';
+    const done = () => { el.style.willChange = ''; run?.cancel(); };
+    if (run) run.finished.then(done, done); else done();
+  }
+  // The pieces of a section, in reading order: its title block, then its cards (a grid's cards one by one) and tables.
+  function piecesOf(section) {
+    const out = [];
+    for (const child of section.children) {
+      if (child.hidden || child.classList.contains('hidden')) continue;
+      if (child.classList.contains('grid') && child.children.length <= 12) out.push(...[...child.children].map((el, i, all) => [el, kindOf(el, i, all.length)]));
+      else out.push([child, kindOf(child, 0, 1)]);
+      if (out.length >= 14) break;
+    }
+    return out;
+  }
+  function revealSections() {
     sectionReveal?.disconnect();
     sectionReveal = null;
+    release();
     const key = page();
     if (!motion || reduce.matches || testLayout() || !('IntersectionObserver' in window) || key === 'Home' || key === 'Scorebook') return;
     const panel = document.getElementById(`panel${key}`);
     if (!panel) return;
     const title = document.getElementById('uiPageTitle');
-    if (fresh && title) { play(title, [{opacity: 0, transform: 'translateY(14px)'}, {opacity: 1, transform: 'none'}], {duration: 620, easing: EASE}); decrypt(title); }
-    const seen = new WeakSet();
+    if (title) play(title, [{opacity: 0, transform: 'translate3d(0, 22px, 0)'}, {opacity: 1, transform: 'none'}], {duration: 800, easing: SMOOTH});
+    const pending = new Map(); // section -> its pieces, hidden until it comes into view
     let first = true;
     sectionReveal = new IntersectionObserver(entries => {
       entries.forEach(e => {
-        if (seen.has(e.target)) return;
-        const numbers = () => e.target.querySelectorAll('span.font-mono.font-black.block, #teamSummaryCards span.font-black.block');
-        if (first && e.isIntersecting) { // on screen when the page opened: the page's own reveal covers it; its numbers still count up
-          seen.add(e.target);
-          if (fresh) [...numbers()].slice(0, 10).forEach((el, i) => countUp(el, 120 + i * 50, 900));
+        const section = e.target;
+        if (first) { // the first report: what is below the screen is hidden now, before anyone can see it
+          if (!e.isIntersecting) {
+            const pieces = piecesOf(section);
+            pieces.forEach(([el, kind]) => prepare(el, kind));
+            section.querySelectorAll('.ui-table-scroll tbody tr:nth-child(-n+10)').forEach(row => prepare(row, 'row'));
+            pending.set(section, pieces);
+          } else sectionReveal.unobserve(section);
           return;
         }
-        if (!e.isIntersecting) return;
-        seen.add(e.target);
-        sectionReveal?.unobserve(e.target);
-        [...numbers()].slice(0, 10).forEach((el, i) => countUp(el, 180 + i * 60, 900));
-        e.target.querySelectorAll(':scope > :first-child h2, :scope > h2').forEach(floatTitle);
-        e.target.querySelectorAll('.ui-table-scroll table').forEach(listIn);
-        // A grid of cards comes in card by card; anything else as one piece.
-        const items = [...e.target.children].flatMap(el => (el.classList.contains('grid') && el.children.length <= 12 ? [...el.children] : [el]))
-          .filter(el => !el.hidden && el.getClientRects().length).slice(0, 14);
-        items.forEach((el, i) => play(el, [{opacity: 0, transform: 'translateY(34px) scale(.97)'}, {opacity: 1, transform: 'none'}],
-          {duration: 760, delay: i * 70, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards'}));
+        if (!e.isIntersecting || !pending.has(section)) return;
+        const pieces = pending.get(section);
+        pending.delete(section);
+        sectionReveal.unobserve(section);
+        pieces.forEach(([el], i) => enter(el, i * 85));
+        section.querySelectorAll('.ui-table-scroll tbody tr[data-fl-enter]').forEach((row, i) => enter(row, 260 + i * 55));
       });
       first = false;
-    }, {rootMargin: '0px 0px -6% 0px'});
+    }, {rootMargin: '0px 0px 4% 0px'});
     panel.querySelectorAll(':scope > section, :scope > div > section').forEach(section => sectionReveal.observe(section));
   }
   window.siteHooks.after('switchMainTab', 'ui-delight', tabId => {
     if (tabId === 'tabHome') requestAnimationFrame(() => enhanceHome(true));
     else if (stars) stars.stop();
-    requestAnimationFrame(() => revealSections(true));
+    requestAnimationFrame(() => revealSections());
   });
   window.siteHooks.after('renderAll', 'ui-delight', () => {
     if (page() === 'Home') requestAnimationFrame(() => enhanceHome(false));
-    else requestAnimationFrame(() => revealSections(false));
+    else requestAnimationFrame(() => revealSections());
   });
   if (page() === 'Home') requestAnimationFrame(() => enhanceHome(true));
 
@@ -435,6 +452,17 @@
     playerSelect.after(wrap);
     playerSelect.parentElement.classList.add('fl-player-row'); // styled in ui-theme.css (a class, not a slow :has() rule)
     playerSelect.parentElement.parentElement?.classList.add('fl-player-head'); // the title row it sits in (wraps on phones and tablets)
+    // Phones and tablets show 球員檔案 one section at a time (ui-comfort.js), so the switcher moves to the top of the page,
+    // above every section, where it is always at hand; the desktop keeps it in the first section's title row.
+    const playerRow = playerSelect.parentElement, playerHome = playerRow.parentElement, playerNext = playerRow.nextSibling;
+    const profilePanel = document.getElementById('panelProfile');
+    const compact = window.matchMedia('(max-width: 1279.98px)');
+    const placePlayerRow = () => {
+      if (compact.matches && profilePanel && playerRow.parentElement !== profilePanel) { profilePanel.prepend(playerRow); playerRow.classList.add('fl-player-top'); }
+      else if (!compact.matches && playerRow.parentElement !== playerHome) { playerHome.insertBefore(playerRow, playerNext); playerRow.classList.remove('fl-player-top'); }
+    };
+    compact.addEventListener('change', placePlayerRow);
+    placePlayerRow();
     wrap.addEventListener('click', event => { const b = event.target.closest('[data-step]'); if (b) stepPlayer(Number(b.dataset.step)); });
     // A horizontal swipe on the profile's first card (the photo and basic numbers), not on charts or tables.
     let sx = 0, sy = 0, st = 0, tracking = false;
@@ -454,6 +482,14 @@
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); stepPlayer(event.key === 'ArrowRight' ? 1 : -1); }
     });
   }
+
+  // ---------- 全隊總覽 toolbar: the two views become one segmented control, the actions one quiet row (ui-theme.css) ----------
+  document.getElementById('tabSummaryBtn')?.parentElement.classList.add('fl-seg');
+  document.getElementById('toggleAddLogBtn')?.parentElement.classList.add('fl-actions');
+  // 比賽場記: the review and the spray chart moved out (賽事分析; 數據分析 → 全隊落點 has the same spray chart with more
+  // filters), so its sub-page switch is gone and 場記 is the live scorer only. The lineup loaders: a quiet row of actions.
+  document.getElementById('btnScoreSubLive')?.parentElement.classList.add('fl-sb-switch');
+  document.querySelector('button[onclick^="loadLineupIntoGameSetup"]')?.parentElement.classList.add('fl-actions');
 
   // ---------- Pull down to refresh (installed app on touch screens; browsers already have their own) ----------
   const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;

@@ -106,7 +106,7 @@
   const afterPaint = fn => requestAnimationFrame(() => setTimeout(fn, 0));
   const soon = fn => (lastPointer === 'touch' || lastPointer === 'pen' ? afterPaint(fn) : fn());
   // Only these class changes matter to the layout passes; press feedback and lens bookkeeping do not.
-  const TRANSIENT = new Set(['ui-pressed', 'fl-lens-on', 'ui-open', 'is-visible']);
+  const TRANSIENT = new Set(['ui-pressed', 'fl-lens-on', 'ui-open', 'is-visible', 'is-docked']); // ui-tab-hidden is not: a shown section needs its tables measured
   const meaningful = records => records.some(r => {
     if (r.type !== 'attributes' || r.attributeName !== 'class') return true;
     const before = new Set((r.oldValue || '').split(/\s+/).filter(Boolean)), after = new Set(String(r.target.className?.baseVal ?? r.target.className ?? '').split(/\s+/).filter(Boolean));
@@ -316,6 +316,18 @@
   // Containers the stylesheet styles by what they hold get a class instead of a CSS :has() rule: a broad :has()
   // made every style recalculation of the page two to four times slower on phones.
   const EYEBROW = 'span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"]';
+  // An action group is one row of equal tiles when its longest label fits a tile on one line; otherwise two columns (a
+  // lone last tile spans both). Decided from the label lengths and the screen width, no layout read.
+  function fitActions(group) {
+    const buttons = [...group.children].filter(el => el.tagName === 'BUTTON' && !el.matches('[onclick^="undoGameFromTeamLogs"], [onclick="syncReviewGameToTeamLogs()"]'));
+    if (!buttons.length) return;
+    const longest = Math.max(...buttons.map(b => [...b.textContent.replace(/\s+/g, '')].length));
+    const avail = Math.min(window.innerWidth, 1240) - (window.innerWidth >= 1280 ? 340 : 48);
+    const per = (avail - (buttons.length - 1) * 8) / buttons.length - 22;
+    const cols = group.classList.contains('ui-review-bar') && buttons.length > 3 && window.innerWidth < 768 ? 2 : longest * 13.5 <= per ? buttons.length : 2;
+    if (group.dataset.cols !== String(cols)) group.dataset.cols = String(cols);
+  }
+  window.addEventListener('resize', () => workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions));
   const CHIP = 'main .justify-between > div > button.text-xs.py-1';
   const within = (root, selector) => [...(root.matches(selector) ? [root] : []), ...root.querySelectorAll(selector)];
   function markHolders(root = workspace) { // only the new content: this runs on every change while the page renders
@@ -328,6 +340,83 @@
       const cell = num.parentElement;
       if (cell && cell.parentElement && cell.parentElement.classList.contains('grid')) cell.classList.add('ui-num-cell');
     });
+    // 場記覆盤與編輯: its row of status and actions is laid out as one tidy bar (ui-theme.css).
+    within(root, 'button[onclick="deleteReviewGame()"]').forEach(b => b.parentElement?.classList.add('ui-review-bar'));
+    // Groups of action buttons become one row of equal action tiles (ui-theme.css), never a ragged wrap.
+    within(root, '[data-ga="replay"], [data-ga="download-image"], [data-ga="share-video"]').forEach(b => b.parentElement?.classList.add('fl-action-grid'));
+    workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions);
+    // A note in parentheses at the end of a short label or button (「本隊安打率 14%（不含全壘打）」, 「無 DH 制 (10 棒・全打全守)」,
+    // 「廖仲毅 (全方位廣角型)」) becomes a second, smaller line of its own, instead of the whole label breaking
+    // wherever the width runs out. The text itself is unchanged.
+    within(root, 'main :is(span, div, b, button, label, h3, h4)').forEach(el => {
+      if (el.querySelector(':scope > .ui-note') || el.classList.contains('ui-note') || el.closest('td, th, select, option, .fl-actions, .fl-action-grid, .ui-review-bar')) return;
+      const nodes = [...el.childNodes];
+      const last = nodes.filter(n => n.nodeType !== 3 || n.nodeValue.trim()).pop();
+      // The note may already be its own element (「無 DH 制 <span>(10 棒・全打全守)</span>」): mark it as the note.
+      if (last && last.nodeType === 1 && nodes.length > 1 && /^[（(][^()（）]{1,26}[)）]$/.test(last.textContent.trim()) && !last.children.length) { last.classList.add('ui-note'); return; }
+      if (!last || last.nodeType !== 3 || el.textContent.trim().length > 40) return;
+      // 「<b>廖仲毅</b> (全方位廣角型)」: the note follows an element.
+      const alone = last.nodeValue.match(/^\s*([（(][^()（）]{1,26}[)）])\s*$/);
+      if (alone && last.previousSibling) {
+        const note = document.createElement('span');
+        note.className = 'ui-note';
+        note.textContent = last.nodeValue;
+        last.replaceWith(note);
+        return;
+      }
+      const m = last.nodeValue.match(/^([\s\S]*?\S)\s*([（(][^()（）]{1,26}[)）])\s*$/);
+      if (!m || !/[\u4e00-\u9fff0-9%]/.test(m[1]) || /^[\s(（]*[A-Za-z]/.test(m[2].slice(1))) return; // English glosses: .ui-en
+      const note = document.createElement('span');
+      note.className = 'ui-note';
+      note.textContent = m[2];
+      last.nodeValue = last.nodeValue.slice(0, last.nodeValue.length - last.nodeValue.trimEnd().length) ? m[1] : m[1];
+      last.after(note);
+    });
+    // A short caption made of phrases (「推薦打線 10.84 分・約 3.7 局」, 「依打擊側判定拉／推；球場落點保持原方向」, 「加權創造
+    // wRC+」) keeps each phrase whole: when it does not fit on one line it breaks only between phrases, never inside one.
+    // Re-checked each time the text is replaced (some captions are rewritten in place).
+    within(root, 'main :is(span, p, div, .ui-note)').forEach(el => {
+      if (el.children.length || el.closest('td, th, button, select, option, .ui-seg') || el.matches('.font-bold, .font-semibold, .font-black')) return;
+      const text = el.textContent.trim();
+      if (text.length < 8 || text.length > 28 || /[（(。]/.test(text)) return; // glosses are handled above; sentences flow as prose
+      // after a separator, or at the space between Chinese and a metric's code
+      const parts = text.split(/(?<=[・；，：、|｜])|(?<=[\u4e00-\u9fff]) (?=[A-Za-z])/).filter(Boolean);
+      if (parts.length < 2) return;
+      el.textContent = '';
+      parts.forEach((part, i) => {
+        const seg = document.createElement('span');
+        seg.className = 'ui-seg';
+        seg.textContent = part;
+        if (i && /[\u4e00-\u9fff]$/.test(parts[i - 1]) && /^[A-Za-z]/.test(part)) el.append(' ');
+        el.append(seg);
+      });
+    });
+    // 「打線賽制：」 and the like: a label that introduces a row of buttons sits above them on phones.
+    within(root, 'main :is(span, label)').forEach(el => {
+      const text = el.textContent.trim();
+      if (text.length > 14 || !/[：:]$/.test(text) || el.parentElement?.children.length < 2) return;
+      el.parentElement.classList.add('ui-label-row');
+    });
+    // 生涯紀錄: record card grids (an odd last card spans the row on phones, see ui-theme.css).
+    within(root, '[data-record-card]').forEach(card => card.parentElement?.classList.add('ui-record-grid'));
+    // An English gloss in parentheses after a Chinese title (「攻擊指數 (Production)」) is set apart, so phones can drop it
+    // instead of breaking the title over two lines.
+    within(root, 'main section :is(h2, h3, h4, span.font-semibold, span.font-bold, span.font-black)').forEach(el => {
+      if (el.dataset.uiGloss || el.textContent.length > 48) return;
+      el.dataset.uiGloss = '';
+      for (const node of el.childNodes) {
+        if (node.nodeType !== 3) continue;
+        const m = node.nodeValue.match(/^([\s\S]*?[\u4e00-\u9fff][\s\S]*?)(\s*[（(][A-Za-z][A-Za-z0-9 .&:+\-\/,'×%]*[)）])(\s*)$/);
+        if (!m) continue;
+        const gloss = document.createElement('span');
+        gloss.className = 'ui-en';
+        gloss.textContent = m[2];
+        node.nodeValue = m[1];
+        node.after(gloss);
+        if (m[3]) gloss.after(document.createTextNode(m[3]));
+        break;
+      }
+    });
     // A chart that is not already inside a data card gets one (ui-theme.css: content groups sit on a material).
     within(root, 'main section canvas').forEach(canvas => {
       const box = canvas.parentElement;
@@ -337,7 +426,7 @@
   let scheduled = false;
   new MutationObserver(records => {
     // At once (writes only): the layout must be right the moment new content lands.
-    records.forEach(r => r.addedNodes.forEach(node => { if (node.nodeType === 1) markHolders(node); }));
+    records.forEach(r => r.addedNodes.forEach(node => { const el = node.nodeType === 1 ? node : node.parentElement; if (el && workspace.contains(el)) markHolders(el); }));
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(() => { scheduled = false; enhanceTables(false); }); // measured after the paint (queueComfort)
@@ -417,15 +506,107 @@
     text = text.replace(/^[A-Za-z0-9 .&:+\-/]+(?=[一-鿿])/, '').trim() || text;
     return text.length > 11 ? `${text.slice(0, 10)}…` : text;
   };
+  // ---------- Phones and tablets: a long page shows one section at a time ----------
+  // The chip row becomes the page's tabs (tap one, or swipe the page sideways); the other sections wait, hidden, with
+  // everything in them. The desktop keeps the long page with jump chips. Each page reopens on the section left last.
+  // 比賽場記 stays one page (the scorer must see everything). Code that scrolls to something inside a waiting section
+  // (search, links) brings that section forward first. Off in the isolated test preview unless ?tabs.
+  const tabQuery = window.matchMedia('(max-width: 1279.98px)');
+  const appConfig = window.BASEBALL_APP_CONFIG || {};
+  let tabMode = false, activeTab = 0;
+  const tabMemory = {}; // page -> label of the section last shown
+  const pageKey = () => document.body.dataset.page || '';
+  function tabsWanted() {
+    return appConfig.sectionTabs !== false && tabQuery.matches && pageKey() !== 'Scorebook'
+      && sectionTargets.length >= 2 && sectionTargets.every(t => t.tagName === 'SECTION');
+  }
+  function showTab(index, how = '') {
+    const chips = [...sectionBar.querySelectorAll('button')];
+    const dir = index > activeTab ? 1 : -1;
+    activeTab = Math.max(0, Math.min(sectionTargets.length - 1, index));
+    tabMemory[pageKey()] = chips[activeTab]?.textContent;
+    sectionTargets.forEach((section, i) => {
+      const hide = i !== activeTab;
+      if (section.classList.contains('ui-tab-hidden') !== hide) section.classList.toggle('ui-tab-hidden', hide);
+    });
+    chips.forEach((chip, i) => {
+      chip.setAttribute('role', 'tab');
+      chip.setAttribute('aria-selected', String(i === activeTab));
+      if (i === activeTab) chip.setAttribute('aria-current', 'true'); else chip.removeAttribute('aria-current');
+    });
+    const chip = chips[activeTab];
+    if (chip) sectionBar.scrollTo({left: chip.offsetLeft - (sectionBar.clientWidth - chip.offsetWidth) / 2, behavior: how ? 'smooth' : 'auto'});
+    if (!how) return;
+    // Back to where the section starts (just under the docked bars), and the new section slides in from its side.
+    const target = sectionTargets[activeTab];
+    const top = target.getBoundingClientRect().top + window.scrollY - (stickyBottom() + 12);
+    if (window.scrollY > top) window.scrollTo({top, behavior: 'instant'});
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && how === 'swipe') {
+      target.animate([{opacity: 0, transform: `translate3d(${dir * 60}px, 0, 0)`}, {opacity: 1, transform: 'none'}], {duration: 420, easing: 'cubic-bezier(.16, 1, .3, 1)'});
+    }
+  }
+  function applyTabs() {
+    const want = tabsWanted();
+    if (!want) {
+      if (tabMode) {
+        sectionTargets.forEach(section => section.classList.remove('ui-tab-hidden'));
+        workspace.querySelectorAll('.ui-tab-hidden').forEach(el => el.classList.remove('ui-tab-hidden'));
+        sectionBar.querySelectorAll('button').forEach(chip => { chip.removeAttribute('role'); chip.removeAttribute('aria-selected'); });
+        sectionBar.removeAttribute('role');
+        document.body.classList.remove('ui-tabbed');
+      }
+      tabMode = false;
+      return;
+    }
+    tabMode = true;
+    sectionBar.setAttribute('role', 'tablist');
+    document.body.classList.add('ui-tabbed');
+    const labels = [...sectionBar.querySelectorAll('button')].map(chip => chip.textContent);
+    const remembered = labels.indexOf(tabMemory[pageKey()]);
+    activeTab = remembered >= 0 ? remembered : 0;
+    showTab(activeTab);
+  }
+  tabQuery.addEventListener('change', () => { if (sectionTargets.length) applyTabs(); });
+  // Swiping the page sideways moves to the next or previous section (not on tables, charts, fields or the player card,
+  // which have their own sideways gestures).
+  let swipe = null;
+  workspace.addEventListener('touchstart', event => {
+    swipe = null;
+    if (!tabMode || event.touches.length !== 1) return;
+    if (event.target.closest('.ui-table-scroll, .overflow-x-auto, canvas, input, select, textarea, #panelProfile > section:first-of-type, .ga-picker, .fl-subnav, .ui-section-bar')) return;
+    const chart = event.target.closest('svg'); // a chart drawn in SVG (spray charts) has its own gestures; an icon does not
+    if (chart && chart.getBoundingClientRect().width > 120) return;
+    swipe = {x: event.touches[0].clientX, y: event.touches[0].clientY, t: performance.now()};
+  }, {passive: true});
+  workspace.addEventListener('touchend', event => {
+    if (!swipe || !tabMode) return;
+    const t = event.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
+    const quick = performance.now() - swipe.t < 650;
+    swipe = null;
+    if (!quick || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.8) return;
+    const next = activeTab + (dx < 0 ? 1 : -1);
+    if (next >= 0 && next < sectionTargets.length) showTab(next, 'swipe');
+  }, {passive: true});
+  // Anything that scrolls to something inside a waiting section brings that section forward first.
+  const nativeIntoView = Element.prototype.scrollIntoView;
+  Element.prototype.scrollIntoView = function (...args) {
+    if (tabMode) {
+      const index = sectionTargets.findIndex(section => section.contains(this));
+      if (index >= 0 && index !== activeTab) showTab(index);
+    }
+    return nativeIntoView.apply(this, args);
+  };
   function buildSections() {
     const panel = workspace.querySelector('[id^="panel"]:not(.hidden)');
-    const found = panel ? [...panel.querySelectorAll('section')].filter(s => visible(s) && s.offsetHeight > 120 && !s.parentElement.closest('section')) : [];
+    // A section waiting behind a tab (phones, tablets) still counts: hidden by us, not gone.
+    const waiting = s => s.classList.contains('ui-tab-hidden') && sectionTargets.includes(s);
+    const found = panel ? [...panel.querySelectorAll('section')].filter(s => (waiting(s) || (visible(s) && s.offsetHeight > 120)) && !s.parentElement.closest('section')) : [];
     let items = found.map(section => ({section, label: sectionLabel(section)})).filter(item => item.label);
     // A page that is one long section (the glossary) jumps between its own sub-headings instead.
     if (items.length < 2 && found.length === 1) items = [...found[0].querySelectorAll('h3')].filter(visible).map(h => ({section: h, label: sectionLabel(h)})).filter(item => item.label);
     const key = items.map(item => item.label).join('|');
     if (sectionBar.dataset.key === key && sectionTargets.length === items.length &&
-        sectionTargets.every((section, index) => section.isConnected && section === items[index].section)) return;
+        sectionTargets.every((section, index) => section.isConnected && section === items[index].section)) { if (tabMode !== tabsWanted()) applyTabs(); return; }
     sectionBar.dataset.key = key;
     sectionTargets = items.map(item => item.section);
     sectionBar.hidden = items.length < 2;
@@ -436,6 +617,7 @@
       chip.textContent = item.label;
       chip.dataset.index = index;
       chip.addEventListener('click', () => {
+        if (tabMode) { showTab(index, 'tap'); return; }
         // Land just below the sticky chip row.
         const target = sectionTargets[index];
         if (!target?.isConnected) return;
@@ -455,12 +637,13 @@
       });
       sectionBar.append(chip);
     });
+    applyTabs();
     markSection();
   }
   // The chip row docks under the app's top bar, so landing positions count both.
   const stickyBottom = () => (parseFloat(getComputedStyle(sectionBar).top) || 0) + sectionBar.offsetHeight;
   function markSection() {
-    if (sectionBar.hidden || !sectionTargets.length) return;
+    if (sectionBar.hidden || !sectionTargets.length || tabMode) return;
     let current = 0;
     // At the very bottom the last sections can never reach the top, so pick the last one on screen.
     const atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
@@ -482,7 +665,8 @@
   backTop.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
   backTop.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
   document.body.append(backTop);
-  let scrollQueued = false, lastScrollY = 0;
+  let scrollQueued = false, lastScrollY = 0, dockTop = null;
+  window.addEventListener('resize', () => { dockTop = null; });
   window.addEventListener('scroll', () => {
     if (scrollQueued) return;
     scrollQueued = true;
@@ -494,6 +678,12 @@
       if (up || down) lastScrollY = y;
       if (up) backTop.classList.toggle('is-visible', phone() && y > window.innerHeight * 1.2);
       if (down || y <= window.innerHeight * 1.2) backTop.classList.remove('is-visible');
+      // Docked under the top bar (ui-theme.css gives it glass only then). Layout is clean here: the read costs nothing.
+      if (!sectionBar.hidden) {
+        if (dockTop === null) dockTop = parseFloat(getComputedStyle(sectionBar).top) || 0;
+        const docked = y > 0 && sectionBar.getBoundingClientRect().top <= dockTop + 1;
+        if (sectionBar.classList.contains('is-docked') !== docked) sectionBar.classList.toggle('is-docked', docked);
+      }
       markSection();
     });
   }, {passive: true});

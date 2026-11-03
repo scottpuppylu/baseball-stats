@@ -1427,66 +1427,66 @@ html.ui-flight #flPull.is-busy svg { animation: fl-spin .8s linear infinite; }
    their labels step back (small, tracked, dimmer). Boxes inside boxes lose their frames and become soft glass tints
    separated by hairlines; tag pills become glass chips; section titles share one white-to-ice gradient (colour stays on
    the small tags); tables lose the grid; fields are glass wells with a light ring on focus. Colours of numbers are kept. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section {
-  --fl-num-glow: 0 0 18px rgba(150, 200, 255, .22), 0 1px 2px rgba(0, 0, 0, .6);
+html.ui-flight body[data-page]:not([data-page="Home"]) main section {
+  --fl-num-glow: 0 1px 2px rgba(0, 0, 0, .55); /* no glow: on a clipped (truncated) box it was cut into a visible rectangle */
 }
 /* Numbers: the headline of every small box. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section span.font-mono.font-black.block {
+html.ui-flight body[data-page]:not([data-page="Home"]) main section span.font-mono.font-black.block {
   font-size: clamp(19px, 5.2vw, 26px) !important; line-height: 1.15; font-weight: 700 !important; letter-spacing: -.01em;
   margin-top: 2px; text-shadow: var(--fl-num-glow);
 }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section span.font-mono.font-black.block.text-white {
+html.ui-flight body[data-page]:not([data-page="Home"]) main section span.font-mono.font-black.block.text-white {
   background: linear-gradient(180deg, #ffffff 30%, #c9dcf5); -webkit-background-clip: text; background-clip: text; color: transparent !important;
-  text-shadow: none; filter: drop-shadow(0 0 14px rgba(150, 200, 255, .2));
+  text-shadow: none;
 }
 /* The overview's headline cards: bigger still. */
-html.ui-flight #teamSummaryCards span.font-black.block { font-size: clamp(26px, 7vw, 34px) !important; line-height: 1.1; font-weight: 700 !important; letter-spacing: -.02em; text-shadow: 0 0 22px rgba(124, 192, 255, .3), 0 1px 2px rgba(0, 0, 0, .6); }
+html.ui-flight #teamSummaryCards span.font-black.block { font-size: clamp(26px, 7vw, 34px) !important; line-height: 1.1; font-weight: 700 !important; letter-spacing: -.02em; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); }
 html.ui-flight #teamSummaryCards span.font-semibold.block { font-size: 11.5px !important; letter-spacing: .1em; color: var(--fl-ink-3) !important; }
 /* Their labels. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section span[class*="text-[10px]"].block {
+html.ui-flight body[data-page]:not([data-page="Home"]) main section span[class*="text-[10px]"].block {
   font-size: 11px !important; letter-spacing: .08em; color: var(--fl-ink-3) !important;
 }
 /* Boxes inside a panel: soft glass, no frame; the column dividers become fading hairlines. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is(div, section)[class*="rounded"][class*="border"]:not(button):not([class*="rounded-full"]) {
+html.ui-flight body[data-page]:not([data-page="Home"]) main section :is(div, section)[class*="rounded"][class*="border"]:not(button):not([class*="rounded-full"]) {
   border-color: transparent !important; border-radius: 18px !important;
 }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section div.grid > div.border-l {
+html.ui-flight body[data-page]:not([data-page="Home"]) main section div.grid > div.border-l {
   border-left-color: transparent !important;
   background-image: linear-gradient(180deg, transparent, rgba(255, 255, 255, .14) 30%, rgba(255, 255, 255, .14) 70%, transparent);
   background-size: 1px 100%; background-repeat: no-repeat; background-position: left center;
 }
 /* Tag pills (OPS / OPS+, SDI 2.0 …): glass chips that keep their colour. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section span[class*="text-[10px]"][class*="rounded"][class*="border"]:not(.block) {
+html.ui-flight body[data-page]:not([data-page="Home"]) main section span[class*="text-[10px]"][class*="rounded"][class*="border"]:not(.block) {
   border-radius: 999px !important; padding: 3px 9px !important; letter-spacing: .04em;
   background: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03)) !important;
   border-color: rgba(255, 255, 255, .14) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 2px 8px -4px rgba(0, 0, 0, .6);
 }
 /* Section titles: one calm gradient instead of a different colour per section. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is(h2, h3) {
+html.ui-flight body[data-page]:not([data-page="Home"]) main section :is(h2, h3) {
   background: linear-gradient(180deg, #ffffff 35%, #bcd3f0) !important; -webkit-background-clip: text !important; background-clip: text !important;
   color: transparent !important; letter-spacing: .06em;
   text-shadow: none !important; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55)); /* a text shadow would paint over the gradient fill */
 }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is(h2, h3) * { color: inherit; }
+html.ui-flight body[data-page]:not([data-page="Home"]) main section :is(h2, h3) * { color: inherit; }
 /* Tables: no grid, a quiet header, hairlines between rows, the row under the mouse lights up. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table thead th {
+html.ui-flight body[data-page]:not([data-page="Home"]) main section table thead th {
   background: rgba(14, 16, 21, .72) !important; color: var(--fl-ink-3) !important; font-size: 11.5px; font-weight: 600; letter-spacing: .1em;
   border-bottom: 1px solid rgba(255, 255, 255, .12) !important;
 }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table :is(td, th) { border-left-color: transparent !important; border-right-color: transparent !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr { border-color: rgba(255, 255, 255, .06) !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr:nth-child(odd) { background-color: transparent; }
+html.ui-flight body[data-page]:not([data-page="Home"]) main section table :is(td, th) { border-left-color: transparent !important; border-right-color: transparent !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) main section table tbody tr { border-color: rgba(255, 255, 255, .06) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) main section table tbody tr:nth-child(odd) { background-color: transparent; }
 @media (hover: hover) and (pointer: fine) {
-  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr { transition: background-color .25s var(--fl-ease); }
-  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr:hover { background-color: rgba(124, 192, 255, .08) !important; }
+  html.ui-flight body[data-page]:not([data-page="Home"]) main section table tbody tr { transition: background-color .25s var(--fl-ease); }
+  html.ui-flight body[data-page]:not([data-page="Home"]) main section table tbody tr:hover { background-color: rgba(124, 192, 255, .08) !important; }
 }
 /* Fields: glass wells, a soft light ring on focus. */
-html.ui-flight body[data-page]:not([data-page="Scorebook"]) main :is(select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"])) {
+html.ui-flight body[data-page] main :is(select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"])) {
   background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .03)) !important;
   border-color: rgba(255, 255, 255, .14) !important; border-radius: 14px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 6px 18px -12px rgba(0, 0, 0, .8);
 }
-html.ui-flight body[data-page]:not([data-page="Scorebook"]) main :is(select, input):focus {
+html.ui-flight body[data-page] main :is(select, input):focus {
   border-color: rgba(124, 192, 255, .75) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 0 4px rgba(124, 192, 255, .18), 0 0 24px rgba(124, 192, 255, .18) !important;
 }
 @media (prefers-contrast: more) {
@@ -1502,7 +1502,7 @@ html.ui-flight body[data-page]:not([data-page="Scorebook"]) main :is(select, inp
    - text levels for reading data: numbers brightest and largest, labels second, notes third; the colours that tell
      data apart stay. Fonts unchanged.
    No backdrop blur in the content layer: scrolling stays light (the scene behind is dimmed by its veil instead). */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) {
+html.ui-flight body[data-page]:not([data-page="Home"]) {
   --fl-material: linear-gradient(180deg, rgba(28, 32, 40, .74), rgba(16, 18, 24, .74));
   --fl-material-edge: inset 0 1px 0 rgba(255, 255, 255, .075), inset 0 0 0 .5px rgba(255, 255, 255, .05), 0 22px 44px -30px rgba(0, 0, 0, .95);
   --fl-label-2: rgba(232, 238, 246, .66);
@@ -1510,73 +1510,73 @@ html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook
   --fl-separator: rgba(255, 255, 255, .085);
 }
 /* Sections: no box. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace :is(main section:not(.grid), main section.grid > div:not([class*="bg-"])) {
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace :is(main section:not(.grid), main section.grid > div:not([class*="bg-"])) {
   background: none !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important;
   -webkit-backdrop-filter: none !important; backdrop-filter: none !important; --fl-lens-gate: 0;
   text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
 }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main > [id^="panel"] > section:not(.grid) { padding-left: 2px !important; padding-right: 2px !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main > [id^="panel"] > :not([hidden]) ~ :not([hidden]) { margin-top: 52px !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main > [id^="panel"] > section:not(.grid) { padding-left: 2px !important; padding-right: 2px !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main > [id^="panel"] > :not([hidden]) ~ :not([hidden]) { margin-top: 52px !important; }
 @media (max-width: 767px) {
-  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main > [id^="panel"] > :not([hidden]) ~ :not([hidden]) { margin-top: 26px !important; } /* phones: space matters (density ceiling in ui-mobile-comfort) */
+  html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main > [id^="panel"] > :not([hidden]) ~ :not([hidden]) { margin-top: 26px !important; } /* phones: space matters (density ceiling in ui-mobile-comfort) */
 }
 /* Section titles carry the page now. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section:not(.grid) h2 { font-size: clamp(21px, 5.6vw, 27px) !important; line-height: 1.3; font-weight: 700 !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section :is(p, span).text-xs:is(.text-slate-400, .text-slate-500) { color: var(--fl-label-2) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section:not(.grid) h2 { font-size: clamp(21px, 5.6vw, 27px) !important; line-height: 1.3; font-weight: 700 !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section :is(p, span).text-xs:is(.text-slate-400, .text-slate-500) { color: var(--fl-label-2) !important; }
 /* Data groups: thick material, rounded, no border. The overview's headline cards too. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]):not(button):not(input):not(select):not(textarea):not(table):not(thead):not(tbody):not(tr):not(td):not(th),
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace :is(main section.grid > div[class*="bg-"], #teamSummaryCards > div),
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section .ui-chart-card {
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]):not(button):not(input):not(select):not(textarea):not(table):not(thead):not(tbody):not(tr):not(td):not(th),
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace :is(main section.grid > div[class*="bg-"], #teamSummaryCards > div),
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section .ui-chart-card {
   background: var(--fl-material) !important; border: 0 !important; border-radius: 22px !important;
   box-shadow: var(--fl-material-edge) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; --fl-lens-gate: 0;
   text-shadow: none;
 }
 /* Inside a card: a faint tint, no frame, no second shadow. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]) :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"], .ui-chart-card):not(button):not(input):not(select):not(textarea):not(table):not(thead):not(tbody):not(tr):not(td):not(th) {
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]) :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"], .ui-chart-card):not(button):not(input):not(select):not(textarea):not(table):not(thead):not(tbody):not(tr):not(td):not(th) {
   background: rgba(255, 255, 255, .045) !important; box-shadow: none !important; border-radius: 16px !important;
 }
 /* Tables: a card of their own with hairlines between rows (unless already inside a card). */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section .ui-table-scroll {
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section .ui-table-scroll {
   background: var(--fl-material) !important; border: 0 !important; border-radius: 20px; box-shadow: var(--fl-material-edge); text-shadow: none;
 }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section :is([class*="bg-slate-9"], [class*="bg-slate-8"]) .ui-table-scroll { background: none !important; box-shadow: none; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section table thead th { background: rgba(16, 18, 24, .92) !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section table tbody tr { border-bottom: 1px solid var(--fl-separator) !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section table tbody tr:last-child { border-bottom: 0 !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section :is([class*="bg-slate-9"], [class*="bg-slate-8"]) .ui-table-scroll { background: none !important; box-shadow: none; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section table thead th { background: rgba(16, 18, 24, .92) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section table tbody tr { border-bottom: 1px solid var(--fl-separator) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section table tbody tr:last-child { border-bottom: 0 !important; }
 /* Buttons in the content: borderless pills; coloured ones keep their tint. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section button:is(.text-xs, .text-sm):not([role="option"]):not(.fl-step > button) {
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section button:is(.text-xs, .text-sm):not([role="option"]):not(.fl-step > button) {
   border-color: transparent !important; border-radius: 999px !important;
 }
 @media (prefers-contrast: more) {
-  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) { --fl-material: #15181d; }
+  html.ui-flight body[data-page]:not([data-page="Home"]) { --fl-material: #15181d; }
 }
 /* 賽事分析 (game-analysis.js): the same language. Stat cells, moments, half-innings and batters are material cards
    without frames; "ours", the MVP and the chosen game are tinted instead of outlined; the score leads. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(.ga-stat, .ga-moment, .ga-half, .ga-batter, .ga-game) {
+html.ui-flight body[data-page]:not([data-page="Home"]) :is(.ga-stat, .ga-moment, .ga-half, .ga-batter, .ga-game) {
   background: var(--fl-material) !important; border: 0 !important; border-radius: 20px; box-shadow: var(--fl-material-edge); text-shadow: none;
 }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-half-ours { background: linear-gradient(180deg, rgba(56, 189, 248, .16), rgba(56, 189, 248, .05)), var(--fl-material) !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-batter.ga-mvp { background: linear-gradient(180deg, rgba(251, 191, 36, .16), rgba(251, 191, 36, .05)), var(--fl-material) !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-game.ga-on { background: linear-gradient(180deg, rgba(124, 192, 255, .22), rgba(124, 192, 255, .08)), var(--fl-material) !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-stat b { font-size: 26px; font-weight: 700; text-shadow: 0 0 18px rgba(150, 200, 255, .22); }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-stat span { letter-spacing: .08em; color: var(--fl-label-3); }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-score { font-size: clamp(48px, 13vw, 64px); font-weight: 700; letter-spacing: -.02em; text-shadow: 0 0 30px rgba(150, 200, 255, .25), 0 2px 4px rgba(0, 0, 0, .6); }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(.ga-line, .ga-table) :is(th, td) { border-bottom-color: var(--fl-separator); }
+html.ui-flight body[data-page]:not([data-page="Home"]) .ga-half-ours { background: linear-gradient(180deg, rgba(56, 189, 248, .16), rgba(56, 189, 248, .05)), var(--fl-material) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) .ga-batter.ga-mvp { background: linear-gradient(180deg, rgba(251, 191, 36, .16), rgba(251, 191, 36, .05)), var(--fl-material) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) .ga-game.ga-on { background: linear-gradient(180deg, rgba(124, 192, 255, .22), rgba(124, 192, 255, .08)), var(--fl-material) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) .ga-stat b { font-size: 26px; font-weight: 700; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); }
+html.ui-flight body[data-page]:not([data-page="Home"]) .ga-stat span { letter-spacing: .08em; color: var(--fl-label-3); }
+html.ui-flight body[data-page]:not([data-page="Home"]) .ga-score { font-size: clamp(48px, 13vw, 64px); font-weight: 700; letter-spacing: -.02em; text-shadow: 0 2px 4px rgba(0, 0, 0, .6); }
+html.ui-flight body[data-page]:not([data-page="Home"]) :is(.ga-line, .ga-table) :is(th, td) { border-bottom-color: var(--fl-separator); }
 /* Layout after the frames went (2026/11/03): one leading edge for titles, notes and cards; numbers sized by their own
    cell; the overview's headline cards in three roomy columns on wider screens; content no wider than reads well. */
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace .ui-num-cell { container-type: inline-size; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section .ui-num-cell > span.font-mono.font-black.block {
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace .ui-num-cell { container-type: inline-size; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section .ui-num-cell > span.font-mono.font-black.block {
   font-size: clamp(16px, 21cqi, 26px) !important; white-space: nowrap;
 }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section:not(.grid) > :first-child :is(h2, h3, p) { margin-left: 0 !important; padding-left: 0 !important; }
-html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section:not(.grid) > :first-child { padding-left: 0 !important; margin-bottom: 14px; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section:not(.grid) > :first-child :is(h2, h3, p) { margin-left: 0 !important; padding-left: 0 !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section:not(.grid) > :first-child { padding-left: 0 !important; margin-bottom: 14px; }
 @media (min-width: 768px) {
   html.ui-flight #teamSummaryCards { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 14px !important; }
   html.ui-flight #teamSummaryCards > div { padding: 20px 22px !important; min-height: 128px; }
   html.ui-flight #teamSummaryCards span.font-black.block { font-size: clamp(30px, 2.6vw, 40px) !important; }
 }
 @media (min-width: 1280px) {
-  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main { max-width: 1240px; margin-left: auto !important; margin-right: auto !important; }
+  html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main { max-width: 1240px; margin-left: auto !important; margin-right: auto !important; }
 }
 /* Motion details (2026/11/03): Scroll Float titles, Click Spark, spotlight on data cards (mouse). */
 html.ui-flight .fl-floating { background: none !important; color: #f3f6fa !important; -webkit-text-fill-color: currentColor; }
@@ -1584,7 +1584,7 @@ html.ui-flight .fl-fch { display: inline-block; transform-origin: 50% 0; will-ch
 html.ui-flight .fl-click-spark { position: fixed; z-index: 2147483000; width: 2px; height: 11px; border-radius: 2px; pointer-events: none; background: rgba(255, 255, 255, .9); box-shadow: 0 0 6px rgba(255, 255, 255, .6); }
 html.ui-flight .fl-click-spark.is-nav { background: rgba(170, 210, 255, .95); box-shadow: 0 0 6px rgba(124, 192, 255, .7); }
 @media (hover: hover) and (pointer: fine) {
-  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace :is(#teamSummaryCards > div, .ga-stat, .ga-batter, .ga-moment, main section [class*="bg-slate-9"]:not(table *):not(button), main section [class*="bg-slate-8"]:not(table *):not(button)):hover {
+  html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace :is(#teamSummaryCards > div, .ga-stat, .ga-batter, .ga-moment, main section [class*="bg-slate-9"]:not(table *):not(button), main section [class*="bg-slate-8"]:not(table *):not(button)):hover {
     background-image: radial-gradient(380px circle at var(--fl-mx, 50%) var(--fl-my, 0%), rgba(124, 192, 255, .1), transparent 62%), var(--fl-material) !important;
   }
 }
@@ -1596,8 +1596,152 @@ html.ui-flight .fl-click-spark.is-nav { background: rgba(170, 210, 255, .95); bo
   html.ui-flight .fl-player-row > #playerSelect { flex: 1 1 auto; width: auto !important; max-width: none !important; }
 }
 @media (max-width: 767px) {
-  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section:not(.grid) > :first-child { margin-bottom: 10px; }
+  html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section:not(.grid) > :first-child { margin-bottom: 10px; }
 }
+/* Overview toolbar: the two views are one segmented control; the three actions are quiet buttons in one row, told apart by
+   their coloured label instead of loud fills. Same buttons, same handlers. */
+html.ui-flight .fl-seg { display: inline-flex !important; gap: 2px !important; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .1); }
+html.ui-flight .fl-seg > * + * { margin-left: 0 !important; }
+html.ui-flight .fl-seg > button { background: transparent !important; color: var(--fl-ink-2) !important; border: 0 !important; box-shadow: none !important; border-radius: 999px !important; padding: 8px 16px !important; font-size: 13px !important; min-height: 36px; }
+html.ui-flight .fl-seg > button[class*="bg-sky-600"] { background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .08)) !important; color: #fff !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 4px 12px -6px rgba(0, 0, 0, .7) !important; }
+html.ui-flight .fl-actions > #toggleAddLogBtn { color: #6ee7b7 !important; }
+html.ui-flight .fl-actions > #toggleAddPlayerBtn { color: #c4b5fd !important; }
+html.ui-flight .fl-actions > #downloadBackupBtn { color: var(--fl-ink-2) !important; }
+@media (max-width: 767px) {
+  html.ui-flight .fl-seg { display: flex !important; width: 100%; }
+  html.ui-flight .fl-seg > button { flex: 1 1 0; }
+}
+/* The section-chip bar is glass only while it is docked under the top bar; resting in the page it is just its chips
+   (a glass strip lying on the page dimmed a rectangle of the scene and refracted it: an odd "reflection"). */
+html.ui-flight .ui-section-bar:not(.is-docked) { background: transparent !important; box-shadow: none !important; border-bottom-color: transparent !important; --fl-glass-moving: none; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+/* Phones and tablets: one section at a time (ui-comfort.js); the chip row is the page's tab bar and stays glass. */
+html.ui-flight .ui-tab-hidden { display: none !important; }
+html.ui-flight body.ui-tabbed .ui-section-bar button[aria-selected="true"] { color: #fff !important; }
+html.ui-flight body.ui-tabbed .ui-section-bar { padding-top: 6px; padding-bottom: 6px; }
+/* 球員檔案 on phones and tablets: the player switcher heads the page (above every section tab). */
+html.ui-flight .fl-player-row.fl-player-top { display: flex !important; align-items: center; gap: 8px; width: 100%; margin: 0 0 6px !important; padding: 6px; border-radius: 999px; background: var(--fl-material, rgba(20, 22, 28, .7)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07); }
+html.ui-flight .fl-player-row.fl-player-top > label { display: none; }
+html.ui-flight .fl-player-row.fl-player-top > #playerSelect { flex: 1 1 auto; min-width: 0; }
+/* Toolbars everywhere (2026/11/03): tinted outline buttons in a row become quiet pills that keep their coloured label;
+   view switches are segmented controls. Not the live game's own scoring buttons (#activeGameContainer): those stay as
+   they are, large and colour-filled, for a scorer working fast. */
+html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section button[class*="border"]:is([class*="/20"], [class*="/30"], [class*="/40"]):not(#activeGameContainer *) {
+  background: rgba(255, 255, 255, .06) !important; border-color: transparent !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important; border-radius: 999px !important;
+}
+html.ui-flight #panelScorebook .fl-seg > [id^="btnScoreSub"] { background: transparent !important; color: var(--fl-ink-2) !important; box-shadow: none !important; border: 0 !important; border-radius: 999px !important; }
+html.ui-flight #panelScorebook .fl-seg > [id^="btnScoreSub"][class*="bg-amber"] { background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .08)) !important; color: #fff !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 4px 12px -6px rgba(0, 0, 0, .7) !important; }
+html.ui-flight #panelScorebook .fl-seg { border: 0 !important; }
+/* 場記 lineup rows: borderless material like every other card; the batter now up keeps its strong gold frame. */
+html.ui-flight .lineup-row:not(.lineup-current) { border-color: transparent !important; background: var(--fl-material, #141821) !important; border-radius: 18px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 14px 30px -24px rgba(0, 0, 0, .9); }
+/* 比賽場記 has one view now (the live scorer): no sub-page switch. */
+html.ui-flight #panelScorebook .fl-sb-switch { display: none !important; }
+/* 賽事分析: the game picker heads the page as a material card; the overview's parts are separated by space and a title. */
+html.ui-flight #panelGames > .ga-picker-block { padding: 16px; border-radius: 22px; background: var(--fl-material) !important; box-shadow: var(--fl-material-edge); margin-bottom: 8px; }
+html.ui-flight #panelGames .ga-sub { margin-top: 30px; }
+/* ---------- Action tiles (2026/11/03): every group of action buttons is a tidy grid of equal tiles ----------
+   Same look everywhere (the site's quiet glass fill, a bright label, colour only in the label and icon), the icon above
+   the label so the label has the tile's whole width. ui-comfort.js sets data-cols: one row when every label fits on one
+   line, otherwise two columns with a lone last tile spanning both; a group never wraps raggedly. Danger (刪除) is red,
+   the primary action (編輯) light blue. Same buttons, same handlers. */
+html.ui-flight :is(.fl-actions, .fl-action-grid, .ui-review-bar) { display: grid !important; gap: 8px !important; width: 100%; margin: 0 !important; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); }
+html.ui-flight :is(.fl-actions, .fl-action-grid, .ui-review-bar)[data-cols="1"] { --cols: 1; }
+html.ui-flight :is(.fl-actions, .fl-action-grid, .ui-review-bar)[data-cols="2"] { --cols: 2; }
+html.ui-flight :is(.fl-actions, .fl-action-grid, .ui-review-bar)[data-cols="3"] { --cols: 3; }
+html.ui-flight :is(.fl-actions, .fl-action-grid, .ui-review-bar)[data-cols="4"] { --cols: 4; }
+html.ui-flight :is(.fl-actions, .fl-action-grid, .ui-review-bar)[data-cols="5"] { --cols: 5; }
+html.ui-flight :is(.fl-actions, .fl-action-grid)[data-cols="2"] > button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+html.ui-flight :is(.fl-actions, .fl-action-grid, .ui-review-bar) > * { margin: 0 !important; }
+html.ui-flight :is(.fl-actions, .fl-action-grid, .ui-review-bar) > button {
+  display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 58px; padding: 8px 10px !important;
+  border: 0 !important; border-radius: 16px !important; background: linear-gradient(180deg, rgba(255, 255, 255, .085), rgba(255, 255, 255, .04)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 8px 20px -14px rgba(0, 0, 0, .9) !important; animation: none !important;
+  font-size: 13.5px !important; font-weight: 650 !important; line-height: 1.25; text-align: center; white-space: nowrap !important; width: 100%; min-width: 0;
+}
+html.ui-flight :is(.fl-actions, .fl-action-grid, .ui-review-bar) > button > span:first-child:not(:only-child) { font-size: 17px; line-height: 1; }
+html.ui-flight :is(.fl-actions, .fl-action-grid) > button:not([class*="text-"]) { color: var(--fl-ink) !important; }
+/* 場記覆盤與編輯: the status line on top (score state, and the log-sync switch), then the actions as tiles; 刪除 last. */
+html.ui-flight .ui-review-bar { align-items: stretch; }
+html.ui-flight .ui-review-bar > span { order: 0; grid-column: 1 / -1; display: flex !important; align-items: center; background: none !important; border: 0 !important; padding: 0 2px !important; font-size: 13px !important; color: var(--fl-ink-2) !important; white-space: nowrap; }
+html.ui-flight .ui-review-bar > button:is([onclick^="undoGameFromTeamLogs"], [onclick="syncReviewGameToTeamLogs()"]) { order: 0; grid-column: 1 / -1; flex-direction: row; min-height: 42px; border-radius: 999px !important; }
+html.ui-flight .ui-review-bar > button[onclick^="undoGameFromTeamLogs"] { color: #6ee7b7 !important; }
+html.ui-flight .ui-review-bar > button[onclick="syncReviewGameToTeamLogs()"] { color: #fcd34d !important; }
+html.ui-flight .ui-review-bar > button[onclick="toggleEditCurrentReviewGame()"] { order: 1; background: linear-gradient(180deg, rgba(124, 192, 255, .3), rgba(124, 192, 255, .14)) !important; color: #e6f2ff !important; }
+html.ui-flight .ui-review-bar > button { order: 2; }
+html.ui-flight .ui-review-bar > button[data-spray3d-game] { color: #6ee7b7 !important; }
+html.ui-flight .ui-review-bar > button[onclick="deleteReviewGame()"] { order: 9; color: #fb7185 !important; }
+html.ui-flight .fl-actions > #toggleAddLogBtn { color: #6ee7b7 !important; }
+html.ui-flight .fl-actions > #toggleAddPlayerBtn { color: #c4b5fd !important; }
+/* A label with a unit (「近 4 場（8 打席）」 + 「AVG / OBP / SLG」): two deliberate lines on phones, one line when there is room. */
+html.ui-flight .ui-pair { display: flex; flex-direction: column; gap: 1px; }
+html.ui-flight .ui-pair-unit { font-size: 11px; letter-spacing: .08em; color: var(--fl-label-3, #8b93a1); }
+/* Content touched by wrapping, set deliberately instead (phones): */
+@media (max-width: 767px) {
+  /* a card's header row (title, then a badge or note on the right) stacks: title, and the note as a line under it */
+  html.ui-flight body[data-page]:not([data-page="Home"]) main section :is([class*="bg-slate-9"], [class*="bg-slate-8"]) > .flex.justify-between:first-child { flex-direction: column; align-items: flex-start !important; gap: 4px !important; }
+  /* the overview's headline cards: one line for each note, cut with an ellipsis if it must */
+  html.ui-flight #teamSummaryCards span.block { white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; }
+}
+/* Wrapping, designed (2026/11/03): nothing breaks wherever the width happens to run out.
+   - table headers stay on one line; - a parenthesised note is its own smaller second line on phones (inline when there is
+   room); - a label that introduces a row of buttons sits above them; - an odd last card in a two-column grid takes the row;
+   - a batter's plate appearances in 賽事分析 line up in equal columns instead of a ragged run of chips. */
+html.ui-flight main :is(th, th *) { white-space: nowrap !important; }
+html.ui-flight .ui-note { font-size: max(11px, .86em); opacity: .78; display: block; line-height: 1.3; }
+html.ui-flight .ui-pair .ui-note { display: inline; margin-left: .2em; }
+html.ui-flight .ui-pair > span:first-child { white-space: nowrap; }
+html.ui-flight :is(.flex, .inline-flex):has(> .ui-note) { flex-wrap: wrap; }
+html.ui-flight :is(.flex, .inline-flex) > .ui-note { flex: 1 0 100%; }
+/* Phrases of a caption stay whole (ui-comfort.js); the caption breaks only between them, in balanced lines. */
+html.ui-flight .ui-seg { display: inline-block; }
+html.ui-flight :has(> .ui-seg) { text-wrap: balance; }
+html.ui-flight .ui-pair-unit, html.ui-flight .ui-note { font-weight: 500; }
+@media (max-width: 767px) {
+  html.ui-flight .ui-label-row { flex-wrap: wrap !important; row-gap: 8px !important; }
+  html.ui-flight .ui-label-row > :is(span, label):first-child { flex: 1 1 100%; }
+  /* two-column card grids: an odd last card takes the full row instead of leaving a hole beside it */
+  html.ui-flight :is(.ui-record-grid, main section .grid.grid-cols-2) > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+  html.ui-flight [data-record-card="全隊單場紀錄"] { grid-column: 1 / -1; }
+}
+html.ui-flight #panelGames .ga-batter > .flex.flex-wrap { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px !important; }
+html.ui-flight #panelGames .ga-batter > .flex.flex-wrap > * { justify-content: center; text-align: center; white-space: nowrap; }
+/* Tablets (portrait and landscape) show the section tabs too: they read pages one section at a time like phones
+   (the chip row used to be phone-only, which left a tablet in tab mode without its tabs). */
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  html.ui-flight .ui-section-bar { display: flex; gap: 8px; overflow-x: auto; position: sticky; z-index: 45; margin: 0 0 18px !important; padding: 8px 4px; scrollbar-width: none; }
+  html.ui-flight .ui-section-bar::-webkit-scrollbar { display: none; }
+  html.ui-flight .ui-section-bar[hidden] { display: none; }
+  html.ui-flight .ui-section-bar button { flex: 0 0 auto; white-space: nowrap; }
+}
+/* 打線賽制: the rule's name (with its dot) on one line, its explanation under it. */
+html.ui-flight #dhStatusExplanation > span { display: grid !important; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; row-gap: 3px; align-items: center; }
+html.ui-flight #dhStatusExplanation > span > span:nth-child(2) { white-space: nowrap; }
+html.ui-flight #dhStatusExplanation > span > span:nth-child(3) { grid-column: 1 / -1; }
+/* 賽事分析 batter rows: name, then the line (打數・安打…) under it in grey. */
+html.ui-flight .ga-batter-line { margin-top: 1px; overflow: hidden; text-overflow: ellipsis; }
+/* A section's header row (title on the left; a badge or a small action on the right): the badge and the action keep
+   their words on one line, the title gives way. */
+html.ui-flight main section > div.justify-between > :is(span, button):last-child { white-space: nowrap; flex-shrink: 0; }
+/* 打擊方向 card (球員檔案): the numbers on a line of their own, the tendency badge under them (never squeezed beside). */
+html.ui-flight #panelProfile div.justify-between:has(> div > span.text-slate-200) { flex-direction: column !important; align-items: flex-start !important; }
+html.ui-flight #panelProfile div.justify-between > div > span.text-slate-200 { display: block; white-space: nowrap; margin-top: 2px; }
+/* 名詞解釋: a term's title keeps one line; its badge moves under it when the card is narrow. */
+html.ui-flight #panelGlossary div.flex.items-start.justify-between { flex-wrap: wrap; }
+html.ui-flight #panelGlossary div.flex.items-start.justify-between > span.font-bold { white-space: nowrap; }
+/* 生涯紀錄: the latest milestone takes the full row on phones, so its line (🏅 生涯第 10 支安打) reads whole. */
+@media (max-width: 767px) {
+  html.ui-flight [data-record-hero="最新里程碑"] { grid-column: 1 / -1; }
+  html.ui-flight [data-record-hero="最新里程碑"] .text-emerald-200 { white-space: nowrap; }
+}
+/* 球員檔案 metric cards (five across on a landscape tablet): the metric name keeps one line, its badge moves under it. */
+html.ui-flight #panelProfile .lg\:grid-cols-5 > div > div.flex.justify-between:first-child { flex-wrap: wrap; column-gap: 6px; }
+html.ui-flight #panelProfile .lg\:grid-cols-5 > div > div.flex.justify-between:first-child > span:first-child { white-space: nowrap; }
+/* An English gloss after a Chinese title (「真實 vs. 預期 (Actual vs. xStats)」) is dropped on phones and tablets rather than
+   breaking the title or pushing its badge out of the card; a card header row keeps its right-hand badge whole. */
+@media (max-width: 1023px) { html.ui-flight main .ui-en { display: none; } }
+html.ui-flight main .rounded-xl > div.flex.justify-between:first-child { column-gap: 8px; }
+html.ui-flight main .rounded-xl > div.flex.justify-between:first-child > span:last-child:not(:first-child) { white-space: nowrap; flex-shrink: 0; }
+/* An action group beside a title (數據總覽) takes the room left, not the full width. */
+html.ui-flight .fl-actions { flex-shrink: 1 !important; min-width: 0; }
 /* ---------- Pages: the space scene behind each page drifts toward its planet as the page scrolls (scroll-driven, on the
    compositor, no script). The entry fade is the same for every scene; translate / scale leave its transform alone. ---------- */
 @supports (animation-timeline: scroll()) {
