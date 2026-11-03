@@ -26,7 +26,7 @@ put('data', 'data/legacy-main.json', Buffer.from(JSON.stringify(Object.fromEntri
 
 const injection = `<script>
 // Clawd (the easter-egg creature, ui-delight.js) wanders over the page; it stays off unless a test opens ?clawd.
-window.BASEBALL_APP_CONFIG = Object.assign(new URLSearchParams(location.search).has('pwa') ? {} : {serviceWorker: false}, {easterEgg: new URLSearchParams(location.search).has('clawd')});
+window.BASEBALL_APP_CONFIG = Object.assign(new URLSearchParams(location.search).has('pwa') ? {} : {serviceWorker: false}, {easterEgg: new URLSearchParams(location.search).has('clawd'), motion: new URLSearchParams(location.search).has('motion')});
 window.__previewWrites = [];
 window.__previewFailWrites = false;
 window.__previewErrors = [];

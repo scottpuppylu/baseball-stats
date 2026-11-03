@@ -10,7 +10,7 @@
 //   Pages     every page's title settles from a blur and its sections fade in as they scroll into view; the space scene
 //             behind each page drifts toward the planet as the page scrolls (ui-theme.css, scroll-driven, no script).
 //   Feel      the glass answers the finger: a light follows it on the phone tab bar (slide along the bar to pick a tab),
-//             the glass thumbs stretch like liquid as they glide, home cards tilt toward the mouse.
+//             the glass thumbs stretch like liquid as they glide, home and overview cards tilt toward the mouse.
 //   Flow      search for any page / player / game (⌘K, Ctrl+K or "/" and the 🔍 button); previous/next player on 球員檔案
 //             (buttons, swipe, ← →); pull down to refresh in the installed app.
 // Presentation and navigation only: reads the site's data through the same functions the pages use, never writes data.
@@ -129,8 +129,9 @@
     ], {duration: 900, delay: 120 + i * 85, easing: EASE, fill: 'backwards'}));
   }
 
-  // ---------- Numbers count up (Count Up). The final text is restored exactly at the end. ----------
-  function countUp(el, delay) {
+  // ---------- Numbers count up (Count Up). The final text is restored exactly at the end; if the page redraws the number
+  // meanwhile, the count stops and leaves the new text alone. ----------
+  function countUp(el, delay, dur = 1100) {
     const final = el.textContent;
     const m = final.match(/(\d*)\.(\d+)|\d+/);
     if (!m || reduce.matches) return;
@@ -138,14 +139,15 @@
     if (!Number.isFinite(target) || target === 0) return;
     const decimals = (token.split('.')[1] || '').length, bareDot = token.startsWith('.');
     const fmt = v => { let s = v.toFixed(decimals); if (bareDot) s = s.replace(/^0(?=\.)/, ''); return final.slice(0, m.index) + s + final.slice(m.index + token.length); };
-    const t0 = performance.now() + delay, dur = 1100;
+    const t0 = performance.now() + delay;
+    let written;
     const step = now => {
-      if (!el.isConnected) return;
+      if (!el.isConnected || el.textContent !== written) return;
       const k = Math.max(0, Math.min(1, (now - t0) / dur));
-      el.textContent = k >= 1 ? final : fmt(target * OUT_EXPO(k));
+      el.textContent = written = k >= 1 ? final : fmt(target * OUT_EXPO(k));
       if (k < 1) requestAnimationFrame(step);
     };
-    el.textContent = fmt(0);
+    el.textContent = written = fmt(0);
     requestAnimationFrame(step);
   }
 
@@ -202,31 +204,44 @@
       revealBands(panel);
     }
   }
-  // ---------- Every other page: the title settles from a blur (Blur Text); sections further down fade in as they
-  // scroll into view (Animated Content). Opacity and blur only, so nothing moves under a measurement or a finger. ----------
+  // ---------- Every other page, like Apple's pages: the title rises in, and as each section scrolls into view the things
+  // in it (cards, tables, charts) rise and fade in one after another. Transform and opacity only, so the compositor runs
+  // it and nothing waits on the page's scripts; the sections themselves stay put (section jumps land exactly). Off with
+  // "reduce motion", during 比賽場記, and in the isolated test preview unless ?motion (it measures layouts mid-flight). ----------
+  const motion = config.motion !== false;
   let sectionReveal = null;
   function revealSections(fresh) {
     sectionReveal?.disconnect();
     sectionReveal = null;
     const key = page();
-    if (reduce.matches || testLayout() || !('IntersectionObserver' in window) || key === 'Home' || key === 'Scorebook') return;
+    if (!motion || reduce.matches || testLayout() || !('IntersectionObserver' in window) || key === 'Home' || key === 'Scorebook') return;
     const panel = document.getElementById(`panel${key}`);
     if (!panel) return;
     const title = document.getElementById('uiPageTitle');
-    if (fresh && title) play(title, [{opacity: 0, filter: 'blur(10px)', letterSpacing: '.2em'}, {opacity: 1, filter: 'blur(0)', letterSpacing: '.08em'}], {duration: 620, easing: EASE});
+    if (fresh && title) play(title, [{opacity: 0, transform: 'translateY(14px)'}, {opacity: 1, transform: 'none'}], {duration: 620, easing: EASE});
     const seen = new WeakSet();
     let first = true;
     sectionReveal = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (seen.has(e.target)) return;
-        if (first && e.isIntersecting) { seen.add(e.target); return; } // already on screen when the page opened: the page reveal covers it
+        const numbers = () => e.target.querySelectorAll('span.font-mono.font-black.block, #teamSummaryCards span.font-black.block');
+        if (first && e.isIntersecting) { // on screen when the page opened: the page's own reveal covers it; its numbers still count up
+          seen.add(e.target);
+          if (fresh) [...numbers()].slice(0, 10).forEach((el, i) => countUp(el, 120 + i * 50, 900));
+          return;
+        }
         if (!e.isIntersecting) return;
         seen.add(e.target);
         sectionReveal?.unobserve(e.target);
-        play(e.target, [{opacity: 0, filter: 'blur(6px)'}, {opacity: 1, filter: 'blur(0)'}], {duration: 560, easing: EASE});
+        [...numbers()].slice(0, 10).forEach((el, i) => countUp(el, 180 + i * 60, 900));
+        // A grid of cards comes in card by card; anything else as one piece.
+        const items = [...e.target.children].flatMap(el => (el.classList.contains('grid') && el.children.length <= 12 ? [...el.children] : [el]))
+          .filter(el => !el.hidden && el.getClientRects().length).slice(0, 14);
+        items.forEach((el, i) => play(el, [{opacity: 0, transform: 'translateY(34px) scale(.97)'}, {opacity: 1, transform: 'none'}],
+          {duration: 760, delay: i * 70, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards'}));
       });
       first = false;
-    }, {rootMargin: '0px 0px 8% 0px'});
+    }, {rootMargin: '0px 0px -6% 0px'});
     panel.querySelectorAll(':scope > section, :scope > div > section').forEach(section => sectionReveal.observe(section));
   }
   window.siteHooks.after('switchMainTab', 'ui-delight', tabId => {
@@ -513,7 +528,7 @@
     const untilt = () => { if (!tilted) return; tilted.classList.remove('fl-tilting'); tilted.style.transform = ''; tilted = null; };
     document.addEventListener('pointermove', event => {
       if (event.pointerType !== 'mouse' || reduce.matches) return;
-      const card = event.target.closest?.('#panelHome .fl-card');
+      const card = event.target.closest?.('#panelHome .fl-card, #teamSummaryCards > div');
       if (card !== tilted) untilt();
       if (!card) return;
       tilted = card;

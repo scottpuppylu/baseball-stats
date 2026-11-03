@@ -246,6 +246,31 @@
   brand.addEventListener('click', goHome);
   nav.prepend(brand);
 
+  // ---------- Pages drawn ahead in idle time, so opening one is instant ----------
+  // The site redraws a page when it is opened if its data changed since it was last drawn (renderPage skips it otherwise).
+  // Doing that early, one page at a time while nobody is touching the screen, takes the wait out of the tap. Never during
+  // 比賽場記 (scoring), never in a hidden tab; a data change (renderAll) starts it again.
+  const AHEAD = ['tabOverview', 'tabProfile', 'tabLeaderboard', 'tabAnalytics', 'tabCompare'];
+  let aheadTimer = 0, lastInput = 0;
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(type => window.addEventListener(type, () => { lastInput = performance.now(); }, {capture: true, passive: true}));
+  const whenIdle = fn => (window.requestIdleCallback ? window.requestIdleCallback(fn, {timeout: 5000}) : setTimeout(fn, 300));
+  const stale = tab => {
+    try { return pageDrawnAt[tab] !== `${dataVersion}|${pageStateKey(tab)}`; } catch (error) { return false; } // the site's own globals
+  };
+  function drawAhead() {
+    clearTimeout(aheadTimer);
+    aheadTimer = setTimeout(() => whenIdle(function next() {
+      if (typeof window.renderPage !== 'function' || document.visibilityState !== 'visible' || document.body.dataset.page === 'Scorebook') return;
+      if (performance.now() - lastInput < 800) { aheadTimer = setTimeout(() => whenIdle(next), 800); return; }
+      const tab = AHEAD.find(t => t !== currentTabId && stale(t));
+      if (!tab) return;
+      try { window.renderPage(tab); } catch (error) { console.error('[ui-app] draw ahead', tab, error); }
+      whenIdle(next);
+    }), 1500);
+  }
+  window.siteHooks.after('renderAll', 'ui-app-ahead', drawAhead);
+  if (window.teamRecords || (typeof allLogs !== 'undefined' && allLogs.length)) drawAhead();
+
   // ---------- Back button / swipe back moves between pages, like an app ----------
   let restoring = false;
   try { history.replaceState({...(history.state || {}), flTab: 'tabHome'}, ''); } catch (error) { /* sandboxed */ }
