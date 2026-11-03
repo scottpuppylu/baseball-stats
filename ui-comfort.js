@@ -322,6 +322,17 @@
     within(root, EYEBROW).forEach(span => span.parentElement?.classList.add('ui-has-eyebrow'));
     within(root, CHIP).forEach(b => b.parentElement.parentElement.classList.add('ui-has-chips'));
     document.getElementById('compareSpraySvgA')?.closest('.grid > div')?.parentElement.classList.add('ui-has-spray-pair');
+    // Grid cells holding a headline number size it to their own width (container query in ui-theme.css), so a big number
+    // never overflows a narrow column.
+    within(root, 'main section span.font-mono.font-black.block').forEach(num => {
+      const cell = num.parentElement;
+      if (cell && cell.parentElement && cell.parentElement.classList.contains('grid')) cell.classList.add('ui-num-cell');
+    });
+    // A chart that is not already inside a data card gets one (ui-theme.css: content groups sit on a material).
+    within(root, 'main section canvas').forEach(canvas => {
+      const box = canvas.parentElement;
+      if (box && box.tagName === 'DIV' && !box.closest('[class*="slate-9"], [class*="slate-8"], [class*="gray-9"]')) box.classList.add('ui-chart-card'); // dark-filled boxes are cards already
+    });
   }
   let scheduled = false;
   new MutationObserver(records => {

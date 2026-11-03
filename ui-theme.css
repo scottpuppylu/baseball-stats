@@ -1427,15 +1427,15 @@ html.ui-flight #flPull.is-busy svg { animation: fl-spin .8s linear infinite; }
    their labels step back (small, tracked, dimmer). Boxes inside boxes lose their frames and become soft glass tints
    separated by hairlines; tag pills become glass chips; section titles share one white-to-ice gradient (colour stays on
    the small tags); tables lose the grid; fields are glass wells with a light ring on focus. Colours of numbers are kept. */
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section {
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section {
   --fl-num-glow: 0 0 18px rgba(150, 200, 255, .22), 0 1px 2px rgba(0, 0, 0, .6);
 }
 /* Numbers: the headline of every small box. */
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section span.font-mono.font-black.block {
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section span.font-mono.font-black.block {
   font-size: clamp(19px, 5.2vw, 26px) !important; line-height: 1.15; font-weight: 700 !important; letter-spacing: -.01em;
   margin-top: 2px; text-shadow: var(--fl-num-glow);
 }
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section span.font-mono.font-black.block.text-white {
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section span.font-mono.font-black.block.text-white {
   background: linear-gradient(180deg, #ffffff 30%, #c9dcf5); -webkit-background-clip: text; background-clip: text; color: transparent !important;
   text-shadow: none; filter: drop-shadow(0 0 14px rgba(150, 200, 255, .2));
 }
@@ -1443,54 +1443,160 @@ html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main se
 html.ui-flight #teamSummaryCards span.font-black.block { font-size: clamp(26px, 7vw, 34px) !important; line-height: 1.1; font-weight: 700 !important; letter-spacing: -.02em; text-shadow: 0 0 22px rgba(124, 192, 255, .3), 0 1px 2px rgba(0, 0, 0, .6); }
 html.ui-flight #teamSummaryCards span.font-semibold.block { font-size: 11.5px !important; letter-spacing: .1em; color: var(--fl-ink-3) !important; }
 /* Their labels. */
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section span[class*="text-[10px]"].block {
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section span[class*="text-[10px]"].block {
   font-size: 11px !important; letter-spacing: .08em; color: var(--fl-ink-3) !important;
 }
 /* Boxes inside a panel: soft glass, no frame; the column dividers become fading hairlines. */
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is(div, section)[class*="rounded"][class*="border"]:not(button):not([class*="rounded-full"]) {
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is(div, section)[class*="rounded"][class*="border"]:not(button):not([class*="rounded-full"]) {
   border-color: transparent !important; border-radius: 18px !important;
 }
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section div.grid > div.border-l {
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section div.grid > div.border-l {
   border-left-color: transparent !important;
   background-image: linear-gradient(180deg, transparent, rgba(255, 255, 255, .14) 30%, rgba(255, 255, 255, .14) 70%, transparent);
   background-size: 1px 100%; background-repeat: no-repeat; background-position: left center;
 }
 /* Tag pills (OPS / OPS+, SDI 2.0 …): glass chips that keep their colour. */
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section span[class*="text-[10px]"][class*="rounded"][class*="border"]:not(.block) {
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section span[class*="text-[10px]"][class*="rounded"][class*="border"]:not(.block) {
   border-radius: 999px !important; padding: 3px 9px !important; letter-spacing: .04em;
   background: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03)) !important;
   border-color: rgba(255, 255, 255, .14) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 2px 8px -4px rgba(0, 0, 0, .6);
 }
 /* Section titles: one calm gradient instead of a different colour per section. */
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is(h2, h3) {
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is(h2, h3) {
   background: linear-gradient(180deg, #ffffff 35%, #bcd3f0) !important; -webkit-background-clip: text !important; background-clip: text !important;
   color: transparent !important; letter-spacing: .06em;
   text-shadow: none !important; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55)); /* a text shadow would paint over the gradient fill */
 }
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is(h2, h3) * { color: inherit; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section :is(h2, h3) * { color: inherit; }
 /* Tables: no grid, a quiet header, hairlines between rows, the row under the mouse lights up. */
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section table thead th {
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table thead th {
   background: rgba(14, 16, 21, .72) !important; color: var(--fl-ink-3) !important; font-size: 11.5px; font-weight: 600; letter-spacing: .1em;
   border-bottom: 1px solid rgba(255, 255, 255, .12) !important;
 }
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section table :is(td, th) { border-left-color: transparent !important; border-right-color: transparent !important; }
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr { border-color: rgba(255, 255, 255, .06) !important; }
-html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr:nth-child(odd) { background-color: transparent; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table :is(td, th) { border-left-color: transparent !important; border-right-color: transparent !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr { border-color: rgba(255, 255, 255, .06) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr:nth-child(odd) { background-color: transparent; }
 @media (hover: hover) and (pointer: fine) {
-  html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr { transition: background-color .25s var(--fl-ease); }
-  html.ui-flight body:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr:hover { background-color: rgba(124, 192, 255, .08) !important; }
+  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr { transition: background-color .25s var(--fl-ease); }
+  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) main section table tbody tr:hover { background-color: rgba(124, 192, 255, .08) !important; }
 }
 /* Fields: glass wells, a soft light ring on focus. */
-html.ui-flight body:not([data-page="Scorebook"]) main :is(select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"])) {
+html.ui-flight body[data-page]:not([data-page="Scorebook"]) main :is(select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"])) {
   background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .03)) !important;
   border-color: rgba(255, 255, 255, .14) !important; border-radius: 14px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 6px 18px -12px rgba(0, 0, 0, .8);
 }
-html.ui-flight body:not([data-page="Scorebook"]) main :is(select, input):focus {
+html.ui-flight body[data-page]:not([data-page="Scorebook"]) main :is(select, input):focus {
   border-color: rgba(124, 192, 255, .75) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 0 4px rgba(124, 192, 255, .18), 0 0 24px rgba(124, 192, 255, .18) !important;
 }
 @media (prefers-contrast: more) {
   html.ui-flight body main section :is(h2, h3), html.ui-flight body main section span.font-mono.font-black.block.text-white { background: none !important; color: #fff !important; filter: none; }
+}
+/* ---------- Layout like Apple's (2026/11/03), after the Human Interface Guidelines ----------
+   Liquid Glass belongs to the navigation layer only (tab bar, top bar, sidebar, tools): "Don't use Liquid Glass in the
+   content layer". Content groups by space, container shapes or separators instead of frames:
+   - a page section has no box at all: its title and the space around it set it apart (more space between sections);
+   - groups of data (cards, tables, charts) sit on a borderless "thick material": a dark translucent fill that keeps
+     every number legible over the bright parts of a scene, rounded, no border;
+   - inside a card, smaller groups are a faint tint and hairline separators, never a box in a box;
+   - text levels for reading data: numbers brightest and largest, labels second, notes third; the colours that tell
+     data apart stay. Fonts unchanged.
+   No backdrop blur in the content layer: scrolling stays light (the scene behind is dimmed by its veil instead). */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) {
+  --fl-material: linear-gradient(180deg, rgba(28, 32, 40, .74), rgba(16, 18, 24, .74));
+  --fl-material-edge: inset 0 1px 0 rgba(255, 255, 255, .075), inset 0 0 0 .5px rgba(255, 255, 255, .05), 0 22px 44px -30px rgba(0, 0, 0, .95);
+  --fl-label-2: rgba(232, 238, 246, .66);
+  --fl-label-3: rgba(232, 238, 246, .46);
+  --fl-separator: rgba(255, 255, 255, .085);
+}
+/* Sections: no box. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace :is(main section:not(.grid), main section.grid > div:not([class*="bg-"])) {
+  background: none !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important; --fl-lens-gate: 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+}
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main > [id^="panel"] > section:not(.grid) { padding-left: 2px !important; padding-right: 2px !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main > [id^="panel"] > :not([hidden]) ~ :not([hidden]) { margin-top: 52px !important; }
+@media (max-width: 767px) {
+  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main > [id^="panel"] > :not([hidden]) ~ :not([hidden]) { margin-top: 26px !important; } /* phones: space matters (density ceiling in ui-mobile-comfort) */
+}
+/* Section titles carry the page now. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section:not(.grid) h2 { font-size: clamp(21px, 5.6vw, 27px) !important; line-height: 1.3; font-weight: 700 !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section :is(p, span).text-xs:is(.text-slate-400, .text-slate-500) { color: var(--fl-label-2) !important; }
+/* Data groups: thick material, rounded, no border. The overview's headline cards too. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]):not(button):not(input):not(select):not(textarea):not(table):not(thead):not(tbody):not(tr):not(td):not(th),
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace :is(main section.grid > div[class*="bg-"], #teamSummaryCards > div),
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section .ui-chart-card {
+  background: var(--fl-material) !important; border: 0 !important; border-radius: 22px !important;
+  box-shadow: var(--fl-material-edge) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; --fl-lens-gate: 0;
+  text-shadow: none;
+}
+/* Inside a card: a faint tint, no frame, no second shadow. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"]) :is([class*="bg-slate-9"], [class*="bg-slate-8"], [class*="bg-gray-9"], .ui-chart-card):not(button):not(input):not(select):not(textarea):not(table):not(thead):not(tbody):not(tr):not(td):not(th) {
+  background: rgba(255, 255, 255, .045) !important; box-shadow: none !important; border-radius: 16px !important;
+}
+/* Tables: a card of their own with hairlines between rows (unless already inside a card). */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section .ui-table-scroll {
+  background: var(--fl-material) !important; border: 0 !important; border-radius: 20px; box-shadow: var(--fl-material-edge); text-shadow: none;
+}
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section :is([class*="bg-slate-9"], [class*="bg-slate-8"]) .ui-table-scroll { background: none !important; box-shadow: none; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section table thead th { background: rgba(16, 18, 24, .92) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section table tbody tr { border-bottom: 1px solid var(--fl-separator) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section table tbody tr:last-child { border-bottom: 0 !important; }
+/* Buttons in the content: borderless pills; coloured ones keep their tint. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section button:is(.text-xs, .text-sm):not([role="option"]):not(.fl-step > button) {
+  border-color: transparent !important; border-radius: 999px !important;
+}
+@media (prefers-contrast: more) {
+  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) { --fl-material: #15181d; }
+}
+/* 賽事分析 (game-analysis.js): the same language. Stat cells, moments, half-innings and batters are material cards
+   without frames; "ours", the MVP and the chosen game are tinted instead of outlined; the score leads. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(.ga-stat, .ga-moment, .ga-half, .ga-batter, .ga-game) {
+  background: var(--fl-material) !important; border: 0 !important; border-radius: 20px; box-shadow: var(--fl-material-edge); text-shadow: none;
+}
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-half-ours { background: linear-gradient(180deg, rgba(56, 189, 248, .16), rgba(56, 189, 248, .05)), var(--fl-material) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-batter.ga-mvp { background: linear-gradient(180deg, rgba(251, 191, 36, .16), rgba(251, 191, 36, .05)), var(--fl-material) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-game.ga-on { background: linear-gradient(180deg, rgba(124, 192, 255, .22), rgba(124, 192, 255, .08)), var(--fl-material) !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-stat b { font-size: 26px; font-weight: 700; text-shadow: 0 0 18px rgba(150, 200, 255, .22); }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-stat span { letter-spacing: .08em; color: var(--fl-label-3); }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) .ga-score { font-size: clamp(48px, 13vw, 64px); font-weight: 700; letter-spacing: -.02em; text-shadow: 0 0 30px rgba(150, 200, 255, .25), 0 2px 4px rgba(0, 0, 0, .6); }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) :is(.ga-line, .ga-table) :is(th, td) { border-bottom-color: var(--fl-separator); }
+/* Layout after the frames went (2026/11/03): one leading edge for titles, notes and cards; numbers sized by their own
+   cell; the overview's headline cards in three roomy columns on wider screens; content no wider than reads well. */
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace .ui-num-cell { container-type: inline-size; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section .ui-num-cell > span.font-mono.font-black.block {
+  font-size: clamp(16px, 21cqi, 26px) !important; white-space: nowrap;
+}
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section:not(.grid) > :first-child :is(h2, h3, p) { margin-left: 0 !important; padding-left: 0 !important; }
+html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section:not(.grid) > :first-child { padding-left: 0 !important; margin-bottom: 14px; }
+@media (min-width: 768px) {
+  html.ui-flight #teamSummaryCards { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 14px !important; }
+  html.ui-flight #teamSummaryCards > div { padding: 20px 22px !important; min-height: 128px; }
+  html.ui-flight #teamSummaryCards span.font-black.block { font-size: clamp(30px, 2.6vw, 40px) !important; }
+}
+@media (min-width: 1280px) {
+  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main { max-width: 1240px; margin-left: auto !important; margin-right: auto !important; }
+}
+/* Motion details (2026/11/03): Scroll Float titles, Click Spark, spotlight on data cards (mouse). */
+html.ui-flight .fl-floating { background: none !important; color: #f3f6fa !important; -webkit-text-fill-color: currentColor; }
+html.ui-flight .fl-fch { display: inline-block; transform-origin: 50% 0; will-change: transform, opacity; }
+html.ui-flight .fl-click-spark { position: fixed; z-index: 2147483000; width: 2px; height: 11px; border-radius: 2px; pointer-events: none; background: rgba(255, 255, 255, .9); box-shadow: 0 0 6px rgba(255, 255, 255, .6); }
+html.ui-flight .fl-click-spark.is-nav { background: rgba(170, 210, 255, .95); box-shadow: 0 0 6px rgba(124, 192, 255, .7); }
+@media (hover: hover) and (pointer: fine) {
+  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace :is(#teamSummaryCards > div, .ga-stat, .ga-batter, .ga-moment, main section [class*="bg-slate-9"]:not(table *):not(button), main section [class*="bg-slate-8"]:not(table *):not(button)):hover {
+    background-image: radial-gradient(380px circle at var(--fl-mx, 50%) var(--fl-my, 0%), rgba(124, 192, 255, .1), transparent 62%), var(--fl-material) !important;
+  }
+}
+@media print { html.ui-flight .fl-click-spark { display: none !important; } }
+/* The player switcher gets a full-width row of its own on phones and tablets (the name was squeezed to "#3"). */
+@media (max-width: 1279px) {
+  html.ui-flight .fl-player-head { flex-wrap: wrap !important; row-gap: 12px; }
+  html.ui-flight .fl-player-head > .fl-player-row { flex: 1 1 100% !important; width: 100%; justify-content: flex-start; }
+  html.ui-flight .fl-player-row > #playerSelect { flex: 1 1 auto; width: auto !important; max-width: none !important; }
+}
+@media (max-width: 767px) {
+  html.ui-flight body[data-page]:not([data-page="Home"]):not([data-page="Scorebook"]) #appWorkspace main section:not(.grid) > :first-child { margin-bottom: 10px; }
 }
 /* ---------- Pages: the space scene behind each page drifts toward its planet as the page scrolls (scroll-driven, on the
    compositor, no script). The entry fade is the same for every scene; translate / scale leave its transform alone. ---------- */

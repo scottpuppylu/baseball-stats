@@ -168,7 +168,7 @@
   // ---------- Spotlight that follows the mouse on cards (Spotlight Card) and a magnetic main button (Magnet) ----------
   document.addEventListener('pointermove', event => {
     if (event.pointerType !== 'mouse' || reduce.matches) return;
-    const card = event.target.closest && event.target.closest('.fl-card, .fl-tile');
+    const card = event.target.closest && event.target.closest('.fl-card, .fl-tile, #teamSummaryCards > div, .ga-stat, .ga-batter, .ga-moment, main section [class*="slate-9"]:not(table *), main section [class*="slate-8"]:not(table *)');
     if (card) {
       const r = card.getBoundingClientRect();
       card.style.setProperty('--fl-mx', `${event.clientX - r.left}px`);
@@ -210,6 +210,47 @@
   // "reduce motion", during 比賽場記, and in the isolated test preview unless ?motion (it measures layouts mid-flight). ----------
   const motion = config.motion !== false;
   let sectionReveal = null;
+  // Decrypted Text: the page title resolves out of scrambled glyphs, left to right (screen readers get the real title).
+  const GLYPHS = '01#%*+=/<>▮▯░▒ABCDEFGHJKLMNPQRSTUVWXYZ';
+  function decrypt(el) {
+    const final = el.textContent;
+    if (!final || final.length > 14) return;
+    el.setAttribute('aria-label', final);
+    const chars = [...final], t0 = performance.now(), per = 38, settle = 260;
+    let written = el.textContent;
+    const step = now => {
+      if (!el.isConnected || el.textContent !== written) { el.removeAttribute('aria-label'); return; } // retitled meanwhile
+      const k = now - t0, fixed = Math.floor(Math.max(0, k - settle) / per);
+      const text = chars.map((c, i) => (i < fixed || c === ' ' ? c : GLYPHS[Math.floor(Math.random() * GLYPHS.length)])).join('');
+      el.textContent = written = fixed >= chars.length ? final : text;
+      if (fixed < chars.length) requestAnimationFrame(step); else el.removeAttribute('aria-label');
+    };
+    requestAnimationFrame(step);
+  }
+  // Scroll Float: a section title rises in character by character (stretched, then springing back), then is put back as
+  // plain text so its gradient and the page's own updates work as before.
+  function floatTitle(h) {
+    if (!h || h.dataset.flFloat || h.children.length || h.textContent.length > 40) return;
+    const text = h.textContent;
+    h.dataset.flFloat = '1';
+    h.setAttribute('aria-label', text);
+    h.classList.add('fl-floating');
+    h.innerHTML = [...text].map(c => `<span class="fl-fch" aria-hidden="true">${c === ' ' ? '&nbsp;' : esc(c)}</span>`).join('');
+    const spans = [...h.children];
+    const runs = spans.map((sp, i) => play(sp, [
+      {opacity: 0, transform: 'translateY(120%) scale(.7, 2.3)'},
+      {opacity: 1, transform: 'none'}
+    ], {duration: 760, delay: i * 30, easing: 'cubic-bezier(.68, -.55, .27, 1.55)', fill: 'backwards'}));
+    Promise.all(runs.map(a => (a ? a.finished : null)).filter(Boolean)).catch(() => {}).then(() => {
+      if (!h.isConnected || h.dataset.flFloat !== '1' || h.textContent !== text) return;
+      h.textContent = text;
+      h.classList.remove('fl-floating');
+      h.removeAttribute('aria-label');
+    });
+  }
+  // Animated List: a table's first rows slide in one after another.
+  const listIn = table => [...(table.tBodies[0]?.rows || [])].slice(0, 10).forEach((row, i) => play(row,
+    [{opacity: 0, transform: 'translateX(-18px)'}, {opacity: 1, transform: 'none'}], {duration: 520, delay: 120 + i * 45, easing: EASE, fill: 'backwards'}));
   function revealSections(fresh) {
     sectionReveal?.disconnect();
     sectionReveal = null;
@@ -218,7 +259,7 @@
     const panel = document.getElementById(`panel${key}`);
     if (!panel) return;
     const title = document.getElementById('uiPageTitle');
-    if (fresh && title) play(title, [{opacity: 0, transform: 'translateY(14px)'}, {opacity: 1, transform: 'none'}], {duration: 620, easing: EASE});
+    if (fresh && title) { play(title, [{opacity: 0, transform: 'translateY(14px)'}, {opacity: 1, transform: 'none'}], {duration: 620, easing: EASE}); decrypt(title); }
     const seen = new WeakSet();
     let first = true;
     sectionReveal = new IntersectionObserver(entries => {
@@ -234,6 +275,8 @@
         seen.add(e.target);
         sectionReveal?.unobserve(e.target);
         [...numbers()].slice(0, 10).forEach((el, i) => countUp(el, 180 + i * 60, 900));
+        e.target.querySelectorAll(':scope > :first-child h2, :scope > h2').forEach(floatTitle);
+        e.target.querySelectorAll('.ui-table-scroll table').forEach(listIn);
         // A grid of cards comes in card by card; anything else as one piece.
         const items = [...e.target.children].flatMap(el => (el.classList.contains('grid') && el.children.length <= 12 ? [...el.children] : [el]))
           .filter(el => !el.hidden && el.getClientRects().length).slice(0, 14);
@@ -391,6 +434,7 @@
     wrap.innerHTML = '<button type="button" data-step="-1" aria-label="上一位球員">‹</button><button type="button" data-step="1" aria-label="下一位球員">›</button>';
     playerSelect.after(wrap);
     playerSelect.parentElement.classList.add('fl-player-row'); // styled in ui-theme.css (a class, not a slow :has() rule)
+    playerSelect.parentElement.parentElement?.classList.add('fl-player-head'); // the title row it sits in (wraps on phones and tablets)
     wrap.addEventListener('click', event => { const b = event.target.closest('[data-step]'); if (b) stepPlayer(Number(b.dataset.step)); });
     // A horizontal swipe on the profile's first card (the photo and basic numbers), not on charts or tables.
     let sx = 0, sy = 0, st = 0, tracking = false;
@@ -520,6 +564,31 @@
     tabBar.addEventListener('click', event => {
       if (swallowClick > 0 && performance.now() < swallowClick && event.isTrusted) { event.stopPropagation(); event.preventDefault(); }
     }, true);
+  }
+
+  // ---------- Click Spark: eight short sparks fly out where a button is pressed. Small elements outside the page, moved by
+  // the compositor (a busy page cannot stall them), removed when done. Not during 比賽場記. ----------
+  if (motion) {
+    document.addEventListener('pointerdown', event => {
+      if (reduce.matches || page() === 'Scorebook' || event.button > 0) return;
+      const target = event.target.closest?.('button, [role="button"], a, summary, select, .fl-card, [onclick]');
+      if (!target || target.closest('#flClawd')) return;
+      const nav = target.closest('.ui-mobile-nav, #mainNavigation, .fl-subnav');
+      const turn = Math.random() * 45;
+      for (let i = 0; i < 8; i++) {
+        const s = document.createElement('i');
+        s.className = 'fl-click-spark';
+        if (nav) s.classList.add('is-nav');
+        s.style.left = `${event.clientX}px`; s.style.top = `${event.clientY}px`;
+        document.body.append(s);
+        const a = turn + i * 45;
+        const run = play(s, [
+          {transform: `translate(-50%, -50%) rotate(${a}deg) translateY(-8px) scaleY(1)`, opacity: 1},
+          {transform: `translate(-50%, -50%) rotate(${a}deg) translateY(-30px) scaleY(.15)`, opacity: 0}
+        ], {duration: 460, easing: 'cubic-bezier(.2, .8, .3, 1)'});
+        if (run) run.finished.then(() => s.remove(), () => s.remove()); else s.remove();
+      }
+    }, {passive: true, capture: true});
   }
 
   // ---------- Home cards tilt toward the mouse (desktop) ----------
