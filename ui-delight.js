@@ -485,6 +485,7 @@
 
   // ---------- 全隊總覽 toolbar: the two views become one segmented control, the actions one quiet row (ui-theme.css) ----------
   document.getElementById('tabSummaryBtn')?.parentElement.classList.add('fl-seg');
+  document.getElementById('tabSummaryBtn')?.parentElement.parentElement.classList.add('fl-seg-row'); // the control on top, the actions under it
   document.getElementById('toggleAddLogBtn')?.parentElement.classList.add('fl-actions');
   // 比賽場記: the review and the spray chart moved out (賽事分析; 數據分析 → 全隊落點 has the same spray chart with more
   // filters), so its sub-page switch is gone and 場記 is the live scorer only. The lineup loaders: a quiet row of actions.

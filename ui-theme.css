@@ -1607,9 +1607,14 @@ html.ui-flight .fl-seg > button[class*="bg-sky-600"] { background: linear-gradie
 html.ui-flight .fl-actions > #toggleAddLogBtn { color: #6ee7b7 !important; }
 html.ui-flight .fl-actions > #toggleAddPlayerBtn { color: #c4b5fd !important; }
 html.ui-flight .fl-actions > #downloadBackupBtn { color: var(--fl-ink-2) !important; }
+/* The control never scrolls or squeezes: it sits on its own row (full width on phones, its own width above) and the
+   actions take the row under it. */
+html.ui-flight .fl-seg-row { flex-direction: column !important; align-items: stretch !important; }
+html.ui-flight .fl-seg { overflow: visible !important; flex-shrink: 0 !important; align-self: flex-start; align-items: stretch !important; max-width: 100%; }
+html.ui-flight .fl-seg > button { flex-shrink: 0; white-space: nowrap; }
 @media (max-width: 767px) {
-  html.ui-flight .fl-seg { display: flex !important; width: 100%; }
-  html.ui-flight .fl-seg > button { flex: 1 1 0; }
+  html.ui-flight .fl-seg { display: flex !important; width: 100%; align-self: stretch; }
+  html.ui-flight .fl-seg > button { flex: 1 1 0; white-space: normal; }
 }
 /* The section-chip bar is glass only while it is docked under the top bar; resting in the page it is just its chips
    (a glass strip lying on the page dimmed a rectangle of the scene and refracted it: an odd "reflection"). */
