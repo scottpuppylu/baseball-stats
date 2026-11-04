@@ -636,7 +636,7 @@
     }
     modal.querySelector('[data-s3="batter"]')?.addEventListener('change', e => { state.batter = e.target.value; rebuild(); });
 
-    let last = performance.now();
+    let last = performance.now(), hudShown = null;
     const drift = reduceMotion() ? 0 : 1;
     function frame(now) {
       if (!viewer || viewer.modal !== modal) return;
@@ -654,7 +654,9 @@
       const ctx = canvas.getContext('2d'), k = canvas.width / Math.max(1, stage.clientWidth);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       const shown = eng.draw(state, canvas.width, canvas.height, {scale: k});
-      hud.innerHTML = hudText(state, shown);
+      // Rebuilt only when its text changes: replacing the same markup every frame cost a style and layout pass each time.
+      const text = hudText(state, shown);
+      if (text !== hudShown) { hud.innerHTML = text; hudShown = text; }
       viewer.raf = requestAnimationFrame(frame);
     }
     setCam(drift ? 'auto' : 'home');
