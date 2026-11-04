@@ -494,11 +494,35 @@
     });
   }
 
+  // The whole recommendation search for one chosen lineup, from plain data to plain data (orders as indexes into
+  // `models`), so it gives the same numbers on the page or in a background worker.
+  function simulateRecommendation({models, team, settings, lineupSize, history, historyFormat, legacyStarts = [], lockEntries = [], legacyModels = null}) {
+    const locks = new Map(lockEntries);
+    const n = models.length;
+    const minutesPerPa = history.games >= 2
+      ? calibrateMinutesPerPa(team, historyFormat, lineupSize, history.average)
+      : DEFAULTS.minutesPerPa;
+    const cfg = makeConfig({...settings, minutesPerPa}, team, lineupSize);
+    const free = n ? optimizeOrder(models, cfg, legacyStarts) : {order: [], runs: 0, evaluations: 0};
+    const best = locks.size ? optimizeOrder(models, cfg, [...legacyStarts, free.order], locks) : free;
+    return {
+      order: best.order, runs: best.runs, detail: n ? evaluateOrder(models, best.order, cfg) : null,
+      freeOrder: free.order, freeRuns: free.runs,
+      legacyRuns: legacyModels ? evaluateOrder(legacyModels, legacyModels.map((m, i) => i), cfg).runs : null,
+      sensitivity: n ? slotSensitivity(models, best.order, cfg, locks) : [],
+      bookRuns: n >= 5 ? evaluateOrder(models, bookOrder(models), cfg).runs : null,
+      randomRuns: n ? randomOrderMean(models, cfg) : null,
+      worstRuns: n >= 2 ? worstOrder(models, cfg).runs : null,
+      minutesPerPa, cfg,
+      evaluations: free.evaluations + (locks.size ? best.evaluations : 0)
+    };
+  }
+
   const api = {
     EVENTS, PRIOR_PA, PRIOR_LIMITS, ADVANCE, DEFAULTS, MAX_PA_PER_INNING,
     teamRates, estimatePriorPa, batterModel, averageBatter, eventOutcomes, compileBatter, halfInning,
     makeConfig, calibrateMinutesPerPa, evaluateOrder, evaluateCompiled, bookOrder,
-    applyLocks, optimizeOrder, worstOrder, randomOrderMean, slotSensitivity
+    applyLocks, optimizeOrder, worstOrder, randomOrderMean, slotSensitivity, simulateRecommendation
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LineupModel = api;

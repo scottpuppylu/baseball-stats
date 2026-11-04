@@ -125,7 +125,8 @@
     return {map, ignored};
   }
 
-  function optimise(players) {
+  // Everything the search depends on, and its cache key. Cheap: the search itself is simulateRecommendation.
+  function prepare(players) {
     const targetSize = isDhEnabled ? 11 : 10;
     const team = M.teamRates(players);
     const byName = new Map(players.map(p => [p.name, p]));
@@ -137,40 +138,93 @@
     const lockInfo = resolveLocks(locks, chosen, present, targetSize);
     const key = JSON.stringify([targetSize, settings, history, present.map(p => p.name).sort(), chosen.map(p => p.name), [...lockInfo.map], lockInfo.ignored,
       players.map(p => [p.name, p.pa, p.bb, p.k, p.h1, p.h2, p.h3, p.hr, p.gb, p.fb, p.ld, p.pu])]);
-    let sim = cache.get(key);
+    return {key, targetSize, team, byName, models, chosen, historicalPaMap, present, settings, history, lockInfo};
+  }
+
+  // The plain-data input of the search (it can be copied to a worker as is).
+  function searchInput(prep) {
+    const {chosen, models, byName, team, settings, history, targetSize, lockInfo} = prep;
+    const nameIndex = new Map(chosen.map((p, i) => [p.name, i]));
+    // The original heuristic ordering the same hitters: a start for the search and a like-for-like baseline.
+    let legacy = null;
+    try { legacy = legacyRecommend(chosen); } catch (error) { legacy = null; }
+    const legacyNames = legacy && legacy.items ? legacy.items.map(i => i.player.name) : [];
+    return {
+      models: chosen.map(p => models.get(p.name)), team, settings, lineupSize: targetSize, history, historyFormat: HISTORY_FORMAT,
+      legacyStarts: legacyNames.length === chosen.length && legacyNames.every(n => nameIndex.has(n)) ? [legacyNames.map(n => nameIndex.get(n))] : [],
+      lockEntries: [...lockInfo.map],
+      legacyModels: legacyNames.length === targetSize ? legacyNames.map(n => modelFor(n, byName, team)) : null
+    };
+  }
+
+  function toSim(prep, out) {
+    const {chosen, lockInfo, present, history, settings, team} = prep;
+    return {
+      names: out.order.map(i => chosen[i].name), runs: out.runs, detail: out.detail,
+      freeRuns: out.freeRuns, freeNames: out.freeOrder.map(i => chosen[i].name), lockedSlots: [...lockInfo.map.keys()],
+      ignoredLocks: lockInfo.ignored, present: present.map(p => p.name),
+      sensitivity: out.sensitivity, bookRuns: out.bookRuns, randomRuns: out.randomRuns, worstRuns: out.worstRuns,
+      legacyRuns: out.legacyRuns, minutesPerPa: out.minutesPerPa, cfg: out.cfg, history, settings, prior: team.prior, team,
+      evaluations: out.evaluations
+    };
+  }
+
+  function remember(key, sim) {
+    cache.set(key, sim);
+    if (cache.size > 30) cache.delete(cache.keys().next().value);
+  }
+
+  function optimise(players) {
+    const prep = prepare(players);
+    let sim = cache.get(prep.key);
     if (!sim) {
-      const lineupModels = chosen.map(p => models.get(p.name));
-      const minutesPerPa = history.games >= 2
-        ? M.calibrateMinutesPerPa(team, HISTORY_FORMAT, targetSize, history.average)
-        : M.DEFAULTS.minutesPerPa;
-      const cfg = M.makeConfig({...settings, minutesPerPa}, team, targetSize);
-      const nameIndex = new Map(chosen.map((p, i) => [p.name, i]));
-      // The original heuristic ordering the same hitters: a start for the search and a like-for-like baseline.
-      let legacy = null;
-      try { legacy = legacyRecommend(chosen); } catch (error) { legacy = null; }
-      const legacyNames = legacy && legacy.items ? legacy.items.map(i => i.player.name) : [];
-      const legacyStart = legacyNames.length === chosen.length && legacyNames.every(n => nameIndex.has(n)) ? [legacyNames.map(n => nameIndex.get(n))] : [];
-      const free = chosen.length ? M.optimizeOrder(lineupModels, cfg, legacyStart) : {order: [], runs: 0, evaluations: 0};
-      const locked = lockInfo.map.size;
-      const best = locked ? M.optimizeOrder(lineupModels, cfg, [...legacyStart, free.order], lockInfo.map) : free;
-      const detail = chosen.length ? M.evaluateOrder(lineupModels, best.order, cfg) : null;
-      const legacyRuns = legacyNames.length === targetSize
-        ? M.evaluateOrder(legacyNames.map(n => modelFor(n, byName, team)), legacyNames.map((n, i) => i), cfg).runs : null;
-      sim = {
-        names: best.order.map(i => chosen[i].name), runs: best.runs, detail,
-        freeRuns: free.runs, freeNames: free.order.map(i => chosen[i].name), lockedSlots: [...lockInfo.map.keys()],
-        ignoredLocks: lockInfo.ignored, present: present.map(p => p.name),
-        sensitivity: chosen.length ? M.slotSensitivity(lineupModels, best.order, cfg, lockInfo.map) : [],
-        bookRuns: chosen.length >= 5 ? M.evaluateOrder(lineupModels, M.bookOrder(lineupModels), cfg).runs : null,
-        randomRuns: chosen.length ? M.randomOrderMean(lineupModels, cfg) : null,
-        worstRuns: chosen.length >= 2 ? M.worstOrder(lineupModels, cfg).runs : null,
-        legacyRuns, minutesPerPa, cfg, history, settings, prior: team.prior, team,
-        evaluations: free.evaluations + (locked ? best.evaluations : 0)
-      };
-      cache.set(key, sim);
-      if (cache.size > 30) cache.delete(cache.keys().next().value);
+      if (background.key === prep.key) stopBackground(); // already needed: computed here instead
+      sim = toSim(prep, M.simulateRecommendation(searchInput(prep)));
+      remember(prep.key, sim);
     }
+    const {byName, models, team, historicalPaMap, targetSize} = prep;
     return {sim, chosenByName: byName, models, team, historicalPaMap, targetSize};
+  }
+
+  // While the 打線 page is hidden, the search for the latest data runs in a background worker (the same
+  // lineup-model.js, loaded into it), so opening the page finds it in the cache. Until it is done, or where workers
+  // are not available, opening the page computes it there as before.
+  const background = {worker: null, key: null, timer: 0, id: 0};
+  const modelScript = document.querySelector('script[src*="lineup-model"]');
+  let workerUrl = null;
+  function stopBackground() {
+    clearTimeout(background.timer);
+    if (background.worker) background.worker.terminate();
+    background.worker = null;
+    background.key = null;
+  }
+  function startWorker() {
+    if (!modelScript || typeof Worker !== 'function' || typeof Blob !== 'function' || !window.URL || !URL.createObjectURL) return null;
+    workerUrl = workerUrl || URL.createObjectURL(new Blob([
+      `importScripts(${JSON.stringify(modelScript.src)});\n` +
+      'onmessage = e => { let out = null; try { out = self.LineupModel.simulateRecommendation(e.data.input); } catch (error) { out = null; } postMessage({id: e.data.id, out}); };'
+    ], {type: 'text/javascript'}));
+    return new Worker(workerUrl);
+  }
+  function precompute(players) {
+    stopBackground();
+    background.timer = setTimeout(() => {
+      try {
+        const prep = prepare(players);
+        if (cache.has(prep.key)) return;
+        const worker = startWorker();
+        if (!worker) return;
+        const id = ++background.id;
+        Object.assign(background, {worker, key: prep.key});
+        worker.onmessage = e => {
+          if (e.data.id !== id || background.worker !== worker) return;
+          stopBackground();
+          if (e.data.out) remember(prep.key, toSim(prep, e.data.out));
+        };
+        worker.onerror = () => { if (background.worker === worker) stopBackground(); };
+        worker.postMessage({id, input: searchInput(prep)});
+      } catch (error) { stopBackground(); }
+    }, 300);
   }
 
   // Only the shown 打線 page needs the model's order. Every data load re-renders that page while it is hidden (its
@@ -184,7 +238,7 @@
   function recommend(players) {
     const targetSize = isDhEnabled ? 11 : 10;
     if (!players || !players.length) return {items: [], hasDh: isDhEnabled, targetSize};
-    if (rendering && lineupHidden()) { deferred = true; lastResult = null; return legacyRecommend(players); }
+    if (rendering && lineupHidden()) { deferred = true; lastResult = null; precompute(players); return legacyRecommend(players); }
     const {sim, chosenByName, models, historicalPaMap} = optimise(players);
     const rawBatters = sim.names.map(n => chosenByName.get(n));
     const assigned = rawBatters.length ? matchPositionsForLineup(rawBatters, isDhEnabled) : {};

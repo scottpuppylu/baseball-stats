@@ -186,3 +186,32 @@ test('the worst order bounds every other order from below and the best from abov
   assert.deepEqual([...worst.order].sort((a, b) => a - b), models.map((m, i) => i), 'a permutation of the hitters');
   for (let i = 0; i < 9; i++) { const o = worst.order.slice(); [o[i], o[i + 1]] = [o[i + 1], o[i]]; assert.ok(M.evaluateOrder(models, o, cfg).runs >= worst.runs - 1e-9); }
 });
+test('the recommendation search gives bit-identical results on the page and after a copy to a worker', () => {
+  const mk = (name, h, bb) => ({name, pa: 40, bb, k: 3, h1: h, h2: 2, h3: 1, hr: h > 11 ? 2 : 0, gb: 8, fb: 7, ld: 4, pu: 2});
+  const players = [...Array(7)].map((_, i) => mk('p' + i, 6 + i, 2 + (i % 3)));
+  const team = M.teamRates(players), models = players.map(p => M.batterModel(p, team));
+  const historyFormat = {timeLimit: 90, rule: 'noNewInning', maxInnings: 7};
+  const cases = [
+    {settings: {}, history: {games: 0, average: 0}, legacyStarts: [], lockEntries: [], legacyModels: null},
+    {settings: {}, history: {games: 3, average: 3.6}, legacyStarts: [[6, 5, 4, 3, 2, 1, 0]], lockEntries: [[1, 0], [6, 2]], legacyModels: models.slice().reverse()}
+  ];
+  for (const c of cases) {
+    // The steps exactly as the recommender ran them on the page before the search became one function.
+    const locks = new Map(c.lockEntries);
+    const minutesPerPa = c.history.games >= 2 ? M.calibrateMinutesPerPa(team, historyFormat, 7, c.history.average) : M.DEFAULTS.minutesPerPa;
+    const cfg = M.makeConfig({...c.settings, minutesPerPa}, team, 7);
+    const free = M.optimizeOrder(models, cfg, c.legacyStarts);
+    const best = locks.size ? M.optimizeOrder(models, cfg, [...c.legacyStarts, free.order], locks) : free;
+    const expected = {
+      order: best.order, runs: best.runs, detail: M.evaluateOrder(models, best.order, cfg), freeOrder: free.order, freeRuns: free.runs,
+      legacyRuns: c.legacyModels ? M.evaluateOrder(c.legacyModels, c.legacyModels.map((m, i) => i), cfg).runs : null,
+      sensitivity: M.slotSensitivity(models, best.order, cfg, locks),
+      bookRuns: M.evaluateOrder(models, M.bookOrder(models), cfg).runs, randomRuns: M.randomOrderMean(models, cfg),
+      worstRuns: M.worstOrder(models, cfg).runs, minutesPerPa, cfg, evaluations: free.evaluations + (locks.size ? best.evaluations : 0)
+    };
+    const input = {models, team, lineupSize: 7, historyFormat, ...c};
+    assert.deepStrictEqual(M.simulateRecommendation(input), expected);
+    // A worker receives a structured clone of the input, and the page a clone of the output.
+    assert.deepStrictEqual(structuredClone(M.simulateRecommendation(structuredClone(input))), expected);
+  }
+});
