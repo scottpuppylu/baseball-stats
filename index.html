@@ -7547,12 +7547,12 @@ function renderCustomChart(agg) {
         allLogs = allLogs.filter(l => !(l.id.startsWith(`log_game_${gameId}_`) || l.gameId === gameId));
         localCache.set('rebas_logs', JSON.stringify(allLogs));
 
-        // 3. 雙向同步推播至 GitHub
+        // 3. 雙向同步推播至 GitHub。賽事上傳失敗就不送日誌（雲端會留下和賽事對不上的日誌），日誌改存成本機草稿。
         const gamesSynced = await commitGamesToGitHub(allGames, `刪除賽事: ${gameDesc}`);
-        const logsSynced = await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${gameDesc}`);
+        const logsSynced = gamesSynced ? await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${gameDesc}`) : (stagePendingChanges(DATA_FILE_PATH, allLogs), false);
 
         renderAll();
-        showSyncResult(gamesSynced && logsSynced, `已徹底刪除【${gameDesc}】比賽紀錄與全隊對應日誌！`);
+        showSyncResult(gamesSynced && logsSynced, `已徹底刪除【${gameDesc}】比賽紀錄與全隊對應日誌！`, gamesSynced ? undefined : '刪除尚未同步：賽事上傳失敗，日誌也先不送出；已保留本機刪除，請點「重新同步」重試。');
       } else {
         if (!confirm(`確認自 GitHub 雲端資料庫永久刪除此筆日誌（#${targetLog.jersey} ${targetLog.name} - ${targetLog.date}）？`)) return;
         const updated = allLogs.filter(l => l.id !== id);
@@ -10198,14 +10198,14 @@ function renderCustomChart(agg) {
       allLogs = allLogs.filter(l => !l.id.startsWith(prefix1) && !l.id.startsWith(prefix2));
       localCache.set('rebas_logs', JSON.stringify(allLogs));
 
-      // 3. 同時推播更新 GitHub 兩大數據庫
+      // 3. 同時推播更新 GitHub 兩大數據庫。賽事上傳失敗就不送日誌（雲端會留下和賽事對不上的日誌），日誌改存成本機草稿。
       const gamesSynced = await commitGamesToGitHub(allGames, `刪除賽事: ${game.date} vs ${game.opponent}`);
-      const logsSynced = await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${game.date} vs ${game.opponent}`);
+      const logsSynced = gamesSynced ? await commitLogsToGitHub(allLogs, `連動清除賽事日誌: ${game.date} vs ${game.opponent}`) : (stagePendingChanges(DATA_FILE_PATH, allLogs), false);
 
       selectedReviewGameId = allGames.length > 0 ? allGames[0].id : null;
       renderAll();
       renderGameReview();
-      showSyncResult(gamesSynced && logsSynced, '已徹底刪除該場賽事與對應日誌，全隊與個人成績已同步重算！');
+      showSyncResult(gamesSynced && logsSynced, '已徹底刪除該場賽事與對應日誌，全隊與個人成績已同步重算！', gamesSynced ? undefined : '刪除尚未同步：賽事上傳失敗，日誌也先不送出；已保留本機刪除，請點「重新同步」重試。');
     };
 
     window.renderSelectedGameReview = function(gameId) {
@@ -10931,13 +10931,13 @@ function renderCustomChart(agg) {
       localCache.set('rebas_all_games', JSON.stringify(allGames));
       const gamesSynced = await commitGamesToGitHub(allGames, `修改賽事紀錄(含投手數據): ${game.date} vs ${game.opponent}`);
 
-      // 重新計算並自動綁定更新全隊打擊與投手賽伯計量
+      // 重新計算並自動綁定更新全隊打擊與投手賽伯計量。賽事上傳失敗就不送日誌（雲端會留下和賽事對不上的日誌），日誌改存成本機草稿。
       syncAllGamesToTeamLogs();
-      const logsSynced = await commitLogsToGitHub(allLogs, `連動更新賽事日誌: ${game.date} vs ${game.opponent}`);
+      const logsSynced = gamesSynced ? await commitLogsToGitHub(allLogs, `連動更新賽事日誌: ${game.date} vs ${game.opponent}`) : (stagePendingChanges(DATA_FILE_PATH, allLogs), false);
       // Once the cloud holds this version, cancelling must not roll back past it.
       if (gamesSynced && reviewEditSnapshot && reviewEditSnapshot.id === game.id) reviewEditSnapshot.json = JSON.stringify(game);
       if (!gamesSynced || !logsSynced) {
-        showSyncResult(false, '', '修改資料尚未完整同步；已保留本機變更，請再次點擊儲存重試。');
+        showSyncResult(false, '', gamesSynced ? '修改資料尚未完整同步；已保留本機變更，請再次點擊儲存重試。' : '修改資料尚未完整同步：賽事上傳失敗，日誌也先不送出；已保留本機變更，請再次點擊儲存重試。');
         return;
       }
 

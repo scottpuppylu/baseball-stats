@@ -33,8 +33,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // the fielder for single outs, which rewrote the pitcher and the field positions); the review editor offers to put a wrong
 // one-off pitcher name back. Defense records only the pitcher (no fielder: defense has no landing points). Undo recounts every remaining record's outs;
 // entering a defensive half with a different pitcher than the last one warns.
+// 2026/11/04 (WO-02 V-03, authorized): deleting a game and saving a review edit send logs.json only after games.json
+// reached the cloud; otherwise the logs stay a local draft and the message says so. Covered by games-logs-order.test.
 const BASELINE = {
-  "script": "fb898bfd33253d7a90f4d1f0837db03d259ba76cdb86d347bc8f49c30ff227c9",
+  "script": "53d7143f1bb93f8bd92518ccff81bf290affdeb63cfb8ba2fcc83b1d5a60f456",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"

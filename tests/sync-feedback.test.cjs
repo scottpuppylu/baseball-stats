@@ -30,7 +30,7 @@ function context(extra = {}) {
     commitGamesToGitHub: async () => true, rememberCloudBase() {}, DATA_BRANCH: 'data',
     // Unsent-change drafts and the finish lock are covered by pending-sync.test.cjs; neutral stand-ins here.
     stagePendingChanges: () => null, settlePendingChanges() {}, applyPendingChanges: (file, content) => content, writeEpoch: {},
-    setScorerLocked() {}, finalizingGame: false, GAMES_FILE_PATH: 'data/games.json',
+    setScorerLocked() {}, finalizingGame: false, GAMES_FILE_PATH: 'data/games.json', DATA_FILE_PATH: 'data/logs.json',
     ...extra,
   };
   // The page's localCache passes through to localStorage when local-cache.js is absent; mirror that here.
