@@ -337,6 +337,35 @@
   const HOLDERS = [['ui-note-holder', ':scope > .ui-note'], ['ui-seg-holder', ':scope > .ui-seg'], ['ui-profile-stack', ':scope > div > span.text-slate-200']];
   const recheckHolder = el => HOLDERS.forEach(([cls, inside]) => { if (el.classList.contains(cls) && !el.querySelector(inside)) el.classList.remove(cls); });
   const fitAllActions = () => workspace.querySelectorAll(ACTION_GROUPS).forEach(fitActions);
+  const NOTE_HOST = 'main :is(span, div, b, button, label, h3, h4)';
+  function markNote(el) {
+    const hasNote = el.querySelector(':scope > .ui-note');
+    if (hasNote) el.classList.add('ui-note-holder');
+    if (hasNote || el.classList.contains('ui-note') || el.closest('td, th, select, option, .fl-actions, .fl-action-grid, .ui-review-bar')) return;
+    const nodes = [...el.childNodes];
+    const last = nodes.filter(n => n.nodeType !== 3 || n.nodeValue.trim()).pop();
+    // The note may already be its own element (「無 DH 制 <span>(10 棒・全打全守)</span>」): mark it as the note.
+    if (last && last.nodeType === 1 && nodes.length > 1 && /^[（(][^()（）]{1,26}[)）]$/.test(last.textContent.trim()) && !last.children.length) { last.classList.add('ui-note'); el.classList.add('ui-note-holder'); return; }
+    if (!last || last.nodeType !== 3 || el.textContent.trim().length > 40) return;
+    // 「<b>廖仲毅</b> (全方位廣角型)」: the note follows an element.
+    const alone = last.nodeValue.match(/^\s*([（(][^()（）]{1,26}[)）])\s*$/);
+    if (alone && last.previousSibling) {
+      const note = document.createElement('span');
+      note.className = 'ui-note';
+      note.textContent = last.nodeValue;
+      last.replaceWith(note);
+      el.classList.add('ui-note-holder');
+      return;
+    }
+    const m = last.nodeValue.match(/^([\s\S]*?\S)\s*([（(][^()（）]{1,26}[)）])\s*$/);
+    if (!m || !/[\u4e00-\u9fff0-9%]/.test(m[1]) || /^[\s(（]*[A-Za-z]/.test(m[2].slice(1))) return; // English glosses: .ui-en
+    const note = document.createElement('span');
+    note.className = 'ui-note';
+    note.textContent = m[2];
+    last.nodeValue = last.nodeValue.slice(0, last.nodeValue.length - last.nodeValue.trimEnd().length) ? m[1] : m[1];
+    last.after(note);
+    el.classList.add('ui-note-holder');
+  }
   function markHolders(root = workspace, fit = true) { // only the new content: this runs on every change while the page renders
     within(root, EYEBROW).forEach(span => span.parentElement?.classList.add('ui-has-eyebrow'));
     within(root, CHIP).forEach(b => b.parentElement.parentElement.classList.add('ui-has-chips'));
@@ -356,34 +385,7 @@
     // A note in parentheses at the end of a short label or button (「本隊安打率 14%（不含全壘打）」, 「無 DH 制 (10 棒・全打全守)」,
     // 「廖仲毅 (全方位廣角型)」) becomes a second, smaller line of its own, instead of the whole label breaking
     // wherever the width runs out. The text itself is unchanged.
-    within(root, 'main :is(span, div, b, button, label, h3, h4)').forEach(el => {
-      const hasNote = el.querySelector(':scope > .ui-note');
-      if (hasNote) el.classList.add('ui-note-holder');
-      if (hasNote || el.classList.contains('ui-note') || el.closest('td, th, select, option, .fl-actions, .fl-action-grid, .ui-review-bar')) return;
-      const nodes = [...el.childNodes];
-      const last = nodes.filter(n => n.nodeType !== 3 || n.nodeValue.trim()).pop();
-      // The note may already be its own element (「無 DH 制 <span>(10 棒・全打全守)</span>」): mark it as the note.
-      if (last && last.nodeType === 1 && nodes.length > 1 && /^[（(][^()（）]{1,26}[)）]$/.test(last.textContent.trim()) && !last.children.length) { last.classList.add('ui-note'); el.classList.add('ui-note-holder'); return; }
-      if (!last || last.nodeType !== 3 || el.textContent.trim().length > 40) return;
-      // 「<b>廖仲毅</b> (全方位廣角型)」: the note follows an element.
-      const alone = last.nodeValue.match(/^\s*([（(][^()（）]{1,26}[)）])\s*$/);
-      if (alone && last.previousSibling) {
-        const note = document.createElement('span');
-        note.className = 'ui-note';
-        note.textContent = last.nodeValue;
-        last.replaceWith(note);
-        el.classList.add('ui-note-holder');
-        return;
-      }
-      const m = last.nodeValue.match(/^([\s\S]*?\S)\s*([（(][^()（）]{1,26}[)）])\s*$/);
-      if (!m || !/[\u4e00-\u9fff0-9%]/.test(m[1]) || /^[\s(（]*[A-Za-z]/.test(m[2].slice(1))) return; // English glosses: .ui-en
-      const note = document.createElement('span');
-      note.className = 'ui-note';
-      note.textContent = m[2];
-      last.nodeValue = last.nodeValue.slice(0, last.nodeValue.length - last.nodeValue.trimEnd().length) ? m[1] : m[1];
-      last.after(note);
-      el.classList.add('ui-note-holder');
-    });
+    within(root, NOTE_HOST).forEach(markNote);
     // A short caption made of phrases (「推薦打線 10.84 分・約 3.7 局」, 「依打擊側判定拉／推；球場落點保持原方向」, 「加權創造
     // wRC+」) keeps each phrase whole: when it does not fit on one line it breaks only between phrases, never inside one.
     // Re-checked each time the text is replaced (some captions are rewritten in place).
@@ -427,6 +429,9 @@
         node.nodeValue = m[1];
         node.after(gloss);
         if (m[3]) gloss.after(document.createTextNode(m[3]));
+        // The gloss is now a parenthesised last child, which the note step treats as the title's note (second line).
+        // The old full rescan reached it on the next change; content is marked once now, so do it here.
+        if (el.matches(NOTE_HOST)) markNote(el);
         break;
       }
     });
