@@ -820,11 +820,13 @@
       c.fillStyle = sheen; c.fill();
       c.lineWidth = 1.5; c.strokeStyle = IMG.line; c.stroke();
     };
+    // Each item with the 「、」 after it (no lookbehind: Safari before 16.4 cannot parse one, and it would stop this file).
+    const splitAfterComma = line => line.match(/[^、]*、|[^、]+/g) || [''];
     // Wrap at 「、」, or by character when one item is still too long.
     const wrap = (line, maxWidth, size, weight = 600, indent = '') => {
       c.font = font(size, weight);
       const out = [''];
-      for (const part of line.split(/(?<=、)/)) {
+      for (const part of splitAfterComma(line)) {
         if (out[out.length - 1] && c.measureText(out[out.length - 1] + part).width > maxWidth) out.push(indent + part);
         else out[out.length - 1] += part;
       }

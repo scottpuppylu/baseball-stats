@@ -389,12 +389,15 @@
     // A short caption made of phrases (「推薦打線 10.84 分・約 3.7 局」, 「依打擊側判定拉／推；球場落點保持原方向」, 「加權創造
     // wRC+」) keeps each phrase whole: when it does not fit on one line it breaks only between phrases, never inside one.
     // Re-checked each time the text is replaced (some captions are rewritten in place).
+    // Marks each break with , then splits there: Safari before 16.4 cannot parse a lookbehind, and one would stop
+    // this whole file from running.
+    const phraseParts = text => text.replace(/[・；，：、|｜]/g, '$&\uE000').replace(/([\u4e00-\u9fff]) (?=[A-Za-z])/g, '$1\uE000').split('\uE000').filter(Boolean);
     within(root, 'main :is(span, p, div, .ui-note)').forEach(el => {
       if (el.children.length || el.closest('td, th, button, select, option, .ui-seg') || el.matches('.font-bold, .font-semibold, .font-black')) return;
       const text = el.textContent.trim();
       if (text.length < 8 || text.length > 28 || /[（(。]/.test(text)) return; // glosses are handled above; sentences flow as prose
       // after a separator, or at the space between Chinese and a metric's code
-      const parts = text.split(/(?<=[・；，：、|｜])|(?<=[\u4e00-\u9fff]) (?=[A-Za-z])/).filter(Boolean);
+      const parts = phraseParts(text);
       if (parts.length < 2) return;
       el.textContent = '';
       el.classList.add('ui-seg-holder');
