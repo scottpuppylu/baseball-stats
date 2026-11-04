@@ -10,7 +10,9 @@
   'use strict';
   const KEYS = ['rebas_all_games', 'rebas_logs', 'rebas_player_avatars', 'rebas_pending_sync']; // the last: unsent edits (index.html)
   const IDB_ONLY = 'rebas_cache_idb_only'; // set once this device outgrew localStorage
-  const DB_NAME = 'rebas-cache', STORE = 'kv', OPEN_TIMEOUT_MS = 1500;
+  // An IndexedDB-only device has no other copy on this device, so it waits longer for indexedDB.open (iPhones can be
+  // slow to answer on a cold start) instead of starting from nothing.
+  const DB_NAME = 'rebas-cache', STORE = 'kv', OPEN_TIMEOUT_MS = 1500, IDB_ONLY_OPEN_TIMEOUT_MS = 10000;
   const RETRY_MS = [2000, 5000, 15000, 30000];
   const big = key => KEYS.includes(key);
   const mem = new Map();
@@ -162,17 +164,18 @@
     notify();
   }
 
+  // Resolves with {database, unavailable}: unavailable when IndexedDB failed outright, not when it was only slow.
   function open() {
     return new Promise(resolve => {
       let done = false;
-      const finish = value => { if (!done) { done = true; resolve(value); } };
-      setTimeout(() => finish(null), OPEN_TIMEOUT_MS); // some iOS versions never answer indexedDB.open
+      const finish = (database, unavailable = false) => { if (!done) { done = true; resolve({database, unavailable}); } };
+      setTimeout(() => finish(null), idbOnly ? IDB_ONLY_OPEN_TIMEOUT_MS : OPEN_TIMEOUT_MS); // some iOS versions never answer indexedDB.open
       try {
         const request = root.indexedDB.open(DB_NAME, 1);
         request.onupgradeneeded = () => request.result.createObjectStore(STORE);
         request.onsuccess = () => { if (done) request.result.close(); else finish(request.result); };
-        request.onerror = request.onblocked = () => finish(null);
-      } catch (_) { finish(null); }
+        request.onerror = () => finish(null, true); // blocked: still waiting, success follows once unblocked
+      } catch (_) { finish(null, true); }
     });
   }
   function readAll(database) {
@@ -189,7 +192,7 @@
 
   // Resolves with {changed}: true when IndexedDB supplied data the synchronous startup could not read.
   const ready = (async () => {
-    const database = await open();
+    const {database, unavailable} = await open();
     const stored = database ? await readAll(database) : {};
     let changed = false;
     for (const key of KEYS) {
@@ -208,7 +211,9 @@
       } else mem.delete(key);
     }
     if (idbOnly && database) for (const key of KEYS) ls.remove(key); // leftovers, e.g. from an older cached version
-    if (idbOnly && !database) { idbOnly = false; ls.remove(IDB_ONLY); } // IndexedDB gone: fall back to localStorage
+    // IndexedDB gone: fall back to localStorage. Only slow: stay IndexedDB-only, so no localStorage mirror written now is
+    // taken as newer than IndexedDB at the next start (writes this session are reported unsaved instead).
+    if (idbOnly && !database && unavailable) { idbOnly = false; ls.remove(IDB_ONLY); }
     db = database;
     hydrated = true;
     if (db) flush();
