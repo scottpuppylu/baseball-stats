@@ -7,9 +7,9 @@
 
   // ---------- Data ----------
   const HITS = {'1H': 1, '2H': 2, '3H': 3, HR: 4};
-  const REACH = {...HITS, BB: 1, FC: 1};
+  const REACH = {...HITS, BB: 1, FC: 1, E: 1}; // E: safe at first on an error, as in game-analysis.js
   const LABEL = {'1H': '一壘安打', '2H': '二壘安打', '3H': '三壘安打', HR: '全壘打', BB: '四壞保送', K: '三振', '界外K': '界外三振', K_FOUL: '界外三振',
-    GO: '滾地出局', FO: '飛球出局', LO: '平飛出局', FC: '野手選擇', DP: '雙殺打', SF: '高飛犧牲打'};
+    GO: '滾地出局', FO: '飛球出局', LO: '平飛出局', FC: '野手選擇', E: '失誤上壘', DP: '雙殺打', SF: '高飛犧牲打'};
   const TRAJ = {line: '平飛', grounder: '滾地', fly: '高飛', popup: '內野飛球'};
   // Same colours as the 2D spray dots.
   const COLOR = {HR: '#f59e0b', '3H': '#a855f7', '2H': '#38bdf8', '1H': '#22c55e', BB: '#cbd5e1', out: '#f43f5e'};
