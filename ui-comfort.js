@@ -330,7 +330,8 @@
   window.addEventListener('resize', () => workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions));
   const CHIP = 'main .justify-between > div > button.text-xs.py-1';
   const within = (root, selector) => [...(root.matches(selector) ? [root] : []), ...root.querySelectorAll(selector)];
-  const fitAllActions = () => workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions);
+  const ACTION_GROUPS = '.fl-actions, .fl-action-grid, .ui-review-bar';
+  const fitAllActions = () => workspace.querySelectorAll(ACTION_GROUPS).forEach(fitActions);
   function markHolders(root = workspace, fit = true) { // only the new content: this runs on every change while the page renders
     within(root, EYEBROW).forEach(span => span.parentElement?.classList.add('ui-has-eyebrow'));
     within(root, CHIP).forEach(b => b.parentElement.parentElement.classList.add('ui-has-chips'));
@@ -427,18 +428,26 @@
   let scheduled = false;
   new MutationObserver(records => {
     // At once (writes only): the layout must be right the moment new content lands.
-    // One pass per batch: each new subtree once (a node inside another new node is covered by it), then one sweep of
-    // the action groups, instead of a sweep of the whole page for every added node.
+    // One pass per batch: each new subtree once (a node inside another new node is covered by it), instead of a sweep
+    // of the whole page for every added node.
     const roots = new Set();
     records.forEach(r => r.addedNodes.forEach(node => { const el = node.nodeType === 1 ? node : node.parentElement; if (el) roots.add(el); }));
-    let marked = false;
+    const marked = [];
     roots.forEach(el => {
       for (let up = el.parentElement; up; up = up.parentElement) if (roots.has(up)) return;
       if (!workspace.contains(el)) return;
       markHolders(el, false);
-      marked = true;
+      marked.push(el);
     });
-    if (marked) fitAllActions();
+    // A group's columns depend only on its own buttons and the screen width (resize refits them all), so only the
+    // groups inside the new content, or holding it, are fitted.
+    const groups = new Set();
+    marked.forEach(el => {
+      within(el, ACTION_GROUPS).forEach(g => groups.add(g));
+      const holder = el.closest(ACTION_GROUPS);
+      if (holder) groups.add(holder);
+    });
+    groups.forEach(fitActions);
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(() => { scheduled = false; enhanceTables(false); }); // measured after the paint (queueComfort)
