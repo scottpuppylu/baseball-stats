@@ -331,11 +331,17 @@
   const CHIP = 'main .justify-between > div > button.text-xs.py-1';
   const within = (root, selector) => [...(root.matches(selector) ? [root] : []), ...root.querySelectorAll(selector)];
   const ACTION_GROUPS = '.fl-actions, .fl-action-grid, .ui-review-bar';
+  // 球員檔案 cards whose number line (span.text-slate-200) sits in a div beside a badge (ui-theme.css stacks them).
+  const PROFILE_STACK = '#panelProfile div.justify-between > div > span.text-slate-200';
+  // A holder class goes when what it marks is removed, so it always means what the old :has() rule meant.
+  const HOLDERS = [['ui-note-holder', ':scope > .ui-note'], ['ui-seg-holder', ':scope > .ui-seg'], ['ui-profile-stack', ':scope > div > span.text-slate-200']];
+  const recheckHolder = el => HOLDERS.forEach(([cls, inside]) => { if (el.classList.contains(cls) && !el.querySelector(inside)) el.classList.remove(cls); });
   const fitAllActions = () => workspace.querySelectorAll(ACTION_GROUPS).forEach(fitActions);
   function markHolders(root = workspace, fit = true) { // only the new content: this runs on every change while the page renders
     within(root, EYEBROW).forEach(span => span.parentElement?.classList.add('ui-has-eyebrow'));
     within(root, CHIP).forEach(b => b.parentElement.parentElement.classList.add('ui-has-chips'));
     document.getElementById('compareSpraySvgA')?.closest('.grid > div')?.parentElement.classList.add('ui-has-spray-pair');
+    within(root, PROFILE_STACK).forEach(span => span.parentElement.parentElement.classList.add('ui-profile-stack'));
     // Grid cells holding a headline number size it to their own width (container query in ui-theme.css), so a big number
     // never overflows a narrow column.
     within(root, 'main section span.font-mono.font-black.block').forEach(num => {
@@ -351,11 +357,13 @@
     // 「廖仲毅 (全方位廣角型)」) becomes a second, smaller line of its own, instead of the whole label breaking
     // wherever the width runs out. The text itself is unchanged.
     within(root, 'main :is(span, div, b, button, label, h3, h4)').forEach(el => {
-      if (el.querySelector(':scope > .ui-note') || el.classList.contains('ui-note') || el.closest('td, th, select, option, .fl-actions, .fl-action-grid, .ui-review-bar')) return;
+      const hasNote = el.querySelector(':scope > .ui-note');
+      if (hasNote) el.classList.add('ui-note-holder');
+      if (hasNote || el.classList.contains('ui-note') || el.closest('td, th, select, option, .fl-actions, .fl-action-grid, .ui-review-bar')) return;
       const nodes = [...el.childNodes];
       const last = nodes.filter(n => n.nodeType !== 3 || n.nodeValue.trim()).pop();
       // The note may already be its own element (「無 DH 制 <span>(10 棒・全打全守)</span>」): mark it as the note.
-      if (last && last.nodeType === 1 && nodes.length > 1 && /^[（(][^()（）]{1,26}[)）]$/.test(last.textContent.trim()) && !last.children.length) { last.classList.add('ui-note'); return; }
+      if (last && last.nodeType === 1 && nodes.length > 1 && /^[（(][^()（）]{1,26}[)）]$/.test(last.textContent.trim()) && !last.children.length) { last.classList.add('ui-note'); el.classList.add('ui-note-holder'); return; }
       if (!last || last.nodeType !== 3 || el.textContent.trim().length > 40) return;
       // 「<b>廖仲毅</b> (全方位廣角型)」: the note follows an element.
       const alone = last.nodeValue.match(/^\s*([（(][^()（）]{1,26}[)）])\s*$/);
@@ -364,6 +372,7 @@
         note.className = 'ui-note';
         note.textContent = last.nodeValue;
         last.replaceWith(note);
+        el.classList.add('ui-note-holder');
         return;
       }
       const m = last.nodeValue.match(/^([\s\S]*?\S)\s*([（(][^()（）]{1,26}[)）])\s*$/);
@@ -373,6 +382,7 @@
       note.textContent = m[2];
       last.nodeValue = last.nodeValue.slice(0, last.nodeValue.length - last.nodeValue.trimEnd().length) ? m[1] : m[1];
       last.after(note);
+      el.classList.add('ui-note-holder');
     });
     // A short caption made of phrases (「推薦打線 10.84 分・約 3.7 局」, 「依打擊側判定拉／推；球場落點保持原方向」, 「加權創造
     // wRC+」) keeps each phrase whole: when it does not fit on one line it breaks only between phrases, never inside one.
@@ -385,6 +395,7 @@
       const parts = text.split(/(?<=[・；，：、|｜])|(?<=[\u4e00-\u9fff]) (?=[A-Za-z])/).filter(Boolean);
       if (parts.length < 2) return;
       el.textContent = '';
+      el.classList.add('ui-seg-holder');
       parts.forEach((part, i) => {
         const seg = document.createElement('span');
         seg.className = 'ui-seg';
@@ -431,7 +442,10 @@
     // One pass per batch: each new subtree once (a node inside another new node is covered by it), instead of a sweep
     // of the whole page for every added node.
     const roots = new Set();
-    records.forEach(r => r.addedNodes.forEach(node => { const el = node.nodeType === 1 ? node : node.parentElement; if (el) roots.add(el); }));
+    records.forEach(r => {
+      if (r.removedNodes.length) { recheckHolder(r.target); if (r.target.parentElement) recheckHolder(r.target.parentElement); }
+      r.addedNodes.forEach(node => { const el = node.nodeType === 1 ? node : node.parentElement; if (el) roots.add(el); });
+    });
     const marked = [];
     roots.forEach(el => {
       for (let up = el.parentElement; up; up = up.parentElement) if (roots.has(up)) return;

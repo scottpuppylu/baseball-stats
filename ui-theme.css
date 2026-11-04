@@ -1694,11 +1694,11 @@ html.ui-flight main :is(th, th *) { white-space: nowrap !important; }
 html.ui-flight .ui-note { font-size: max(11px, .86em); opacity: .78; display: block; line-height: 1.3; }
 html.ui-flight .ui-pair .ui-note { display: inline; margin-left: .2em; }
 html.ui-flight .ui-pair > span:first-child { white-space: nowrap; }
-html.ui-flight :is(.flex, .inline-flex):has(> .ui-note) { flex-wrap: wrap; }
+html.ui-flight :is(.flex, .inline-flex).ui-note-holder { flex-wrap: wrap; } /* holder classes: ui-comfort.js (no :has()) */
 html.ui-flight :is(.flex, .inline-flex) > .ui-note { flex: 1 0 100%; }
 /* Phrases of a caption stay whole (ui-comfort.js); the caption breaks only between them, in balanced lines. */
 html.ui-flight .ui-seg { display: inline-block; }
-html.ui-flight :has(> .ui-seg) { text-wrap: balance; }
+html.ui-flight .ui-seg-holder { text-wrap: balance; }
 html.ui-flight .ui-pair-unit, html.ui-flight .ui-note { font-weight: 500; }
 @media (max-width: 767px) {
   html.ui-flight .ui-label-row { flex-wrap: wrap !important; row-gap: 8px !important; }
@@ -1727,7 +1727,7 @@ html.ui-flight .ga-batter-line { margin-top: 1px; overflow: hidden; text-overflo
    their words on one line, the title gives way. */
 html.ui-flight main section > div.justify-between > :is(span, button):last-child { white-space: nowrap; flex-shrink: 0; }
 /* 打擊方向 card (球員檔案): the numbers on a line of their own, the tendency badge under them (never squeezed beside). */
-html.ui-flight #panelProfile div.justify-between:has(> div > span.text-slate-200) { flex-direction: column !important; align-items: flex-start !important; }
+html.ui-flight #panelProfile div.justify-between.ui-profile-stack { flex-direction: column !important; align-items: flex-start !important; }
 html.ui-flight #panelProfile div.justify-between > div > span.text-slate-200 { display: block; white-space: nowrap; margin-top: 2px; }
 /* 名詞解釋: a term's title keeps one line; its badge moves under it when the card is narrow. */
 html.ui-flight #panelGlossary div.flex.items-start.justify-between { flex-wrap: wrap; }

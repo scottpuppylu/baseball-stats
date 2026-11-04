@@ -97,3 +97,8 @@ test('presentation script parses and does not directly access persistent data or
   new vm.Script(script);
   assert.doesNotMatch(script, /\b(?:fetch|localStorage|allLogs|allGames|activeGame|GITHUB_TOKEN)\b/);
 });
+test('stylesheets use holder classes instead of :has() (a :has() rule slows every style recalculation on phones)', () => {
+  const styles = ['ui-theme.css', 'ui-comfort.css'].map(f => fs.readFileSync(path.join(root, f), 'utf8'))
+    .concat([...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(m => m[1]));
+  for (const css of styles) assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ''), /:has\(/);
+});
