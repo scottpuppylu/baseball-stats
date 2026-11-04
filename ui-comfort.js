@@ -330,7 +330,8 @@
   window.addEventListener('resize', () => workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions));
   const CHIP = 'main .justify-between > div > button.text-xs.py-1';
   const within = (root, selector) => [...(root.matches(selector) ? [root] : []), ...root.querySelectorAll(selector)];
-  function markHolders(root = workspace) { // only the new content: this runs on every change while the page renders
+  const fitAllActions = () => workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions);
+  function markHolders(root = workspace, fit = true) { // only the new content: this runs on every change while the page renders
     within(root, EYEBROW).forEach(span => span.parentElement?.classList.add('ui-has-eyebrow'));
     within(root, CHIP).forEach(b => b.parentElement.parentElement.classList.add('ui-has-chips'));
     document.getElementById('compareSpraySvgA')?.closest('.grid > div')?.parentElement.classList.add('ui-has-spray-pair');
@@ -344,7 +345,7 @@
     within(root, 'button[onclick="deleteReviewGame()"]').forEach(b => b.parentElement?.classList.add('ui-review-bar'));
     // Groups of action buttons become one row of equal action tiles (ui-theme.css), never a ragged wrap.
     within(root, '[data-ga="replay"], [data-ga="download-image"], [data-ga="share-video"]').forEach(b => b.parentElement?.classList.add('fl-action-grid'));
-    workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions);
+    if (fit) fitAllActions();
     // A note in parentheses at the end of a short label or button (「本隊安打率 14%（不含全壘打）」, 「無 DH 制 (10 棒・全打全守)」,
     // 「廖仲毅 (全方位廣角型)」) becomes a second, smaller line of its own, instead of the whole label breaking
     // wherever the width runs out. The text itself is unchanged.
@@ -426,7 +427,18 @@
   let scheduled = false;
   new MutationObserver(records => {
     // At once (writes only): the layout must be right the moment new content lands.
-    records.forEach(r => r.addedNodes.forEach(node => { const el = node.nodeType === 1 ? node : node.parentElement; if (el && workspace.contains(el)) markHolders(el); }));
+    // One pass per batch: each new subtree once (a node inside another new node is covered by it), then one sweep of
+    // the action groups, instead of a sweep of the whole page for every added node.
+    const roots = new Set();
+    records.forEach(r => r.addedNodes.forEach(node => { const el = node.nodeType === 1 ? node : node.parentElement; if (el) roots.add(el); }));
+    let marked = false;
+    roots.forEach(el => {
+      for (let up = el.parentElement; up; up = up.parentElement) if (roots.has(up)) return;
+      if (!workspace.contains(el)) return;
+      markHolders(el, false);
+      marked = true;
+    });
+    if (marked) fitAllActions();
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(() => { scheduled = false; enhanceTables(false); }); // measured after the paint (queueComfort)
