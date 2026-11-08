@@ -40,3 +40,12 @@ test('outs and hits keep their meaning next to the error (unchanged)', () => {
   assert.equal(fc.bases, 1);
   assert.equal(fc.ball.out, true, 'a fielder\'s choice is still fielded (an out elsewhere)');
 });
+
+test('V-39b: an error is drawn in the postgame page yellow (#fbbf24), not the out red, and the legend names it', () => {
+  const s3 = load();
+  assert.equal(s3.COLOR.E, '#fbbf24', 'same yellow as game-analysis.js COLOR.E');
+  assert.notEqual(s3.COLOR.E, s3.COLOR.out);
+  assert.match(source.replace(/\r\n/g, '\n'), /COLOR\.E\}"><\/i>失誤上壘/, 'the 3D legend shows the yellow dot as 失誤上壘');
+  // Other results keep their colours.
+  assert.deepEqual({...s3.COLOR, E: undefined}, {HR: '#f59e0b', '3H': '#a855f7', '2H': '#38bdf8', '1H': '#22c55e', BB: '#cbd5e1', out: '#f43f5e', E: undefined});
+});

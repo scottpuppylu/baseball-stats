@@ -12,7 +12,7 @@
     GO: '滾地出局', FO: '飛球出局', LO: '平飛出局', FC: '野手選擇', E: '失誤上壘', DP: '雙殺打', SF: '高飛犧牲打'};
   const TRAJ = {line: '平飛', grounder: '滾地', fly: '高飛', popup: '內野飛球'};
   // Same colours as the 2D spray dots.
-  const COLOR = {HR: '#f59e0b', '3H': '#a855f7', '2H': '#38bdf8', '1H': '#22c55e', BB: '#cbd5e1', out: '#f43f5e'};
+  const COLOR = {HR: '#f59e0b', '3H': '#a855f7', '2H': '#38bdf8', '1H': '#22c55e', BB: '#cbd5e1', E: '#fbbf24', out: '#f43f5e'}; // E: same yellow as the postgame page (game-analysis.js)
   const colorOf = r => COLOR[r] || COLOR.out;
   const isHit = r => r in HITS;
   const hasFlight = pa => Number.isFinite(pa.x) && Number.isFinite(pa.y) && pa.trajectory && pa.trajectory !== 'none';
@@ -530,7 +530,7 @@
           <div class="flex flex-wrap gap-3 text-[11px] text-slate-400 pt-1">
             <span><i class="s3-dot" style="background:${COLOR['1H']}"></i>一安</span><span><i class="s3-dot" style="background:${COLOR['2H']}"></i>二安</span>
             <span><i class="s3-dot" style="background:${COLOR['3H']}"></i>三安</span><span><i class="s3-dot" style="background:${COLOR.HR}"></i>全壘打</span>
-            <span><i class="s3-dot" style="background:${COLOR.out}"></i>出局</span><span class="text-slate-500">手指滑動可旋轉、雙指或滾輪縮放</span>
+            <span><i class="s3-dot" style="background:${COLOR.E}"></i>失誤上壘</span><span><i class="s3-dot" style="background:${COLOR.out}"></i>出局</span><span class="text-slate-500">手指滑動可旋轉、雙指或滾輪縮放</span>
           </div>
         </div>
       </div>`;
