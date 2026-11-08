@@ -42,6 +42,8 @@ const output=process.env.UI_QA_OUTPUT||path.join(os.tmpdir(),'baseball-ui-qa');
     const fail=r=>r.fulfill({status:500,body:'{}'});
     await page.route('**/__mock-api/data/games.json?*',fail);
     await page.evaluate(()=>loadLogsFromGitHub());
+    // A backup copy starts one background re-read of the cloud (WO-02 V-04); the badge is checked after it settles.
+    await page.waitForFunction(()=>!document.getElementById('syncStatusBadge').textContent.includes('連線同步中'),null,{timeout:20000});
     const partial=await page.locator('#syncStatusBadge').textContent();
     assert.doesNotMatch(partial,/雲端已同步/);assert.match(partial,/賽事.*備援/);
     await page.evaluate(()=>showCloudStatusToast());
