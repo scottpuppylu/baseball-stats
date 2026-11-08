@@ -4931,10 +4931,17 @@ window.toggleDiagnosticsCollapse = function() {
     }
 
 
+    // A photo is kept and shown only when it is an image data URL; a web address, script or page is dropped (V-58).
+    function isImageAvatar(value) {
+      return typeof value === 'string' && /^data:image\//.test(value);
+    }
+    function imageAvatarsOnly(map) {
+      return Object.fromEntries(Object.entries(map).filter(([, value]) => isImageAvatar(value)));
+    }
     async function loadAvatarsFromGitHub() {
       return loadDatabaseSource(AVATARS_FILE_PATH, 'rebas_player_avatars', (content, source) => {
         if (!content || typeof content !== 'object' || Array.isArray(content)) throw new Error('Invalid avatars');
-        playerAvatars = source === 'cloud' ? content : { ...playerAvatars, ...content };
+        playerAvatars = imageAvatarsOnly(source === 'cloud' ? content : { ...playerAvatars, ...content });
       }, sha => { currentAvatarsSha = sha; });
     }
 
@@ -5136,7 +5143,7 @@ window.toggleDiagnosticsCollapse = function() {
 
     function renderAvatarElement(name, sizeClass = 'w-10 h-10 text-sm') {
       const avatarData = playerAvatars[name];
-      if (avatarData) {
+      if (isImageAvatar(avatarData)) {
         return `<img src="${escHtml(avatarSrc(avatarData))}" alt="${escHtml(name)}" class="${sizeClass} rounded-full object-cover border-2 border-sky-400/80 shadow-md shrink-0 transition duration-150">`;
       }
       const char = name ? name.substring(0, 1) : '航';

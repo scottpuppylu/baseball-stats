@@ -274,6 +274,8 @@ for(const [name,c,key,content]of [
       cloudReadTimeoutMs:3500,isSimulatedGame:()=>false,guestPlayers:[],playerAvatars:{},playerTags:{},defenseRankings:{},DEFAULT_DEFENSE_RANKINGS:{}});
     vm.runInContext(extract('function readStoredJson(','\n    }'),ctx);
     vm.runInContext(extract('async function loadDatabaseSource(','\n    }'),ctx);
+    // V-58: the avatars loader keeps only image data URLs through these two helpers.
+    if(name==='Avatars')for(const helper of['function isImageAvatar(','function imageAvatarsOnly('])vm.runInContext(extract(helper,'\n    }'),ctx);
     vm.runInContext(extract(`async function load${name}FromGitHub(`,'\n    }'),ctx);
     assert.equal(await ctx[`load${name}FromGitHub`](),sourceName);
   });

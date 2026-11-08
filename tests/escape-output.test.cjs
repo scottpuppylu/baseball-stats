@@ -30,8 +30,10 @@ function loadInner(file, names, extra = {}) {
 }
 
 test('V-56: a photo-less avatar and a photo avatar escape the name and the photo value', () => {
-  const ctx = vm.createContext({playerAvatars: {'A"B': 'x" onerror="alert(1)'}, avatarSrc: data => data});
-  vm.runInContext(fn(html, '    function escHtml(') + fn(html, '    function renderAvatarElement('), ctx);
+  const ctx = vm.createContext({playerAvatars: {'A"B': 'data:image/png;base64,x" onerror="alert(1)'}, avatarSrc: data => data});
+  // V-58 later added isImageAvatar, which renderAvatarElement calls.
+  const guard = html.includes('    function isImageAvatar(') ? fn(html, '    function isImageAvatar(') : '';
+  vm.runInContext(guard + fn(html, '    function escHtml(') + fn(html, '    function renderAvatarElement('), ctx);
   const photo = ctx.renderAvatarElement('A"B');
   assert.ok(!photo.includes('" onerror="'), photo);
   assert.ok(!photo.includes('alt="A"B"'), photo);
