@@ -675,11 +675,11 @@
     const play = shown.play, p = play && play.pa;
     if (!p) return '';
     const s = situation(play, shown.t);
-    const where = state.single ? '' : `${p.gameDate ? p.gameDate.slice(5) : ''} vs ${escape(p.opponent || '')}`;
+    const where = state.single ? '' : `${p.gameDate ? escape(p.gameDate.slice(5)) : ''} vs ${escape(p.opponent || '')}`;
     const dots = [0, 1, 2].map(i => `<i class="s3-out${i < s.outs ? ' s3-out-on' : ''}"></i>`).join('');
     const color = colorOf(p.result);
     return `<div class="flex items-center justify-between gap-2">
-        <span class="s3-tag">${s.inning}${where ? ` · ${where}` : ''}</span>
+        <span class="s3-tag">${escape(s.inning)}${where ? ` · ${where}` : ''}</span>
         <span class="s3-tag">${dots}<span class="ml-1">${s.outs} 出局</span></span>
       </div>
       <div class="mt-1 flex items-center justify-between gap-2">

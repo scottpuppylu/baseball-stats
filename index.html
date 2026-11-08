@@ -2663,7 +2663,8 @@
       // This device uploaded the file while this load was in flight: its own copy is newer than the response.
       const outdated = () => (writeEpoch[filePath] || 0) !== epoch;
       // Unsent changes from this device always go back on top of whatever copy was loaded.
-      const withDrafts = content => applyPendingChanges(filePath, content);
+      // Drafts are cleaned like the cloud copy before they are shown (V-56).
+      const withDrafts = content => sanitizeLoadedData(applyPendingChanges(filePath, content));
       try {
         const { content: rawContent, sha } = await fetchGitHubContent(filePath, cloudReadTimeoutMs);
         if (outdated()) return 'cloud';
@@ -5136,12 +5137,12 @@ window.toggleDiagnosticsCollapse = function() {
     function renderAvatarElement(name, sizeClass = 'w-10 h-10 text-sm') {
       const avatarData = playerAvatars[name];
       if (avatarData) {
-        return `<img src="${avatarSrc(avatarData)}" alt="${name}" class="${sizeClass} rounded-full object-cover border-2 border-sky-400/80 shadow-md shrink-0 transition duration-150">`;
+        return `<img src="${escHtml(avatarSrc(avatarData))}" alt="${escHtml(name)}" class="${sizeClass} rounded-full object-cover border-2 border-sky-400/80 shadow-md shrink-0 transition duration-150">`;
       }
       const char = name ? name.substring(0, 1) : '航';
       return `
         <div class="${sizeClass} rounded-full bg-gradient-to-br from-sky-600 via-indigo-700 to-slate-900 border-2 border-sky-400/60 text-white font-black flex items-center justify-center shadow-md shrink-0 select-none tracking-tight">
-          ${char}
+          ${escHtml(char)}
         </div>
       `;
     }

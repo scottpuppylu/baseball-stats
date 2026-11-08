@@ -174,7 +174,7 @@
         <div class="flex items-center justify-between gap-3 flex-wrap">
           <div><p class="text-xs text-slate-400">${esc(g.date)} · ${esc(tagLabel(g.tag))} · ${esc(g.ourRole || '')}</p>
             <p class="text-xl sm:text-2xl font-black text-white mt-1">${TEAM} <span class="text-slate-500 font-medium">vs</span> ${esc(g.opponent || '對手')}</p></div>
-          <div class="text-right">${a.scored ? `<p class="ga-score">${s.us}<span>:</span>${s.opp}</p>` : ''}<p class="text-sm font-bold" style="color:${res[1]}">${res[0]}</p></div>
+          <div class="text-right">${a.scored ? `<p class="ga-score">${esc(s.us)}<span>:</span>${esc(s.opp)}</p>` : ''}<p class="text-sm font-bold" style="color:${res[1]}">${res[0]}</p></div>
         </div>
         <div class="ga-stats">${stat(a.batting.length, '打席')}${stat(a.hits, '安打', '#22c55e')}${stat(avg, '打擊率')}${stat(a.batting.filter(p => ['2H', '3H', 'HR'].includes(p.result)).length, '長打', '#f3c766')}${stat(a.batting.filter(p => p.result === 'BB').length, '保送', '#cbd5e1')}${stat(a.mvp ? esc(a.mvp.name) : '—', 'MVP', '#fbbf24')}</div>
         <div class="flex flex-wrap gap-2">
@@ -196,7 +196,7 @@
       const bw = (W - L - R) / Math.max(1, ours.length) * 0.55;
       return `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" role="img" aria-label="每局安打">
         ${ours.map((h, i) => { const cx = L + (W - L - R) * (i + 0.5) / ours.length, bh = (H - T - B) * h.hits / max;
-          return `<rect x="${cx - bw / 2}" y="${H - B - bh}" width="${bw}" height="${bh}" rx="5" fill="#22c55e" opacity="0.75"/><text x="${cx}" y="${H - B - bh - 6}" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">${h.hits}</text><text x="${cx}" y="${H - 10}" text-anchor="middle" fill="#94a3b8" font-size="13">${h.num} 局</text>`; }).join('')}
+          return `<rect x="${cx - bw / 2}" y="${H - B - bh}" width="${bw}" height="${bh}" rx="5" fill="#22c55e" opacity="0.75"/><text x="${cx}" y="${H - B - bh - 6}" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">${esc(h.hits)}</text><text x="${cx}" y="${H - 10}" text-anchor="middle" fill="#94a3b8" font-size="13">${esc(h.num)} 局</text>`; }).join('')}
       </svg><p class="text-[11px] text-slate-500">這場沒有記錄比分，改顯示本隊每局安打。</p>`;
     }
     const max = Math.max(1, a.score.us, a.score.opp);
@@ -205,7 +205,7 @@
     const grid = Array.from({length: Math.min(max, 6) + 1}, (_, i) => Math.round(max * i / Math.min(max, 6)));
     return `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" role="img" aria-label="比分走勢">
         ${grid.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,0.07)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" fill="#64748b" font-size="12">${v}</text>`).join('')}
-        ${halves.map((h, i) => `<text x="${x(i)}" y="${H - 10}" text-anchor="middle" fill="${h.ours ? '#7dd3fc' : '#94a3b8'}" font-size="12">${h.num}${h.half === 'top' ? '上' : '下'}</text>`).join('')}
+        ${halves.map((h, i) => `<text x="${x(i)}" y="${H - 10}" text-anchor="middle" fill="${h.ours ? '#7dd3fc' : '#94a3b8'}" font-size="12">${esc(h.num)}${h.half === 'top' ? '上' : '下'}</text>`).join('')}
         <path d="${path('opp')}" fill="none" stroke="#fb7185" stroke-width="3" stroke-linejoin="round"/>
         <path d="${path('us')}" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round"/>
         ${halves.map((h, i) => h.runs ? `<circle cx="${x(i)}" cy="${y(h.after[h.ours ? 'us' : 'opp'])}" r="5" fill="${h.ours ? '#38bdf8' : '#fb7185'}"/><text x="${x(i)}" y="${y(h.after[h.ours ? 'us' : 'opp']) - 9}" text-anchor="middle" fill="${h.ours ? '#bae6fd' : '#fecdd3'}" font-size="13" font-weight="700">+${h.runs}</text>` : '').join('')}
@@ -240,14 +240,14 @@
       const head = `<div class="ga-half-head"><span class="ga-inning">${h.num} 局${h.half === 'top' ? '上' : '下'}</span>
           <span class="text-xs ${h.ours ? 'text-sky-300' : 'text-slate-400'}">${h.ours ? '本隊進攻' : `防守${startingPitcher(h.defs) ? `・投手 ${esc(startingPitcher(h.defs))}` : ''}`}</span>
           <span class="ml-auto text-xs font-bold ${h.runs ? 'text-white' : 'text-slate-500'}">${a.scored ? `${h.ours ? '得' : '失'} ${h.runs} 分 · ` : ''}${h.hits} 安</span></div>`;
-      const subs = h.subs.map(s => `<div class="ga-note">🔄 換人：第 ${s.slot} 棒 ${esc(s.outPlayer)} → ${esc(s.inPlayer)}</div>`).join('');
+      const subs = h.subs.map(s => `<div class="ga-note">🔄 換人：第 ${esc(s.slot)} 棒 ${esc(s.outPlayer)} → ${esc(s.inPlayer)}</div>`).join('');
       let body;
       if (h.ours) {
         body = h.pas.length ? h.pas.map(pa => {
           const after = Number.isFinite(pa.outsAtEnd) ? Math.min(3, pa.outsAtEnd) : null;
           if (isRunnerOut(pa)) return `<div class="ga-pa"><span class="ga-slot">—</span><span class="ga-name">${esc(pa.batterName || '跑者')}</span>${chip('跑壘出局', COLOR.out)}<span class="ga-how">壘上跑者出局</span>${after != null ? outsDots(after) : ''}</div>`;
           const how = [TRAJ[pa.trajectory], PLACE[pa.location] && pa.trajectory !== 'none' ? `${PLACE[pa.location]}方向` : ''].filter(Boolean).join('・');
-          return `<div class="ga-pa"><span class="ga-slot">${pa.slot && pa.slot < 90 ? pa.slot : '替'}</span><span class="ga-name">${esc(pa.batterName)}</span>${chip(LABEL[pa.result] || pa.result, colorOf(pa.result))}<span class="ga-how">${esc(how)}${pa.runsScored ? ` · <b class="text-emerald-300">+${pa.runsScored} 分</b>` : ''}</span>${after != null ? outsDots(after) : ''}</div>`;
+          return `<div class="ga-pa"><span class="ga-slot">${esc(pa.slot && pa.slot < 90 ? pa.slot : '替')}</span><span class="ga-name">${esc(pa.batterName)}</span>${chip(LABEL[pa.result] || pa.result, colorOf(pa.result))}<span class="ga-how">${esc(how)}${pa.runsScored ? ` · <b class="text-emerald-300">+${esc(pa.runsScored)} 分</b>` : ''}</span>${after != null ? outsDots(after) : ''}</div>`;
         }).join('') : empty('這半局沒有逐打席紀錄。');
       } else {
         // A pitching change is shown only when the new name stays for two events in a row; a name that appears on a single
@@ -275,7 +275,7 @@
       const isMvp = a.mvp && a.mvp.name === r.name;
       const xb = r.h2 + r.h3 + r.hr;
       return `<div class="ga-batter${isMvp ? ' ga-mvp' : ''}">
-          <div class="flex items-center gap-2.5"><span class="ga-slot">${r.isSub ? '替' : r.slot}</span>
+          <div class="flex items-center gap-2.5"><span class="ga-slot">${esc(r.isSub ? '替' : r.slot)}</span>
             <div class="min-w-0"><div class="flex items-center gap-2 whitespace-nowrap"><b class="text-sm text-white">${esc(r.name)}</b>${isMvp ? '<span class="text-[11px] text-amber-300">🏆 MVP</span>' : ''}</div>
             <div class="ga-batter-line text-xs text-slate-400 whitespace-nowrap">${r.ab} 打數 ${r.h} 安${xb ? `・${xb} 長打` : ''}${r.bb ? `・${r.bb} 保送` : ''}${r.k ? `・${r.k} 三振` : ''}</div></div></div>
           <div class="flex flex-wrap gap-1.5 mt-2">${list.map(p => chip(`${p.inning}局 ${SHORT[p.result] || p.result}`, colorOf(p.result))).join('')}</div>

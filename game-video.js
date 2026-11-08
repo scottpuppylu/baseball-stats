@@ -507,7 +507,7 @@
     const sheet = document.createElement('div');
     sheet.className = 'fixed inset-0 z-[90] bg-black/70 flex items-center justify-center p-6';
     sheet.innerHTML = `<div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 w-full max-w-sm space-y-3">
-        <p class="text-sm font-bold text-slate-100">${label}</p>
+        <p class="text-sm font-bold text-slate-100">${String(label ?? '').replace(/[&<>"']/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[ch]))}</p>
         <div class="h-2 rounded-full bg-slate-800 overflow-hidden"><div class="gv-bar h-full bg-emerald-400" style="width:0%"></div></div>
         <div class="flex items-center justify-between text-xs text-slate-400"><span class="gv-pct">0%</span><button type="button" class="s3-chip">取消</button></div>
         <p class="text-[11px] text-slate-500">影片在這台裝置上製作，不會上傳；製作期間請保持此頁開啟。</p>
