@@ -2883,7 +2883,10 @@
           conflicts = result.conflicts;
           merged = JSON.stringify(data) !== JSON.stringify(localData);
         }
-        const putBody = { message: commitMessage, content: utf8ToBase64(JSON.stringify(data, null, 2)), branch: DATA_BRANCH };
+        // Serialized once (V-02): the page may change `data` while the upload is in flight, and the cloud base must be
+        // exactly what was sent, or those later edits would count as already in the cloud and a merge would drop them.
+        const sentJson = JSON.stringify(data, null, 2);
+        const putBody = { message: commitMessage, content: utf8ToBase64(sentJson), branch: DATA_BRANCH };
         if (remoteSha) putBody.sha = remoteSha;
         const putRes = await fetchWrite(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`, {
           method: 'PUT',
@@ -2898,7 +2901,7 @@
         }
         const resData = await putRes.json();
         const sha = resData && resData.content ? resData.content.sha : null;
-        rememberCloudBase(filePath, sha, data);
+        cloudBase[filePath] = { sha: sha || null, json: sentJson };
         writeEpoch[filePath] = (writeEpoch[filePath] || 0) + 1;
         settlePendingChanges(ticket);
         if (merged) showToast(`雲端已有其他裝置的新紀錄，已自動合併後上傳${conflicts ? `（${conflicts} 筆兩邊都改過，以這台裝置為準）` : ''}`);

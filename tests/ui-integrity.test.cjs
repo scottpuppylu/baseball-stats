@@ -37,8 +37,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // reached the cloud; otherwise the logs stay a local draft and the message says so. Covered by games-logs-order.test.
 // 2026/11/08 (WO-02 V-03b, authorized): 重新同步 likewise sends logs.json only after games.json reached the cloud.
 // Covered by retry-sync-order.test.
+// 2026/11/08 (WO-02 V-02, authorized): an upload serializes once and records exactly what it sent as the cloud base.
+// Covered by sync-feedback.test (V-02).
 const BASELINE = {
-  "script": "869fd3e63132bcd7fda28370ad596d68591cdbf9394ac5948d673732061e819d",
+  "script": "7080c9ecedec7dc530a4bafb5136969ca0479d207b0ebd60d1583d2815e47a29",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"

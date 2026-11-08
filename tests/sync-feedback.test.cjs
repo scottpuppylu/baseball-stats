@@ -391,3 +391,25 @@ test('a missing file is created without a sha', async () => {
   assert.equal('sha' in putBody, false);
   assert.equal(result.sha, 'new');
 });
+test('V-02: an edit made while an upload is in flight is not recorded as already in the cloud, so a later merge keeps it', async () => {
+  const cloud = fakeCloud([{id: 'a', v: 1}]);
+  const local = [{id: 'a', v: 1}, {id: 'mine', v: 1}];
+  let editDuringUpload = true;
+  const fetch = async (url, options = {}) => {
+    const response = await cloud.fetch(url, options);
+    // The page changes the same array (finishing a game, a review edit) before the PUT's answer arrives.
+    if (options.method === 'PUT' && editDuringUpload) { editDuringUpload = false; local[0].v = 2; local.push({id: 'late', v: 1}); }
+    return response;
+  };
+  const ctx = mergeContext({fetch});
+  ctx.rememberCloudBase('data/logs.json', 's0', [{id: 'a', v: 1}]);
+  await ctx.commitJsonFile('data/logs.json', local, 'first', byId);
+  assert.deepEqual(cloud.puts[0], [{id: 'a', v: 1}, {id: 'mine', v: 1}], 'the first upload sent the array as it was');
+  // Another device saves; this device then uploads its in-flight edits and must merge them in, not drop them.
+  cloud.data = [...cloud.data, {id: 'theirs', v: 1}];
+  cloud.sha = 's-other';
+  await ctx.commitJsonFile('data/logs.json', local, 'second', byId);
+  assert.equal(cloud.data.find(x => x.id === 'a').v, 2, 'the edit made during the first upload reached the cloud');
+  assert.ok(cloud.data.some(x => x.id === 'late'), 'the item added during the first upload reached the cloud');
+  assert.ok(cloud.data.some(x => x.id === 'theirs'), 'the other device\'s item stays');
+});
