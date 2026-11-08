@@ -7905,7 +7905,8 @@ function renderCustomChart(agg) {
               else if (evt.type === 'RUNNER_OUT') { p.runner_out++; }
               else if (evt.type === 'BB') { p.bb++; p.tbf++; }
               else if (evt.type === 'HIT') { p.hits++; p.tbf++; }
-              if (evt.runs) p.runs += evt.runs;
+              const runs = Number(evt.runs); // stored text "2" still adds as 2; invalid or negative counts as 0 (V-42)
+              if (Number.isFinite(runs) && runs > 0) p.runs += runs;
             });
           } else {
             // 該半局沒有逐筆守備事件：只記出賽，不推估出局、保送與三振

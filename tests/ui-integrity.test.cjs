@@ -49,8 +49,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // upload and never unlocks the button while an upload runs. Covered by inning-sync-timer.test.
 // 2026/11/08 (WO-02 V-41, authorized): jerseys must be whole numbers 0–999 (empty is not #0) and a new player needs a
 // date. Covered by jersey-input.test.
+// 2026/11/08 (WO-02 V-42, authorized): a pitcher's runs from defensive events are added as numbers. Covered by
+// defense-runs-number.test.
 const BASELINE = {
-  "script": "619a768d82890e995bd3545fbc6eb7f00bc50d63c1e7869541eadae5262d8809",
+  "script": "1760d0b89f5ebc700622ec3438b75a4b1f954e8530c61117145ac786564af474",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"
