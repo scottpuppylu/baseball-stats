@@ -125,6 +125,21 @@ async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
       for (const selector of ['#filterStartDate', 'button[onclick="manualRefresh()"]', 'button[onclick="openDefenseModal()"]', '#btnToggleChien', '#exportCsvBtn', '#flTools #syncStatusBadge'])
         assert.ok(await page.locator(selector).isVisible(), selector);
       await page.screenshot({path: path.join(output, `${engine}-${width}-tools.png`)});
+      if (width < 768) { // V-16: with the browser bars showing (short viewport) the panel ends above the tab bar, and its last item is reachable
+        await page.setViewportSize({width, height: 560});
+        await page.waitForTimeout(200);
+        const reach = await page.evaluate(() => {
+          const panel = document.getElementById('flTools'), tabs = document.querySelector('.ui-mobile-nav');
+          panel.scrollTop = panel.scrollHeight;
+          const last = [...panel.querySelectorAll('button, input, a, [id="syncStatusBadge"]')].filter(el => el.getClientRects().length).at(-1);
+          const r = last.getBoundingClientRect(), hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          return {panelBottom: panel.getBoundingClientRect().bottom, tabsTop: tabs.getBoundingClientRect().top, lastOnTop: !!hit && (hit === last || last.contains(hit))};
+        });
+        assert.ok(reach.panelBottom <= reach.tabsTop, `tools panel ends above the tab bar (${reach.panelBottom} > ${reach.tabsTop})`);
+        assert.ok(reach.lastOnTop, 'the last tool can be tapped after scrolling to the end');
+        await page.screenshot({path: path.join(output, `${engine}-${width}-tools-short.png`)});
+        await page.setViewportSize({width, height});
+      }
       await page.locator('#flTools .fl-tools-done').click();
       assert.equal(await page.locator('#flTools').isVisible(), false);
       const bar = await page.locator('#appHeader').boundingBox();

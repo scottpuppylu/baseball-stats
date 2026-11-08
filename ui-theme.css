@@ -735,6 +735,12 @@ html.ui-flight .ui-section-bar { top: var(--fl-top-h) !important; }
   html.ui-flight #flTopbar { gap: 8px; padding: 6px 12px !important; }
   html.ui-flight #flTopbar #uiDateToggle { display: none !important; }
   html.ui-flight #flTools { left: 10px; right: 10px; width: auto; border-radius: 24px; }
+  /* V-16: end above the floating tab bar (it sits on top, 8px + ~70px + safe area) and follow the visible height when
+     the iOS browser bars show, so the last tool can always be scrolled to and tapped. */
+  html.ui-flight #flTools {
+    max-height: calc(100vh - var(--fl-top-h) - 104px - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - var(--fl-top-h) - 104px - env(safe-area-inset-bottom));
+  }
   html.ui-flight .ui-page-heading p { display: none; }
 }
 
