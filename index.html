@@ -8424,7 +8424,8 @@ function renderCustomChart(agg) {
       ['xba', 'xBA'], ['xslg', 'xSLG'], ['xwoba', 'xwOBA']
     ];
     function csvCell(p, key) {
-      if (key === 'name') return `"${String(p.name).replace(/"/g, '""')}"`;
+      // A name starting with = + - @ would be read as a formula by Excel or Sheets; a leading ' keeps it text (V-59).
+      if (key === 'name') return `"${String(p.name).replace(/^[=+\-@]/, "'$&").replace(/"/g, '""')}"`;
       if (['xba', 'xslg', 'xwoba'].includes(key) && !p.tracked) return '';
       const v = Number(p[key]);
       if (!Number.isFinite(v)) return '';

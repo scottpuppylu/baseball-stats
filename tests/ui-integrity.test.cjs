@@ -55,8 +55,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // cloud copy before they are shown. Covered by escape-output.test.
 // 2026/11/08 (WO-02 V-58, authorized): a player photo is kept and shown only when it is an image data URL. Covered by
 // avatar-image-only.test.
+// 2026/11/08 (WO-02 V-59, authorized): a CSV name starting with = + - @ gets a leading ' so it stays text. Covered by
+// csv-formula.test.
 const BASELINE = {
-  "script": "be72a9845daafe7bf875eec33c3bf300275963176ba314410b34ecf8d87d4adf",
+  "script": "d55a5d91ef1f6f13a95e0e617c522224b908c5b86f0bf36542cb08837c745108",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"
