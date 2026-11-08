@@ -271,7 +271,7 @@ for(const [name,c,key,content]of [
       fetchGitHubContent:async()=>{if(sourceName!=='cloud')throw Error('cloud offline');return{content,sha:'cloud-sha'};},
       fetchLocalContent:async()=>{if(sourceName!=='static')throw Error('static offline');return content;},
       localStorage:{setItem(){},getItem:k=>sourceName==='cache'&&k===key?JSON.stringify(content):null},
-      isSimulatedGame:()=>false,guestPlayers:[],playerAvatars:{},playerTags:{},defenseRankings:{},DEFAULT_DEFENSE_RANKINGS:{}});
+      cloudReadTimeoutMs:3500,isSimulatedGame:()=>false,guestPlayers:[],playerAvatars:{},playerTags:{},defenseRankings:{},DEFAULT_DEFENSE_RANKINGS:{}});
     vm.runInContext(extract('function readStoredJson(','\n    }'),ctx);
     vm.runInContext(extract('async function loadDatabaseSource(','\n    }'),ctx);
     vm.runInContext(extract(`async function load${name}FromGitHub(`,'\n    }'),ctx);

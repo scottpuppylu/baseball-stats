@@ -39,8 +39,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // Covered by retry-sync-order.test.
 // 2026/11/08 (WO-02 V-02, authorized): an upload serializes once and records exactly what it sent as the cloud base.
 // Covered by sync-feedback.test (V-02).
+// 2026/11/08 (WO-02 V-04, authorized): after showing a backup copy, the page reads the cloud once more in the background
+// with a 15 s limit. Covered by backup-reread.test.
 const BASELINE = {
-  "script": "7080c9ecedec7dc530a4bafb5136969ca0479d207b0ebd60d1583d2815e47a29",
+  "script": "8c4ba762d9cda893cba4aa56df2e39a3ff5811bdf94d0abb951d499cfc6d54a5",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"

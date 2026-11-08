@@ -2635,6 +2635,16 @@
       }
     })();
 
+    // ★ 備援後重讀雲端（V-04）：GitHub API 3.5 秒內沒回應時，畫面先用備援副本（徽章標「備援」）。在舊副本上修改，
+    // 可能蓋掉雲端較新的同一筆，所以背景再用較長的時限讀一次雲端；讀到就換成雲端版本，只重試一次。
+    const CLOUD_READ_TIMEOUT_MS = 3500, CLOUD_RETRY_TIMEOUT_MS = 15000;
+    let cloudReadTimeoutMs = CLOUD_READ_TIMEOUT_MS;
+    async function retryCloudRead() {
+      cloudReadTimeoutMs = CLOUD_RETRY_TIMEOUT_MS;
+      try { await loadLogsFromGitHub(); } finally { cloudReadTimeoutMs = CLOUD_READ_TIMEOUT_MS; }
+    }
+    // ★ 備援後重讀雲端（結束）
+
     async function loadDatabaseSource(filePath, storageKey, apply, setSha, optional = false) {
       await localCache.ready;
       const epoch = writeEpoch[filePath] || 0;
@@ -2643,7 +2653,7 @@
       // Unsent changes from this device always go back on top of whatever copy was loaded.
       const withDrafts = content => applyPendingChanges(filePath, content);
       try {
-        const { content: rawContent, sha } = await fetchGitHubContent(filePath);
+        const { content: rawContent, sha } = await fetchGitHubContent(filePath, cloudReadTimeoutMs);
         if (outdated()) return 'cloud';
         const content = sanitizeLoadedData(rawContent);
         const shown = withDrafts(content);
@@ -5036,6 +5046,8 @@ window.toggleDiagnosticsCollapse = function() {
         setStatusBadge(`[連線正常] 雲端已同步 (${allLogs.length} 筆)`, 'success');
       } else {
         setStatusBadge(`[部分同步／備援] 部分資料未取得最新雲端版本：${fallback.join('；')} (${allLogs.length} 筆)`, 'warning');
+        const online = !(typeof navigator !== 'undefined' && navigator.onLine === false);
+        if (online && cloudReadTimeoutMs === CLOUD_READ_TIMEOUT_MS && sources.some(s => s === 'static' || s === 'cache')) setTimeout(retryCloudRead, 0);
       }
       renderAll();
       // 只有雲端讀取正常時才檢查舊版頁面寫到 main 的資料；併入後重新載入，讓畫面與雲端一致。
