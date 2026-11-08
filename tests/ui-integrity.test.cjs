@@ -41,8 +41,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // Covered by sync-feedback.test (V-02).
 // 2026/11/08 (WO-02 V-04, authorized): after showing a backup copy, the page reads the cloud once more in the background
 // with a 15 s limit. Covered by backup-reread.test.
+// 2026/11/08 (WO-02 V-08, authorized): after a merged guest roster upload, edits made on the page during the upload go
+// back on top of the merged copy. Covered by guest-merge.test.
 const BASELINE = {
-  "script": "8c4ba762d9cda893cba4aa56df2e39a3ff5811bdf94d0abb951d499cfc6d54a5",
+  "script": "01bf18ad907e9e758559866f3982430eab189156ca75344a3804a31d36ee71f4",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"

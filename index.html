@@ -2696,11 +2696,20 @@
     }
 
     async function commitGuestsToGitHub(updatedGuests, commitMessage = "update: sync guest players via portal") {
+      // The roster as this upload starts: anything that differs from it afterwards was edited on this page meanwhile (V-08).
+      const sentFrom = new Map((updatedGuests || []).map(g => [g.name, JSON.stringify(g)]));
       try {
         const result = await commitJsonFile(GUESTS_FILE_PATH, updatedGuests, commitMessage, g => g.name);
         currentGuestsSha = result.sha;
         if (result.merged) {
-          guestPlayers = window.guestPlayers = result.data.filter(g => g && g.name);
+          // Take the merged cloud copy, then put back what this page added, changed or removed while the upload was in
+          // flight, so those edits are neither lost here nor sent as deletions by the next upload (V-08).
+          const now = new Map((guestPlayers || []).filter(g => g && g.name).map(g => [g.name, g]));
+          const editedHere = name => now.has(name) ? sentFrom.get(name) !== JSON.stringify(now.get(name)) : sentFrom.has(name);
+          const merged = result.data.filter(g => g && g.name && !(editedHere(g.name) && !now.has(g.name)))
+            .map(g => editedHere(g.name) ? now.get(g.name) : g);
+          const added = [...now.values()].filter(g => editedHere(g.name) && !merged.includes(g));
+          guestPlayers = window.guestPlayers = merged.concat(added);
           localStorage.setItem('rebas_guest_players', JSON.stringify(guestPlayers));
           syncJerseyMaps();
         }
