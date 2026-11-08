@@ -47,8 +47,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // storeLocal, which never throws and shows 「本機暫存失敗」. Covered by local-save-safe.test.
 // 2026/11/08 (WO-02 V-17, authorized): the inning upload button's 3 s reset keeps its timer id, is cleared by the next
 // upload and never unlocks the button while an upload runs. Covered by inning-sync-timer.test.
+// 2026/11/08 (WO-02 V-41, authorized): jerseys must be whole numbers 0–999 (empty is not #0) and a new player needs a
+// date. Covered by jersey-input.test.
 const BASELINE = {
-  "script": "f2ac574267b6fe114341f1e1a331928be90963da9bd9dc0fdecedbc429a8f9ae",
+  "script": "619a768d82890e995bd3545fbc6eb7f00bc50d63c1e7869541eadae5262d8809",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"

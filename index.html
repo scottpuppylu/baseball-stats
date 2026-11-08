@@ -7674,6 +7674,12 @@ function renderCustomChart(agg) {
     });
 
 
+    // A jersey is a whole number 0–999; an empty field is no jersey, not #0 (V-41).
+    function parseJersey(text) {
+      const value = String(text ?? '').trim();
+      return /^\d{1,3}$/.test(value) ? Number(value) : null;
+    }
+
     document.getElementById('addLogForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const date = document.getElementById('new_date').value;
@@ -7683,7 +7689,11 @@ function renderCustomChart(agg) {
       }
 
 
-      const jerseyNum = Number(document.getElementById('new_jersey').value.trim());
+      const jerseyNum = parseJersey(document.getElementById('new_jersey').value);
+      if (jerseyNum === null) {
+        showToast('請輸入背號：0–999 的整數。', 'error');
+        return;
+      }
       const playerName = JERSEY_TO_NAME[jerseyNum];
       if (!playerName) {
         showToast(`查無背號 #${jerseyNum} 之球員！\n請先點擊「+ 新增球隊球員」建立檔案。`, 'error');
@@ -7746,7 +7756,7 @@ function renderCustomChart(agg) {
 
     document.getElementById('addPlayerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const num = Number(document.getElementById('reg_jersey').value.trim());
+      const num = parseJersey(document.getElementById('reg_jersey').value);
       const name = document.getElementById('reg_name').value.trim();
       const date = document.getElementById('reg_date').value;
       const tag = document.getElementById('reg_tag').value.trim() || '選手建檔';
@@ -7757,8 +7767,12 @@ function renderCustomChart(agg) {
         showToast('請輸入球員姓名！', 'error');
         return;
       }
-      if (isNaN(num) || num < 0) {
-        showToast('請輸入有效數字背號！', 'error');
+      if (num === null) {
+        showToast('請輸入有效背號：0–999 的整數！', 'error');
+        return;
+      }
+      if (!date) {
+        showToast('請填寫建檔日期！', 'error');
         return;
       }
       if (JERSEY_TO_NAME[num]) {
