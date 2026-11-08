@@ -255,6 +255,8 @@ let externalGitHub = 0;
       await page.reload(); await page.waitForFunction(() => window.teamRecords && !document.getElementById('syncStatusBadge').textContent.includes('連線同步中'));
       assert.ok(await page.evaluate(() => guestPlayers.some(g => g.name === '記憶體支援')));
       state.failGet.add('data/guests.json'); await page.evaluate(() => loadLogsFromGitHub());
+      // A backup copy starts one background re-read of the cloud (WO-02 V-04); the badge is checked after it settles.
+      await page.waitForFunction(() => !document.getElementById('syncStatusBadge').textContent.includes('連線同步中'), null, {timeout: 20000});
       assert.match(await page.locator('#syncStatusBadge').textContent(), /部分同步.*支援名冊/);
     });
     assert.equal(externalGitHub, 0); assert.deepEqual(hashes(), diskBefore);
