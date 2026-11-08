@@ -128,7 +128,7 @@ function changeLiveLineupPosition(index, position) {
   activeGame.pitcherName = pitcherIndex >= 0 ? activeGame.lineup[pitcherIndex] :
     activeGame.lineup.includes(activeGame.pitcherName) ? null : activeGame.pitcherName;
   saveLineupDefenseChange(before, '守位調整');
-  localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+  storeLocal('rebas_active_game', JSON.stringify(activeGame)); // never throws (V-09)
   renderLiveScorer();
 }
 

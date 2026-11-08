@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 function context(game = {}) {
   const c = vm.createContext({activeGame:game, POSITIONS:['P','C','1B','2B','3B','SS','LF','SF','RC','RF'].map(key=>({key})),
-    localStorage:{setItem(){}},renderLiveScorer(){}});
+    localStorage:{setItem(){}},storeLocal(){return true;},renderLiveScorer(){}}); // storeLocal: index.html (V-09)
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../scorebook-lineup.js'),'utf8'),c);
   return c;
 }

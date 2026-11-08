@@ -43,8 +43,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // with a 15 s limit. Covered by backup-reread.test.
 // 2026/11/08 (WO-02 V-08, authorized): after a merged guest roster upload, edits made on the page during the upload go
 // back on top of the merged copy. Covered by guest-merge.test.
+// 2026/11/08 (WO-02 V-09, authorized): tags, the 簡承均 switch, game start and pitching change save locally through
+// storeLocal, which never throws and shows 「本機暫存失敗」. Covered by local-save-safe.test.
 const BASELINE = {
-  "script": "01bf18ad907e9e758559866f3982430eab189156ca75344a3804a31d36ee71f4",
+  "script": "4483ea99ad5e503851b5e2f7871b5541de0beae6b4449866332a5fe70833be5e",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"

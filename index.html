@@ -2416,6 +2416,18 @@
       remove: key => localStorage.removeItem(key),
       ready: Promise.resolve({changed: false})
     };
+    // Small values saved straight to localStorage. A full or blocked storage (private mode) throws: the flow must go on
+    // (screen update, cloud upload, result message), and the scorer is told the local copy failed, once per 5 s (V-09).
+    let localSaveWarnedAt = 0;
+    function storeLocal(key, value) {
+      try { localStorage.setItem(key, value); return true; } catch (e) {
+        if (Date.now() - localSaveWarnedAt > 5000) {
+          localSaveWarnedAt = Date.now();
+          showToast('本機暫存失敗：這台裝置的儲存空間已滿或被封鎖，這次修改重新整理後可能不見，請先同步到雲端。', 'error');
+        }
+        return false;
+      }
+    }
     // Corrupted browser storage must not stop the whole page from loading.
     function readStoredJson(key, fallback) {
       try {
@@ -4966,7 +4978,7 @@ window.toggleDiagnosticsCollapse = function() {
         const result = await commitJsonFile(TAGS_FILE_PATH, updatedTags, commitMessage);
         currentTagsSha = result.sha;
         playerTags = result.data;
-        localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
+        storeLocal('rebas_player_tags', JSON.stringify(playerTags));
 
 
         setStatusBadge('[連線正常] 標籤已即時同步', 'success');
@@ -5004,7 +5016,7 @@ window.toggleDiagnosticsCollapse = function() {
         return;
       }
       playerTags[playerName] = [...currentList, cleanTag];
-      localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
+      storeLocal('rebas_player_tags', JSON.stringify(playerTags));
       const anaAgg = getAnalysisAgg();
       renderPlayerProfile(anaAgg);
       await commitTagsToGitHub(playerTags, `feat: add nickname tag "${cleanTag}" for ${playerName}`);
@@ -5021,7 +5033,7 @@ window.toggleDiagnosticsCollapse = function() {
       } else {
         playerTags[playerName] = currentList;
       }
-      localStorage.setItem('rebas_player_tags', JSON.stringify(playerTags));
+      storeLocal('rebas_player_tags', JSON.stringify(playerTags));
       const anaAgg = getAnalysisAgg();
       renderPlayerProfile(anaAgg);
       await commitTagsToGitHub(playerTags, `delete: remove tag "${targetTag}" for ${playerName}`);
@@ -7801,7 +7813,7 @@ function renderCustomChart(agg) {
     window.toggleChienFilter = function() {
       includeChien = !includeChien;
       window.includeChien = includeChien;
-      localStorage.setItem('rebas_include_chien', JSON.stringify(includeChien));
+      storeLocal('rebas_include_chien', JSON.stringify(includeChien));
       updateChienFilterButton();
       renderAll();
       showToast(includeChien ? '⚡ 已將簡承均數據重新納入常模分析！' : '🚫 已成功將簡承均超標數據排除於分析之外！');
@@ -8721,7 +8733,7 @@ function renderCustomChart(agg) {
       };
 
       if (typeof window !== 'undefined') window.activeGame = activeGame;
-      localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+      storeLocal('rebas_active_game', JSON.stringify(activeGame));
       renderLiveScorer();
     };
 
@@ -8999,7 +9011,7 @@ function renderCustomChart(agg) {
         const beforeDefense = gameDefenseSnapshot();
         alignLineupPitcher(newPitcherName);
         saveLineupDefenseChange(beforeDefense, '換投');
-        localStorage.setItem('rebas_active_game', JSON.stringify(activeGame));
+        storeLocal('rebas_active_game', JSON.stringify(activeGame));
         updateLivePitcherCard();
         showToast(`已更換登板投手為：#${NAME_TO_JERSEY[newPitcherName] ?? ''} ${newPitcherName} (場上調換)`);
       } else {
