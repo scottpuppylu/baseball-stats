@@ -8489,17 +8489,23 @@ function renderCustomChart(agg) {
       }, sha => { currentGamesSha = sha; });
     }
 
+    // The success message goes back to idle after 3 s, but never over a later result or while another upload runs (V-17).
+    let inningSyncResetTimer = null, gamesWritesInFlight = 0;
     async function commitGamesToGitHub(updatedGames, commitMessage = "update: sync scorebook games via portal") {
       setStatusBadge('雲端資料庫：正在同步場記數據...', 'pending');
 
       const inningSyncBtn = document.getElementById('btnInningCloudSync');
+      clearTimeout(inningSyncResetTimer);
+      inningSyncResetTimer = null;
       if (inningSyncBtn) {
         inningSyncBtn.innerHTML = '<span>⏳</span> 雲端寫入中...';
         inningSyncBtn.disabled = true;
       }
 
       try {
-        const result = await commitJsonFile(GAMES_FILE_PATH, updatedGames, commitMessage, g => g.id);
+        let result;
+        gamesWritesInFlight++;
+        try { result = await commitJsonFile(GAMES_FILE_PATH, updatedGames, commitMessage, g => g.id); } finally { gamesWritesInFlight--; }
         currentGamesSha = result.sha;
         allGames = result.merged ? result.data.filter(g => !isSimulatedGame(g)) : result.data;
         localCache.set('rebas_all_games', JSON.stringify(allGames));
@@ -8511,8 +8517,10 @@ function renderCustomChart(agg) {
         if (inningSyncBtn) {
           inningSyncBtn.innerHTML = '<span>✓</span> 本局雲端同步成功！';
           inningSyncBtn.className = 'bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg transition flex items-center gap-1.5';
-          setTimeout(() => {
-            if (inningSyncBtn) {
+          clearTimeout(inningSyncResetTimer);
+          inningSyncResetTimer = setTimeout(() => {
+            inningSyncResetTimer = null;
+            if (inningSyncBtn && !gamesWritesInFlight) {
               inningSyncBtn.innerHTML = '<span>☁️</span> 上傳本局戰況至 GitHub';
               inningSyncBtn.className = 'bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-amber-600/30 transition flex items-center gap-1.5';
               inningSyncBtn.disabled = false;
@@ -8525,7 +8533,7 @@ function renderCustomChart(agg) {
         setStatusBadge(`[寫入失敗] 場記同步失敗: ${err.message}`, 'error');
         if (inningSyncBtn) {
           inningSyncBtn.innerHTML = '<span>✕</span> 同步失敗重試';
-          inningSyncBtn.disabled = false;
+          inningSyncBtn.disabled = gamesWritesInFlight > 0; // another upload still running: unlocked when it ends
         }
         showToast(`場記資料同步至 GitHub 失敗：${err.message}\n（本地 localStorage 已安全暫存，資料不會遺失！）`, 'error');
         return false;

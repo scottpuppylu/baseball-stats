@@ -45,8 +45,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // back on top of the merged copy. Covered by guest-merge.test.
 // 2026/11/08 (WO-02 V-09, authorized): tags, the 簡承均 switch, game start and pitching change save locally through
 // storeLocal, which never throws and shows 「本機暫存失敗」. Covered by local-save-safe.test.
+// 2026/11/08 (WO-02 V-17, authorized): the inning upload button's 3 s reset keeps its timer id, is cleared by the next
+// upload and never unlocks the button while an upload runs. Covered by inning-sync-timer.test.
 const BASELINE = {
-  "script": "4483ea99ad5e503851b5e2f7871b5541de0beae6b4449866332a5fe70833be5e",
+  "script": "f2ac574267b6fe114341f1e1a331928be90963da9bd9dc0fdecedbc429a8f9ae",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"
