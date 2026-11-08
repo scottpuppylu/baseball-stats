@@ -31,7 +31,9 @@ function load({storage = {}, stored = {}, openAfter = 0, fail = false, noIndexed
     }
   };
   const ls = new Map(Object.entries(storage));
-  const localStorage = {getItem: k => (ls.has(k) ? ls.get(k) : null), setItem: (k, v) => ls.set(k, String(v)), removeItem: k => ls.delete(k)};
+  const quota = {full: false}; // full: every localStorage write throws, as Safari does when the quota is used up
+  const localStorage = {getItem: k => (ls.has(k) ? ls.get(k) : null), removeItem: k => ls.delete(k),
+    setItem: (k, v) => { if (quota.full) throw Object.assign(new Error('full'), {name: 'QuotaExceededError'}); ls.set(k, String(v)); }};
   const data = new Map(Object.entries(stored));
   const db = {
     closed: false,
@@ -59,8 +61,44 @@ function load({storage = {}, stored = {}, openAfter = 0, fail = false, noIndexed
   if (!noIndexedDB) root.indexedDB = indexedDB;
   const ctx = vm.createContext({window: root, setTimeout: clock.setTimeout, clearTimeout: clock.clearTimeout, console});
   vm.runInContext(source, ctx);
-  return {cache: root.LocalCache, ls, data, db, clock};
+  return {cache: root.LocalCache, ls, data, db, clock, quota};
 }
+
+test('V-07: localStorage full and no IndexedDB: the old mirror stays, so a reload still has the last saved copy', async () => {
+  for (const options of [{noIndexedDB: true}, {fail: true}]) {
+    const {cache, ls, clock, quota} = load({storage: {rebas_logs: '[old]'}, ...options});
+    await clock.advance(100);
+    quota.full = true;
+    assert.equal(cache.set('rebas_logs', '[new]'), false, 'the new value could not be saved');
+    assert.equal(ls.get('rebas_logs'), '[old]', 'the last durable copy is not deleted');
+    assert.equal(cache.status().failed, true, 'the page is told the write is not saved');
+  }
+});
+
+test('V-07: localStorage full before IndexedDB answered: the old mirror goes only once IndexedDB takes over', async () => {
+  const failed = load({storage: {rebas_logs: '[old]'}, fail: true, openAfter: 1000});
+  failed.quota.full = true;
+  failed.cache.set('rebas_logs', '[new]');
+  await failed.clock.advance(2000);
+  assert.equal(failed.ls.get('rebas_logs'), '[old]', 'IndexedDB failed: the old mirror is still the only durable copy');
+
+  const works = load({storage: {rebas_logs: '[old]'}, openAfter: 1000});
+  works.quota.full = true;
+  works.cache.set('rebas_logs', '[new]');
+  await works.clock.advance(2000);
+  assert.equal(works.data.get('rebas_logs'), '[new]', 'IndexedDB holds the new value');
+  assert.equal(works.ls.has('rebas_logs'), false, 'the outdated mirror is not read at the next start');
+});
+
+test('localStorage full with IndexedDB working: the outdated mirror goes and IndexedDB keeps the value (unchanged)', async () => {
+  const {cache, ls, data, clock, quota} = load({storage: {rebas_logs: '[old]'}});
+  await clock.advance(100);
+  quota.full = true;
+  cache.set('rebas_logs', '[new]');
+  await clock.advance(100);
+  assert.equal(ls.has('rebas_logs'), false);
+  assert.equal(data.get('rebas_logs'), '[new]');
+});
 
 test('V-01: an IndexedDB-only device whose IndexedDB answers late keeps the flag and loads the stored copy', async () => {
   const draft = '{"logs":[{"id":"draft"}]}';

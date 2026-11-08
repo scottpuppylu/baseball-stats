@@ -93,15 +93,20 @@
     queue.set(key, value);
     if (db && !flushTimer && !retryTimer) flushTimer = setTimeout(flush, 0);
   }
+  const staleMirrors = new Set(); // full before IndexedDB answered: these old mirrors go only if IndexedDB takes over
   // Writes the localStorage mirror. Returns true when that alone made the value durable.
   function mirror(key, value) {
     if (idbOnly) return false;
-    if (ls.set(key, value)) return true;
-    // Full. The old mirror is now outdated and must not be read at the next start, so it goes; the other mirrors stay
-    // until IndexedDB has confirmed every value (only then does the device switch to IndexedDB-only).
-    ls.remove(key);
-    if (db) switchToIdbOnly = true;
+    if (ls.set(key, value)) { staleMirrors.delete(key); return true; }
+    // Full. Once IndexedDB holds the new value the old mirror is outdated and must not be read at the next start, so it
+    // goes; the other mirrors stay until IndexedDB has confirmed every value (only then does the device switch to
+    // IndexedDB-only). Without IndexedDB the old mirror is the last durable copy and stays (V-07).
+    if (db) { ls.remove(key); switchToIdbOnly = true; } else if (!hydrated) staleMirrors.add(key);
     return false;
+  }
+  function dropStaleMirrors() {
+    if (db) for (const key of staleMirrors) { ls.remove(key); switchToIdbOnly = true; }
+    staleMirrors.clear();
   }
   function finishIdbOnlySwitch() {
     switchToIdbOnly = false;
@@ -216,6 +221,7 @@
     if (idbOnly && !database && unavailable) { idbOnly = false; ls.remove(IDB_ONLY); }
     db = database;
     hydrated = true;
+    dropStaleMirrors();
     if (db) flush();
     else queue.clear(); // without IndexedDB the localStorage mirror is the only copy, as before
     // Ask the browser not to evict this site's storage under pressure (no prompt in Chrome; ignored elsewhere).
