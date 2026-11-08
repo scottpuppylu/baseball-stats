@@ -780,7 +780,7 @@
 
   function drawGameImage(game, options = {}) {
     const s = gameSummary(game);
-    const score = game.finalScore || {us: 0, opp: 0};
+    const score = scoreOf(game); // stored text "10" still compares as 10 (V-40b)
     // A 0:0 final means the score was not kept (as in the stats pages): show hits instead of a fake tie.
     const scored = isGameScoreRecorded(game);
     const result = !scored ? null : score.us > score.opp ? ['勝', IMG.green] : score.us < score.opp ? ['敗', IMG.red] : ['和', IMG.amber];

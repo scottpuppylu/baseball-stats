@@ -109,13 +109,15 @@
   // ---------- Game picker: the current game with older / newer, and a searchable list grouped by month ----------
   const pick = {open: false, q: '', year: 'all', tag: 'all', result: 'all'};
   const RESULTS = {win: ['勝', '#22c55e'], loss: ['敗', '#fb7185'], tie: ['和', '#fbbf24'], none: ['未記比分', '#94a3b8'], live: ['進行中', '#38bdf8']};
+  // Stored text "10" still compares and shows as 10; anything that is not a number counts as 0 (V-40b, as V-40).
+  const scoreOf = g => ({us: Number(g?.finalScore?.us) || 0, opp: Number(g?.finalScore?.opp) || 0});
   function resultOf(g) {
     if (g.status === 'in_progress') return 'live';
-    const s = g.finalScore || {us: 0, opp: 0};
+    const s = scoreOf(g);
     if (typeof isGameScoreRecorded === 'function' && !isGameScoreRecorded(g)) return 'none';
     return s.us > s.opp ? 'win' : s.us < s.opp ? 'loss' : 'tie';
   }
-  const scoreText = g => (['none', 'live'].includes(resultOf(g)) ? '' : `${(g.finalScore || {}).us} : ${(g.finalScore || {}).opp} `);
+  const scoreText = g => (['none', 'live'].includes(resultOf(g)) ? '' : `${scoreOf(g).us} : ${scoreOf(g).opp} `);
   function filtered(games) {
     const q = pick.q.trim().toLowerCase();
     return games.filter(g => (pick.year === 'all' || (g.date || '').startsWith(pick.year))
