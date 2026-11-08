@@ -35,8 +35,10 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // entering a defensive half with a different pitcher than the last one warns.
 // 2026/11/04 (WO-02 V-03, authorized): deleting a game and saving a review edit send logs.json only after games.json
 // reached the cloud; otherwise the logs stay a local draft and the message says so. Covered by games-logs-order.test.
+// 2026/11/08 (WO-02 V-03b, authorized): 重新同步 likewise sends logs.json only after games.json reached the cloud.
+// Covered by retry-sync-order.test.
 const BASELINE = {
-  "script": "53d7143f1bb93f8bd92518ccff81bf290affdeb63cfb8ba2fcc83b1d5a60f456",
+  "script": "869fd3e63132bcd7fda28370ad596d68591cdbf9394ac5948d673732061e819d",
   "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
   "idCount": 285,
   "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"

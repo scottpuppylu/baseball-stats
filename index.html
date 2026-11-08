@@ -2988,10 +2988,12 @@
       const files = Object.keys(pendingStore());
       let ok = true;
       if (files.includes(GAMES_FILE_PATH)) ok = (await commitGamesToGitHub(allGames, '重新同步：未上傳的賽事修改')) && ok;
-      if (files.includes(DATA_FILE_PATH)) ok = (await commitLogsToGitHub(allLogs, '重新同步：未上傳的日誌修改')) && ok;
+      // The logs follow the games file (V-03b): after a failed games upload they stay a draft here.
+      const logsHeld = !ok && files.includes(DATA_FILE_PATH);
+      if (files.includes(DATA_FILE_PATH) && ok) ok = (await commitLogsToGitHub(allLogs, '重新同步：未上傳的日誌修改')) && ok;
       if (files.includes(GUESTS_FILE_PATH)) ok = (await commitGuestsToGitHub(guestPlayers, '重新同步：未上傳的支援名冊修改')) && ok;
       renderAll();
-      showSyncResult(ok, '未上傳的修改已全部同步至 GitHub', '仍有修改尚未同步；資料保留在這台裝置，請稍後再試。');
+      showSyncResult(ok, '未上傳的修改已全部同步至 GitHub', logsHeld ? '仍有修改尚未同步：賽事上傳失敗，日誌也先不送出；資料保留在這台裝置，請稍後再試。' : '仍有修改尚未同步；資料保留在這台裝置，請稍後再試。');
       return ok;
     };
     // ★ 待同步草稿（結束）
