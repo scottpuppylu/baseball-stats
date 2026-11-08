@@ -46,7 +46,7 @@
   function gameCard(game) {
     const pa = (game.innings || []).reduce((n, inn) => n + (inn.plateAppearances || []).length, 0);
     const recorded = typeof isGameScoreRecorded === 'function' ? isGameScoreRecorded(game) : !!game.finalScore;
-    const us = game.finalScore?.us ?? 0, opp = game.finalScore?.opp ?? 0;
+    const us = Number(game.finalScore?.us) || 0, opp = Number(game.finalScore?.opp) || 0; // stored text "10" still compares as 10 (V-40)
     const result = !recorded ? '<span class="fl-tag">未記比分</span>'
       : `<span class="fl-score ${us > opp ? 'is-win' : us < opp ? 'is-loss' : ''}">${us}<i>:</i>${opp}</span>`;
     return `<button type="button" class="fl-card" data-game="${esc(game.id)}"><span class="fl-card-date">${shortDate(game.date)}</span>

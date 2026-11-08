@@ -5,6 +5,8 @@
   // Rate stats below this many PA swing heavily; about six or seven games for this team.
   const SAMPLE_PA = 20;
   const RECENT_GAMES = 5;
+  // A stored score may be text ("10"): compare and add it as a number, and let nothing else reach the page (V-40).
+  const scoreOf = game => ({us: Number(game?.finalScore?.us) || 0, opp: Number(game?.finalScore?.opp) || 0});
   const TEAM_NAME = '淡江航太系壘';
   // Team badge for the post-game image; loaded once, and the image is drawn without it if it fails.
   const LOGO = typeof Image === 'function' ? new Image() : null;
@@ -482,14 +484,14 @@
     const hasScore = g => isGameScoreRecorded(g.game);
     const scored = games.filter(hasScore);
     const record = scored.reduce((r, g) => {
-      const s = g.game.finalScore;
+      const s = scoreOf(g.game);
       if (s.us > s.opp) r.w++; else if (s.us < s.opp) r.l++; else r.t++;
       r.rs += s.us || 0; r.ra += s.opp || 0;
       return r;
     }, {w: 0, l: 0, t: 0, rs: 0, ra: 0});
     const result = g => {
       if (!hasScore(g)) return '<span class="text-slate-600">—</span>';
-      const s = g.game.finalScore;
+      const s = scoreOf(g.game);
       const [label, cls] = s.us > s.opp ? ['勝', 'text-emerald-300'] : s.us < s.opp ? ['敗', 'text-rose-300'] : ['和', 'text-amber-300'];
       return `<span class="${cls} font-bold">${label}</span> <span class="font-mono">${s.us}:${s.opp}</span>`;
     };
