@@ -327,7 +327,9 @@
     const titleOf = key => document.getElementById(`btnTab${key}`)?.querySelector('span:last-child')?.textContent?.trim() || nav?.labels?.[key] || key;
     (nav?.groups || []).forEach(([group, keys]) => keys.forEach(key => {
       if (!document.getElementById(`btnTab${key}`)) return;
-      items.push({kind: '頁面', label: titleOf(key), hint: group || '主頁', keywords: `${titleOf(key)} ${nav.labels?.[key] || ''} ${group}`, run: () => nav.openPage(key)});
+      // The group's shown name, plus its old names (數據／健康／賽事分析 stay findable: WO-03 B2).
+      const name = nav.groupName ? nav.groupName(group) : group;
+      items.push({kind: '頁面', label: titleOf(key), hint: name || '主頁', keywords: `${titleOf(key)} ${nav.labels?.[key] || ''} ${name} ${group} ${nav.aliases?.[key] || ''}`, run: () => nav.openPage(key)});
     }));
     let names = [];
     try { names = typeof getAllAvailablePlayerNames === 'function' ? getAllAvailablePlayerNames().teamNames : []; } catch (e) { names = []; }

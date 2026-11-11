@@ -1920,3 +1920,25 @@ html.ui-flight #playerProfileBio .pf-tags button[onclick^="addPlayerTag"] > .ui-
 /* WO-03 B1: on 球員檔案 the chip row now sits inside the page, where every control must reach 36 px; the phone rule in
    ui-comfort.css made chips 34 px. 36 px everywhere keeps the row the same on every page. */
 html.ui-flight .ui-section-bar button { min-height: 36px; }
+/* WO-03 B2 (U-06): tablets get the phone's glass pill chips. The pill shape and spacing came from a phone-only rule in
+   ui-comfort.css, so tablets showed square boxes; colour and glass already come from the shared rules above. */
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  html.ui-flight .ui-section-bar:not(#fl-x) button { border: 0 !important; border-radius: 999px !important; padding: 0 15px !important; font-size: 14px; }
+}
+/* WO-03 B2 (U-11): phones get a small date pill beside the page title (opens 工具與篩選); elsewhere the top bar shows dates. */
+.ui-date-pill { display: none; }
+@media (max-width: 767.98px) {
+  html.ui-flight .ui-page-heading .ui-date-pill {
+    display: inline-flex; align-items: center; flex: none; align-self: center; margin-left: auto; min-height: 32px; padding: 0 12px;
+    border: 0; border-radius: 999px; color: rgba(232, 236, 242, .86); font-size: 12.5px; font-weight: 600; white-space: nowrap;
+    background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18), 0 6px 16px -12px rgba(0, 0, 0, .8);
+  }
+}
+/* WO-03 B2 (U-10): the home page's 所有功能 tiles moved here: in 更多 (phone) and the drawer (tablet) each group says
+   what it holds under its name. CSS text, so the group's element text stays just its name. Not in the desktop sidebar. */
+@media (max-width: 1279.98px) {
+  html.ui-flight #mainNavigation > .ui-nav-group[data-desc]::after {
+    content: attr(data-desc); display: block; margin-top: 4px; color: var(--fl-ink-2); font-size: 12.5px; font-weight: 400;
+    letter-spacing: .02em; line-height: 1.55;
+  }
+}

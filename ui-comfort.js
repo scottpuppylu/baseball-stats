@@ -45,6 +45,10 @@
     const end = document.getElementById('filterEndDate').value;
     const label = start || end ? `${start || '不限起日'} ～ ${end || '不限迄日'}` : '全部日期';
     dateToggle.textContent = `日期篩選 · ${label}　${document.body.classList.contains('ui-date-collapsed') ? '⌄' : '⌃'}`;
+    const md = v => v ? v.slice(5).replace('-', '/').replace(/^0/, '').replace('/0', '/') : '';
+    const short = start || end ? `${md(start) || '起'}～${md(end) || '今'}` : '全部日期';
+    const pill = document.getElementById('uiDatePill');
+    if (pill && pill.textContent !== short) { pill.textContent = short; pill.setAttribute('aria-label', `日期範圍：${label}（打開工具與篩選）`); }
   }
   dateToggle.addEventListener('click', () => {
     const collapsed = document.body.classList.toggle('ui-date-collapsed');
@@ -64,22 +68,35 @@
     Compare: ['雙人比較', '兩位球員並列比較指標、逐場近況與擊球方向。'],
     Lineup: ['打線安排', '確認出席與守位，推薦或自訂完整打線。'],
     Scorebook: ['比賽場記', '即時記分、換人換投、賽事覆盤與落點分析。'],
-    Games: ['賽事分析', '一場比賽發生的所有事：關鍵時刻、比分走勢、逐局經過、打者與投手表現。'],
+    Games: ['比賽覆盤', '一場比賽發生的所有事：關鍵時刻、比分走勢、逐局經過、打者與投手表現。'],
     Pitching: ['投手分析', '查看投球事件、出局結構與隊內投手指標。'],
     Records: ['生涯紀錄', '生涯排行、單場與連續紀錄、里程碑與趣味紀錄。'],
     Glossary: ['指標說明', '查閱各項數據的定義、公式與判讀方式。'],
-    Health: ['球員健康資料', '記錄基本資料與左右打，依打擊側校正拉打／推打判定。']
+    Health: ['球員名冊', '記錄基本資料與左右打，依打擊側校正拉打／推打判定。']
   };
   const heading = document.createElement('div');
   heading.className = 'ui-page-heading';
   heading.innerHTML = '<div><h1 id="uiPageTitle"></h1><p id="uiPageDescription"></p></div>';
   workspace.prepend(heading);
+  // Phones: a small date pill beside the page title (the date range is otherwise only in 工具與篩選). It opens that
+  // panel; tablets and desktops already show the dates in the top bar, so CSS shows the pill on phones only (WO-03 B2, U-11).
+  const datePill = document.createElement('button');
+  datePill.type = 'button';
+  datePill.className = 'ui-date-pill';
+  datePill.id = 'uiDatePill';
+  datePill.setAttribute('aria-label', '日期範圍：全部日期（打開工具與篩選）');
+  datePill.textContent = '全部日期';
+  datePill.addEventListener('click', () => document.getElementById('flToolsButton')?.click());
+  heading.append(datePill);
+  updateDateLabel();
   const bottom = document.createElement('nav');
   bottom.className = 'ui-mobile-nav';
   bottom.setAttribute('aria-label', '手機常用功能');
   // ---------- Site map ----------
   // Five places on the phone tab bar; each group's pages switch with a segmented control under the page title.
   // 參考 (glossary, version history) lives in 「更多」, which also lists every page. Buttons keep their own handlers.
+  // A group's first value is its id (data-group, like tab* ids it never changes: bookmarks, tests and lastInGroup use it);
+  // GROUP_NAMES is what people read. 2026/11/12 (WO-03 B2, PO-23, 總監 DD-21): 球隊數據 reads 球隊 everywhere.
   const NAV_GROUPS = [
     ['', ['Home']],
     ['球隊數據', ['Overview', 'Analytics', 'Pitching', 'Records']],
@@ -87,15 +104,25 @@
     ['比賽', ['Lineup', 'Scorebook', 'Games']],
     ['參考', ['Glossary', 'Changelog']]
   ];
+  const GROUP_NAMES = {'球隊數據': '球隊'};
+  const groupName = label => GROUP_NAMES[label] || label;
+  // What each group holds (was the home page's 所有功能 tiles; now shown under each group in 更多 and the drawer).
+  const GROUP_DESC = {'球隊數據': '全隊成績、象限分析、投手指標與生涯紀錄。', '球員': '個人能力檔案、排行榜、雙人比較與名冊。',
+    '比賽': '賽前打線、賽中場記、賽後覆盤。', '參考': '每項指標的定義與公式，以及版本更新紀錄。'};
   const SUB_LABELS = {Overview: '總覽', Analytics: '分析', Pitching: '投手', Records: '紀錄', Profile: '檔案', Leaderboard: '排行', Compare: '比較',
-    Health: '健康', Lineup: '打線', Scorebook: '場記', Games: '賽事分析', Glossary: '指標說明', Changelog: '版本紀錄'};
+    Health: '名冊', Lineup: '打線', Scorebook: '場記', Games: '覆盤', Glossary: '指標說明', Changelog: '版本紀錄'};
+  // Old names stay findable in search (WO-03 B2): people who learned 數據／健康／賽事分析 still get there.
+  const ALIASES = {Overview: '數據 球隊數據', Analytics: '數據 球隊數據', Pitching: '數據 球隊數據', Records: '數據 球隊數據',
+    Health: '健康 球員健康資料 名冊', Games: '賽事分析 覆盤 賽後'};
+  // Sidebar names set here for buttons another file creates (game-analysis.js makes btnTabGames).
   const groupOf = key => NAV_GROUPS.find(([, keys]) => keys.includes(key)) || NAV_GROUPS[0];
   const ICON = path => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
   const TABS = [
     {group: '', label: '主頁', tone: 'home', icon: ICON('<path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>')},
-    {group: '球隊數據', label: '數據', tone: 'data', icon: ICON('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')},
+    // 2026/11/12 (WO-03 B2, D-2 = A): 主頁｜球員｜比賽｜球隊｜更多 — 球員, the most used, sits under the thumb.
     {group: '球員', label: '球員', tone: 'player', icon: ICON('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>')},
-    {group: '比賽', label: '比賽', tone: 'game', icon: ICON('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>')}
+    {group: '比賽', label: '比賽', tone: 'game', icon: ICON('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>')},
+    {group: '球隊數據', label: '球隊', tone: 'data', icon: ICON('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')}
   ];
   // Each group reopens where it was last left, like an app's tabs.
   const lastInGroup = {};
@@ -253,7 +280,7 @@
   const refitThumbs = () => { moveThumb(bottom, bottom.querySelector('button[aria-current="page"]'), true); moveThumb(subnav, subnav.querySelector('[aria-current="page"]'), true); };
   window.addEventListener('resize', refitThumbs);
   document.fonts?.ready.then(refitThumbs); // web fonts change the item widths
-  window.uiNavigation = {groups: NAV_GROUPS, labels: SUB_LABELS, openPage};
+  window.uiNavigation = {groups: NAV_GROUPS, labels: SUB_LABELS, groupName, groupDesc: GROUP_DESC, aliases: ALIASES, openPage};
   new MutationObserver(records => { if (meaningful(records)) updateNavigation(); }).observe(navigation, { subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class'] });
   // Drawer and sidebar page buttons: a finger tap marks the page, paints, then switches.
   document.addEventListener('click', event => {
@@ -834,7 +861,9 @@
         head.className = 'ui-nav-group';
         head.dataset.group = label;
         head.setAttribute('aria-hidden', 'true');
-        head.textContent = label;
+        head.textContent = groupName(label);
+        // Shown under the name in 更多 and the drawer only (CSS, so the name stays the element's whole text).
+        if (GROUP_DESC[label]) head.dataset.desc = GROUP_DESC[label];
       }
       want.push(...[head, ...keys.map(key => document.getElementById(`btnTab${key}`))].filter(Boolean));
     }

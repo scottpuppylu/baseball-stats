@@ -59,12 +59,6 @@
     return `<button type="button" class="fl-card fl-leader" data-player="${esc(player.name)}">${avatar}<span class="fl-card-date">${label}</span>
       <span class="fl-card-value">${esc(value)}</span><span class="fl-card-meta">${esc(jersey + player.name)}・個人檔案 ›</span></button>`;
   }
-  const TILES = {
-    '球隊數據': ['TEAM DATA', 'data', '全隊成績、象限分析、投手指標與生涯紀錄。'],
-    '球員': ['PLAYERS', 'player', '個人能力檔案、排行榜、雙人比較與健康資料。'],
-    '比賽': ['GAME DAY', 'game', '出席與打線推薦、即時場記與賽事覆盤。'],
-    '參考': ['REFERENCE', 'home', '每項指標的定義與公式，以及版本更新紀錄。']
-  };
   function renderHome(panel) {
     let agg = null;
     try { agg = getAnalysisAgg(); } catch (error) { agg = null; }
@@ -79,7 +73,6 @@
     const telemetry = agg ? [
       ['AVG', '打擊率', fmt3(agg.teamAvg)], ['OBP', '上壘率', fmt3(agg.teamObp)], ['OPS', '攻擊指數', fmt3(agg.teamOps)], ['PA', '打席', String(agg.totalPa)]
     ] : [];
-    const groups = (window.uiNavigation?.groups || []).filter(([label]) => label);
     const avg = top(qualified, 'avg'), hr = top(players, 'hr'), wrc = top(qualified, 'wrc_plus');
     panel.innerHTML = `<div class="fl-home">
       <div class="fl-hero">
@@ -106,14 +99,8 @@
           ${leaderCard('進攻破壞王', wrc, wrc ? `wRC+ ${wrc.wrc_plus.toFixed(0)}` : '')}
         </div>
       </div>
-      <div class="fl-band">
-        <div class="fl-band-head"><h2>所有功能</h2></div>
-        <div class="fl-tiles">${groups.map(([label, keys]) => {
-          const [eyebrow, tone, text] = TILES[label] || ['', 'home', ''];
-          const links = keys.filter(k => document.getElementById(`btnTab${k}`));
-          return `<div class="fl-tile" data-tone="${tone}"><p class="fl-eyebrow">${eyebrow}</p><h3>${esc(label)}</h3><p>${text}</p>
-            <div class="fl-tile-links">${links.map(k => `<button type="button" class="fl-chip" data-go="${k}">${esc(window.uiNavigation.labels[k] || k)}</button>`).join('')}</div></div>`;
-        }).join('')}</div>
+      <div class="fl-band fl-band-all">
+        <div class="fl-band-head"><h2>所有功能</h2><p>每一頁都依球隊、球員、比賽分組，連同說明收在選單裡。</p><button type="button" class="fl-more-link" data-open-nav>打開所有功能 ›</button></div>
       </div>
       <div class="fl-home-foot">
         ${version ? `<button type="button" class="fl-more-link" data-go="Changelog">目前版本 ${esc(version.v)}・看看更新了什麼 ›</button>` : ''}
@@ -123,8 +110,14 @@
   }
   const home = addPage('Home', '主頁', svg('<path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>'), renderHome);
   home.panel.addEventListener('click', event => {
-    const target = event.target.closest('[data-go], [data-game], [data-player]');
+    const target = event.target.closest('[data-go], [data-game], [data-player], [data-open-nav]');
     if (!target) return;
+    // 所有功能 (WO-03 B2, U-10): the grid moved into 更多 (phone) and the drawer (tablet); desktops have it as the sidebar.
+    if (target.hasAttribute('data-open-nav')) {
+      const opener = [document.getElementById('uiMoreNavigation'), document.getElementById('uiDrawerToggle')].find(b => b && b.getClientRects().length);
+      if (opener) opener.click(); else document.querySelector('#mainNavigation > [id^="btnTab"]')?.focus();
+      return;
+    }
     if (target.dataset.player) { selectedPlayerName = target.dataset.player; switchMainTab('tabProfile'); return; }
     if (target.dataset.game) {
       switchMainTab('tabScorebook');
