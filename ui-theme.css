@@ -778,6 +778,7 @@ html.ui-flight .fl-band { padding: clamp(56px, 9vw, 110px) 0 0; }
 html.ui-flight .fl-band-head { max-width: 980px; margin: 0 auto 26px; padding: 0 24px; text-align: center; }
 html.ui-flight .fl-band-head h2 { margin: 0; font-family: var(--fl-font) !important; font-size: clamp(30px, 4.6vw, 52px); font-weight: 600 !important; letter-spacing: .08em !important; color: #f3f5f8; }
 html.ui-flight .fl-band-head p { margin: 10px 0 4px; color: var(--fl-ink-2); font-size: clamp(14.5px, 1.5vw, 18px); letter-spacing: .04em; }
+html.ui-flight .fl-band-head p .fl-nb { display: inline-block; } /* WO-03 G1: break at the comma, never inside a word (選／單) */
 html.ui-flight .fl-rail { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 300px); gap: 16px; padding: 4px max(24px, calc((100% - 1100px) / 2)) 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; justify-content: start; }
 html.ui-flight .fl-rail::-webkit-scrollbar { display: none; }
 html.ui-flight .fl-rail-3 { grid-auto-columns: minmax(260px, 1fr); max-width: 1100px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }

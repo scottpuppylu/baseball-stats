@@ -100,7 +100,7 @@
         </div>
       </div>
       <div class="fl-band fl-band-all">
-        <div class="fl-band-head"><h2>所有功能</h2><p>每一頁都依球隊、球員、比賽分組，連同說明收在選單裡。</p><button type="button" class="fl-more-link" data-open-nav>打開所有功能 ›</button></div>
+        <div class="fl-band-head"><h2>所有功能</h2><p>每一頁都依球隊、球員、比賽分組，<span class="fl-nb">連同說明收在選單裡。</span></p><button type="button" class="fl-more-link" data-open-nav>打開所有功能 ›</button></div>
       </div>
       <div class="fl-home-foot">
         ${version ? `<button type="button" class="fl-more-link" data-go="Changelog">目前版本 ${esc(version.v)}・看看更新了什麼 ›</button>` : ''}
