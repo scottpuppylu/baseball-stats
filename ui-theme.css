@@ -637,7 +637,8 @@ html.ui-flight :is(.fl-tab-thumb, .fl-subnav-thumb) {
   border-radius: 20px;
   background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .07) 50%, rgba(255, 255, 255, .1));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), inset 0 -1px 0 rgba(255, 255, 255, .1), inset 0 0 0 .5px rgba(255, 255, 255, .22), 0 6px 16px -8px rgba(0, 0, 0, .7);
-  transition: transform .5s var(--fl-spring), width .5s var(--fl-spring), height .3s var(--fl-ease), opacity .2s var(--fl-ease);
+  transform-origin: 0 0; /* WO-03 B4 R-1: the size is set at once and played as a scale (ui-comfort.js moveThumb) */
+  transition: transform .5s var(--fl-spring), opacity .2s var(--fl-ease);
 }
 
 /* ---------- Segmented control: the pages of the current group ---------- */
@@ -1236,7 +1237,8 @@ html.ui-flight .fl-notice button:disabled { opacity: .6; }
 html.ui-flight #scoreSubPanelLive.ui-finalizing { opacity: .55; filter: saturate(.6); transition: opacity .2s; }
 /* Tailwind's .transition (140 elements) also animates box-shadow, filter and backdrop-filter, which repaint every frame;
    keep the cheap ones. */
-html.ui-flight .transition { transition-property: color, background-color, border-color, opacity, transform; }
+html.ui-flight .transition { transition-property: opacity, transform; } /* WO-03 B4 R-6: transform／opacity only */
+html.ui-flight body.fl-switching .transition { transition: none !important; } /* during a page switch (ui-app.js) */
 
 /* 3D batted-ball viewer (spray3d.js): clear glass chips, a quiet launch button on each spray chart, and the top bar. */
 .s3-chip { font-size: 12px; font-weight: 700; color: #cbd5e1; padding: 6px 11px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); white-space: nowrap; transition: background-color .15s, border-color .15s, color .15s; }
@@ -1345,12 +1347,22 @@ html.ui-flight .fl-hero > .fl-stars { position: absolute; inset: 0; width: 100%;
 html.ui-flight .fl-hero > :not(.fl-stars) { position: relative; z-index: 1; }
 html.ui-flight .fl-hero-title .fl-ch { display: inline-block; }
 /* Shiny eyebrow: a slow highlight sweeping across the letters (the base colour is unchanged, so it stays readable). */
-html.ui-flight .fl-eyebrow.fl-shiny {
-  color: transparent; -webkit-background-clip: text; background-clip: text;
-  background-image: linear-gradient(105deg, var(--fl-ink-2) 0 42%, #ffffff 50%, var(--fl-ink-2) 58% 100%);
-  background-size: 260% 100%; background-position: 100% 0; animation: fl-shine 5.2s cubic-bezier(.45, 0, .25, 1) 1.2s infinite;
+/* WO-03 B4 R-1: the highlight is a window (.fl-shine, soft-edged by a mask) sliding across with transform, while its white copy
+   of the text (::before) slides back by the same amount, so the letters stay put and only the light moves. Same 5.2 s cycle,
+   curve and 1.2 s delay as before; nothing is repainted per frame. The outer .fl-shine stays put and clips, so the moving
+   window never widens the page (a wider page stretches a phone's layout viewport and pushes fixed bars off screen). */
+html.ui-flight .fl-eyebrow.fl-shiny { position: relative; }
+html.ui-flight .fl-shine { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+html.ui-flight .fl-shine-win {
+  position: absolute; inset: 0; color: #ffffff;
+  -webkit-mask-image: linear-gradient(105deg, transparent 29%, #000 50%, transparent 71%); mask-image: linear-gradient(105deg, transparent 29%, #000 50%, transparent 71%);
+  transform: translateX(-80%); animation: fl-shine 5.2s cubic-bezier(.45, 0, .25, 1) 1.2s infinite;
 }
-@keyframes fl-shine { 0% { background-position: 100% 0; } 45%, 100% { background-position: 0 0; } }
+html.ui-flight .fl-shine-win::before { content: attr(data-text); display: block; transform: translateX(80%); animation: fl-shine-back 5.2s cubic-bezier(.45, 0, .25, 1) 1.2s infinite; }
+@keyframes fl-shine { 0% { transform: translateX(-80%); } 45%, 100% { transform: translateX(80%); } }
+@keyframes fl-shine-back { 0% { transform: translateX(80%); } 45%, 100% { transform: translateX(-80%); } }
+/* WO-03 B4 R-5: endless decorations pause while off screen (ui-delight.js / ui-theme.js add .fl-offscreen). */
+html.ui-flight .fl-offscreen, html.ui-flight .fl-offscreen::before, html.ui-flight .fl-offscreen::after, html.ui-flight .fl-offscreen .fl-shine-win, html.ui-flight .fl-offscreen .fl-shine-win::before { animation-play-state: paused !important; }
 /* Star border: a point of light orbits the main button. */
 html.ui-flight .fl-cta.fl-star-border { position: relative; isolation: isolate; }
 html.ui-flight .fl-cta.fl-star-border::before {
@@ -1764,8 +1776,8 @@ html.ui-flight .fl-tab-glow {
 }
 html.ui-flight .fl-tab-glow.is-on { opacity: 1; transition-duration: .08s; }
 @media (hover: hover) and (pointer: fine) {
-  html.ui-flight :is(#panelHome .fl-card, #teamSummaryCards > div) { transition: transform .7s var(--fl-spring), filter .3s var(--fl-ease); }
-  html.ui-flight :is(#panelHome .fl-card, #teamSummaryCards > div).fl-tilting { transition: transform .12s ease-out, filter .3s var(--fl-ease); }
+  html.ui-flight :is(#panelHome .fl-card, #teamSummaryCards > div) { transition: transform .7s var(--fl-spring); } /* WO-03 B4 R-1: no filter in the transition */
+  html.ui-flight :is(#panelHome .fl-card, #teamSummaryCards > div).fl-tilting { transition: transform .12s ease-out; }
 }
 @media (prefers-reduced-motion: reduce) { html.ui-flight .fl-tab-glow { display: none; } }
 /* ---------- Clawd: a pixel creature that lives behind the glass (z-index set per scene in ui-delight.js) ----------
@@ -1829,7 +1841,8 @@ html.ui-flight .fl-clawd-confetti { width: 7px; height: 10px; border-radius: 1.5
 html.ui-flight .fl-clawd-poof { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 70%); }
 @media print { html.ui-flight #flClawd, html.ui-flight #flPull, html.ui-flight .fl-clawd-fx, html.ui-flight .fl-clawd-spark { display: none !important; } }
 @media (prefers-reduced-motion: reduce) {
-  html.ui-flight .fl-eyebrow.fl-shiny, html.ui-flight .fl-cta.fl-star-border::before, html.ui-flight .fl-cta.fl-star-border::after { animation: none; }
+  html.ui-flight .fl-shine-win, html.ui-flight .fl-shine-win::before, html.ui-flight .fl-cta.fl-star-border::before, html.ui-flight .fl-cta.fl-star-border::after { animation: none; }
+  html.ui-flight .fl-shine { display: none; }
   html.ui-flight .fl-cta.fl-star-border::after { display: none; }
 }
 
@@ -1941,4 +1954,11 @@ html.ui-flight .ui-section-bar button { min-height: 36px; }
     content: attr(data-desc); display: block; margin-top: 4px; color: var(--fl-ink-2); font-size: 12.5px; font-weight: 400;
     letter-spacing: .02em; line-height: 1.55;
   }
+}
+
+/* ---------- WO-03 B4 R-7: reduce motion everywhere ----------
+   Decorative transitions and animations finish at once; pages and panels still fade in over 120 ms (ui-theme.js).
+   The 3D batted-ball replay and the post-game video are content drawn on canvas, not CSS motion, so they are unchanged. */
+@media (prefers-reduced-motion: reduce) {
+  html.ui-flight *, html.ui-flight *::before, html.ui-flight *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
 }

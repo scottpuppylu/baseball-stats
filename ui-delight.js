@@ -123,9 +123,10 @@
     title.innerHTML = [...text].map(c => `<span class="fl-ch" aria-hidden="true">${esc(c)}</span>`).join('');
     if (!animate || reduce.matches) return;
     title.querySelectorAll('.fl-ch').forEach((ch, i) => play(ch, [
-      {opacity: 0, filter: 'blur(14px)', transform: 'translateY(22px) scale(1.06)'},
-      {opacity: .7, filter: 'blur(3px)', transform: 'translateY(-3px)', offset: .6},
-      {opacity: 1, filter: 'blur(0)', transform: 'none'}
+      // Opacity and transform only (WO-03 R-1): an animated blur repainted every letter on every frame.
+      {opacity: 0, transform: 'translateY(22px) scale(1.06)'},
+      {opacity: .7, transform: 'translateY(-3px)', offset: .6},
+      {opacity: 1, transform: 'none'}
     ], {duration: 900, delay: 120 + i * 85, easing: EASE, fill: 'backwards'}));
   }
 
@@ -197,7 +198,21 @@
     if (!testLayout()) starField(hero);
     blurTitle(hero.querySelector('.fl-hero-title'), animate);
     hero.querySelector('.fl-cta')?.classList.add('fl-star-border');
-    hero.querySelector('.fl-eyebrow')?.classList.add('fl-shiny');
+    const eyebrow = hero.querySelector('.fl-eyebrow');
+    if (eyebrow && !eyebrow.querySelector('.fl-shine')) {
+      // The shine is a copy of the text in an overlay that slides (transform only), instead of moving a background.
+      eyebrow.classList.add('fl-shiny');
+      const shine = document.createElement('span');
+      shine.className = 'fl-shine';
+      shine.setAttribute('aria-hidden', 'true');
+      const win = document.createElement('span');
+      win.className = 'fl-shine-win';
+      win.dataset.text = eyebrow.textContent.trim();
+      shine.append(win);
+      eyebrow.append(shine);
+    }
+    window.flPauseOffscreen?.(eyebrow);
+    window.flPauseOffscreen?.(hero.querySelector('.fl-cta'));
     magnet(hero.querySelector('.fl-cta'));
     if (animate && !testLayout()) {
       panel.querySelectorAll('.fl-telemetry dd').forEach((dd, i) => countUp(dd, 380 + i * 90));
@@ -960,7 +975,8 @@
       C.el.dataset.flip = ltr ? '1' : '';
       C.el.classList.add('is-walking');
       C.mood = 'moving';
-      await anim([{left: `${ltr ? bar.left - W : bar.right}px`}, {left: `${ltr ? bar.right : bar.left - W}px`}], {duration: rand(2400, 3400), easing: 'linear'});
+      C.el.style.left = '0px'; // it moves by translate only (WO-03 R-1): no layout on every frame
+      await anim([{translate: `${ltr ? bar.left - W : bar.right}px 0`}, {translate: `${ltr ? bar.right : bar.left - W}px 0`}], {duration: rand(2400, 3400), easing: 'linear'});
     },
     async 'header-hang'(t, opts) {
       const header = visibleRect(document.getElementById('appHeader'));
@@ -1013,11 +1029,12 @@
       const n = Math.max(4, Math.round(vw / 120)), frames = [];
       for (let i = 0; i <= n; i++) {
         const x = ltr ? -W + (vw + W) * (i / n) : vw - (vw + W) * (i / n);
-        frames.push({left: `${x}px`, translate: '0 0', offset: i / n});
-        if (i < n) frames.push({left: `${ltr ? x + (vw + W) / n / 2 : x - (vw + W) / n / 2}px`, translate: '0 -46px', offset: (i + .5) / n, easing: 'cubic-bezier(.2, .6, .4, 1)'});
+        frames.push({translate: `${x}px 0`, offset: i / n});
+        if (i < n) frames.push({translate: `${ltr ? x + (vw + W) / n / 2 : x - (vw + W) / n / 2}px -46px`, offset: (i + .5) / n, easing: 'cubic-bezier(.2, .6, .4, 1)'});
       }
       frames.forEach(f => { if (f.easing === undefined) f.easing = 'cubic-bezier(.6, 0, .8, .4)'; });
       C.mood = 'moving';
+      C.el.style.left = '0px';
       await anim(frames, {duration: n * 430, easing: 'linear'});
     },
     async dash(t, opts) { await pass(t, opts, false); },
@@ -1031,7 +1048,8 @@
       C.el.dataset.flip = ltr ? '' : '1';
       C.el.style.top = `${y}px`;
       const a = ltr ? -W * 1.6 : vw + W * .6, b = ltr ? vw + W * .6 : -W * 1.6;
-      await anim([{left: `${a}px`, translate: '0 30px'}, {left: `${(a + b) / 2}px`, translate: '0 -20px'}, {left: `${b}px`, translate: '0 -60px'}], {duration: rand(2200, 2800), easing: 'cubic-bezier(.45, 0, .55, 1)'});
+      C.el.style.left = '0px';
+      await anim([{translate: `${a}px 30px`}, {translate: `${(a + b) / 2}px -20px`}, {translate: `${b}px -60px`}], {duration: rand(2200, 2800), easing: 'cubic-bezier(.45, 0, .55, 1)'});
     },
     async sleep(t, opts) {
       // Dozes on the tab bar's glass (phones) or at the bottom edge of the screen; a touch wakes it with a start.
@@ -1068,7 +1086,8 @@
     C.el.style.top = `${near ? vh - H * 2.2 : rand(vh * .35, vh * .7)}px`;
     const span = near ? W * 3 : W;
     C.mood = 'moving';
-    await anim([{left: `${ltr ? -span : vw + span}px`}, {left: `${ltr ? vw + span : -span}px`}], {duration: near ? rand(900, 1200) : rand(1500, 2200), easing: near ? 'cubic-bezier(.4, 0, .6, 1)' : 'linear'});
+    C.el.style.left = '0px';
+    await anim([{translate: `${ltr ? -span : vw + span}px 0`}, {translate: `${ltr ? vw + span : -span}px 0`}], {duration: near ? rand(900, 1200) : rand(1500, 2200), easing: near ? 'cubic-bezier(.4, 0, .6, 1)' : 'linear'});
   }
   async function appear(kind = pick(), opts = {}) {
     if (busy || blocked() || !SCENES[kind]) return false;
@@ -1350,12 +1369,21 @@
   }
   // Leaving for 比賽場記 (or opening a panel) sends it away at once.
   new MutationObserver(() => { if (C && blocked()) vanish(); }).observe(document.body, {attributes: true, attributeFilter: ['data-page', 'class']});
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') schedule(false); });
+  // A hidden tab keeps no timers running (WO-03 R-5); they start again when the tab comes back.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') { schedule(false); startNap(); }
+    else { clearTimeout(timer); clearInterval(napTimer); napTimer = 0; }
+  });
   // Nobody touching the page for a while: it comes out for a nap.
   let lastInput = performance.now(), napped = false;
   ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(type => document.addEventListener(type, () => { lastInput = performance.now(); napped = false; }, {passive: true, capture: true}));
   window.addEventListener('scroll', () => { lastInput = performance.now(); napped = false; }, {passive: true});
-  setInterval(() => { if (!quiet && !napped && !busy && performance.now() - lastInput > 30000 && document.visibilityState === 'visible' && !blocked()) { napped = true; appear('sleep'); } }, 5000);
+  let napTimer = 0;
+  function startNap() {
+    clearInterval(napTimer);
+    napTimer = setInterval(() => { if (!quiet && !napped && !busy && performance.now() - lastInput > 30000 && document.visibilityState === 'visible' && !blocked()) { napped = true; appear('sleep'); } }, 5000);
+  }
+  startNap();
   // The team logo, tapped three times quickly, calls it out.
   let logoTaps = [];
   document.addEventListener('click', event => {

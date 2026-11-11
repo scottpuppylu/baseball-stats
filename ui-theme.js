@@ -89,27 +89,52 @@
   }
   function pop(el) { play(el, [{transform: 'scale(.9)'}, {transform: 'scale(1.03)', offset: .55}, {transform: 'scale(1)'}], {duration: 420, easing: SPRING}); }
   const hasClass = (value, name) => new RegExp(`(^|\\s)${name}(\\s|$)`).test(value || '');
-  new MutationObserver(records => {
-    if (!motionOk()) return;
+  // Reduced motion: no movement at all, only a short fade so a page or dialog does not pop in from nothing (WO-03 R-7).
+  const fadeIn = el => play(el, [{opacity: 0}, {opacity: 1}], {duration: 120, easing: 'linear'});
+  // Blocks worth a reveal; a cheap selector test instead of a layout read (offsetHeight forced a layout on every class change).
+  const BLOCKS = 'div, section, article, form, table, ul, ol, details, figure';
+  const motionWatch = new MutationObserver(records => {
+    if (document.visibilityState !== 'visible') return;
+    const still = reduceMotion.matches;
     for (const r of records) {
       const el = r.target;
       if (!(el instanceof HTMLElement)) continue;
+      if (still) {
+        if (r.attributeName === 'class' && hasClass(r.oldValue, 'hidden') && !hasClass(el.className, 'hidden') && (/^panel/.test(el.id) || /Modal$/.test(el.id) || el.matches('.fixed.inset-0'))) fadeIn(el);
+        continue;
+      }
       if (r.attributeName === 'aria-current') { if (el.getAttribute('aria-current') && el.closest('.ui-mobile-nav, .ui-section-bar')) pop(el); continue; }
       const now = typeof el.className === 'string' ? el.className : '';
       if (hasClass(now, 'tab-active') && !hasClass(r.oldValue, 'tab-active')) { pop(el); continue; }
       if (!hasClass(r.oldValue, 'hidden') || hasClass(now, 'hidden')) continue;
       if (/^panel/.test(el.id)) revealPage(el);
       else if (/Modal$/.test(el.id) || el.matches('.fixed.inset-0')) revealDialog(el);
-      else if (el.closest('#appWorkspace') && !el.closest('#panelScorebook') && el.offsetHeight > 40) revealBlock(el); // cheap checks first: offsetHeight forces a layout // live scoring swaps blocks constantly: controls must not move under the scorer's finger
+      else if (el.firstElementChild && el.matches(BLOCKS) && el.closest('#appWorkspace') && !el.closest('#panelScorebook')) revealBlock(el); // live scoring swaps blocks constantly: controls must not move under the scorer's finger
     }
-  }).observe(document.body, {subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'aria-current']});
-  // Dialogs created on demand (form dialog, post-game image, detail sheets).
+  });
+  // Watch only where motion happens (WO-03 R-6): the workspace, the navigation and the dialogs, not every node of the body.
+  const WATCH = {subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'aria-current']};
+  const watchRoots = [document.getElementById('appWorkspace'), nav, document.querySelector('.ui-mobile-nav')].filter(Boolean);
+  if (!watchRoots.length) watchRoots.push(document.body);
+  watchRoots.forEach(root => motionWatch.observe(root, WATCH));
+  document.querySelectorAll('body > [id$="Modal"], body > .fixed.inset-0').forEach(el => motionWatch.observe(el, {attributes: true, attributeOldValue: true, attributeFilter: ['class']}));
+  // Dialogs created on demand (form dialog, post-game image, detail sheets), and the mobile bar if it arrives later.
   new MutationObserver(records => {
-    if (!motionOk()) return;
+    if (document.visibilityState !== 'visible') return;
     for (const r of records) for (const node of r.addedNodes) {
-      if (node instanceof HTMLElement && (node.id === 'uiFormDialog' || node.id === 'insightImageModal' || node.matches('.fixed.inset-0'))) revealDialog(node);
+      if (!(node instanceof HTMLElement)) continue;
+      if (node.matches('.ui-mobile-nav') && !watchRoots.includes(node)) { watchRoots.push(node); motionWatch.observe(node, WATCH); continue; }
+      if (!(node.id === 'uiFormDialog' || node.id === 'insightImageModal' || /Modal$/.test(node.id) || node.matches('.fixed.inset-0'))) continue;
+      motionWatch.observe(node, {attributes: true, attributeOldValue: true, attributeFilter: ['class']});
+      if (reduceMotion.matches) fadeIn(node); else revealDialog(node);
     }
   }).observe(document.body, {childList: true});
+  // Endless decorative loops pause while off screen (WO-03 R-5): CSS reads .fl-offscreen.
+  const offscreen = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+    for (const e of entries) e.target.classList.toggle('fl-offscreen', !e.isIntersecting);
+  }) : null;
+  window.flPauseOffscreen = el => { if (offscreen && el instanceof Element) offscreen.observe(el); };
+  document.querySelectorAll('.animate-ping').forEach(el => window.flPauseOffscreen(el));
   // Drawer / "更多" sheet slide in with a spring; the desktop sidebar never animates.
   if (nav) {
     let wasOpen = false;

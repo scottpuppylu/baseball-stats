@@ -259,6 +259,7 @@
     soon(() => openPage(b.dataset.sub));
   });
   // A glass "thumb" glides to the selected item (the segmented control and the tab bar share it).
+  const thumbBox = new WeakMap(); // thumb -> the box it was last given (WO-03 B4: played as a scale when the size changes)
   const thumbAt = new WeakMap(); // container -> the item its thumb already sits on (re-measured only when that changes or on resize)
   function moveThumb(container, target, force = false) {
     const thumb = container.querySelector(':scope > .fl-subnav-thumb, :scope > .fl-tab-thumb');
@@ -267,9 +268,20 @@
     thumbAt.set(container, target);
     if (!target || !target.offsetWidth) { thumb.style.opacity = '0'; thumbAt.delete(container); return; }
     thumb.style.opacity = '1';
-    thumb.style.width = `${target.offsetWidth}px`;
-    thumb.style.height = `${target.offsetHeight}px`;
-    thumb.style.transform = `translate(${target.offsetLeft}px, ${target.offsetTop}px)`;
+    // WO-03 B4 R-1: the size changes at once and is played as a scale (FLIP), so nothing is laid out per frame. Same
+    // 0.5 s spring as the old width transition; the move itself stays the CSS transform transition.
+    const w = target.offsetWidth, h = target.offsetHeight, x = target.offsetLeft, y = target.offsetTop;
+    const was = thumbBox.get(thumb);
+    thumbBox.set(thumb, {w, h, x, y});
+    thumb.style.width = `${w}px`;
+    thumb.style.height = `${h}px`;
+    thumb.style.transform = `translate(${x}px, ${y}px)`;
+    if (!force && was && (was.w !== w || was.h !== h) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      try {
+        thumb.animate([{transform: `translate(${was.x}px, ${was.y}px) scale(${was.w / w}, ${was.h / h})`}, {transform: `translate(${x}px, ${y}px)`}],
+          {duration: 500, easing: 'cubic-bezier(.34, 1.4, .64, 1)'});
+      } catch (e) { /* no Web Animations: the thumb just takes its new size */ }
+    }
   }
   const tabThumb = document.createElement('span');
   tabThumb.className = 'fl-tab-thumb';
