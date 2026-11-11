@@ -1237,8 +1237,7 @@ html.ui-flight .fl-notice button:disabled { opacity: .6; }
 html.ui-flight #scoreSubPanelLive.ui-finalizing { opacity: .55; filter: saturate(.6); transition: opacity .2s; }
 /* Tailwind's .transition (140 elements) also animates box-shadow, filter and backdrop-filter, which repaint every frame;
    keep the cheap ones. */
-html.ui-flight .transition { transition-property: opacity, transform; } /* WO-03 B4 R-6: transform／opacity only */
-html.ui-flight body.fl-switching .transition { transition: none !important; } /* during a page switch (ui-app.js) */
+html.ui-flight .transition { transition-property: opacity, transform; } /* WO-03 B4 R-8: transform／opacity only */
 
 /* 3D batted-ball viewer (spray3d.js): clear glass chips, a quiet launch button on each spray chart, and the top bar. */
 .s3-chip { font-size: 12px; font-weight: 700; color: #cbd5e1; padding: 6px 11px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); white-space: nowrap; transition: background-color .15s, border-color .15s, color .15s; }

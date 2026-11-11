@@ -310,14 +310,9 @@
     chip.style.top = `${Math.min(window.innerHeight - h - 10, top)}px`;
   }
   window.addEventListener('scroll', () => { if (Math.abs(window.scrollY - chipY) > 40) hideChip(); }, {passive: true}); // a real scroll, not the nudge of opening
-  // WO-03 B4 R-6: while a page switches, Tailwind's .transition is off (ui-theme.css), so the tab and button classes that
-  // change in the same task snap instead of starting dozens of transitions; back on two frames later. Same hook as the
-  // chip (the hook registry is fixed by tests/ui-round3.cjs).
-  window.siteHooks.after('switchMainTab', 'ui-app-chip', () => {
-    hideChip();
-    document.body.classList.add('fl-switching');
-    requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('fl-switching')));
-  });
+  // No body class around a page switch (WO-03 B4): toggling one restyles the whole document twice per switch, which cost
+  // more than the transitions it stopped; .transition is already limited to opacity and transform in ui-theme.css.
+  window.siteHooks.after('switchMainTab', 'ui-app-chip', hideChip);
   document.addEventListener('pointerdown', event => { if (chip && !chip.contains(event.target) && !(event.target instanceof HTMLCanvasElement)) hideChip(); }, {passive: true});
   if (window.Chart && typeof Chart.register === 'function') {
     Chart.register({
