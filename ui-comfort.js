@@ -187,6 +187,9 @@
     const [groupLabel, groupKeys] = groupOf(key);
     lastInGroup[groupLabel] = key;
     document.body.dataset.page = key;
+    // Move the chip row now, not on the next comfort pass: on 球員檔案 it belongs under the identity head, and waiting
+    // left it under the page tabs for a moment before it jumped down (WO-03 B1).
+    placeSectionBar();
     renderSubnav(groupLabel, groupKeys, key);
     toolbar.querySelector('.ui-current-page').textContent = title;
     document.getElementById('uiPageTitle').textContent = title;
@@ -719,7 +722,7 @@
   backTop.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
   backTop.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
   document.body.append(backTop);
-  let scrollQueued = false, lastScrollY = 0, dockTop = null, dockKey = '';
+  let scrollQueued = false, lastScrollY = 0, dockTop = null, dockKey = '', settleFrames = 0;
   window.addEventListener('resize', () => { dockTop = null; });
   window.addEventListener('scroll', () => {
     if (scrollQueued) return;
@@ -733,16 +736,27 @@
       if (up) backTop.classList.toggle('is-visible', phone() && y > window.innerHeight * 1.2);
       if (down || y <= window.innerHeight * 1.2) backTop.classList.remove('is-visible');
       // Docked under the top bar (ui-theme.css gives it glass only then). Layout is clean here: the read costs nothing.
-      if (!sectionBar.hidden) {
-        // The bar's sticky top moves down 56 px under the player compact bar (球員檔案), so re-read it when that changes.
-        const key = sectionBar.classList.contains('pf-under-compact') ? 'c' : '';
-        if (dockTop === null || key !== dockKey) { dockTop = parseFloat(getComputedStyle(sectionBar).top) || 0; dockKey = key; }
-        const docked = y > 0 && sectionBar.getBoundingClientRect().top <= dockTop + 1;
-        if (sectionBar.classList.contains('is-docked') !== docked) sectionBar.classList.toggle('is-docked', docked);
-      }
+      updateDock();
       markSection();
     });
   }, {passive: true});
+  function updateDock() {
+    if (sectionBar.hidden) return;
+    // The bar's sticky top moves down 56 px under the player compact bar (球員檔案), so re-read it when that changes.
+    const key = sectionBar.classList.contains('pf-under-compact') ? 'c' : '';
+    if (dockTop === null || key !== dockKey) { dockTop = parseFloat(getComputedStyle(sectionBar).top) || 0; dockKey = key; }
+    const top = sectionBar.getBoundingClientRect().top, docked = window.scrollY > 0 && top <= dockTop + 1;
+    if (sectionBar.classList.contains('is-docked') !== docked) sectionBar.classList.toggle('is-docked', docked);
+    // On 球員檔案 the bar lives inside the page panel, whose entrance motion (Web Animations: no DOM event) can still be
+    // shifting it a few px when the scroll lands; while it is that close, look again next frame (at most ~40 frames).
+    if (!docked && window.scrollY > 0 && top > dockTop + 1 && top < dockTop + 24 && settleFrames < 40) { settleFrames++; requestAnimationFrame(updateDock); }
+    else settleFrames = 0;
+  }
+  // The compact bar can come or go after the last scroll frame (its IntersectionObserver runs later), with no further
+  // scroll to re-check; so check again when that marker changes. Only that change: is-docked itself is ignored.
+  new MutationObserver(() => {
+    if (sectionBar.classList.contains('pf-under-compact') !== (dockKey === 'c')) updateDock();
+  }).observe(sectionBar, {attributes: true, attributeFilter: ['class']});
 
   // Wide tables keep the player column in view while scrolling sideways (single-row headers only,
   // so grouped headers never get a mismatched sticky cell). A narrow first column (slot / rank) also

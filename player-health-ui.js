@@ -158,7 +158,8 @@
     if (!button) return;
     const name = button.dataset.healthOpen;
     switchMainTab('tabHealth');
-    if (getAllAvailablePlayerNames().includes(name)) choose(name);
+    const roster = getAllAvailablePlayerNames(); // {teamNames, guestNames}, not an array
+    if ([...roster.teamNames, ...roster.guestNames].includes(name)) choose(name);
     requestAnimationFrame(() => panel.querySelector('[data-health-identity]')?.scrollIntoView({block: 'center'}));
   });
   siteHooks.after('renderPlayerProfile','player-health',renderProfileHealth);

@@ -74,14 +74,43 @@ fs.mkdirSync(output, {recursive: true});
           assert.equal(await page.evaluate(n => !!playerAvatars[n], value), true, 'dismissing keeps the photo');
         }
 
+        // ＋補資料 opens 球員健康資料 on that same player, without a page error. Use a player who is not the editor's
+        // default (the first on the roster), so landing on the default would not pass by accident.
+        const errors = [];
+        page.on('pageerror', e => errors.push(e.message));
+        const fillPlayer = await page.evaluate(() => {
+          const r = getAllAvailablePlayerNames(), first = [...r.teamNames, ...r.guestNames][0];
+          return [...document.getElementById('playerSelect').options].map(o => o.value).filter(v => v && v !== first);
+        });
+        let filled = null;
+        for (const n of fillPlayer) {
+          await page.selectOption('#playerSelect', n);
+          await page.waitForFunction(n => document.getElementById('playerPickName').textContent === n, n);
+          if (await page.locator('#playerProfileBio .pf-fill').count()) { filled = n; break; }
+        }
+        if (filled) {
+          await page.locator('#playerProfileBio .pf-fill').click();
+          await page.waitForFunction(() => document.body.dataset.page === 'Health');
+          await page.waitForTimeout(200);
+          assert.equal(await page.locator('[data-health-player]').inputValue(), filled, '＋補資料 opens the health editor on the same player');
+          assert.deepEqual(errors, [], '＋補資料 raises no page error');
+          // Coming back to 球員檔案, the chip row is under the identity head at once (it used to sit under the page
+          // tabs for a moment and then jump down). Read before any frame is drawn.
+          const placed = await page.evaluate(async () => { switchMainTab('tabProfile'); await Promise.resolve(); return document.querySelector('.ui-section-bar').previousElementSibling?.id; });
+          if (width < 1280) assert.equal(placed, 'profileIdentity', 'back on 球員檔案 the chips sit under the identity head at once');
+          await page.selectOption('#playerSelect', value);
+          await page.waitForFunction(v => document.getElementById('playerPickName').textContent === v, value);
+          await page.evaluate(() => scrollTo(0, 0));
+        }
+
         // Phones and tablets: a compact bar once the head has scrolled away, gone again at the top. Desktop: none.
         await page.evaluate(() => scrollTo(0, document.getElementById('profileIdentity').getBoundingClientRect().bottom + scrollY + 200));
         await page.waitForTimeout(500);
-        const compact = await page.evaluate(() => { const e = document.querySelector('.pf-compact'); return {on: !!e?.classList.contains('is-on'), docked: document.querySelector('.ui-section-bar').classList.contains('is-docked'), visible: !!e && getComputedStyle(e).visibility === 'visible' && getComputedStyle(e).display !== 'none', name: e?.querySelector('.pf-compact-name')?.textContent}; });
+        const compact = await page.evaluate(() => { const e = document.querySelector('.pf-compact'); const bar = document.querySelector('.ui-section-bar'); return {top: bar.getBoundingClientRect().top, css: getComputedStyle(bar).top, y: scrollY, prev: bar.previousElementSibling?.id, on: !!e?.classList.contains('is-on'), docked: document.querySelector('.ui-section-bar').classList.contains('is-docked'), visible: !!e && getComputedStyle(e).visibility === 'visible' && getComputedStyle(e).display !== 'none', name: e?.querySelector('.pf-compact-name')?.textContent}; });
         if (width < 1280) {
           assert.equal(compact.on && compact.visible, true, 'the compact bar shows after scrolling past the head');
           assert.equal(compact.name, value, 'the compact bar names the same player');
-          assert.equal(compact.docked, true, 'the section chips under the compact bar keep their glass (docked)');
+          assert.equal(compact.docked, true, `${width}: the section chips under the compact bar keep their glass (docked) ${JSON.stringify(compact)}`);
           await page.evaluate(() => scrollTo(0, 0));
           await page.waitForTimeout(500);
           assert.equal(await page.evaluate(() => document.querySelector('.pf-compact')?.classList.contains('is-on')), false, 'the compact bar leaves at the top');
@@ -91,7 +120,7 @@ fs.mkdirSync(output, {recursive: true});
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'page must not overflow');
         assert.deepEqual(await page.evaluate(() => window.__previewWrites), [], 'inspection must not write data');
         await page.screenshot({path: path.join(output, `${width}-AvatarMenu.png`)});
-        results.push({width, height, hasPhoto, compact});
+        results.push({width, height, hasPhoto, compact, filled});
       } finally { await context.close(); }
     }
     fs.writeFileSync(path.join(output, 'avatar-menu-report.json'), JSON.stringify(results, null, 2));
