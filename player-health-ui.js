@@ -142,12 +142,25 @@
     const info = birthdayInfo(profile);
     const block = document.createElement('div');
     block.dataset.profileHealth = '';
-    block.className = 'flex flex-wrap items-center gap-1.5 text-xs text-slate-300';
-    const values = [handedness(profile).text, profile.heightCm == null ? '身高未填寫' : `身高 ${profile.heightCm} cm`, profile.weightKg == null ? '體重未填寫' : `體重 ${profile.weightKg} kg`, info.age, info.sign];
-    block.innerHTML = values.map(value => `<span class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1">${esc(value)}</span>`).join('');
+    block.className = 'pf-basics flex flex-wrap items-center gap-1.5 text-xs text-slate-300';
+    // Only what is filled in; everything missing becomes one 「＋補資料」 that opens this player's editor (編輯球員資料).
+    const side = handedness(profile), hasBirth = PlayerHealth.age(profile.birthDate || '') !== null;
+    const values = [side.missing ? '' : side.text, profile.heightCm == null ? '' : `身高 ${profile.heightCm} cm`, profile.weightKg == null ? '' : `體重 ${profile.weightKg} kg`, hasBirth ? info.age : '', hasBirth && !info.sign.includes('未填寫') ? info.sign : ''].filter(Boolean);
+    const missing = side.missing || profile.heightCm == null || profile.weightKg == null || !hasBirth;
+    block.innerHTML = values.map(value => `<span class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1">${esc(value)}</span>`).join('')
+      + (missing ? `<button type="button" class="pf-fill rounded-lg px-2 py-1" data-health-open="${esc(player.name)}" title="${esc(side.missing ? '打擊側未設定，拉打／推打無法判定' : '補上身高、體重、生日等資料')}">＋補資料</button>` : '');
     column.querySelector('[data-profile-health]')?.remove();
-    column.append(block);
+    column.prepend(block);
   }
+  // 「＋補資料」: open 編輯球員資料 on that player.
+  document.addEventListener('click', event => {
+    const button = event.target.closest && event.target.closest('[data-health-open]');
+    if (!button) return;
+    const name = button.dataset.healthOpen;
+    switchMainTab('tabHealth');
+    if (getAllAvailablePlayerNames().includes(name)) choose(name);
+    requestAnimationFrame(() => panel.querySelector('[data-health-identity]')?.scrollIntoView({block: 'center'}));
+  });
   siteHooks.after('renderPlayerProfile','player-health',renderProfileHealth);
   siteHooks.after('switchMainTab','player-health',tab => {if(tab==='tabHealth') render();});
   siteHooks.after('renderAll','player-health',() => {if(!panel.classList.contains('hidden')) render();});

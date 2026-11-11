@@ -583,7 +583,10 @@
     // Back to where the section starts (just under the docked bars), and the new section slides in from its side.
     const target = sectionTargets[activeTab];
     const top = target.getBoundingClientRect().top + window.scrollY - (stickyBottom() + 12);
-    if (window.scrollY > top) window.scrollTo({top, behavior: 'instant'});
+    // Also forward when the section would start in the lower part of the screen (球員檔案: under the identity head on a
+    // phone), so a tapped or swiped section is read at once; the compact bar then names the player. A jump, as the
+    // backward case always was: no scroll animation, so reduced motion needs nothing more (WO-03 B1, 總監 DD-18).
+    if (window.scrollY > top || target.getBoundingClientRect().top > innerHeight * .6) window.scrollTo({top, behavior: 'instant'});
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && how === 'swipe') {
       target.animate([{opacity: 0, transform: `translate3d(${dir * 60}px, 0, 0)`}, {opacity: 1, transform: 'none'}], {duration: 420, easing: 'cubic-bezier(.16, 1, .3, 1)'});
     }
@@ -616,7 +619,7 @@
   workspace.addEventListener('touchstart', event => {
     swipe = null;
     if (!tabMode || event.touches.length !== 1) return;
-    if (event.target.closest('.ui-table-scroll, .overflow-x-auto, canvas, input, select, textarea, #panelProfile > section:first-of-type, .ga-picker, .fl-subnav, .ui-section-bar')) return;
+    if (event.target.closest('.ui-table-scroll, .overflow-x-auto, canvas, input, select, textarea, #panelProfile > section:first-of-type, #profileIdentity, .ga-picker, .fl-subnav, .ui-section-bar')) return;
     const chart = event.target.closest('svg'); // a chart drawn in SVG (spray charts) has its own gestures; an icon does not
     if (chart && chart.getBoundingClientRect().width > 120) return;
     swipe = {x: event.touches[0].clientX, y: event.touches[0].clientY, t: performance.now()};
@@ -639,7 +642,15 @@
     }
     return nativeIntoView.apply(this, args);
   };
+  // 球員檔案在手機、平板：段落晶片排在身分頭部（頁首）下面；其他頁與桌機照舊排在分頁切換列下面。
+  function placeSectionBar() {
+    const identity = pageKey() === 'Profile' && tabQuery.matches ? document.getElementById('profileIdentity') : null;
+    const home = identity && !identity.closest('.hidden') ? identity : subnav;
+    if (sectionBar.previousElementSibling !== home) home.after(sectionBar);
+  }
+  tabQuery.addEventListener('change', placeSectionBar);
   function buildSections() {
+    placeSectionBar();
     const panel = workspace.querySelector('[id^="panel"]:not(.hidden)');
     // A section waiting behind a tab (phones, tablets) still counts: hidden by us, not gone.
     const waiting = s => s.classList.contains('ui-tab-hidden') && sectionTargets.includes(s);
@@ -708,7 +719,7 @@
   backTop.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
   backTop.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
   document.body.append(backTop);
-  let scrollQueued = false, lastScrollY = 0, dockTop = null;
+  let scrollQueued = false, lastScrollY = 0, dockTop = null, dockKey = '';
   window.addEventListener('resize', () => { dockTop = null; });
   window.addEventListener('scroll', () => {
     if (scrollQueued) return;
@@ -723,7 +734,9 @@
       if (down || y <= window.innerHeight * 1.2) backTop.classList.remove('is-visible');
       // Docked under the top bar (ui-theme.css gives it glass only then). Layout is clean here: the read costs nothing.
       if (!sectionBar.hidden) {
-        if (dockTop === null) dockTop = parseFloat(getComputedStyle(sectionBar).top) || 0;
+        // The bar's sticky top moves down 56 px under the player compact bar (球員檔案), so re-read it when that changes.
+        const key = sectionBar.classList.contains('pf-under-compact') ? 'c' : '';
+        if (dockTop === null || key !== dockKey) { dockTop = parseFloat(getComputedStyle(sectionBar).top) || 0; dockKey = key; }
         const docked = y > 0 && sectionBar.getBoundingClientRect().top <= dockTop + 1;
         if (sectionBar.classList.contains('is-docked') !== docked) sectionBar.classList.toggle('is-docked', docked);
       }

@@ -57,7 +57,9 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
         // column comes back when its row is tapped — folding hides nothing for good.
         const fold=await page.evaluate(()=>{
           const panel=document.querySelector('[id^=panel]:not(.hidden)');
-          const sideways=[...panel.querySelectorAll('*')].filter(el=>{if(!el.getClientRects().length)return false;const o=getComputedStyle(el).overflowX;return (o==='auto'||o==='scroll')&&el.scrollWidth>el.clientWidth+4;}).map(el=>el.id||el.className.toString().slice(0,30));
+          // 2026/11/11 (WO-03 B1, 總監 DD-18): chip row moved inside #panelProfile per approved proposal; it is navigation, not content.
+          // Only the chip row element itself is excused, and it may hold nothing but chip buttons (chipsOnly below).
+          const sideways=[...panel.querySelectorAll('*')].filter(el=>{if(!el.getClientRects().length||el.matches('.ui-section-bar'))return false;const o=getComputedStyle(el).overflowX;return (o==='auto'||o==='scroll')&&el.scrollWidth>el.clientWidth+4;}).map(el=>el.id||el.className.toString().slice(0,30));
           const missing=[];
           for(const t of [...panel.querySelectorAll('table.ui-fold-table')].filter(t=>t.getClientRects().length)){
             const head=[...t.tHead.rows[0].cells];
@@ -68,9 +70,11 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
             row.click();
             if(row.nextElementSibling?.classList.contains('ui-row-detail'))missing.push('detail did not close');
           }
-          return {sideways,missing};
+          const chipsOnly=[...panel.querySelectorAll('.ui-section-bar')].flatMap(bar=>[...bar.children].filter(c=>c.tagName!=='BUTTON').map(c=>c.tagName+'.'+c.className.toString().slice(0,20)));
+          return {sideways,missing,chipsOnly};
         });
         assert.deepEqual(fold.sideways,[],`${width} ${name}: no sideways-scrolling content`);
+        assert.deepEqual(fold.chipsOnly,[],`${width} ${name}: the chip row holds only chips (no content table or chart)`);
         assert.deepEqual(fold.missing,[],`${width} ${name}: folded columns all reachable by tapping a row`);
         assert.deepEqual(r.small,[],`${width} ${name}: every control is at least 36×36`);
         assert.deepEqual(r.zoom,[],`${width} ${name}: no field under 16px (iOS would zoom)`);
@@ -162,7 +166,9 @@ const LONG=['Overview','Profile','Analytics','Compare','Lineup','Pitching','Reco
         await page.locator('.ui-section-bar button',{hasText:label}).click();
         await page.waitForFunction(label=>{const bar=document.querySelector('.ui-section-bar');return bar.querySelector('[aria-current]')?.textContent===label;},label,{timeout:5000});
         await page.waitForTimeout(700);
-        const at=await page.evaluate(()=>{const bar=document.querySelector('.ui-section-bar');return {bar:bar.getBoundingClientRect().top,barH:bar.offsetHeight,dock:document.getElementById('appHeader').getBoundingClientRect().bottom};});
+        // 2026/11/11 (WO-03 B1, 總監 DD-20): on 球員檔案 the chips dock under the player compact bar while it shows; with no
+        // compact bar this is exactly the old check (appHeader bottom).
+        const at=await page.evaluate(()=>{const bar=document.querySelector('.ui-section-bar');return {bar:bar.getBoundingClientRect().top,barH:bar.offsetHeight,dock:Math.max(document.getElementById('appHeader').getBoundingClientRect().bottom,document.querySelector('.pf-compact.is-on')?.getBoundingClientRect().bottom||0)};});
         assert.ok(Math.abs(at.bar-at.dock)<=1.5,`${width}: jump bar docks under the top bar (${at.bar} vs ${at.dock})`);
       }
       assert.equal(await page.locator('.ui-back-top.is-visible').count(),0,'back-to-top stays out of the way while scrolling down');

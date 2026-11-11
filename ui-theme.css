@@ -1595,12 +1595,6 @@ html.ui-flight .fl-click-spark.is-nav { background: rgba(170, 210, 255, .95); bo
   }
 }
 @media print { html.ui-flight .fl-click-spark { display: none !important; } }
-/* The player switcher gets a full-width row of its own on phones and tablets (the name was squeezed to "#3"). */
-@media (max-width: 1279px) {
-  html.ui-flight .fl-player-head { flex-wrap: wrap !important; row-gap: 12px; }
-  html.ui-flight .fl-player-head > .fl-player-row { flex: 1 1 100% !important; width: 100%; justify-content: flex-start; }
-  html.ui-flight .fl-player-row > #playerSelect { flex: 1 1 auto; width: auto !important; max-width: none !important; }
-}
 @media (max-width: 767px) {
   html.ui-flight body[data-page]:not([data-page="Home"]) #appWorkspace main section:not(.grid) > :first-child { margin-bottom: 10px; }
 }
@@ -1629,10 +1623,6 @@ html.ui-flight .ui-section-bar:not(.is-docked) { background: transparent !import
 html.ui-flight .ui-tab-hidden { display: none !important; }
 html.ui-flight body.ui-tabbed .ui-section-bar button[aria-selected="true"] { color: #fff !important; }
 html.ui-flight body.ui-tabbed .ui-section-bar { padding-top: 6px; padding-bottom: 6px; }
-/* 球員檔案 on phones and tablets: the player switcher heads the page (above every section tab). */
-html.ui-flight .fl-player-row.fl-player-top { display: flex !important; align-items: center; gap: 8px; width: 100%; margin: 0 0 6px !important; padding: 6px; border-radius: 999px; background: var(--fl-material, rgba(20, 22, 28, .7)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07); }
-html.ui-flight .fl-player-row.fl-player-top > label { display: none; }
-html.ui-flight .fl-player-row.fl-player-top > #playerSelect { flex: 1 1 auto; min-width: 0; }
 /* Toolbars everywhere (2026/11/03): tinted outline buttons in a row become quiet pills that keep their coloured label;
    view switches are segmented controls. Not the live game's own scoring buttons (#activeGameContainer): those stay as
    they are, large and colour-filled, for a scorer working fast. */
@@ -1842,3 +1832,91 @@ html.ui-flight .fl-clawd-poof { width: 16px; height: 16px; border-radius: 50%; b
   html.ui-flight .fl-eyebrow.fl-shiny, html.ui-flight .fl-cta.fl-star-border::before, html.ui-flight .fl-cta.fl-star-border::after { animation: none; }
   html.ui-flight .fl-cta.fl-star-border::after { display: none; }
 }
+
+/* ---------- 球員檔案：身分頭部（WO-03 B1） ----------
+   點姓名開選手清單（透明 select 疊在姓名上）、‹ › 在兩側；頭像 120（手機）／144（其他）沿用已核准尺寸，相機鈕在頭像外側；
+   基本資料只列已填的，其餘合成「＋補資料」；基礎打擊累積緊接在下。手機、平板它是頁首（晶片列排在它下面），
+   捲過它之後頂端出現 56 px 精簡列；桌機是左欄 320 px 的常駐卡。 */
+#profileIdentity { padding: 14px; }
+.pf-pick { display: flex; align-items: center; gap: 8px; }
+html.ui-flight .pf-pick > .fl-step { display: contents; }
+.pf-pick > .fl-step > [data-step="-1"] { order: 0; }
+.pf-pick-label { order: 1; position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 14px; background: rgba(255, 255, 255, .045); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14); }
+.pf-pick > .fl-step > [data-step="1"] { order: 2; }
+.pf-pick-text { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.pf-pick-name { font-family: var(--fl-mincho, serif); font-size: 23px; font-weight: 800; line-height: 1.2; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-pick-jersey { flex: none; font-family: var(--fl-mincho, serif); font-size: 16px; font-weight: 700; color: #7dd3fc; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pf-pick-caret { flex: none; width: 16px; height: 16px; color: rgba(255, 255, 255, .55); }
+.pf-pick-select { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; font-size: 16px; -webkit-appearance: none; appearance: none; }
+.pf-pick-label:focus-within { box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14), 0 0 0 2px #38bdf8; }
+html.ui-flight #playerPick .fl-step > button { width: 44px; height: 44px; flex: none; }
+#profileIdentity #playerProfileBio { margin-top: 14px; padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; }
+#playerProfileBio .pf-info { display: flex; flex-direction: column; gap: 8px; }
+#playerProfileBio .pf-info > * { margin: 0 !important; }
+#playerProfileBio .pf-basics > span { font-variant-numeric: tabular-nums; }
+#playerProfileBio .pf-fill { min-height: 36px; color: #7dd3fc; background: rgba(56, 189, 248, .08); border: 1px dashed rgba(125, 211, 252, .5); font-weight: 600; }
+#playerProfileBio .pf-fill:hover { background: rgba(56, 189, 248, .16); }
+html.ui-flight #panelProfile .pf-studio-title { font-size: 17px !important; line-height: 1.35; letter-spacing: .04em; }
+/* Phones: photo left, basics and tags beside it; the camera sits under the photo's right edge (never on it). */
+@media (max-width: 767px) {
+  #profileIdentity { padding: 12px; }
+  .pf-pick-name { font-size: 21px; }
+  #profileIdentity #playerProfileBio { margin-top: 12px; }
+  #profileIdentity #playerProfileBio div[onclick="triggerAvatarUpload()"] > .pf-camera { left: auto; right: -2px; }
+}
+/* Tablets and desktop: the camera beside the photo's lower right corner. */
+@media (min-width: 768px) {
+  #profileIdentity #playerProfileBio div[onclick="triggerAvatarUpload()"] > .pf-camera { left: calc(100% + 6px); right: auto; top: auto; bottom: 0; width: 40px; height: 40px; }
+  #profileIdentity .pf-head { gap: 58px; }
+  #profileIdentity .pf-info { padding-top: 6px; }
+}
+/* Desktop: two columns, the identity card stays at hand on the left. */
+@media (min-width: 1280px) {
+  #panelProfile:not(.hidden) { display: grid; grid-template-columns: 320px minmax(0, 1fr); column-gap: 24px; row-gap: 0; align-items: start; }
+  #panelProfile:not(.hidden) > * { grid-column: 2; margin-top: 0 !important; margin-bottom: 24px; }
+  #panelProfile:not(.hidden) > #profileIdentity { grid-column: 1; grid-row: 1 / span 30; position: sticky; top: calc(var(--fl-top-h, 56px) + 30px); margin-bottom: 0; padding: 18px; max-height: calc(100vh - var(--fl-top-h, 56px) - 48px); overflow-y: auto; scrollbar-width: thin; }
+  #profileIdentity .pf-head { flex-direction: column; align-items: center; gap: 14px; }
+  #profileIdentity .pf-info { width: 100%; align-items: center; text-align: center; padding-top: 0; }
+  #profileIdentity .pf-info > div { justify-content: center; }
+}
+/* The compact bar (ui-delight.js): phones and tablets, once the head has scrolled away. */
+.pf-compact { display: none; }
+@media (max-width: 1279.98px) {
+  .pf-compact {
+    display: flex; position: fixed; left: 0; right: 0; top: var(--fl-top-h, 0px); z-index: 46; height: 56px; align-items: center; gap: 10px; padding: 6px 12px;
+    background: rgba(10, 11, 14, .8); -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%); border-bottom: 1px solid rgba(255, 255, 255, .08);
+    /* Stays painted while away (transparent, no taps; inert in JS), so showing it is only a composite: a hidden bar
+       had to paint its glass and photo in the frame it appeared. Other pages hide it outright. */
+    transform: translate3d(0, -110%, 0); opacity: 0; visibility: hidden; pointer-events: none; transition: transform .2s cubic-bezier(.16, 1, .3, 1), opacity .14s linear;
+  }
+  body[data-page="Profile"] .pf-compact { visibility: visible; }
+  body[data-page="Profile"] .pf-compact.is-on { transform: none; opacity: 1; pointer-events: auto; }
+  html.ui-flight body[data-page="Profile"] .ui-section-bar.pf-under-compact { top: calc(var(--fl-top-h) + 56px) !important; }
+}
+.pf-compact-who { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; height: 44px; padding: 0; background: none; border: 0; color: #fff; text-align: left; }
+.pf-compact-avatar { flex: none; width: 36px; height: 36px; }
+.pf-compact-name { min-width: 0; font-family: var(--fl-mincho, serif); font-size: 18px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-compact-no { flex: none; font-family: var(--fl-mincho, serif); font-size: 14px; font-weight: 700; color: #7dd3fc; }
+.pf-compact-step { display: flex; gap: 6px; flex: none; }
+.pf-compact-step > button {
+  width: 44px; height: 44px; border-radius: 14px; font-size: 24px; line-height: 1; color: #fff; border: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03)); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+/* 頭像選單（相機鈕）：換照片、清除頭像 */
+.pf-avatar-menu {
+  position: fixed; z-index: 90; min-width: 156px; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-radius: 16px;
+  background: rgba(22, 24, 30, .9); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .45), inset 0 0 0 .5px rgba(255, 255, 255, .18);
+}
+.pf-avatar-menu > button { min-height: 44px; padding: 0 14px; border: 0; border-radius: 11px; background: none; color: #e5e7eb; font-size: 15px; text-align: left; white-space: nowrap; }
+.pf-avatar-menu > button:hover, .pf-avatar-menu > button:focus-visible { background: rgba(255, 255, 255, .08); outline: none; }
+.pf-avatar-menu > .is-danger { color: #fda4af; }
+@media (prefers-reduced-motion: reduce) { .pf-compact, body[data-page="Profile"] .pf-compact.is-on { transition: opacity .12s linear; transform: none; } }
+/* Desktop: the right column is ~1080 px wide, so the five metric cards go 3 + 2 instead of five thin columns. */
+@media (min-width: 1280px) { #panelProfile .pf-metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* 「＋標籤 (1/3)」: in this small pill the count reads beside the label, not under it (the shared .ui-note rule drops it to its own line). */
+html.ui-flight #playerProfileBio .pf-tags button[onclick^="addPlayerTag"] { flex-wrap: nowrap; white-space: nowrap; }
+html.ui-flight #playerProfileBio .pf-tags button[onclick^="addPlayerTag"] > .ui-note { flex: none; display: inline; margin-left: 2px; }
+/* WO-03 B1: on 球員檔案 the chip row now sits inside the page, where every control must reach 36 px; the phone rule in
+   ui-comfort.css made chips 34 px. 36 px everywhere keeps the row the same on every page. */
+html.ui-flight .ui-section-bar button { min-height: 36px; }

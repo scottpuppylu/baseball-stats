@@ -449,25 +449,65 @@
     const wrap = document.createElement('span');
     wrap.className = 'fl-step';
     wrap.innerHTML = '<button type="button" data-step="-1" aria-label="上一位球員">‹</button><button type="button" data-step="1" aria-label="下一位球員">›</button>';
-    playerSelect.after(wrap);
-    playerSelect.parentElement.classList.add('fl-player-row'); // styled in ui-theme.css (a class, not a slow :has() rule)
-    playerSelect.parentElement.parentElement?.classList.add('fl-player-head'); // the title row it sits in (wraps on phones and tablets)
-    // Phones and tablets show 球員檔案 one section at a time (ui-comfort.js), so the switcher moves to the top of the page,
-    // above every section, where it is always at hand; the desktop keeps it in the first section's title row.
-    const playerRow = playerSelect.parentElement, playerHome = playerRow.parentElement, playerNext = playerRow.nextSibling;
-    const profilePanel = document.getElementById('panelProfile');
+    // 球員檔案的身分頭部（index.html #profileIdentity）：‹ › 在姓名兩側（ui-theme.css 排位置），點姓名開選手清單。
+    // 手機與平板時它就是整頁的頁首，標 fl-player-row / fl-player-top（桌機是左欄常駐卡，不標）。
+    const identity = document.getElementById('profileIdentity');
+    const pick = document.getElementById('playerPick');
+    if (pick) pick.append(wrap); else playerSelect.after(wrap);
     const compact = window.matchMedia('(max-width: 1279.98px)');
-    const placePlayerRow = () => {
-      if (compact.matches && profilePanel && playerRow.parentElement !== profilePanel) { profilePanel.prepend(playerRow); playerRow.classList.add('fl-player-top'); }
-      else if (!compact.matches && playerRow.parentElement !== playerHome) { playerHome.insertBefore(playerRow, playerNext); playerRow.classList.remove('fl-player-top'); }
+    const markIdentity = () => {
+      if (!identity) return;
+      identity.classList.toggle('fl-player-row', compact.matches);
+      identity.classList.toggle('fl-player-top', compact.matches);
     };
-    compact.addEventListener('change', placePlayerRow);
-    placePlayerRow();
+    compact.addEventListener('change', markIdentity);
+    markIdentity();
     wrap.addEventListener('click', event => { const b = event.target.closest('[data-step]'); if (b) stepPlayer(Number(b.dataset.step)); });
+    // 往下捲過身分頭部後，頂端出現 56 px 精簡列（小頭像、姓名、背號、‹ ›）。用 IntersectionObserver 判斷，不綁 scroll。
+    if (identity && 'IntersectionObserver' in window) {
+      const bar = document.createElement('div');
+      bar.className = 'pf-compact';
+      bar.inert = true;
+      bar.innerHTML = '<button type="button" class="pf-compact-who" aria-label="回到球員資料"><span class="pf-compact-avatar"></span><span class="pf-compact-name"></span><span class="pf-compact-no"></span></button>'
+        + '<span class="pf-compact-step"><button type="button" data-pf-step="-1" aria-label="上一位球員">‹</button><button type="button" data-pf-step="1" aria-label="下一位球員">›</button></span>';
+      document.body.append(bar);
+      const badge = document.getElementById('playerSelectAvatarBadge'); // the small photo populatePlayerSelect keeps current
+      if (badge) { badge.hidden = false; bar.querySelector('.pf-compact-avatar').append(badge); }
+      // A hidden bar never decodes its photo, so the first frame it showed paid for it (22 ms at CPU 4x). Decode each
+      // new photo ahead of time instead.
+      const warm = () => badge?.querySelectorAll('img').forEach(img => { img.decode?.().catch(() => {}); });
+      if (badge) { warm(); new MutationObserver(warm).observe(badge, {childList: true, subtree: true, attributes: true, attributeFilter: ['src']}); }
+      const sync = () => {
+        bar.querySelector('.pf-compact-name').textContent = document.getElementById('playerPickName')?.textContent || '';
+        bar.querySelector('.pf-compact-no').textContent = document.getElementById('playerPickJersey')?.textContent || '';
+      };
+      let shown = false;
+      const show = on => {
+        if (on === shown) return;
+        shown = on;
+        if (on) sync();
+        bar.inert = !on;
+        // Marker classes on the two elements that change, not on body: a body class re-styled the whole long page
+        // (one 40 ms frame at the moment the bar appeared, CPU 4x).
+        bar.classList.toggle('is-on', on);
+        document.querySelector('.ui-section-bar')?.classList.toggle('pf-under-compact', on);
+      };
+      // Shown only once the head has gone up under the top bar (a hidden page reports a zero box: never shown).
+      new IntersectionObserver(([entry]) => {
+        const box = entry.boundingClientRect;
+        show(!entry.isIntersecting && box.height > 0 && box.bottom <= (entry.rootBounds ? entry.rootBounds.top : 0) + 1);
+      }, {rootMargin: '-64px 0px 0px 0px'}).observe(identity);
+      playerSelect.addEventListener('change', () => { if (shown) requestAnimationFrame(sync); });
+      bar.addEventListener('click', event => {
+        const step = event.target.closest('[data-pf-step]');
+        if (step) { stepPlayer(Number(step.dataset.pfStep)); return; }
+        if (event.target.closest('.pf-compact-who')) window.scrollTo({top: Math.max(0, identity.getBoundingClientRect().top + window.scrollY - 72), behavior: reduce.matches ? 'auto' : 'smooth'});
+      });
+    }
     // A horizontal swipe on the profile's first card (the photo and basic numbers), not on charts or tables.
     let sx = 0, sy = 0, st = 0, tracking = false;
     document.addEventListener('touchstart', event => {
-      const card = event.target.closest && event.target.closest('#panelProfile > section:first-of-type');
+      const card = event.target.closest && event.target.closest('#panelProfile > section:first-of-type, #profileIdentity');
       tracking = Boolean(card) && !event.target.closest('select, input, canvas, .overflow-x-auto, .ui-table-scroll');
       if (tracking) { sx = event.touches[0].clientX; sy = event.touches[0].clientY; st = performance.now(); }
     }, {passive: true});

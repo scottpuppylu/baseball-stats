@@ -57,11 +57,17 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 // avatar-image-only.test.
 // 2026/11/08 (WO-02 V-59, authorized): a CSV name starting with = + - @ gets a leading ' so it stays text. Covered by
 // csv-formula.test.
+// 2026/11/11 (WO-03 B1, authorized by 總監 DD-17): the player profile gets an identity head (name picker with the
+// select overlaid, ‹ › beside it, photo, filled-in basics, tags, batting basics). One handler changes: the inline
+// 清除頭像 onclick="clearAvatar(...)" becomes the camera button's onclick="event.stopPropagation(); openAvatarMenu(this, ...)";
+// clearAvatar is unchanged and runs from that menu (換照片／清除頭像) with its own confirm. Four additive ids:
+// profileIdentity, playerPick, playerPickName, playerPickJersey (playerSelectAvatarBadge stays, now after them; no id
+// removed). Covered by ui-avatar, ui-player-health and ui-avatar-menu.
 const BASELINE = {
-  "script": "d55a5d91ef1f6f13a95e0e617c522224b908c5b86f0bf36542cb08837c745108",
-  "handlers": "7a88628d70dca9e5a6e35724bbde5da54655d7da0ef84887ef94edcc5bc4c0f1",
-  "idCount": 285,
-  "ids": "5086eeeecad2a720f18bf756eb624de283f54b4c68c9a62ceec162453f52fa87"
+  "script": "e8091d1c9c307260f9a8cff5da93cb5cea01d54c48b594bfe896b2bd3c163a3b",
+  "handlers": "db07838c434a1303266de478bdbde315e78fb2a0ff56084ec9a6de24bb043e30",
+  "idCount": 289,
+  "ids": "c022c17768d21780c1e0e5a5ab402fe2ba19b54873806cde59a154f8666d3213"
 };
 test('business script is byte-identical to the approved baseline', () => {
   const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
