@@ -16,23 +16,40 @@
   const RETRY_MS = [2000, 5000, 15000, 30000];
   const big = key => KEYS.includes(key);
   const mem = new Map();
+  // WO-03 B8: until IndexedDB has answered, each large mirror is read from localStorage once (every getItem copies the
+  // whole string, megabytes for a full season) and that copy is reused by the startup render and by hydration. This
+  // tab's own writes update it; another tab's write drops it (storage event), so the next read takes the new value.
+  const mirrorCopy = new Map();
+  let hydrated = false;
   const ls = {
     get(key) { try { return root.localStorage.getItem(key); } catch (_) { return null; } },
-    set(key, value) { try { root.localStorage.setItem(key, value); return true; } catch (_) { return false; } },
-    remove(key) { try { root.localStorage.removeItem(key); } catch (_) { /* storage unavailable */ } }
+    set(key, value) {
+      try { root.localStorage.setItem(key, value); } catch (_) { mirrorCopy.delete(key); return false; }
+      if (big(key) && !hydrated) mirrorCopy.set(key, value);
+      return true;
+    },
+    remove(key) {
+      try { root.localStorage.removeItem(key); } catch (_) { /* storage unavailable */ }
+      mirrorCopy.delete(key);
+    }
   };
+  const readMirror = key => {
+    if (!mirrorCopy.has(key)) mirrorCopy.set(key, ls.get(key));
+    return mirrorCopy.get(key);
+  };
+  try { root.addEventListener?.('storage', event => { if (event.key) mirrorCopy.delete(event.key); else mirrorCopy.clear(); }); } catch (_) { /* no DOM */ }
   // Once a value outgrows localStorage, this device keeps all three large values in IndexedDB only, so the space stays
   // free for small keys such as the live game and the mirrors do not keep refilling it.
   let idbOnly = ls.get(IDB_ONLY) === '1';
   let switchToIdbOnly = false; // requested by a full localStorage; done once IndexedDB has confirmed every value
   // A mirror present at startup means the synchronous startup code read complete data, so its writes are real.
   // Without one, startup writes are derived from missing data and must not overwrite what IndexedDB holds.
-  const hadMirror = new Set(idbOnly ? [] : KEYS.filter(key => ls.get(key) !== null));
+  const hadMirror = new Set(idbOnly ? [] : KEYS.filter(key => readMirror(key) !== null));
   const queue = new Map();    // key -> value waiting for IndexedDB, or null to delete
   const inMirror = new Set(); // keys whose newest value is in the localStorage mirror
   const acked = new Set();    // keys whose newest value IndexedDB has confirmed
   const waiters = new Map();  // key -> resolve functions of whenPersisted()
-  let db = null, hydrated = false, flushTimer = null, retryTimer = null, attempts = 0;
+  let db = null, flushTimer = null, retryTimer = null, attempts = 0;
   let errored = false, lastError = '';
   const isDurable = key => inMirror.has(key) || acked.has(key);
   // Failed = a write went wrong and some newest value is still only in memory (a reload would lose it).
@@ -119,7 +136,7 @@
   function get(key) {
     if (!big(key)) return ls.get(key);
     if (mem.has(key)) return mem.get(key);
-    return hydrated || idbOnly ? null : ls.get(key);
+    return hydrated || idbOnly ? null : readMirror(key);
   }
   // Returns true when the value is already durable; false when it is only in memory so far (IndexedDB pending or
   // failed). Use whenPersisted(key) to wait for the outcome.
@@ -203,10 +220,10 @@
     for (const key of KEYS) {
       if (hadMirror.has(key)) {
         // localStorage is written first, so its mirror is the newest copy; keep any value written since startup.
-        const value = mem.has(key) ? mem.get(key) : ls.get(key);
+        const value = mem.has(key) ? mem.get(key) : readMirror(key);
         if (value !== null) {
           mem.set(key, value);
-          if (!idbOnly && ls.get(key) === value) inMirror.add(key);
+          if (!idbOnly && readMirror(key) === value) inMirror.add(key);
           if (stored[key] !== value) queue.set(key, value); else acked.add(key);
         }
       } else if (stored[key] !== undefined) {
@@ -221,6 +238,7 @@
     if (idbOnly && !database && unavailable) { idbOnly = false; ls.remove(IDB_ONLY); }
     db = database;
     hydrated = true;
+    mirrorCopy.clear(); // from here on large values are read from memory only
     dropStaleMirrors();
     if (db) flush();
     else queue.clear(); // without IndexedDB the localStorage mirror is the only copy, as before

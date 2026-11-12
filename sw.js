@@ -91,26 +91,41 @@ self.addEventListener('fetch', event => {
   if (file.startsWith('data/') || file.startsWith('api/') || url.searchParams.has('auth_code')) return;
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
-      try {
-        const config = await fetch(absolute('app-config.js'), {cache: 'no-store'});
-        if (config.ok && /^\s*serviceWorker:\s*false\b/m.test(await config.text())) {
-          disabled = true;
-          await (await caches.open(CACHE)).put(absolute('__pwa_disabled'), new Response('1'));
-          return fetch(request, {cache: 'no-store'});
-        }
-      } catch (_) { /* keep installed snapshot */ }
-      const cached = await (await caches.open(CACHE)).match(absolute('index.html'));
-      if (!cached) return new Response('離線版本不完整，請連線後重新開啟。', {status: 503});
+      // WO-03 B8: stale-while-revalidate with a 3 s limit. The page is this worker's verified snapshot (stale); the kill
+      // switch and the live page's public declaration are fetched at the same time, not one after the other, and
+      // neither may hold the page up for more than 3 s: past that the snapshot opens as the offline shell (its notice
+      // offers a reload). New releases are checked by pwa.js (registration.update) as before.
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+      const network = {cache: 'no-store', signal: controller.signal};
+      const killSwitch = (async () => {
+        try {
+          const config = await fetch(absolute('app-config.js'), network);
+          if (config.ok && /^\s*serviceWorker:\s*false\b/m.test(await config.text())) {
+            disabled = true;
+            await (await caches.open(CACHE)).put(absolute('__pwa_disabled'), new Response('1'));
+            return true;
+          }
+        } catch (_) { /* keep installed snapshot */ }
+        return false;
+      })();
       // Restore only the original public declaration, in memory. Never cache the live page or credential.
+      const liveDeclaration = (async () => {
+        try {
+          const live = await fetch(absolute('index.html'), network);
+          if (!live.ok) return null;
+          const matches = (await live.text()).match(declaration);
+          return matches?.length === 1 ? matches[0] : null; // unrecognized live page: offline shell
+        } catch (_) { return null; } // offline or slower than 3 s
+      })();
+      const [off, live, cached] = await Promise.all([killSwitch, liveDeclaration, caches.open(CACHE).then(cache => cache.match(absolute('index.html')))]);
+      clearTimeout(timer);
+      if (off) return fetch(request, {cache: 'no-store'});
+      if (!cached) return new Response('離線版本不完整，請連線後重新開啟。', {status: 503});
       // HTML/JS/CSS always come from this worker's complete verified snapshot, even during a new deployment.
-      try {
-        const live = await fetch(absolute('index.html'), {cache: 'no-store'});
-        if (!live.ok) throw new Error('offline');
-        const matches = (await live.text()).match(declaration);
-        if (matches?.length !== 1) throw new Error('Unrecognized live page');
-        const html = (await cached.text()).replace("const GITHUB_TOKEN = ''; window.BASEBALL_OFFLINE_SHELL = true;", () => matches[0]);
-        return new Response(html, {headers: {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store'}});
-      } catch (_) { return cached; }
+      if (!live) return cached;
+      const html = (await cached.text()).replace("const GITHUB_TOKEN = ''; window.BASEBALL_OFFLINE_SHELL = true;", () => live);
+      return new Response(html, {headers: {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store'}});
     })());
     return;
   }
