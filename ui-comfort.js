@@ -4,6 +4,9 @@
   const navigation = document.getElementById('mainNavigation');
   const workspace = document.getElementById('appWorkspace');
   const currentPanel = () => workspace.querySelector('[id^="panel"]:not(.hidden)') || workspace;
+  // WO-03 B6 (J-11): resize fires many times per frame while a window is dragged or a tablet turns; these handlers read
+  // and write layout, so each runs at most once per frame.
+  const onResize = fn => { let queued = false; window.addEventListener('resize', () => { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; fn(); }); }); };
   if (!navigation || !workspace) return;
   const toolbar = document.createElement('div');
   toolbar.className = 'ui-compact-toolbar';
@@ -208,7 +211,9 @@
   function updateNavigation() {
     const active = navigation.querySelector('.tab-active');
     const key = active?.id.replace('btnTab', '') || 'Home';
-    if (lastPage && lastPage !== key) { if (window.scrollY > 0) window.scrollTo({top: 0, behavior: 'instant'}); detail?.remove(); }
+    // WO-03 B6: no scrollY read here. The new page's content has just landed, so reading it laid the whole page out
+    // (100–300 ms at CPU 4x); a scroll to (0, 0) needs no layout and does nothing when already at the top.
+    if (lastPage && lastPage !== key) { window.scrollTo({top: 0, left: 0, behavior: 'instant'}); detail?.remove(); }
     lastPage = key;
     const [title, description] = pages[key] || pages.Home;
     const [groupLabel, groupKeys] = groupOf(key);
@@ -290,7 +295,7 @@
   const placeTabThumb = () => moveThumb(bottom, bottom.querySelector('button[aria-current="page"]'));
   bottom.addEventListener('fl-tab-change', () => requestAnimationFrame(placeTabThumb));
   const refitThumbs = () => { moveThumb(bottom, bottom.querySelector('button[aria-current="page"]'), true); moveThumb(subnav, subnav.querySelector('[aria-current="page"]'), true); };
-  window.addEventListener('resize', refitThumbs);
+  onResize(refitThumbs);
   document.fonts?.ready.then(refitThumbs); // web fonts change the item widths
   window.uiNavigation = {groups: NAV_GROUPS, labels: SUB_LABELS, groupName, groupDesc: GROUP_DESC, aliases: ALIASES, openPage};
   new MutationObserver(records => { if (meaningful(records)) updateNavigation(); }).observe(navigation, { subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class'] });
@@ -369,7 +374,7 @@
     const cols = group.classList.contains('ui-review-bar') && buttons.length > 3 && window.innerWidth < 768 ? 2 : longest * 13.5 <= per ? buttons.length : 2;
     if (group.dataset.cols !== String(cols)) group.dataset.cols = String(cols);
   }
-  window.addEventListener('resize', () => workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions));
+  onResize(() => workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions));
   const CHIP = 'main .justify-between > div > button.text-xs.py-1';
   const within = (root, selector) => [...(root.matches(selector) ? [root] : []), ...root.querySelectorAll(selector)];
   const ACTION_GROUPS = '.fl-actions, .fl-action-grid, .ui-review-bar';
@@ -518,7 +523,7 @@
   }).observe(workspace, { childList: true, subtree: true });
   markHolders();
   // Hidden pages are handled when they are shown (their tables have no size until then).
-  window.addEventListener('resize', () => {
+  onResize(() => {
     if (!customColumns) { columnSelect.value = window.innerWidth < 768 ? 'core' : 'all'; applyColumns(); }
     updateTableHints();
     if (window.innerWidth >= 768) closeNavigation();
@@ -1077,7 +1082,7 @@
       buildSections();
     }, 0));
   };
-  window.addEventListener('resize', placeDateToggle);
+  onResize(placeDateToggle);
   placeDateToggle();
   new MutationObserver(records => { if (meaningful(records)) queueComfort(); }).observe(workspace, {childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class']});
   window.addEventListener('resize', queueComfort);
