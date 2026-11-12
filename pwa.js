@@ -4,9 +4,37 @@
   const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   document.documentElement.classList.toggle('ui-standalone', standalone());
 
+  // G2-N1: the connection notice sits right under the header and pushes the page down by its own height,
+  // so it never covers the header (logo, status, search, settings) or the page eyebrow. The header itself is untouched.
+  let connRO = null;
+  function placeConnectionBar() {
+    const root = document.documentElement;
+    const el = document.getElementById('uiOfflineBar');
+    if (!el) {
+      root.classList.remove('ui-conn-bar');
+      root.style.removeProperty('--ui-conn-bar-top');
+      root.style.removeProperty('--ui-conn-bar-h');
+      if (connRO) { connRO.disconnect(); connRO = null; }
+      return;
+    }
+    const head = document.getElementById('appHeader');
+    const r = head ? head.getBoundingClientRect() : null;
+    const top = r && r.height ? Math.max(0, Math.round(r.bottom)) : 0;
+    const h = el.offsetHeight;
+    root.style.setProperty('--ui-conn-bar-top', `${top + 8}px`);
+    root.style.setProperty('--ui-conn-bar-h', `${h + 16}px`);
+    root.classList.add('ui-conn-bar');
+    if (!connRO && typeof ResizeObserver === 'function') {
+      let queued = false;
+      connRO = new ResizeObserver(() => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; placeConnectionBar(); }); } });
+      connRO.observe(el);
+      if (head) connRO.observe(head);
+    }
+  }
+
   function bar(id, html, tone) {
     let el = document.getElementById(id);
-    if (!html) { if (el) el.remove(); return null; }
+    if (!html) { if (el) el.remove(); if (id === 'uiOfflineBar') placeConnectionBar(); return null; }
     if (!el) {
       el = document.createElement('div');
       el.id = id;
@@ -15,6 +43,7 @@
     }
     el.className = `ui-app-bar ui-app-bar-${tone}`;
     el.innerHTML = html;
+    if (id === 'uiOfflineBar') placeConnectionBar();
     return el;
   }
 
