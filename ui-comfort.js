@@ -365,13 +365,19 @@
   const EYEBROW = 'span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"]';
   // An action group is one row of equal tiles when its longest label fits a tile on one line; otherwise two columns (a
   // lone last tile spans both). Decided from the label lengths and the screen width, no layout read.
+  // WO-03 B7: reading window.innerWidth lays the page out first; fitActions runs as new content lands (mid page switch),
+  // so it uses the width as of the last resize instead.
+  let lastWidth = window.innerWidth;
+  window.addEventListener('resize', () => { lastWidth = window.innerWidth; });
+  const viewWidth = () => lastWidth;
   function fitActions(group) {
     const buttons = [...group.children].filter(el => el.tagName === 'BUTTON' && !el.matches('[onclick^="undoGameFromTeamLogs"], [onclick="syncReviewGameToTeamLogs()"]'));
     if (!buttons.length) return;
     const longest = Math.max(...buttons.map(b => [...b.textContent.replace(/\s+/g, '')].length));
-    const avail = Math.min(window.innerWidth, 1240) - (window.innerWidth >= 1280 ? 340 : 48);
+    const width = viewWidth();
+    const avail = Math.min(width, 1240) - (width >= 1280 ? 340 : 48);
     const per = (avail - (buttons.length - 1) * 8) / buttons.length - 22;
-    const cols = group.classList.contains('ui-review-bar') && buttons.length > 3 && window.innerWidth < 768 ? 2 : longest * 13.5 <= per ? buttons.length : 2;
+    const cols = group.classList.contains('ui-review-bar') && buttons.length > 3 && width < 768 ? 2 : longest * 13.5 <= per ? buttons.length : 2;
     if (group.dataset.cols !== String(cols)) group.dataset.cols = String(cols);
   }
   onResize(() => workspace.querySelectorAll('.fl-actions, .fl-action-grid, .ui-review-bar').forEach(fitActions));

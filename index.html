@@ -15,7 +15,6 @@
   <!-- Same Tailwind 3.4.17 and Chart.js 4.5.1 the page loaded from CDNs, kept locally so the PWA works offline (vendor/README.md). -->
   <script src="boot.js"></script>
   <script src="local-cache.js"></script>
-  <script src="vendor/chart.umd-4.5.1.min.js"></script>
   <script src="app-config.js?v=20261016-pwa1"></script>
   <script src="pwa.js?v=20261016-pwa1"></script>
   <style>
@@ -2373,6 +2372,8 @@
   <input type="file" id="hiddenAvatarInput" accept="image/*" class="hidden">
 
 
+  <!-- WO-03 B7: Chart.js loads after the page markup (it no longer holds up the first paint); everything that draws a chart comes after it. -->
+  <script src="vendor/chart.umd-4.5.1.min.js"></script>
   <script src="scorebook-lineup.js"></script>
   <script src="player-health.js"></script>
   <script src="player-health-store.js"></script>

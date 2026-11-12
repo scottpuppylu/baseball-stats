@@ -275,11 +275,29 @@
     rendering++;
     try { return renderLineupPage.apply(this, args); } finally { rendering--; }
   });
+  // WO-03 B7: opening the page, the custom lineup's evaluation (its model run, swap advice and flow chart, below the
+  // recommended order) waits until the page has painted; until then it keeps its last result under a 「計算中」 note.
+  const evaluateCustomNow = window.evaluateCustomLineup;
+  let customLater = 0, customAgg = null;
+  const customNote = () => document.getElementById('customLineupComputing');
+  if (typeof evaluateCustomNow === 'function') window.siteHooks.replace('evaluateCustomLineup', 'lineup-recommender', function (agg) {
+    if (!customLater) { customAgg = null; customNote()?.remove(); return evaluateCustomNow.call(this, agg); }
+    const first = !customAgg;
+    customAgg = agg;
+    if (!customNote()) document.getElementById('lineupEvalMetrics')?.insertAdjacentHTML('beforebegin', '<p id="customLineupComputing" class="text-xs text-slate-400" role="status">計算中…</p>');
+    if (first) requestAnimationFrame(() => setTimeout(() => {
+      const latest = customAgg;
+      customAgg = null;
+      customNote()?.remove();
+      if (latest) evaluateCustomNow(latest);
+    }, 0));
+  });
   // Synchronously as the page opens, so it is ready before it is painted (and for any code reading it right after).
   window.siteHooks.after('switchMainTab', 'lineup-recommender', () => {
     if (!deferred || lineupHidden()) return;
     deferred = false;
-    renderLineupAnalysis(getFullAgg());
+    customLater++;
+    try { renderLineupAnalysis(getFullAgg()); } finally { customLater--; }
   });
   window.calculateLegacyRecommendedLineup = legacyRecommend;
 
