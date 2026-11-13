@@ -580,6 +580,8 @@
   const visible = el => el.getClientRects().length > 0 && !el.closest('.hidden');
   // Short chip names for the long section titles (matched by a distinctive part of the title).
   const SHORT_LABELS = [
+    // WO-03 B3: the shortened page titles keep their chip names.
+    ['全隊排行', '排行榜'], ['投手分析', '投手總覽'], ['象限分析', '象限與圖表'], ['兩人比較', '指標對決'], ['落點對照', '落點對照'],
     ['基礎數據與打擊三圍', '基礎與三圍'], ['綜合產值（進階', '綜合產值'], ['紀律、擊球品質與方向', '紀律與擊球'], ['慢壘規則與本站模型', '規則與模型'], ['投手指標（慢速壘球', '投手指標'],
     ['生涯紀錄與趣味', '生涯紀錄'], ['生涯排行榜', '生涯排行'], ['單場紀錄', '單場紀錄'], ['連續紀錄', '連續紀錄'], ['趣味紀錄與里程碑', '趣味紀錄'],
     ['逐場成績與近況對決', '逐場對決'], ['逐場成績與近況', '逐場近況'], ['深度能力檔案', '能力檔案'], ['擊球落點噴流', '擊球落點'],

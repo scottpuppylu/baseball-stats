@@ -338,6 +338,28 @@
         return false; // keep the tap from opening the profile directly
       }
     });
+    // WO-03 B3 (X-04): every chart canvas is an image with a spoken summary of what it shows, rebuilt on each update.
+    const fmt = v => typeof v === 'number' ? String(Math.round(v * 1000) / 1000) : v && typeof v === 'object' && 'y' in v ? `${fmt(v.x)}／${fmt(v.y)}` : String(v ?? '');
+    const KIND = {radar: '雷達圖', doughnut: '圓環圖', pie: '圓餅圖', bar: '長條圖', line: '折線圖', scatter: '散布圖', bubble: '氣泡圖', polarArea: '極座標圖'};
+    const describe = chart => {
+      const canvas = chart.canvas, labels = (chart.data.labels || []).map(String);
+      // The chart's name: the fallback label written in the page (「能力雷達圖（尚無資料）」), else the nearest card heading.
+      if (canvas.dataset.flTitle == null) {
+        let heading = null;
+        for (let el = canvas.parentElement, i = 0; el && !heading && i < 4 && !/^panel/.test(el.id); el = el.parentElement, i++) heading = el.querySelector('h2, h3, h4');
+        canvas.dataset.flTitle = ((canvas.getAttribute('aria-label') || '').replace(/（尚無資料）$/, '') || (heading ? heading.textContent : '')).replace(/\s+/g, ' ').trim().slice(0, 30);
+      }
+      const title = canvas.dataset.flTitle;
+      const sets = (chart.data.datasets || []).filter(d => !d.hidden).slice(0, 4).map(d => {
+        const data = (d.data || []).slice(0, 8);
+        const pairs = labels.length && data.every(x => typeof x !== 'object') ? data.map((x, i) => `${labels[i] ?? ''} ${fmt(x)}`) : [`${(d.data || []).length} 個點`];
+        return `${d.label ? d.label + '：' : ''}${pairs.join('、')}`;
+      });
+      return `${title || KIND[chart.config.type] || '圖表'}。${sets.join('；') || '目前沒有資料'}`.slice(0, 320);
+    };
+    const label = chart => { const c = chart.canvas; if (!c) return; c.setAttribute('role', 'img'); const s = describe(chart); if (c.getAttribute('aria-label') !== s) c.setAttribute('aria-label', s); };
+    Chart.register({id: 'flA11yLabel', afterUpdate: label});
+    Object.values(Chart.instances || {}).forEach(label); // charts drawn before this file loaded
   }
   // Spray-chart dots: on touch, a tap fills the chart's detail line the way hovering does with a mouse.
   document.addEventListener('click', event => {

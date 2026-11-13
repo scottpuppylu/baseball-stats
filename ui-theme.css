@@ -100,9 +100,9 @@ html.ui-flight .ui-page-heading h1, html.ui-flight [id$="Modal"] h3 {
 }
 html.ui-flight h4, html.ui-flight label, html.ui-flight th { font-feature-settings: "palt" 1; letter-spacing: .03em; }
 html.ui-flight p, html.ui-flight li { letter-spacing: .025em; }
-/* Small text is the first to vanish in sunlight: nothing below 11.5px, and a touch more weight. */
-html.ui-flight .text-\[9px\] { font-size: 11px; font-weight: 500; }
-html.ui-flight .text-\[10px\] { font-size: 11.5px; font-weight: 500; }
+/* Small text is the first to vanish in sunlight: nothing below 12px (WO-03 B3 X-02), and a touch more weight. */
+html.ui-flight .text-\[9px\] { font-size: 12px; font-weight: 500; }
+html.ui-flight .text-\[10px\] { font-size: 12px; font-weight: 500; }
 html.ui-flight .text-\[11px\] { font-size: 12px; font-weight: 500; }
 html.ui-flight .text-xs { font-weight: 500; }
 html.ui-flight .uppercase, html.ui-flight .tracking-wider, html.ui-flight .tracking-widest { letter-spacing: .12em; }
@@ -306,7 +306,7 @@ html.ui-flight #appHeader span.rounded-full[class*="bg-emerald-"] > span { backg
 /* English section tags ("LEADERBOARD", "ROSTER FILTER" …): quiet mission-style eyebrows instead of neon pills. */
 html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"] {
   background: none !important; border: 0 !important; border-radius: 0; padding: 0 0 0 10px !important;
-  font-size: 11px; font-weight: 640; letter-spacing: .2em; line-height: 1.2;
+  font-size: 12px; font-weight: 640; letter-spacing: .18em; line-height: 1.2;
   position: relative; box-shadow: none !important;
 }
 html.ui-flight span.rounded-full.font-mono.font-bold.text-xs[class*="px-2.5"][class*="-500/"]::before {
@@ -402,7 +402,7 @@ html.ui-flight {
   --fl-liquid-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 0 0 .5px rgba(255, 255, 255, .04), 0 30px 60px -28px rgba(0, 0, 0, .9);
 }
 /* Navigation group labels (數據 / 比賽 / 參考): mission-panel captions. */
-html.ui-flight .ui-nav-group { color: var(--fl-ink-3) !important; font-size: 11px !important; font-weight: 600; letter-spacing: .32em !important; padding: 14px 12px 4px !important; }
+html.ui-flight .ui-nav-group { color: var(--fl-ink-3) !important; font-size: 12px !important; font-weight: 600; letter-spacing: .32em !important; padding: 14px 12px 4px !important; }
 html.ui-flight #mainNavigation > button > svg { opacity: .9; }
 html.ui-flight .fl-side-foot { display: none; }
 /* Phone tab bar: clear liquid glass. Light frosting only, so what scrolls behind stays visible; on Chromium
@@ -454,7 +454,7 @@ html.ui-flight .ui-mobile-nav button[aria-current="page"], html.ui-flight .ui-mo
   html.ui-flight #mainNavigation > button svg { width: 18px; height: 18px; }
   html.ui-flight .fl-side-foot {
     display: flex; flex-direction: column; gap: 6px; order: 99; margin-top: auto; padding: 16px 10px 4px;
-    border-top: 1px solid var(--fl-line); color: var(--fl-ink-3); font-size: 11.5px;
+    border-top: 1px solid var(--fl-line); color: var(--fl-ink-3); font-size: 12px;
   }
   html.ui-flight .fl-side-foot::before { content: 'TKU AEROSPACE · SOFTBALL'; font-family: var(--fl-font); font-size: 10px; letter-spacing: .22em; white-space: nowrap; color: var(--fl-ink-3); }
   html.ui-flight .fl-side-foot > span { display: inline-flex !important; width: fit-content; }
@@ -772,7 +772,7 @@ html.ui-flight .fl-telemetry { display: grid; grid-template-columns: repeat(4, m
 html.ui-flight .fl-telemetry > div { padding: 4px 8px; }
 html.ui-flight .fl-telemetry > div + div { border-left: 1px solid rgba(255, 255, 255, .12); }
 html.ui-flight .fl-telemetry dt { display: flex; flex-direction: column; gap: 3px; color: var(--fl-ink-2); font-size: 12.5px; letter-spacing: .12em; }
-html.ui-flight .fl-telemetry dt span { font-family: var(--fl-font); font-size: 11px; font-weight: 600; letter-spacing: .34em; color: var(--fl-ink-3); }
+html.ui-flight .fl-telemetry dt span { font-family: var(--fl-font); font-size: 12px; font-weight: 600; letter-spacing: .3em; color: var(--fl-ink-3); }
 html.ui-flight .fl-telemetry dd { margin: 8px 0 0; font-family: var(--fl-font); font-variant-numeric: tabular-nums; font-size: clamp(26px, 3.6vw, 44px); font-weight: 500; color: #f3f5f8; }
 html.ui-flight .fl-band { padding: clamp(56px, 9vw, 110px) 0 0; }
 html.ui-flight .fl-band-head { max-width: 980px; margin: 0 auto 26px; padding: 0 24px; text-align: center; }
@@ -1271,7 +1271,7 @@ html.ui-flight .transition { transition-property: opacity, transform; } /* WO-03
 @media (min-width: 640px) { .ga-stats { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .ga-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 12px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.07); }
 .ga-stat b { font-size: 20px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.ga-stat span { font-size: 11px; color: #94a3b8; }
+.ga-stat span { font-size: 12px; color: #b3bfce; }
 .ga-chip { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
 .ga-outs { display: inline-flex; gap: 3px; margin-left: auto; flex: 0 0 auto; }
 .ga-outs i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.35); }
@@ -1308,25 +1308,25 @@ html.ui-flight .transition { transition-property: opacity, transform; } /* WO-03
 .ga-video-wait .ga-card-img { position: absolute; inset: 0; max-width: none; border: 0; border-radius: 0; }
 .ga-dim { filter: brightness(0.38) blur(1px); }
 .ga-play { position: relative; z-index: 1; font-size: 15px; font-weight: 800; color: #ecfdf5; padding: 12px 20px; border-radius: 999px; border: 1px solid rgba(52,211,153,0.6); background: rgba(16,185,129,0.25); }
-.ga-media-note { position: relative; z-index: 1; font-size: 11px; color: #cbd5e1; }
+.ga-media-note { position: relative; z-index: 1; font-size: 12px; color: #cbd5e1; }
 .s3-chip[disabled] { opacity: 0.4; cursor: not-allowed; }
 /* 賽事分析 picker: the current game with older / newer, and a searchable list grouped by month (scales to many games). */
 .ga-current { display: flex; align-items: center; gap: 8px; }
 .ga-step { flex: 0 0 44px; height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: #e2e8f0; font-size: 22px; line-height: 1; }
 .ga-step[disabled] { opacity: 0.3; }
 .ga-current-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 10px; border-radius: 14px; border: 1px solid rgba(125,211,252,0.35); background: rgba(56,189,248,0.08); text-align: center; }
-.ga-current-info small { font-size: 11px; color: #94a3b8; }
+.ga-current-info small { font-size: 12px; color: #b3bfce; }
 .ga-current-info b { font-size: 16px; color: #f8fafc; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ga-current-info span { font-size: 13px; font-weight: 700; }
 .ga-browse { display: flex; flex-direction: column; gap: 8px; }
 .ga-browse-list { max-height: min(60vh, 520px); overflow-y: auto; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.18); -webkit-overflow-scrolling: touch; }
-.ga-month-head { position: sticky; top: 0; z-index: 1; padding: 6px 12px; font-size: 11px; font-weight: 700; color: #94a3b8; background: rgba(10,12,16,0.92); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.ga-month-head { position: sticky; top: 0; z-index: 1; padding: 6px 12px; font-size: 12px; font-weight: 700; color: #b3bfce; background: rgba(10,12,16,0.92); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .ga-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 8px 12px; text-align: left; border-top: 1px solid rgba(255,255,255,0.05); }
 .ga-row.ga-on { background: rgba(56,189,248,0.12); }
 .ga-row-date { flex: 0 0 3.2em; font-size: 13px; font-weight: 700; color: #cbd5e1; font-variant-numeric: tabular-nums; }
 .ga-row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
 .ga-row-main b { font-size: 14px; color: #f1f5f9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ga-row-main small { font-size: 11px; color: #94a3b8; }
+.ga-row-main small { font-size: 12px; color: #b3bfce; }
 .ga-row-res { flex: 0 0 auto; font-size: 13px; font-weight: 700; white-space: nowrap; }
 /* The video download is the main action on the page. */
 .ga-download { display: block; width: 100%; max-width: 360px; margin: 0 auto; padding: 14px; border-radius: 16px; font-size: 16px; font-weight: 800; color: #ecfdf5; border: 1px solid rgba(52,211,153,0.65); background: linear-gradient(180deg, rgba(16,185,129,0.42), rgba(5,150,105,0.32)); box-shadow: 0 8px 24px rgba(16,185,129,0.18); }
@@ -1459,10 +1459,10 @@ html.ui-flight body[data-page]:not([data-page="Home"]) main section span.font-mo
 }
 /* The overview's headline cards: bigger still. */
 html.ui-flight #teamSummaryCards span.font-black.block { font-size: clamp(26px, 7vw, 34px) !important; line-height: 1.1; font-weight: 700 !important; letter-spacing: -.02em; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); }
-html.ui-flight #teamSummaryCards span.font-semibold.block { font-size: 11.5px !important; letter-spacing: .1em; color: var(--fl-ink-3) !important; }
+html.ui-flight #teamSummaryCards span.font-semibold.block { font-size: 12px !important; letter-spacing: .1em; color: var(--fl-ink-3) !important; }
 /* Their labels. */
 html.ui-flight body[data-page]:not([data-page="Home"]) main section span[class*="text-[10px]"].block {
-  font-size: 11px !important; letter-spacing: .08em; color: var(--fl-ink-3) !important;
+  font-size: 12px !important; letter-spacing: .08em; color: var(--fl-ink-3) !important;
 }
 /* Boxes inside a panel: soft glass, no frame; the column dividers become fading hairlines. */
 html.ui-flight body[data-page]:not([data-page="Home"]) main section :is(div, section)[class*="rounded"][class*="border"]:not(button):not([class*="rounded-full"]) {
@@ -1488,7 +1488,7 @@ html.ui-flight body[data-page]:not([data-page="Home"]) main section :is(h2, h3) 
 html.ui-flight body[data-page]:not([data-page="Home"]) main section :is(h2, h3) * { color: inherit; }
 /* Tables: no grid, a quiet header, hairlines between rows, the row under the mouse lights up. */
 html.ui-flight body[data-page]:not([data-page="Home"]) main section table thead th {
-  background: rgba(14, 16, 21, .72) !important; color: var(--fl-ink-3) !important; font-size: 11.5px; font-weight: 600; letter-spacing: .1em;
+  background: rgba(14, 16, 21, .72) !important; color: var(--fl-ink-3) !important; font-size: 12px; font-weight: 600; letter-spacing: .1em;
   border-bottom: 1px solid rgba(255, 255, 255, .12) !important;
 }
 html.ui-flight body[data-page]:not([data-page="Home"]) main section table :is(td, th) { border-left-color: transparent !important; border-right-color: transparent !important; }
@@ -1577,7 +1577,7 @@ html.ui-flight body[data-page]:not([data-page="Home"]) .ga-half-ours { backgroun
 html.ui-flight body[data-page]:not([data-page="Home"]) .ga-batter.ga-mvp { background: linear-gradient(180deg, rgba(251, 191, 36, .16), rgba(251, 191, 36, .05)), var(--fl-material) !important; }
 html.ui-flight body[data-page]:not([data-page="Home"]) .ga-game.ga-on { background: linear-gradient(180deg, rgba(124, 192, 255, .22), rgba(124, 192, 255, .08)), var(--fl-material) !important; }
 html.ui-flight body[data-page]:not([data-page="Home"]) .ga-stat b { font-size: 26px; font-weight: 700; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); }
-html.ui-flight body[data-page]:not([data-page="Home"]) .ga-stat span { letter-spacing: .08em; color: var(--fl-label-3); }
+html.ui-flight body[data-page]:not([data-page="Home"]) .ga-stat span { letter-spacing: .08em; color: var(--fl-ink-2); } /* WO-03 B3: 4.5 contrast on the glass card */
 html.ui-flight body[data-page]:not([data-page="Home"]) .ga-score { font-size: clamp(48px, 13vw, 64px); font-weight: 700; letter-spacing: -.02em; text-shadow: 0 2px 4px rgba(0, 0, 0, .6); }
 html.ui-flight body[data-page]:not([data-page="Home"]) :is(.ga-line, .ga-table) :is(th, td) { border-bottom-color: var(--fl-separator); }
 /* Layout after the frames went (2026/11/03): one leading edge for titles, notes and cards; numbers sized by their own
@@ -1686,7 +1686,7 @@ html.ui-flight .fl-actions > #toggleAddLogBtn { color: #6ee7b7 !important; }
 html.ui-flight .fl-actions > #toggleAddPlayerBtn { color: #c4b5fd !important; }
 /* A label with a unit (「近 4 場（8 打席）」 + 「AVG / OBP / SLG」): two deliberate lines on phones, one line when there is room. */
 html.ui-flight .ui-pair { display: flex; flex-direction: column; gap: 1px; }
-html.ui-flight .ui-pair-unit { font-size: 11px; letter-spacing: .08em; color: var(--fl-label-3, #8b93a1); }
+html.ui-flight .ui-pair-unit { font-size: 12px; letter-spacing: .08em; color: var(--fl-label-3, #8b93a1); }
 /* Content touched by wrapping, set deliberately instead (phones): */
 @media (max-width: 767px) {
   /* a card's header row (title, then a badge or note on the right) stacks: title, and the note as a line under it */
@@ -1699,7 +1699,7 @@ html.ui-flight .ui-pair-unit { font-size: 11px; letter-spacing: .08em; color: va
    room); - a label that introduces a row of buttons sits above them; - an odd last card in a two-column grid takes the row;
    - a batter's plate appearances in 賽事分析 line up in equal columns instead of a ragged run of chips. */
 html.ui-flight main :is(th, th *) { white-space: nowrap !important; }
-html.ui-flight .ui-note { font-size: max(11px, .86em); opacity: .78; display: block; line-height: 1.3; }
+html.ui-flight .ui-note { font-size: max(12px, .86em); opacity: .78; display: block; line-height: 1.3; }
 html.ui-flight .ui-pair .ui-note { display: inline; margin-left: .2em; }
 html.ui-flight .ui-pair > span:first-child { white-space: nowrap; }
 html.ui-flight :is(.flex, .inline-flex).ui-note-holder { flex-wrap: wrap; } /* holder classes: ui-comfort.js (no :has()) */
@@ -1962,3 +1962,35 @@ html.ui-flight .ui-section-bar button { min-height: 36px; }
 @media (prefers-reduced-motion: reduce) {
   html.ui-flight *, html.ui-flight *::before, html.ui-flight *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- WO-03 B3 (X-01): every control reaches 44 × 44 ----------
+   Real boxes, not pseudo-element hit areas: the lens glass already owns ::before/::after on these buttons. */
+html.ui-flight #flTopbar .fl-top-logo { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+html.ui-flight #flTopbar .fl-top-icon, html.ui-flight #flTopbar .fl-status-light { width: 44px; height: 44px; min-height: 44px !important; }
+html.ui-flight #flTopbar #uiDateToggle, html.ui-flight #flTopbar #uiDrawerToggle { min-height: 44px; }
+html.ui-flight .fl-subnav button { min-height: 44px; }
+html.ui-flight .ui-section-bar button { min-height: 44px; }
+/* The date pill keeps its 32 px look; the transparent box around it takes the tap. */
+@media (max-width: 767.98px) {
+  html.ui-flight .ui-page-heading .ui-date-pill { position: relative; min-height: 44px; background: none; box-shadow: none; isolation: isolate; }
+  html.ui-flight .ui-page-heading .ui-date-pill::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 6px; bottom: 6px; z-index: -1; border-radius: 999px;
+    background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18), 0 6px 16px -12px rgba(0, 0, 0, .8);
+  }
+}
+html.ui-flight #profileIdentity #playerProfileBio div[onclick="triggerAvatarUpload()"] > .pf-camera { min-width: 44px; min-height: 44px; }
+html.ui-flight #playerProfileBio .pf-fill { min-height: 44px; }
+html.ui-flight #playerProfileBio button[onclick^="removePlayerTag"] { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -10px -12px -10px -6px; }
+html.ui-flight main :is(select, input[type="text"], input[type="number"], input[type="date"], input[type="search"], input:not([type])) { min-height: 44px; }
+html.ui-flight main button.bg-emerald-600, html.ui-flight main button.bg-sky-600, html.ui-flight main button.bg-slate-800 { min-height: 44px; }
+/* Small controls inside running text or a row of pills keep their look; a transparent 44 px band takes the tap. */
+html.ui-flight #panelRecords [data-record-player] { min-height: 44px; }
+html.ui-flight :is([data-record-player], #playerProfileBio .pf-tags button[onclick^="addPlayerTag"]) { position: relative; }
+html.ui-flight :is([data-record-player], #playerProfileBio .pf-tags button[onclick^="addPlayerTag"])::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%);
+}
+
+/* ---------- WO-03 B3 (X-02): nothing below 12 px ---------- */
+html.ui-flight :is(main, [id$="Modal"]) :is(.text-\[8px\], .text-\[9px\]) { font-size: 12px !important; }
+html.ui-flight .ui-table-hint, html.ui-flight .ui-detail-grid span, html.ui-flight .lineup-order span { font-size: 12px; }
+html.ui-flight .ui-card-table tbody td::before { font-size: 12px; }

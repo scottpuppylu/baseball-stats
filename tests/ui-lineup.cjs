@@ -25,7 +25,7 @@ const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa')
         allLogs.forEach(l=>{hist[l.name]=(hist[l.name]||0)+(Number(l.pa)||0);});
         const expected=Object.values(JERSEY_TO_NAME).filter(n=>(hist[n]||0)>=14).sort();
         return {present:[...presentPlayersSet].sort(),expected,badge:document.getElementById('attendanceCountBadge').textContent,
-          button:[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='PA≥14出席')};
+          button:[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='打席 14 以上')};
       });
       assert.equal(attendance.expected.length>=10,true);
       assert.deepEqual(attendance.present,attendance.expected);

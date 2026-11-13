@@ -367,13 +367,13 @@
               <div class="sm:col-span-7 h-72 sm:h-80 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-between">
                 <span class="text-xs text-slate-400 font-medium">全隊百分位 (PR 0–100) 五維能力雷達</span>
                 <div class="h-56 sm:h-64 w-full relative">
-                  <canvas id="radarChart"></canvas>
+                  <canvas id="radarChart" role="img" aria-label="能力雷達圖（尚無資料）"></canvas>
                 </div>
               </div>
               <div class="sm:col-span-5 h-72 sm:h-80 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-between">
                 <span class="text-xs text-slate-400 font-medium">區間長打分佈</span>
                 <div class="h-56 sm:h-64 w-full relative">
-                  <canvas id="donutChart"></canvas>
+                  <canvas id="donutChart" role="img" aria-label="安打類型圓環圖（尚無資料）"></canvas>
                 </div>
               </div>
             </div>
@@ -448,7 +448,7 @@
                 <span class="text-[10px] text-emerald-400 font-mono">LD% 越佳</span>
               </div>
               <div class="h-56 relative w-full">
-                <canvas id="profileBattedBallChart"></canvas>
+                <canvas id="profileBattedBallChart" role="img" aria-label="擊球型態圖（尚無資料）"></canvas>
               </div>
               <span class="text-[10px] text-slate-500 font-mono text-center block">藍色: 個人 | 綠色虛線: 全隊常模</span>
             </div>
@@ -460,7 +460,7 @@
                 <span class="text-[10px] text-amber-400 font-mono">三等分落點</span>
               </div>
               <div class="h-56 relative w-full">
-                <canvas id="profileSprayPolarChart"></canvas>
+                <canvas id="profileSprayPolarChart" role="img" aria-label="擊球方向圖（尚無資料）"></canvas>
               </div>
               <span class="text-[10px] text-slate-500 font-mono text-center block">依打擊側判定拉／推；球場落點保持原方向</span>
             </div>
@@ -472,7 +472,7 @@
                 <span class="text-[10px] text-sky-400 font-mono">運氣因子</span>
               </div>
               <div class="h-56 relative w-full">
-                <canvas id="profileExpectedChart"></canvas>
+                <canvas id="profileExpectedChart" role="img" aria-label="預期與實際成績對照圖（尚無資料）"></canvas>
               </div>
               <span class="text-[10px] text-slate-500 font-mono text-center block">實績與純擊球品質期望差距</span>
             </div>
@@ -485,7 +485,7 @@
             <div>
               <div class="flex items-center space-x-2">
                 <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">SCOUTING & TACTICAL ADVISORY</span>
-                <h3 class="text-base font-bold text-rose-300">球員打擊弱點診斷與技術改善方針 (即時動態分析)</h3>
+                <h3 class="text-base font-bold text-rose-300">弱點診斷</h3>
               </div>
               <p class="text-xs text-slate-400 mt-1">與全隊同期比較並依樣本量修正，交叉比對三振、保送、長打、擊球型態（含本隊各型態安打率）、方向與預期打擊率，找出原因並排出改善優先順序</p>
             </div>
@@ -527,7 +527,7 @@
             <div>
               <div class="flex items-center space-x-2">
                 <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">LEADERBOARD</span>
-                <h2 class="text-xl font-black text-amber-400 tracking-tight">全隊數據排行榜競技場</h2>
+                <h2 class="text-xl font-black text-amber-400 tracking-tight">全隊排行</h2>
               </div>
               <p class="text-xs text-slate-400 mt-1">支援傳統三圍、進階賽伯計量與紀律控制全維度指標切換</p>
             </div>
@@ -536,7 +536,7 @@
 
           <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 sm:p-3.5 rounded-xl border border-slate-800/80">
             <div class="flex items-center space-x-2.5 w-full sm:w-auto">
-              <label class="text-xs text-slate-400 font-medium shrink-0">排行指標：</label>
+              <label for="leaderboardMetricSelect" class="text-xs text-slate-400 font-medium shrink-0">排行指標：</label>
               <select id="leaderboardMetricSelect" class="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-500 font-medium w-full sm:w-auto">
                 <optgroup label="綜合產值">
                   <option value="wrc_plus" selected>加權得分創造 (wRC+)</option>
@@ -577,7 +577,7 @@
               </select>
             </div>
             <div class="flex items-center space-x-2">
-              <label class="text-xs text-slate-400">最低打席門檻：</label>
+              <label for="leaderboardMinPa" class="text-xs text-slate-400">最低打席門檻：</label>
               <input type="number" id="leaderboardMinPa" value="0" min="0" max="100" class="w-14 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-center text-xs text-amber-400 font-mono">
               <span class="text-[11px] text-slate-500 font-mono">PA</span>
             </div>
@@ -623,10 +623,10 @@
               <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
                 <div class="flex items-center space-x-2">
                   <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded font-mono font-bold">QUADRANT MATRIX</span>
-                  <h3 class="text-sm font-bold text-slate-200">賽伯計量多維象限分析</h3>
+                  <h3 class="text-sm font-bold text-slate-200">象限分析</h3>
                 </div>
                 <div class="flex items-center space-x-2">
-                  <select id="quadrantPresetSelect" onchange="renderQuadrantChart(getAnalysisAgg())" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2.5 py-1 text-emerald-300 font-medium focus:outline-none focus:border-emerald-500">
+                  <select id="quadrantPresetSelect" aria-label="象限圖預設組合" onchange="renderQuadrantChart(getAnalysisAgg())" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2.5 py-1 text-emerald-300 font-medium focus:outline-none focus:border-emerald-500">
                     <option value="obp_slg" selected>經典攻擊象限 (OBP vs. SLG)</option>
                     <option value="ld_xba">Statcast 擊球品質象限 (LD% vs. xBA)</option>
                     <option value="contact_sdi">紀律與好球帶控制 (Contact% vs. SDI 2.0)</option>
@@ -638,7 +638,7 @@
               <p class="text-xs text-slate-400 mb-3" id="quadrantDescText">十字虛線代表全隊平均基準線，點擊散佈圓點可直接切換至該球員深度檔案</p>
             </div>
             <div class="h-72 sm:h-80 relative w-full">
-              <canvas id="quadrantChart"></canvas>
+              <canvas id="quadrantChart" role="img" aria-label="象限散布圖（尚無資料）"></canvas>
             </div>
           </div>
 
@@ -646,14 +646,14 @@
           <div class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col justify-between backdrop-blur-sm">
             <div>
               <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <h3 class="text-sm font-bold text-purple-300">多變量交叉比對引擎</h3>
+                <h3 class="text-sm font-bold text-purple-300">交叉比對</h3>
                 <div id="correlationIndicator" class="text-xs font-mono px-2 py-0.5 rounded bg-purple-950/80 border border-purple-800 text-purple-200">
                   相關係數 r: --
                 </div>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
                 <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5">圖表型態</label>
+                  <label for="customChartType" class="block text-[10px] text-slate-400 mb-0.5">圖表型態</label>
                   <select id="customChartType" class="w-full bg-slate-950 border border-slate-700 text-xs rounded px-2 py-1">
                     <option value="bubble" selected>三維氣泡圖 (X/Y/Size)</option>
                     <option value="scatter">二維散佈圖 (X/Y)</option>
@@ -662,7 +662,7 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5">X 軸變量</label>
+                  <label for="customXVar" class="block text-[10px] text-slate-400 mb-0.5">X 軸變量</label>
                   <select id="customXVar" class="w-full bg-slate-950 border border-slate-700 text-xs rounded px-2 py-1">
                     <optgroup label="打擊三圍與長打">
                       <option value="avg">打擊率 (AVG)</option>
@@ -694,7 +694,7 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5">Y 軸變量</label>
+                  <label for="customYVar" class="block text-[10px] text-slate-400 mb-0.5">Y 軸變量</label>
                   <select id="customYVar" class="w-full bg-slate-950 border border-slate-700 text-xs rounded px-2 py-1">
                     <optgroup label="綜合產值">
                       <option value="wrc_plus" selected>加權得分創造 (wRC+)</option>
@@ -737,7 +737,7 @@
               </div>
             </div>
             <div class="h-72 sm:h-80 relative w-full">
-              <canvas id="customChart"></canvas>
+              <canvas id="customChart" role="img" aria-label="交叉比對圖（尚無資料）"></canvas>
             </div>
           </div>
         </section>
@@ -756,7 +756,7 @@
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             <div class="lg:col-span-8 h-72 sm:h-80 relative w-full bg-slate-950/70 p-4 rounded-2xl border border-slate-800">
-              <canvas id="luckRegressionChart"></canvas>
+              <canvas id="luckRegressionChart" role="img" aria-label="運氣回歸圖（尚無資料）"></canvas>
             </div>
             <div class="lg:col-span-4 bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-3 text-xs">
               <span class="font-bold text-slate-200 block text-sm border-b border-slate-800 pb-2">🧠 賽伯計量運氣因子球探解讀</span>
@@ -832,7 +832,7 @@
           <div class="border-b border-slate-800 pb-3">
             <div class="flex items-center space-x-2">
               <span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">HEAD TO HEAD</span>
-              <h2 class="text-xl font-black text-purple-300 tracking-tight">雙人選手數據對決比對</h2>
+              <h2 class="text-xl font-black text-purple-300 tracking-tight">兩人比較</h2>
             </div>
             <p class="text-xs text-slate-400 mt-1">選取任意兩位球員進行全維度攻守數據對決、優勢指標標記與五維雷達重疊對比</p>
           </div>
@@ -844,7 +844,7 @@
                 <span class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
                   <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> 選手 A (藍方)
                 </span>
-                <select id="comparePlayerA" class="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-sky-500 font-medium"></select>
+                <select id="comparePlayerA" aria-label="選手 A（藍方）" class="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-sky-500 font-medium"></select>
               </div>
               <div id="compareCardA"></div>
             </div>
@@ -855,7 +855,7 @@
                 <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
                   <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> 選手 B (金方)
                 </span>
-                <select id="comparePlayerB" class="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-amber-500 font-medium"></select>
+                <select id="comparePlayerB" aria-label="選手 B（金方）" class="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-amber-500 font-medium"></select>
               </div>
               <div id="compareCardB"></div>
             </div>
@@ -884,7 +884,7 @@
                 <span class="text-[10px] text-slate-500 font-mono">標準化 0–100 PR</span>
               </div>
               <div class="h-64 sm:h-72 w-full relative">
-                <canvas id="compareRadarChart"></canvas>
+                <canvas id="compareRadarChart" role="img" aria-label="兩人能力雷達圖（尚無資料）"></canvas>
               </div>
             </div>
           </div>
@@ -894,7 +894,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div class="flex items-center space-x-2">
                 <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">DUAL SPRAY ANALYSIS</span>
-                <h3 class="text-base font-bold text-white tracking-tight">雙雄球場擊球噴流圖對照與空間傾向</h3>
+                <h3 class="text-base font-bold text-white tracking-tight">落點對照</h3>
               </div>
               <span class="text-xs text-slate-400 font-mono">左: 選手 A (藍方) | 右: 選手 B (金方)</span>
             </div>
@@ -981,7 +981,7 @@
             <div class="flex flex-wrap items-center gap-2">
               <span id="attendanceCountBadge" class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg"></span>
               <button onclick="selectAllAttendance()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">全選出席</button>
-              <button onclick="selectPa15Attendance()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">PA≥14出席</button>
+              <button onclick="selectPa15Attendance()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">打席 14 以上</button>
               <button onclick="clearAttendance()" class="bg-slate-800 hover:bg-slate-700 text-rose-300 text-xs px-2.5 py-1 rounded-lg transition font-medium border border-slate-700">清空選取</button>
             </div>
           </div>
@@ -1097,7 +1097,7 @@
                 <span class="text-[10px] text-slate-500 font-mono">越平滑斷層越少</span>
               </div>
               <div class="h-64 sm:h-72 w-full relative">
-                <canvas id="lineupFlowChart"></canvas>
+                <canvas id="lineupFlowChart" role="img" aria-label="打序得分流程圖（尚無資料）"></canvas>
               </div>
             </div>
 
@@ -1151,19 +1151,19 @@
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                 <div>
-                  <label class="block text-slate-400 mb-1 font-semibold">比賽日期 <span class="text-rose-400">*</span></label>
+                  <label for="setup_game_date" class="block text-slate-400 mb-1 font-semibold">比賽日期 <span class="text-rose-400">*</span></label>
                   <input type="date" id="setup_game_date" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
-                  <label class="block text-slate-400 mb-1 font-semibold">對手隊伍名稱 <span class="text-rose-400">*</span></label>
+                  <label for="setup_game_opponent" class="block text-slate-400 mb-1 font-semibold">對手隊伍名稱 <span class="text-rose-400">*</span></label>
                   <input type="text" id="setup_game_opponent" placeholder="例如: 化材系壘、土木系壘" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
-                  <label class="block text-slate-400 mb-1 font-semibold">賽事/盃賽標籤</label>
+                  <label for="setup_game_tag" class="block text-slate-400 mb-1 font-semibold">賽事/盃賽標籤</label>
                   <input type="text" id="setup_game_tag" placeholder="預設: 航太系壘例行賽" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
-                  <label class="block text-slate-400 mb-1 font-semibold">我方攻守身分</label>
+                  <label for="setup_game_role" class="block text-slate-400 mb-1 font-semibold">我方攻守身分</label>
                   <select id="setup_game_role" class="w-full bg-slate-900 border border-slate-700 text-amber-300 rounded-lg px-2.5 py-1.5 font-bold focus:outline-none focus:border-amber-500">
                     <option value="先攻" selected>先攻 (第 1 局上半我方先打)</option>
                     <option value="後攻">後攻 / 先守 (第 1 局上半我方先守，下半打擊)</option>
@@ -1215,7 +1215,7 @@
 
               <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
                 <button type="button" onclick="startNewGameFromSetup()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2 rounded-xl text-xs shadow-lg transition flex items-center gap-1.5">
-                  <span>🚀</span> 正式開賽，啟動實況場記
+                  開始比賽
                 </button>
               </div>
             </div>
@@ -1239,7 +1239,7 @@
                     <span>🔄</span> 切換 DH (10/11棒)
                   </button>
                   <button onclick="finishActiveGameAndSyncLogs()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow transition flex items-center gap-1">
-                    <span>🏁</span> 結束比賽並同步全隊日誌
+                    結束比賽並同步
                   </button>
                   <button onclick="discardActiveGame()" class="bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border border-slate-700 text-xs px-2.5 py-1.5 rounded-xl transition">
                     清除此場
@@ -1315,8 +1315,8 @@
                 </div>
               </div>
 
-              <details id="liveLineupCard" class="lineup-card" aria-label="即時歐打單">
-                <summary class="lineup-card-heading"><h3>歐打單</h3><strong id="liveLineupStatus" aria-live="polite"></strong><span class="lineup-disclosure-label" aria-hidden="true"></span></summary>
+              <details id="liveLineupCard" class="lineup-card" aria-label="今日打序">
+                <summary class="lineup-card-heading"><h3>今日打序</h3><strong id="liveLineupStatus" aria-live="polite"></strong><span class="lineup-disclosure-label" aria-hidden="true"></span></summary>
                 <p class="lineup-help">上下捲動查看全打線，直接在該棒次換人或改守位；代打沿用原守位，已記錄打席保留原打者。</p>
                 <div id="liveLineupRows" class="lineup-list"></div>
               </details>
@@ -1468,7 +1468,7 @@
                     <div class="pt-2">
                       <button onclick="submitBattedBallPlay()" class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-sm shadow-xl transition flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                        <span>登打送出此打席紀錄 (Submit Play)</span>
+                        <span>送出這個打席</span>
                       </button>
                     </div>
                   </div>
@@ -1529,7 +1529,7 @@
                 <div class="fl-def-row grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                   <section id="liveDefenseFieldCard" class="lg:col-span-6 lineup-field-card" aria-label="查看目前球場守位">
                     <h3>查看目前球場守位</h3>
-                    <p class="lineup-help">我方目前守備配置，僅供檢視。換人或守位調整請展開上方歐打單。</p>
+                    <p class="lineup-help">我方目前守備配置，僅供檢視。換人或守位調整請展開上方今日打序。</p>
                     <div id="liveLineupField"></div>
                   </section>
 
@@ -1678,14 +1678,14 @@
             <div>
               <div class="flex items-center space-x-2.5">
                 <span class="bg-teal-500/10 text-teal-400 border border-teal-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">SLOWPITCH PITCHING LAB</span>
-                <h2 class="text-xl font-black text-white tracking-tight">慢速高拋壘球投手進階分析實驗室</h2>
+                <h2 class="text-xl font-black text-white tracking-tight">投手分析</h2>
               </div>
               <p class="text-xs text-slate-400 mt-1">
                 <b class="text-teal-300">「壘球被打是常態，保送自爆才是死罪！」</b> 告別毫無參考價值的傳統棒球 ERA，以好球帶好投率 (ZCR)、慢壘獨立防禦 (sFIP)、兩好球界外誘殺 (FKR) 與出局轉化率重構慢壘投手真實身價！
               </p>
             </div>
             <div class="flex items-center space-x-3 bg-slate-950/80 p-2 sm:p-2.5 rounded-xl border border-slate-800 w-full md:w-auto justify-between md:justify-start">
-              <label class="text-xs text-slate-400 font-semibold shrink-0">選取投手：</label>
+              <label for="pitchingPlayerSelect" class="text-xs text-slate-400 font-semibold shrink-0">選取投手：</label>
               <div id="pitcherSelectAvatarBadge" class="shrink-0"></div>
               <select id="pitchingPlayerSelect" onchange="selectPitcherRow(this.value)" class="bg-slate-900 border border-teal-700/70 text-teal-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-teal-400 font-bold flex-1 md:flex-initial"></select>
             </div>
@@ -1705,7 +1705,7 @@
                 <span class="text-[11px] font-mono text-slate-400" id="pitcherSampleCount">總投球局數: --</span>
               </div>
               <div class="h-60 sm:h-64 relative w-full">
-                <canvas id="pitcherOutProfileChart"></canvas>
+                <canvas id="pitcherOutProfileChart" role="img" aria-label="投手出局型態圖（尚無資料）"></canvas>
               </div>
               <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between font-mono" id="pitcherGoAoIndicator"></div>
             </div>
@@ -1719,7 +1719,7 @@
                 <span id="pitcherRadarNote" class="text-[10px] text-slate-500 font-mono">全隊投手常模對比 0–100 PR</span>
               </div>
               <div class="h-60 sm:h-64 relative w-full">
-                <canvas id="pitcherRadarChart"></canvas>
+                <canvas id="pitcherRadarChart" role="img" aria-label="投手能力雷達圖（尚無資料）"></canvas>
               </div>
               <span class="text-[10px] text-slate-500 font-mono text-center block">
                 ZCR好投率 (控球) | K%奪三振力 | FKR界外誘殺 | BIP Out%出局轉化 | IP局數耐力
@@ -2342,7 +2342,7 @@
 
 
       <div class="relative w-[260px] h-[260px] sm:w-[300px] sm:h-[300px] rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shadow-inner select-none cursor-grab active:cursor-grabbing">
-        <canvas id="cropCanvas" width="300" height="300" class="touch-none w-full h-full"></canvas>
+        <canvas id="cropCanvas" role="img" aria-label="頭像裁切預覽：拖曳移動、雙指縮放" width="300" height="300" class="touch-none w-full h-full"></canvas>
       </div>
 
 

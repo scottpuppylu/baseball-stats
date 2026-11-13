@@ -41,7 +41,7 @@
     if (stars) stars.stop();
     const canvas = document.createElement('canvas');
     canvas.className = 'fl-stars';
-    canvas.setAttribute('aria-hidden', 'true');
+    canvas.setAttribute('aria-hidden', 'true'); canvas.setAttribute('role', 'presentation');
     hero.prepend(canvas);
     const ctx = canvas.getContext('2d');
     let w = 0, h = 0, dpr = 1, list = [], shooting = null, nextShot = 0, raf = 0, last = 0, onScreen = true, px = 0, py = 0, tx = 0, ty = 0;
