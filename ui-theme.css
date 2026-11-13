@@ -1994,3 +1994,35 @@ html.ui-flight :is([data-record-player], #playerProfileBio .pf-tags button[oncli
 html.ui-flight :is(main, [id$="Modal"]) :is(.text-\[8px\], .text-\[9px\]) { font-size: 12px !important; }
 html.ui-flight .ui-table-hint, html.ui-flight .ui-detail-grid span, html.ui-flight .lineup-order span { font-size: 12px; }
 html.ui-flight .ui-card-table tbody td::before { font-size: 12px; }
+
+/* ---------- WO-03 B10: game group — block order (lineup, scorebook, review) ---------- */
+/* Lineup: rules card last; its long explanation and status line fold behind 「規則說明」. The DH switch never folds. */
+html.ui-flight .fl-lineup-rules:not(.is-open) > :first-child p, html.ui-flight .fl-lineup-rules:not(.is-open) > :nth-child(2) { display: none; }
+html.ui-flight .fl-fold-toggle { display: inline-flex; align-items: center; margin-top: 8px; min-height: 44px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--fl-ink-2, #cbd5e1); background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18); white-space: nowrap; }
+html.ui-flight .fl-fold-toggle::after { content: ' ⌄'; }
+html.ui-flight .fl-lineup-rules.is-open .fl-fold-toggle::after { content: ' ⌃'; }
+/* Attendance and the recommended order stay full width: with section tabs (phones, tablets) each card is its own tab,
+   and on desktop a 7/12 column clipped the recommended table and squeezed its title (B10 visual check). */
+/* Review: the result beside how the score went from tablet landscape up; at 820 px each half (372 px) was too narrow
+   for the hero's numbers (AVG and MVP ellipsized), so tablet portrait keeps them stacked. */
+@media (min-width: 1024px) {
+  html.ui-flight #panelGames > section[data-ga-part] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; row-gap: 16px; align-items: start; }
+  html.ui-flight #panelGames > section[data-ga-part] > * { grid-column: 1 / -1; margin-top: 0 !important; }
+  html.ui-flight #panelGames > section[data-ga-part] > .ga-hero { grid-column: 1; grid-row: 2; }
+  /* half width: six stats in one row left 85 px each and cut the MVP name; three per row keeps every value whole */
+  html.ui-flight #panelGames > section[data-ga-part] > .ga-hero .ga-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  html.ui-flight #panelGames > section[data-ga-part] > .ga-hero + .ga-sub + .ga-sub { grid-column: 2; grid-row: 2; }
+}
+
+/* Scorebook, batting: result buttons → field → runs and 送出 on phones; tablets and up keep the field on the left. */
+html.ui-flight #liveBattingSection > .fl-live-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+html.ui-flight #liveBattingSection > .fl-live-grid > * { grid-column: auto; margin-top: 0; }
+@media (min-width: 768px) {
+  html.ui-flight #liveBattingSection > .fl-live-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "field pad" "field submit"; align-items: start; }
+  html.ui-flight #liveBattingSection > .fl-live-grid > .fl-live-field { grid-area: field; }
+  html.ui-flight #liveBattingSection > .fl-live-grid > .fl-live-pad { grid-area: pad; }
+  html.ui-flight #liveBattingSection > .fl-live-grid > .fl-live-submit { grid-area: submit; }
+  html.ui-flight #liveBattingSection > .fl-live-grid > .fl-live-field > div:first-child { flex-wrap: wrap; gap: 6px; }
+}
+/* Runs 0–4 are one row of equal buttons; the chosen one (bg-emerald-600, 44 px since B3) no longer stands taller. */
+html.ui-flight #runsScoredButtonGroup > button { min-height: 44px; }

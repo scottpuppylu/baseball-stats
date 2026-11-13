@@ -173,3 +173,28 @@ function renderLiveLineupCard() {
   const external = activeGame.pitcherName && !activeGame.lineup.includes(activeGame.pitcherName) ? activeGame.pitcherName : '';
   document.getElementById('liveLineupField').innerHTML = lineupFieldMarkup(activeGame.lineup, positions, external);
 }
+
+// WO-03 B10: while batting, the result buttons come first, then the field (where it went), then runs and 送出.
+// Phones read top to bottom in that order; tablets and desktops keep the field on the left (ui-theme.css).
+// Elements are moved, never re-created, so every id and inline handler stays as it was.
+(function arrangeLiveBattingPad() {
+  const run = () => {
+    const field = document.getElementById('interactiveFieldSvg')?.closest('#liveBattingSection > .grid > div');
+    const grid = field?.parentElement;
+    const pad = field?.nextElementSibling;
+    const runs = document.getElementById('runsScoredButtonGroup')?.closest('.grid');
+    const submit = document.querySelector('#liveBattingSection button[onclick="submitBattedBallPlay()"]')?.parentElement;
+    if (!grid || !pad || !runs || !submit || grid.classList.contains('fl-live-grid')) return;
+    const finish = document.createElement('div');
+    finish.className = 'fl-live-submit bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-4 shadow-xl';
+    runs.classList.remove('border-t', 'pt-3');
+    finish.append(runs, submit);
+    grid.classList.add('fl-live-grid');
+    field.classList.add('fl-live-field');
+    pad.classList.add('fl-live-pad');
+    grid.insertBefore(pad, field);
+    grid.append(finish);
+  };
+  if (typeof document === 'undefined') return; // unit tests load this file in Node
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run, {once: true}); else run();
+})();

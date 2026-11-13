@@ -899,8 +899,28 @@
   new MutationObserver(arrangeNav).observe(navigation, {childList: true}); // the records page adds its button later
   arrangeNav();
 
+  // WO-03 B10: the lineup page reads in the order it is used — who came today, the recommended order, your own order,
+  // then the rules (DH and positions) last, their long explanation folded behind 「規則說明」. The DH switch stays in view.
+  const lineupPanel = document.getElementById('panelLineup');
+  const rulesCard = document.getElementById('btnRuleNoDh')?.closest('section');
+  const attendanceCard = document.getElementById('attendanceGrid')?.closest('section');
+  if (lineupPanel && rulesCard && attendanceCard && rulesCard.parentElement === lineupPanel) {
+    lineupPanel.append(rulesCard);
+    rulesCard.classList.add('fl-lineup-rules');
+    attendanceCard.classList.add('fl-lineup-attend');
+    attendanceCard.nextElementSibling?.classList.add('fl-lineup-rec');
+    const head = rulesCard.firstElementChild;
+    const fold = document.createElement('button');
+    fold.type = 'button';
+    fold.className = 'fl-fold-toggle';
+    fold.textContent = '規則說明';
+    fold.setAttribute('aria-expanded', 'false');
+    fold.addEventListener('click', () => fold.setAttribute('aria-expanded', String(rulesCard.classList.toggle('is-open'))));
+    (head?.firstElementChild || head)?.append(fold); // under the title, so it never takes width from the DH switch
+  }
+
   // The lineup page gets its own way into the defensive rankings it is built on (the header button stays too).
-  const lineupFirst = document.querySelector('#panelLineup > section');
+  const lineupFirst = rulesCard || document.querySelector('#panelLineup > section');
   if (lineupFirst && typeof window.openDefenseModal === 'function' && !document.getElementById('uiLineupDefense')) {
     const shortcut = document.createElement('button');
     shortcut.type = 'button';
