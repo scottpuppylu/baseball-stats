@@ -167,7 +167,9 @@
     const heroOf = (label, pool, value, format = v => v, unit = '') => {
       const g = grouped(pool, value, 2);
       if (!g.length) return {label, empty: true};
-      return {label, holders: g[0].players, value: `${format(g[0].v)}${unit}`, next: g[1] ? `第二名 ${g[1].players.map(p => p.name).join('、')}　${format(g[1].v)}${unit}` : ''};
+      return {label, holders: g[0].players, value: `${format(g[0].v)}${unit}`, next: g[1] ? `第二名 ${g[1].players.map(p => p.name).join('、')}　${format(g[1].v)}${unit}` : '',
+        // WO-03 G3: each name (with its 「、」) wraps as one piece, so a name is never split across lines.
+        nextHtml: g[1] ? `第二名 ${g[1].players.map((p, i, all) => `<span class="ui-nobr">${esc(p.name)}${i < all.length - 1 ? '、' : ''}</span>`).join('')}　<span class="ui-nobr">${esc(format(g[1].v) + unit)}</span>` : ''};
     };
     const heroes = [
       heroOf('生涯安打王', list, p => p.career.h, v => v, ' 支'),
@@ -181,7 +183,7 @@
       : `<div class="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/15 via-slate-950/80 to-slate-950 p-3 space-y-2" data-record-hero="${esc(h.label)}">
           <div class="text-[11px] font-bold text-amber-300 tracking-wide">${h.label}</div>
           <div class="flex items-center gap-2.5">${avatars(h.holders, 3)}<div class="min-w-0"><div class="text-sm font-black text-white leading-tight">${people(h.holders)}</div><div class="font-mono text-2xl font-black text-amber-200 leading-tight">${h.value}</div></div></div>
-          ${h.next ? `<div class="text-[10px] text-slate-500 truncate">${esc(h.next)}</div>` : ''}</div>`;
+          ${h.next ? `<div class="text-[10px] text-slate-500 truncate">${h.nextHtml}</div>` : ''}</div>`;
     const latestTile = latest ? `<div class="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-slate-950/80 to-slate-950 p-3 space-y-2" data-record-hero="最新里程碑">
           <div class="text-[11px] font-bold text-emerald-300 tracking-wide">最新里程碑</div>
           <div class="flex items-center gap-2.5">${renderAvatarElement(latest.name, 'w-9 h-9 text-xs ring-2 ring-emerald-400/60')}<div class="min-w-0"><button type="button" data-record-player="${esc(latest.name)}" class="text-sm font-black text-white">${esc(latest.name)}</button><div class="text-sm font-bold text-emerald-200">🏅 ${esc(latest.text)}</div></div></div>

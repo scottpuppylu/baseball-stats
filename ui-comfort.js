@@ -338,9 +338,15 @@
     scrollAreas.forEach(area => {
       if (!area.isConnected) { scrollAreas.delete(area); return; }
       if (!panel.contains(area)) return; // hidden pages are measured when shown
-      marks.push([area.previousElementSibling, area.clientWidth > 0 && area.scrollWidth > area.clientWidth + 2]);
+      const over = area.clientWidth > 0 && area.scrollWidth > area.clientWidth + 2;
+      marks.push([area, over, over && area.scrollLeft + area.clientWidth >= area.scrollWidth - 2]);
     });
-    return () => marks.forEach(([hint, on]) => hint?.classList.toggle('is-overflowing', on)); // all reads first, then the writes: one layout
+    // all reads first, then the writes: one layout. The area itself fades its cut edge while more columns wait (ui-theme.css).
+    return () => marks.forEach(([area, on, end]) => {
+      area.previousElementSibling?.classList.toggle('is-overflowing', on);
+      area.classList.toggle('is-overflowing', on);
+      area.classList.toggle('is-end', end);
+    });
   }
   // measure = false: only the DOM work (before the first paint of a page, when a layout read would hold that paint back).
   function enhanceTables(measure = true) {
@@ -356,6 +362,9 @@
       hint.className = 'ui-table-hint';
       hint.textContent = '左右滑動查看完整欄位';
       area.before(hint);
+      area.addEventListener('scroll', () => { // WO-03 G3: no fade once the last column is in view
+        area.classList.toggle('is-end', area.scrollLeft + area.clientWidth >= area.scrollWidth - 2);
+      }, {passive: true});
       scrollAreas.add(area);
     });
     if (measure) updateTableHints();
