@@ -74,18 +74,73 @@
     el.style.setProperty('--fl-glass-moving', MOVING_GLASS);
     Promise.resolve(finished).catch(() => {}).then(() => el.style.removeProperty('--fl-glass-moving'));
   }
+  // ---------- One entrance for the whole site (WO-03 R-3) ----------
+  // Pages, blocks, home bands, numbers and scrolled-in sections all arrive the same way, in one of three directions:
+  // rise (cards, blocks, pages), title (headings) and zoom (charts). Each caller keeps its own duration (the 1.75x
+  // numbers); `lift` sets how far it travels (0 = a plain fade). ui-delight.js uses the same table through window.flMotion.
+  const SMOOTH = 'cubic-bezier(.16, 1, .3, 1)';
+  const ENTER = {rise: ['translate3d(0, 64px, 0) scale(.92)', 1000], title: ['translate3d(0, 34px, 0)', 900], zoom: ['scale(.78)', 1100]};
+  const enterFrom = (kind, lift) => (lift != null && kind !== 'zoom' ? (lift ? `translate3d(0, ${lift}px, 0)` : 'none') : (ENTER[kind] || ENTER.rise)[0]);
+  function enter(el, kind = 'rise', {delay = 0, duration, easing = SMOOTH, lift, fill = 'backwards'} = {}) {
+    const from = enterFrom(kind, lift); // a plain fade animates opacity only: a transform track would lift every block onto its own layer
+    return play(el, from === 'none' ? [{opacity: 0}, {opacity: 1}] : [{opacity: 0, transform: from}, {opacity: 1, transform: 'none'}], {duration: duration || (ENTER[kind] || ENTER.rise)[1], delay, easing, fill});
+  }
+  window.flMotion = {ENTER, SMOOTH, enterFrom, enter};
   function revealPage(panel) {
-    play(panel, [{opacity: 0, transform: 'translateY(10px)'}, {opacity: 1, transform: 'none'}], {duration: 380, easing: EASE});
+    enter(panel, 'rise', {duration: 380, easing: EASE, lift: 10, fill: 'none'});
     // The page's own sections follow one after another, like an Apple app settling in.
     [...panel.children].filter(el => !el.hidden && !el.classList.contains('hidden')).slice(0, 8).forEach((child, i) => { // no layout read: it would force one mid-switch
-      play(child, [{opacity: 0}, {opacity: 1}], {duration: 420, delay: 50 + i * 45, easing: EASE, fill: 'backwards'});
+      enter(child, 'rise', {duration: 420, delay: 50 + i * 45, easing: EASE, lift: 0});
     });
   }
-  function revealBlock(el) { play(el, [{opacity: 0, transform: 'translateY(6px)'}, {opacity: 1, transform: 'none'}], {duration: 300, easing: EASE}); }
+  function revealBlock(el) { enter(el, 'rise', {duration: 300, easing: EASE, lift: 6, fill: 'none'}); }
   function revealDialog(dialog) {
     const card = dialog.firstElementChild || dialog;
     play(dialog, [{opacity: 0}, {opacity: 1}], {duration: 220, easing: EASE});
     play(card, [{opacity: 0, transform: 'scale(.94) translateY(12px)'}, {opacity: 1, transform: 'none'}], {duration: 460, easing: SPRING});
+  }
+  // ---------- Leaving mirrors arriving (WO-03 R-4) ----------
+  // A dialog, the drawer / 更多 sheet and the tools panel play their entrance backwards over the same time when they close
+  // (dialog card 460 ms, drawer 460 ms, tools 420 ms) instead of vanishing. The page state changes at once: the element
+  // already carries `hidden` or the body class is already gone, so every handler sees it closed. Only the picture stays a
+  // moment: the element is held on screen (inline display, inert, no pointer events) until its exit ends, and opening it
+  // again cuts the exit short. Display comes from what each one uses when open (no style read). Off for reduced motion, a
+  // hidden tab, and in the isolated test preview unless ?motion.
+  const EXIT = 'cubic-bezier(.4, 0, .9, .6)';
+  const appConfig = window.BASEBALL_APP_CONFIG || {};
+  const exitOk = () => appConfig.motion !== false && motionOk();
+  const leaving = new Map(); // element -> {runs, saved inline styles, inert}
+  function stopLeaving(el) {
+    const held = leaving.get(el);
+    if (!held) return;
+    leaving.delete(el);
+    held.runs.forEach(a => a && a.cancel());
+    held.saved.forEach(([name, value, priority]) => { if (value) el.style.setProperty(name, value, priority); else el.style.removeProperty(name); });
+    el.inert = held.inert;
+  }
+  function leave(el, look, parts) { // look: the open layout to hold ({display, ...}); parts: [[element, keyframes, options], ...]
+    stopLeaving(el);
+    const hold = {...look, 'pointer-events': 'none'};
+    const held = {saved: Object.keys(hold).map(name => [name, el.style.getPropertyValue(name), el.style.getPropertyPriority(name)]), inert: el.inert, runs: []};
+    Object.entries(hold).forEach(([name, value]) => el.style.setProperty(name, value, 'important'));
+    el.inert = true;
+    held.runs = parts.map(([target, frames, options]) => play(target, frames, {easing: EXIT, fill: 'forwards', ...options}));
+    leaving.set(el, held);
+    const end = () => { if (leaving.get(el) === held) stopLeaving(el); };
+    Promise.all(held.runs.map(a => a && a.finished)).then(end, end);
+    return held.runs;
+  }
+  // A glass surface loses its backdrop blur in Chrome as soon as its opacity drops below 1 (what lies behind shows through
+  // sharp), so a glass panel slides out solid and fades only at the very end of its exit.
+  const glassOut = to => [{opacity: 1, transform: 'none'}, {opacity: 1, offset: .5}, {opacity: 0, transform: to}];
+  function closeDialog(dialog) {
+    if (!exitOk()) return;
+    const card = dialog.firstElementChild || dialog;
+    const display = hasClass(dialog.className, 'grid') ? 'grid' : hasClass(dialog.className, 'flex') ? 'flex' : 'block';
+    leave(dialog, {display}, [
+      [card, [{opacity: 1, transform: 'none'}, {opacity: 0, transform: 'scale(.94) translateY(12px)'}], {duration: 460}],
+      [dialog, [{opacity: 1}, {opacity: 0}], {duration: 220, delay: 240}] // the dim lifts last, as it came first
+    ]);
   }
   function pop(el) { play(el, [{transform: 'scale(.9)'}, {transform: 'scale(1.03)', offset: .55}, {transform: 'scale(1)'}], {duration: 420, easing: SPRING}); }
   const hasClass = (value, name) => new RegExp(`(^|\\s)${name}(\\s|$)`).test(value || '');
@@ -106,7 +161,12 @@
       if (r.attributeName === 'aria-current') { if (el.getAttribute('aria-current') && el.closest('.ui-mobile-nav, .ui-section-bar')) pop(el); continue; }
       const now = typeof el.className === 'string' ? el.className : '';
       if (hasClass(now, 'tab-active') && !hasClass(r.oldValue, 'tab-active')) { pop(el); continue; }
+      if (r.attributeName === 'class' && !hasClass(r.oldValue, 'hidden') && hasClass(now, 'hidden')) {
+        if (/Modal$/.test(el.id) || el.matches('.fixed.inset-0')) closeDialog(el);
+        continue;
+      }
       if (!hasClass(r.oldValue, 'hidden') || hasClass(now, 'hidden')) continue;
+      stopLeaving(el);
       if (/^panel/.test(el.id)) revealPage(el);
       else if (/Modal$/.test(el.id) || el.matches('.fixed.inset-0')) revealDialog(el);
       else if (el.firstElementChild && el.matches(BLOCKS) && el.closest('#appWorkspace') && !el.closest('#panelScorebook')) revealBlock(el); // live scoring swaps blocks constantly: controls must not move under the scorer's finger
@@ -142,8 +202,15 @@
       const open = document.body.classList.contains('ui-nav-open');
       if (open === wasOpen) return;
       wasOpen = open;
-      if (!open || !motionOk() || window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) return;
+      stopLeaving(nav);
+      if (!motionOk() || window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) return;
       const phone = window.innerWidth < 768;
+      if (!open) { // slides back the way it came; the phone 更多 sheet is a two-column grid, the tablet drawer a column (ui-comfort.css)
+        if (!exitOk()) return;
+        const back = leave(nav, phone ? {display: 'grid', 'grid-template-columns': '1fr 1fr', gap: '8px'} : {display: 'flex'}, [[nav, glassOut(phone ? 'translateY(40px)' : 'translateX(-28px)'), {duration: 460}]]);
+        calmGlassWhile(nav, back[0] && back[0].finished);
+        return;
+      }
       const slide = play(nav, [{opacity: 0, transform: phone ? 'translateY(40px)' : 'translateX(-28px)'}, {opacity: 1, transform: 'none'}], {duration: 460, easing: SPRING});
       calmGlassWhile(nav, slide && slide.finished);
       [...nav.querySelectorAll(':scope > button')].forEach((b, i) => play(b, [{opacity: 0}, {opacity: 1}], {duration: 300, delay: 60 + i * 22, easing: EASE, fill: 'backwards'}));
@@ -156,7 +223,17 @@
     if (open === toolsOpen) return;
     toolsOpen = open;
     const tools = document.getElementById('flTools');
-    if (!open || !tools) return;
+    if (!tools) return;
+    const dim = document.querySelector('.fl-tools-backdrop');
+    stopLeaving(tools);
+    if (dim) stopLeaving(dim);
+    if (!open) { // fl-drop backwards, and the dim behind it lifts with it
+      if (!exitOk()) return;
+      const back = leave(tools, {display: 'block'}, [[tools, glassOut('translateY(-10px) scale(.97)'), {duration: 420}]]);
+      if (dim) leave(dim, {display: 'block'}, [[dim, [{opacity: 1}, {opacity: 0}], {duration: 420}]]);
+      calmGlassWhile(tools, back[0] && back[0].finished);
+      return;
+    }
     calmGlassWhile(tools, new Promise(resolve => {
       const done = () => { tools.removeEventListener('animationend', done); resolve(); };
       tools.addEventListener('animationend', done);

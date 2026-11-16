@@ -28,6 +28,7 @@
   const EASE = 'cubic-bezier(.2, .8, .2, 1)';
   const SPRING = 'cubic-bezier(.34, 1.56, .64, 1)';
   const OUT_EXPO = t => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+  const motionKit = window.flMotion || {enterFrom: () => 'none', enter: () => null}; // one entrance for the site (ui-theme.js)
   const testLayout = () => root.classList.contains('fl-full-layout');
 
   // =====================================================================================================
@@ -130,26 +131,11 @@
     ], {duration: 900, delay: 120 + i * 85, easing: EASE, fill: 'backwards'}));
   }
 
-  // ---------- Numbers count up (Count Up). The final text is restored exactly at the end; if the page redraws the number
-  // meanwhile, the count stops and leaves the new text alone. ----------
-  function countUp(el, delay, dur = 1100) {
-    const final = el.textContent;
-    const m = final.match(/(\d*)\.(\d+)|\d+/);
-    if (!m || reduce.matches) return;
-    const token = m[0], target = parseFloat(token.startsWith('.') ? `0${token}` : token);
-    if (!Number.isFinite(target) || target === 0) return;
-    const decimals = (token.split('.')[1] || '').length, bareDot = token.startsWith('.');
-    const fmt = v => { let s = v.toFixed(decimals); if (bareDot) s = s.replace(/^0(?=\.)/, ''); return final.slice(0, m.index) + s + final.slice(m.index + token.length); };
-    const t0 = performance.now() + delay;
-    let written;
-    const step = now => {
-      if (!el.isConnected || el.textContent !== written) return;
-      const k = Math.max(0, Math.min(1, (now - t0) / dur));
-      el.textContent = written = k >= 1 ? final : fmt(target * OUT_EXPO(k));
-      if (k < 1) requestAnimationFrame(step);
-    };
-    el.textContent = written = fmt(0);
-    requestAnimationFrame(step);
+  // ---------- The home numbers arrive (WO-03 R-2): each shows its final value at once and rises into place over the same
+  // 1100 ms the count used to take. The text is never rewritten (a counting number re-laid out its line on every frame). ----------
+  function numberIn(el, delay, dur = 1100) {
+    if (reduce.matches) return;
+    motionKit.enter(el, 'rise', {lift: 18, duration: dur, delay});
   }
 
   // ---------- Bands appear as they scroll into view (Scroll Reveal) ----------
@@ -161,7 +147,7 @@
       if (!e.isIntersecting) return;
       reveal.unobserve(e.target);
       const items = [e.target.querySelector('.fl-band-head'), ...e.target.querySelectorAll('.fl-card, .fl-tile')].filter(Boolean).slice(0, 8);
-      items.forEach((el, i) => play(el, [{opacity: 0, transform: 'translateY(28px)'}, {opacity: 1, transform: 'none'}], {duration: 720, delay: i * 70, easing: EASE, fill: 'backwards'}));
+      items.forEach((el, i) => motionKit.enter(el, 'rise', {lift: 28, duration: 720, delay: i * 70, easing: EASE}));
     }), {rootMargin: '0px 0px -12% 0px'});
     panel.querySelectorAll('.fl-band').forEach(band => reveal.observe(band));
   }
@@ -215,42 +201,31 @@
     window.flPauseOffscreen?.(hero.querySelector('.fl-cta'));
     magnet(hero.querySelector('.fl-cta'));
     if (animate && !testLayout()) {
-      panel.querySelectorAll('.fl-telemetry dd').forEach((dd, i) => countUp(dd, 380 + i * 90));
+      panel.querySelectorAll('.fl-telemetry dd').forEach((dd, i) => numberIn(dd, 380 + i * 90));
       revealBands(panel);
     }
   }
-  // ---------- Every other page, like Apple's pages: as you scroll, the things on the page come in one after another, each
-  // kind its own way (React Bits: Animated Content, Fade Content, Animated List, Scroll Float):
-  //   cards rise; wide cards tilt up from the page; charts zoom out of the dark; a two-column grid slides in from both
-  //   sides; a table rises and its rows slide in; section titles float up.
+  // ---------- Every other page, like Apple's pages: as you scroll, the things on the page come in one after another, in
+  // the site's one entrance (WO-03 R-3, ui-theme.js window.flMotion) and its three directions:
+  //   cards, tables and table rows rise; charts zoom out of the dark; section titles float up.
   // Smooth on phones: things below the screen are hidden in advance (nothing that is already showing ever blinks out and
   // back), each moving element gets its own compositor layer only while it moves, and only transform and opacity change
   // (no text is rewritten: counting numbers read oddly in Chinese). The sections themselves stay put, so section jumps
   // land exactly. Off with "reduce motion", during 比賽場記, and in the isolated test preview unless ?motion. ----------
   const motion = config.motion !== false;
   let sectionReveal = null;
-  const ENTER = {
-    rise: ['translate3d(0, 64px, 0) scale(.92)', 1000],
-    tilt: ['perspective(1100px) translate3d(0, 70px, 0) rotateX(24deg) scale(.94)', 1150],
-    zoom: ['scale(.78)', 1100],
-    left: ['translate3d(-56px, 36px, 0) rotate(-2deg)', 1000],
-    right: ['translate3d(56px, 36px, 0) rotate(2deg)', 1000],
-    row: ['translate3d(-44px, 0, 0)', 760],
-    title: ['translate3d(0, 34px, 0)', 900]
-  };
-  const SMOOTH = 'cubic-bezier(.16, 1, .3, 1)';
-  // Which entrance an element gets.
-  function kindOf(el, index, siblings) {
+  // How each piece arrives: a direction from the shared table, its duration, and for table rows a shorter rise.
+  const SPEC = {rise: {kind: 'rise'}, title: {kind: 'title'}, zoom: {kind: 'zoom'}, row: {kind: 'rise', lift: 24, duration: 760}};
+  // Which entrance an element gets: read from what it is (headings, charts), never from its size (no layout read).
+  function kindOf(el) {
     if (el.matches('h2, h3') || el.querySelector(':scope > h2, :scope > h3, :scope > div > h2')) return 'title';
     if (el.querySelector('canvas, svg[viewBox]') && !el.querySelector('table')) return 'zoom';
-    if (siblings === 2 || (siblings > 2 && siblings <= 4)) return index % 2 ? 'right' : 'left';
-    if (el.offsetWidth > window.innerWidth * .7 && el.offsetHeight > 160) return 'tilt';
     return 'rise';
   }
   // Hidden in advance, below the screen: the pre-state is the first frame of its entrance.
   const prepared = new Set();
   function release() { // shows everything still waiting (re-render, page change, printing): nothing stays hidden
-    prepared.forEach(el => { if (el.dataset.flEnter) { delete el.dataset.flEnter; el.style.opacity = ''; el.style.transform = ''; el.style.transformOrigin = ''; } });
+    prepared.forEach(el => { if (el.dataset.flEnter) { delete el.dataset.flEnter; el.style.opacity = ''; el.style.transform = ''; } });
     prepared.clear();
   }
   window.addEventListener('beforeprint', release);
@@ -258,18 +233,18 @@
     prepared.add(el);
     el.dataset.flEnter = kind;
     el.style.opacity = '0';
-    el.style.transform = ENTER[kind][0];
-    el.style.transformOrigin = kind === 'tilt' ? '50% 100%' : kind === 'zoom' ? '50% 50%' : '';
+    const spec = SPEC[kind] || SPEC.rise;
+    el.style.transform = motionKit.enterFrom(spec.kind, spec.lift);
   }
   function enter(el, delay) {
     const kind = el.dataset.flEnter;
     if (!kind) return;
     delete el.dataset.flEnter;
     prepared.delete(el);
-    const [from, duration] = ENTER[kind];
+    const spec = SPEC[kind] || SPEC.rise;
     el.style.willChange = 'transform, opacity'; // its own layer while it moves: the compositor runs it, scrolling never waits
-    const run = play(el, [{opacity: 0, transform: from}, {opacity: 1, transform: 'none'}], {duration, delay, easing: SMOOTH, fill: 'both'});
-    el.style.opacity = ''; el.style.transform = ''; el.style.transformOrigin = '';
+    const run = motionKit.enter(el, spec.kind, {lift: spec.lift, duration: spec.duration, delay, fill: 'both'});
+    el.style.opacity = ''; el.style.transform = '';
     const done = () => { el.style.willChange = ''; run?.cancel(); };
     if (run) run.finished.then(done, done); else done();
   }
@@ -278,8 +253,8 @@
     const out = [];
     for (const child of section.children) {
       if (child.hidden || child.classList.contains('hidden')) continue;
-      if (child.classList.contains('grid') && child.children.length <= 12) out.push(...[...child.children].map((el, i, all) => [el, kindOf(el, i, all.length)]));
-      else out.push([child, kindOf(child, 0, 1)]);
+      if (child.classList.contains('grid') && child.children.length <= 12) out.push(...[...child.children].map(el => [el, kindOf(el)]));
+      else out.push([child, kindOf(child)]);
       if (out.length >= 14) break;
     }
     return out;
@@ -293,7 +268,7 @@
     const panel = document.getElementById(`panel${key}`);
     if (!panel) return;
     const title = document.getElementById('uiPageTitle');
-    if (title) play(title, [{opacity: 0, transform: 'translate3d(0, 22px, 0)'}, {opacity: 1, transform: 'none'}], {duration: 800, easing: SMOOTH});
+    if (title) motionKit.enter(title, 'title', {lift: 22, duration: 800, fill: 'none'});
     const pending = new Map(); // section -> its pieces, hidden until it comes into view
     let first = true;
     sectionReveal = new IntersectionObserver(entries => {
