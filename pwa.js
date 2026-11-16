@@ -55,7 +55,7 @@
     if (event && event.type === 'offline') connectionRecovered = false;
     // Network failure can serve the offline shell even while the browser still reports onLine=true.
     if (navigator.onLine === false || (window.BASEBALL_OFFLINE_SHELL && !connectionRecovered)) {
-      const el = bar('uiOfflineBar', '<span>⚠️ 離線中：顯示本機暫存資料，可能不是最新；雲端同步暫停（新紀錄先存在這台裝置）。</span><button type="button" data-act="retry">重新整理數據</button>', 'warn');
+      const el = bar('uiOfflineBar', '<span>⚠️ 離線中：顯示本機暫存資料，可能不是最新；雲端同步暫停（新紀錄先<span class="ui-nobr">存在這台裝置</span>）。</span><button type="button" data-act="retry">重新整理數據</button>', 'warn');
       el.querySelector('[data-act="retry"]').addEventListener('click', () => location.reload());
     } else if (document.getElementById('uiOfflineBar')) {
       const el = bar('uiOfflineBar', '<span>✓ 已恢復連線。</span><button type="button" data-act="refresh">重新整理數據</button>', 'ok');

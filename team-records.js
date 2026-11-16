@@ -109,7 +109,8 @@
     return [...by.entries()].sort((a, b) => b[0] - a[0]).slice(0, limit).map(([v, players], i) => ({v, players, rank: i + 1}));
   }
   const avatars = (players, max = 4) => `<span class="flex -space-x-2 shrink-0">${players.slice(0, max).map(p => renderAvatarElement(p.name, 'w-7 h-7 text-[10px] ring-2 ring-slate-950')).join('')}</span>`;
-  const people = players => players.map(p => `<button type="button" data-record-player="${esc(p.name)}" class="hover:text-sky-200">${esc(p.name)}</button>`).join('<span class="text-slate-600">、</span>');
+  // Each name keeps its 「、」 on its own line end (a line never starts with 「、」): name + separator wrap as one piece.
+  const people = players => players.map((p, i, all) => `<span class="ui-nobr"><button type="button" data-record-player="${esc(p.name)}" class="hover:text-sky-200">${esc(p.name)}</button>${i < all.length - 1 ? '<span class="text-slate-600">、</span>' : ''}</span>`).join('');
 
   // A leaderboard card: the leader large, the rest with a bar against the leader.
   function rankCard(title, list, value, format = v => v, note = '') {

@@ -2097,3 +2097,12 @@ html.ui-flight :is(#comparePlayerA, #comparePlayerB) {
 html.ui-flight #comparePlayerA:focus-visible { outline: none; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14), 0 0 0 2px #38bdf8; }
 html.ui-flight #comparePlayerB:focus-visible { outline: none; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14), 0 0 0 2px #fbbf24; }
 html.ui-flight :is(#comparePlayerA, #comparePlayerB) option { font-family: inherit; font-size: 16px; font-weight: 600; color: #e5e7eb; background: #111317; }
+/* ---------- WO-03 B9: line breaks (font unchanged, D-1 = B) ----------
+   Body text may wrap between any two characters (clreq); short labels and notices may not split a word or leave one
+   character alone on the last line. */
+.ui-nobr { white-space: nowrap; }
+#uiOfflineBar > span { text-wrap: pretty; }
+html.ui-flight span.flex.items-center.gap-1 { white-space: nowrap; } /* chart legends: 一安 / 出局 never split */
+/* A gloss inside a bold term in running text reads beside the term (「K%（三振率）：…」), not on its own line, so the colon
+   after it never starts a line. */
+html.ui-flight :is(p, li) > :is(b, strong).ui-note-holder > .ui-note { display: inline; margin-left: .2em; }
