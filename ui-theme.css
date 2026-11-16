@@ -2026,3 +2026,74 @@ html.ui-flight #liveBattingSection > .fl-live-grid > * { grid-column: auto; marg
 }
 /* Runs 0–4 are one row of equal buttons; the chosen one (bg-emerald-600, 44 px since B3) no longer stands taller. */
 html.ui-flight #runsScoredButtonGroup > button { min-height: 44px; }
+
+/* ---------- WO-03 B11: team group + home + reference — block order ----------
+   ids and the static markup order are locked (ui-integrity), so blocks move with CSS order/grid only. */
+/* DD-27: while the offline bar shows, Home no longer pushes the whole workspace down (that pulled the hero out from
+   behind the header and showed its rounded top edge on desktop); the hero keeps its place and only its content moves
+   down by the bar's height, so the eyebrow clears the bar by the same margin on every size. */
+html.ui-flight.ui-conn-bar body[data-page="Home"] #appWorkspace { margin-top: 0; }
+html.ui-flight.ui-conn-bar .fl-hero { padding-top: calc(var(--fl-top-h) + 9vh + var(--ui-conn-bar-h, 0px)); }
+/* The hero grows when the bar appears, so the browser's scroll anchoring would scroll the page down by the same
+   amount on a restored scroll position and undo the push; Home has no anchor while the bar shows. */
+html.ui-flight.ui-conn-bar body[data-page="Home"] #appWorkspace { overflow-anchor: none; }
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  html.ui-flight.ui-conn-bar .fl-hero { padding-top: calc(var(--fl-top-h) + 12vh + var(--ui-conn-bar-h, 0px)); }
+}
+@media (max-width: 767px) {
+  html.ui-flight.ui-conn-bar .fl-hero { padding-top: calc(var(--fl-top-h) + 7vh + var(--ui-conn-bar-h, 0px)); }
+}
+/* 主頁 on landscape tablets: 近期比賽 and 區間焦點 side by side under the hero. Each rail shows two whole cards and a
+   faded edge of the next, so the cut is clearly "more to the side" and never a card sliced at the column seam.
+   Portrait tablets keep the bands stacked (a half-width rail there showed only one and a half cards). */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  html.ui-flight .fl-home { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; align-items: start; }
+  html.ui-flight .fl-home > :not(.fl-band), html.ui-flight .fl-home > .fl-band-all { grid-column: 1 / -1; }
+  html.ui-flight .fl-home > .fl-band:not(.fl-band-all) .fl-band-head { padding: 0 16px; }
+  html.ui-flight .fl-home > .fl-band:not(.fl-band-all) .fl-band-head h2 { font-size: clamp(28px, 3.6vw, 40px); }
+  html.ui-flight .fl-home > .fl-band:not(.fl-band-all) .fl-rail { grid-auto-columns: calc((100% - 32px) / 2.2); gap: 16px; padding-left: 16px; padding-right: 16px; scroll-padding-left: 16px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); }
+}
+/* 全隊總覽: phones and tablets fold the admin actions under 「管理」 (ui-delight.js); desktops show them, no button. */
+html.ui-flight .fl-admin-toggle { align-self: flex-start; margin-top: 0; }
+html.ui-flight .fl-admin-toggle[aria-expanded="true"]::after { content: ' ⌃'; }
+@media (max-width: 1279.98px) {
+  html.ui-flight .fl-admin-menu:not(.is-open) { display: none !important; }
+}
+@media (min-width: 1280px) {
+  html.ui-flight .fl-admin-toggle { display: none; }
+}
+/* 球員名冊: save / restore / retry stay pinned to the bottom while the form is in view (on phones above the tab bar).
+   Phones and tablets show 編輯 and 名冊 as section tabs, so the side-by-side layout is desktop only: the list on the left,
+   tap a player and the editor on the right (it stays at hand while the list scrolls). */
+html.ui-flight .fl-health-actions {
+  position: sticky; bottom: 12px; z-index: 5; margin: 0 -8px; padding: 8px; border-radius: 18px;
+  background: var(--fl-liquid, rgba(16, 18, 24, .72)) padding-box, var(--fl-liquid-edge, rgba(255, 255, 255, .14)) border-box;
+  border: 1px solid transparent; box-shadow: var(--fl-liquid-shadow, 0 18px 40px -20px rgba(0, 0, 0, .9));
+  -webkit-backdrop-filter: var(--fl-liquid-blur, blur(18px) saturate(1.6)); backdrop-filter: var(--fl-liquid-blur, blur(18px) saturate(1.6));
+}
+html.ui-flight .fl-health-actions > button { min-height: 44px; }
+@media (max-width: 767px) {
+  html.ui-flight .fl-health-actions { bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
+@media (min-width: 1280px) {
+  html.ui-flight #panelHealth:not(.hidden) { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(380px, 1fr); gap: 24px; align-items: start; }
+  html.ui-flight #panelHealth > * { margin: 0 !important; }
+  html.ui-flight #panelHealth > .fl-health-list { grid-column: 1; grid-row: 1; }
+  html.ui-flight #panelHealth > .fl-health-edit { grid-column: 2; grid-row: 1; position: sticky; top: calc(var(--fl-top-h, 56px) + 30px); max-height: calc(100vh - var(--fl-top-h, 56px) - 48px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+  html.ui-flight #panelHealth [data-health-roster] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* 兩人比較: each picker is the 球員檔案 identity capsule (B1) — the player's name large in the title face, a caret, the
+   whole capsule opens the list; the side label sits above it. */
+html.ui-flight #panelCompare > section > .grid > div:not([data-h2h-card]) > div:first-child:not([class*="text-"]) { flex-direction: column; align-items: stretch; gap: 8px; }
+html.ui-flight #panelCompare > section > .grid > div:not([data-h2h-card]) > div:first-child:not([class*="text-"]) > span { white-space: nowrap; }
+html.ui-flight :is(#comparePlayerA, #comparePlayerB) {
+  -webkit-appearance: none; appearance: none; width: 100%; min-height: 44px; padding: 0 40px 0 14px !important; border: 0 !important; border-radius: 14px !important;
+  font-family: var(--fl-mincho, serif); font-size: 21px !important; font-weight: 800 !important; line-height: 1.2; text-align: center; text-align-last: center; color: #fff !important;
+  text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='rgba(255,255,255,.55)' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 14px center / 16px 16px no-repeat, rgba(255, 255, 255, .045) !important;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14);
+}
+html.ui-flight #comparePlayerA:focus-visible { outline: none; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14), 0 0 0 2px #38bdf8; }
+html.ui-flight #comparePlayerB:focus-visible { outline: none; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14), 0 0 0 2px #fbbf24; }
+html.ui-flight :is(#comparePlayerA, #comparePlayerB) option { font-family: inherit; font-size: 16px; font-weight: 600; color: #e5e7eb; background: #111317; }

@@ -16,7 +16,7 @@
     return {text:THROWS[profile.throws] ? `${THROWS[profile.throws]}・${bats}` : bats, missing:false};
   }
   const inputClass = 'w-full min-w-0 bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm';
-  panel.innerHTML = `<section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4">
+  panel.innerHTML = `<section class="fl-health-edit bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4">
     <h2 class="text-xl text-white font-black">編輯球員資料</h2>
     <p class="text-sm text-slate-400">打擊慣用側用來判定拉打／推打；其他欄位僅作紀錄，可留空。</p>
     <label class="block text-sm text-slate-300">球員<select data-health-player class="${inputClass} mt-1"></select></label>
@@ -31,10 +31,10 @@
         <div class="text-sm text-slate-300 self-end pb-2" data-health-birthday></div>
       </div>
       <p class="text-xs text-slate-400">修改打擊側後，未個別指定側別的打席會立即重算；左右開弓者請在場記或歷史編輯指定每個打席的實際側。</p>
-      <div class="flex flex-wrap gap-2"><button type="submit" class="bg-sky-600 text-white font-bold px-4 py-2 rounded-lg text-sm">儲存並同步</button><button type="button" data-health-reset class="bg-slate-800 text-slate-200 px-4 py-2 rounded-lg text-sm">還原未儲存輸入</button><button type="button" data-health-retry class="bg-amber-700 text-white px-4 py-2 rounded-lg text-sm hidden">重試待同步資料</button></div>
+      <div class="fl-health-actions flex flex-wrap gap-2"><button type="submit" class="bg-sky-600 text-white font-bold px-4 py-2 rounded-lg text-sm">儲存並同步</button><button type="button" data-health-reset class="bg-slate-800 text-slate-200 px-4 py-2 rounded-lg text-sm">還原未儲存輸入</button><button type="button" data-health-retry class="bg-amber-700 text-white px-4 py-2 rounded-lg text-sm hidden">重試待同步資料</button></div>
       <p data-health-status role="status" aria-live="polite" class="text-sm text-amber-300"></p>
     </form>
-  </section><section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-3"><h3 class="font-bold text-slate-100">球員名冊</h3><p data-health-summary class="text-sm"></p><div data-health-roster class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div></section>`;
+  </section><section class="fl-health-list bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-3"><h3 class="font-bold text-slate-100">球員名冊</h3><p data-health-summary class="text-sm"></p><div data-health-roster class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div></section>`;
   const form = panel.querySelector('form'), picker = panel.querySelector('[data-health-player]');
   const status = panel.querySelector('[data-health-status]');
   function state() {

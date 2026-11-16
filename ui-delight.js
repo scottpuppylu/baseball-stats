@@ -544,6 +544,23 @@
   document.getElementById('tabSummaryBtn')?.parentElement.classList.add('fl-seg');
   document.getElementById('tabSummaryBtn')?.parentElement.parentElement.classList.add('fl-seg-row'); // the control on top, the actions under it
   document.getElementById('toggleAddLogBtn')?.parentElement.classList.add('fl-actions');
+  // WO-03 B11: phones and tablets fold the three admin actions (登記日誌、新增球員、完整備份) under one 「管理」 button, so
+  // the summary table comes first; desktops keep them in view (ui-theme.css hides the button there).
+  const adminRow = document.getElementById('toggleAddLogBtn')?.parentElement;
+  if (adminRow) {
+    const admin = document.createElement('button');
+    admin.type = 'button';
+    admin.className = 'fl-fold-toggle fl-admin-toggle';
+    admin.textContent = '管理';
+    admin.setAttribute('aria-expanded', 'false');
+    adminRow.classList.add('fl-admin-menu');
+    adminRow.before(admin);
+    admin.addEventListener('click', () => {
+      const open = admin.getAttribute('aria-expanded') !== 'true';
+      admin.setAttribute('aria-expanded', String(open));
+      adminRow.classList.toggle('is-open', open);
+    });
+  }
   // 比賽場記: the review and the spray chart moved out (賽事分析; 數據分析 → 全隊落點 has the same spray chart with more
   // filters), so its sub-page switch is gone and 場記 is the live scorer only. The lineup loaders: a quiet row of actions.
   document.getElementById('btnScoreSubLive')?.parentElement.classList.add('fl-sb-switch');
