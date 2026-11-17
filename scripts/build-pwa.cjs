@@ -7,6 +7,9 @@ const extras = ['vendor/fonts/tk-sans-400.woff2', 'vendor/fonts/tk-sans-500.woff
 // Published with the site but not precached for offline use (about 1 MB of page scenes; offline shows the dark base).
 const SCENES = ['overview', 'analytics', 'pitching', 'records', 'leaderboard', 'compare', 'health', 'lineup', 'glossary', 'changelog'];
 const publicOnly = SCENES.flatMap(name => [`assets/bg-${name}.webp`, `assets/bg-${name}-portrait.webp`]);
+// WO-05: new scorebook/review UI. index.html loads these only when the rebas_ui_v2 flag is on (created by script, so the
+// tag scan above never sees them); listed here so they are published and precached, and the flag works offline too.
+const lazy = ['ui-v2.css', 'scorebook-v2-haptics.js', 'scorebook-v2.js', 'review-v2/review-v2.js'];
 function build(read) {
   let html = read('index.html').toString().replace(/\r\n/g, '\n');
   html = html.replace(/\s*<meta name="baseball-release" content="[^"]+">/g, '');
@@ -18,6 +21,7 @@ function build(read) {
     return before + file + '?v=' + digest(bytes).slice(0, 20) + after;
   });
   for (const file of extras) files.set(file, read(file));
+  for (const file of lazy) files.set(file, read(file));
   const version = digest(html + worker + [...files].map(([file, bytes]) => file + digest(bytes)).join('\n')).slice(0, 24);
   html = html.replace('<head>', `<head>\n  <meta name="baseball-release" content="${version}">`);
   files.set('index.html', Buffer.from(html));
@@ -26,7 +30,7 @@ function build(read) {
   files.set('sw.js', Buffer.from(worker.replace('const RELEASE = null; // generated-release', 'const RELEASE = ' + JSON.stringify(release) + '; // generated-release')));
   return {version, files, release, publicOnly};
 }
-module.exports = {build, digest, extras, publicOnly};
+module.exports = {build, digest, extras, lazy, publicOnly};
 if (require.main === module) {
   const root = path.resolve(__dirname, '..');
   const result = build(file => fs.readFileSync(path.join(root, file)));
