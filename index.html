@@ -11235,5 +11235,57 @@ function renderCustomChart(agg) {
   <script src="ui-theme.js"></script>
   <script src="ui-app.js"></script>
   <script src="ui-delight.js"></script>
+  <script>
+    // WO-05：新版場記與覆盤的旗標。localStorage.rebas_ui_v2 = '1' 或網址 ?ui=v2 開，?ui=v1 這次先關；預設關。
+    // 旗標關時只在「工具與篩選」多一列試用開關，新版的檔案不載入、不執行。新舊版用同一份資料，切換不搬資料。
+    (function () {
+      const KEY = 'rebas_ui_v2';
+      const param = new URLSearchParams(location.search).get('ui');
+      let stored = null;
+      try { stored = localStorage.getItem(KEY); } catch (error) { /* 私密模式：當作關 */ }
+      const on = param === 'v2' || (param !== 'v1' && stored === '1');
+      window.uiV2Flag = {
+        on,
+        set(next) {
+          try { if (next) localStorage.setItem(KEY, '1'); else localStorage.removeItem(KEY); } catch (error) { return; }
+          const url = new URL(location.href);
+          url.searchParams.delete('ui');
+          location.replace(url.href);
+        }
+      };
+      const tools = document.querySelector('#flTools .fl-tools-group[data-k="status"]');
+      if (tools) {
+        const group = document.createElement('div');
+        group.className = 'fl-tools-group';
+        group.dataset.k = 'trial';
+        const title = document.createElement('h3');
+        title.textContent = '試用';
+        const row = document.createElement('div');
+        row.className = 'fl-tools-actions';
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.id = 'uiV2Toggle';
+        toggle.setAttribute('role', 'switch');
+        toggle.setAttribute('aria-checked', String(on));
+        toggle.style.gridColumn = '1 / -1';
+        toggle.textContent = `試用新版場記與覆盤：${on ? '開' : '關'}`;
+        toggle.addEventListener('click', () => window.uiV2Flag.set(!on));
+        row.append(toggle);
+        group.append(title, row);
+        tools.before(group);
+      }
+      if (!on) return;
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = 'ui-v2.css';
+      document.head.append(css);
+      for (const file of ['scorebook-v2.js', 'review-v2/review-v2.js']) {
+        const script = document.createElement('script');
+        script.src = file;
+        script.async = false;
+        document.body.append(script);
+      }
+    })();
+  </script>
 </body>
 </html>

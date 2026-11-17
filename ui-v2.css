@@ -1,0 +1,46 @@
+/* ui-v2.css — 新版場記與覆盤（WO-05）。只在旗標開（localStorage.rebas_ui_v2 = '1' 或 ?ui=v2）時載入；
+   旗標關時這個檔案不會出現在頁面上。B1 只有外殼：實況／覆盤兩個空頁，舊版頁面仍在背後照常運作。 */
+
+/* 旗標開時，場記與覆盤兩頁換成新版外殼；舊版的面板只是藏起來，程式照跑（資料同一份）。 */
+body.ui-v2[data-page="Scorebook"] #panelScorebook,
+body.ui-v2[data-page="Games"] #panelGames { display: none !important; }
+.v2-shell { display: none; }
+body.ui-v2[data-page="Scorebook"] .v2-shell[data-v2-view="live"],
+body.ui-v2[data-page="Games"] .v2-shell[data-v2-view="review"] { display: block; }
+
+.v2-shell {
+  color: var(--fl-ink, #eef2f7);
+  font-family: var(--fl-font, system-ui, sans-serif);
+  border-radius: 24px;
+  padding: 18px 16px 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .015)), rgba(14, 16, 21, .72);
+  border: 1px solid var(--fl-line, rgba(255, 255, 255, .12));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-break: strict;
+}
+@media (min-width: 768px) { .v2-shell { padding: 24px 28px 28px; } }
+
+.v2-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.v2-title { margin: 0; font-family: var(--fl-mincho, serif); font-size: 22px; font-weight: 700; letter-spacing: .04em; color: var(--fl-ink, #eef2f7); }
+.v2-badge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-family: var(--fl-font, system-ui, sans-serif); font-size: 12px; font-weight: 600; letter-spacing: .08em; vertical-align: middle; color: #1a1205; background: var(--fl-amber, #f6c26b); }
+
+/* 實況／覆盤切換：兩顆一樣大的按鈕，觸控目標至少 44 px。 */
+.v2-seg { display: inline-grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 16px; background: rgba(0, 0, 0, .35); border: 1px solid var(--fl-line, rgba(255, 255, 255, .12)); }
+.v2-seg button { min-width: 88px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: transparent; color: var(--fl-ink-2, #c3cbd6); font-size: 15px; font-weight: 600; letter-spacing: .06em; cursor: pointer; }
+.v2-seg button[aria-current="page"] { background: rgba(255, 255, 255, .14); color: var(--fl-ink, #fff); }
+.v2-seg button:focus-visible, .v2-back:focus-visible { outline: 2px solid var(--fl-accent, #7cc0ff); outline-offset: 2px; }
+
+.v2-body { margin-top: 18px; padding: 28px 16px; border-radius: 18px; border: 1px dashed rgba(255, 255, 255, .18); text-align: center; }
+.v2-body h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; color: var(--fl-ink, #fff); }
+.v2-body p { margin: 0 auto; max-width: 34em; font-size: 14px; line-height: 1.7; color: var(--fl-ink-2, #c3cbd6); }
+/* 詞組不從中間斷（例如「回到／舊版」）：每段是一個 inline-block，只在段與段之間換行。 */
+.v2-nb { display: inline-block; }
+.v2-status { margin-top: 12px !important; font-variant-numeric: tabular-nums; }
+
+.v2-foot { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--fl-ink-3, #8a94a3); }
+.v2-foot p { margin: 0; flex: 1 1 220px; min-width: 0; }
+.v2-back { min-height: 44px; padding: 0 18px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .08); color: var(--fl-ink, #fff); font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
