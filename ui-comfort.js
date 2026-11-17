@@ -99,19 +99,20 @@
   // Five places on the phone tab bar; each group's pages switch with a segmented control under the page title.
   // 參考 (glossary, version history) lives in 「更多」, which also lists every page. Buttons keep their own handlers.
   // A group's first value is its id (data-group, like tab* ids it never changes: bookmarks, tests and lastInGroup use it);
+  // 2026/11/17 (WO-03 G3 v3, PO-27): 比賽 reads 場記 → 覆盤 → 打線 (打線 last); the group's first page is 場記.
   // GROUP_NAMES is what people read. 2026/11/12 (WO-03 B2, PO-23, 總監 DD-21): 球隊數據 reads 球隊 everywhere.
   const NAV_GROUPS = [
     ['', ['Home']],
     ['球隊數據', ['Overview', 'Analytics', 'Pitching', 'Records']],
     ['球員', ['Profile', 'Leaderboard', 'Compare', 'Health']],
-    ['比賽', ['Lineup', 'Scorebook', 'Games']],
+    ['比賽', ['Scorebook', 'Games', 'Lineup']],
     ['參考', ['Glossary', 'Changelog']]
   ];
   const GROUP_NAMES = {'球隊數據': '球隊'};
   const groupName = label => GROUP_NAMES[label] || label;
   // What each group holds (was the home page's 所有功能 tiles; now shown under each group in 更多 and the drawer).
   const GROUP_DESC = {'球隊數據': '全隊成績、象限分析、投手指標與生涯紀錄。', '球員': '個人能力檔案、排行榜、雙人比較與名冊。',
-    '比賽': '賽前打線、賽中場記、賽後覆盤。', '參考': '每項指標的定義與公式，以及版本更新紀錄。'};
+    '比賽': '賽中場記、賽後覆盤、賽前打線。', '參考': '每項指標的定義與公式，以及版本更新紀錄。'};
   const SUB_LABELS = {Overview: '總覽', Analytics: '分析', Pitching: '投手', Records: '紀錄', Profile: '檔案', Leaderboard: '排行', Compare: '比較',
     Health: '名冊', Lineup: '打線', Scorebook: '場記', Games: '覆盤', Glossary: '指標說明', Changelog: '版本紀錄'};
   // Old names stay findable in search (WO-03 B2): people who learned 數據／健康／賽事分析 still get there.
