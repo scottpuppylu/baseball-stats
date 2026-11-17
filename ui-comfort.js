@@ -525,6 +525,7 @@
     });
   }
   let scheduled = false;
+  const NOT_CONTENT = new Set(['SCRIPT', 'STYLE', 'LINK', 'TEMPLATE', 'NOSCRIPT']);
   new MutationObserver(records => {
     // At once (writes only): the layout must be right the moment new content lands.
     // One pass per batch: each new subtree once (a node inside another new node is covered by it), instead of a sweep
@@ -532,7 +533,14 @@
     const roots = new Set();
     records.forEach(r => {
       if (r.removedNodes.length) { recheckHolder(r.target); if (r.target.parentElement) recheckHolder(r.target.parentElement); }
-      r.addedNodes.forEach(node => { const el = node.nodeType === 1 ? node : node.parentElement; if (el) roots.add(el); });
+      // WO-03 G3 v3 (CI): while the page is still loading, the parser adds blank text and <script> tags straight into
+      // <main>; each one used to send the whole page (about 3,000 elements) through markHolders again, holding the first
+      // paint back by seconds on a slow device. Neither can change what is marked, so they are skipped.
+      r.addedNodes.forEach(node => {
+        if (node.nodeType === 3 ? !node.nodeValue.trim() : node.nodeType !== 1 || NOT_CONTENT.has(node.tagName)) return;
+        const el = node.nodeType === 1 ? node : node.parentElement;
+        if (el) roots.add(el);
+      });
     });
     const marked = [];
     roots.forEach(el => {

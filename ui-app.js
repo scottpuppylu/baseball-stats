@@ -427,5 +427,11 @@
   // The app opens on the home page.
   switchMainTab('tabHome');
   // Reveal the page now that the shell is arranged (boot.js hid it to avoid a flash of the old layout).
-  requestAnimationFrame(() => document.documentElement.classList.remove('fl-booting'));
+  // WO-03 G3 v3 (CI): the header's transition-all also eased its visibility back from the boot hiding, so its buttons (the
+  // drawer toggle on tablets) stayed hidden and untappable for a moment after the page showed. Visibility now arrives at
+  // once; nothing else about the header changes.
+  requestAnimationFrame(() => {
+    document.documentElement.classList.remove('fl-booting');
+    if (document.getAnimations) document.getAnimations().forEach(a => { if (a.transitionProperty === 'visibility') a.finish(); });
+  });
 })();
