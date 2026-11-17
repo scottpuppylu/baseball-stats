@@ -339,14 +339,31 @@
       if (!area.isConnected) { scrollAreas.delete(area); return; }
       if (!panel.contains(area)) return; // hidden pages are measured when shown
       const over = area.clientWidth > 0 && area.scrollWidth > area.clientWidth + 2;
-      marks.push([area, over, over && area.scrollLeft + area.clientWidth >= area.scrollWidth - 2]);
+      marks.push([area, over, over ? tableCut(area) : 0]);
     });
     // all reads first, then the writes: one layout. The area itself fades its cut edge while more columns wait (ui-theme.css).
-    return () => marks.forEach(([area, on, end]) => {
+    return () => marks.forEach(([area, on, fade]) => {
       area.previousElementSibling?.classList.toggle('is-overflowing', on);
       area.classList.toggle('is-overflowing', on);
-      area.classList.toggle('is-end', end);
+      writeTableFade(area, fade);
     });
+  }
+  // WO-03 G3 v2: how much of the first column cut by the right edge is still in view (0 = every column in view is whole).
+  // The fade covers only that part, so a column that is fully visible is never darkened.
+  function tableCut(area) {
+    const row = area.querySelector('thead tr, tr');
+    // scrolled to the end: every column is in view (the last cell can reach a sub-pixel under the 1 px border)
+    if (!row || area.scrollLeft + area.clientWidth >= area.scrollWidth - 2) return 0;
+    const box = area.getBoundingClientRect(), right = box.left + area.clientLeft + area.clientWidth;
+    for (const cell of row.children) {
+      const r = cell.getBoundingClientRect();
+      if (r.right > right + 2 && r.left < right) return Math.round(right - r.left);
+    }
+    return 0;
+  }
+  function writeTableFade(area, fade) {
+    area.classList.toggle('is-end', !fade);
+    if (fade) area.style.setProperty('--fl-table-fade', `${Math.max(12, Math.min(40, fade))}px`);
   }
   // measure = false: only the DOM work (before the first paint of a page, when a layout read would hold that paint back).
   function enhanceTables(measure = true) {
@@ -363,7 +380,7 @@
       hint.textContent = '左右滑動查看完整欄位';
       area.before(hint);
       area.addEventListener('scroll', () => { // WO-03 G3: no fade once the last column is in view
-        area.classList.toggle('is-end', area.scrollLeft + area.clientWidth >= area.scrollWidth - 2);
+        writeTableFade(area, tableCut(area));
       }, {passive: true});
       scrollAreas.add(area);
     });

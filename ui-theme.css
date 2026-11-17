@@ -1985,6 +1985,7 @@ html.ui-flight main :is(select, input[type="text"], input[type="number"], input[
 html.ui-flight main button.bg-emerald-600, html.ui-flight main button.bg-sky-600, html.ui-flight main button.bg-slate-800 { min-height: 44px; }
 /* Small controls inside running text or a row of pills keep their look; a transparent 44 px band takes the tap. */
 html.ui-flight #panelRecords [data-record-player] { min-height: 44px; }
+html.ui-flight #panelRecords :is(span.basis-full, .leading-tight) [data-record-player] { min-height: 0; } /* names in running text: the 44 px band below takes the tap, the line keeps its height */
 html.ui-flight :is([data-record-player], #playerProfileBio .pf-tags button[onclick^="addPlayerTag"]) { position: relative; }
 html.ui-flight :is([data-record-player], #playerProfileBio .pf-tags button[onclick^="addPlayerTag"])::after {
   content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%);
@@ -2079,6 +2080,10 @@ html.ui-flight .fl-health-edit :is(input, select, textarea) { scroll-margin-bott
 @media (max-width: 767px) {
   html.ui-flight .fl-health-actions { bottom: calc(96px + env(safe-area-inset-bottom)); }
 }
+/* WO-03 G3 v2: tablets have the room to show the whole form, so the bar stays in place under it and never covers a field. */
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  html.ui-flight .fl-health-actions { position: static; }
+}
 @media (min-width: 1280px) {
   html.ui-flight #panelHealth:not(.hidden) { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(380px, 1fr); gap: 24px; align-items: start; }
   html.ui-flight body[data-page] #appWorkspace main > #panelHealth:not(.hidden) > * { margin: 0 !important; } /* beats the page's 52px section gap */
@@ -2111,8 +2116,8 @@ html.ui-flight span.flex.items-center.gap-1 { white-space: nowrap; } /* chart le
 html.ui-flight :is(p, li) > :is(b, strong).ui-note-holder > .ui-note { display: inline; margin-left: .2em; }
 /* WO-03 G3: a wide table fades its cut right edge while more columns wait (ui-comfort.js marks .is-overflowing / .is-end),
    so the last visible column never looks clipped by accident. */
-html.ui-flight .ui-table-scroll.is-overflowing:not(.is-end) {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+html.ui-flight .ui-table-scroll.is-overflowing:not(.is-end) { /* the fade covers only the cut column's visible part (ui-comfort.js sets the width) */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--fl-table-fade, 40px)), transparent); mask-image: linear-gradient(to right, #000 calc(100% - var(--fl-table-fade, 40px)), transparent);
 }
 /* WO-03 G3: 象限分析 card — the header sits on top and the chart takes the card's spare height (its neighbour, 交叉比對,
    has more selectors), so no empty band opens between the note and the chart. */
@@ -2123,3 +2128,8 @@ html.ui-flight #panelAnalytics section.grid > [data-fl-gated].flex-col.justify-b
 html.ui-flight main #panelGlossary div.flex.items-start.justify-between { flex-wrap: nowrap; }
 html.ui-flight main #panelGlossary div.flex.items-start.justify-between > span.font-bold { flex: 1 1 auto; min-width: 0; white-space: normal; word-break: keep-all; } /* breaks only at the spaces: 「…與 / 雙殺打」 */
 html.ui-flight main #panelGlossary div.flex.items-start.justify-between > span.font-mono { flex: 0 1 auto; max-width: 50%; white-space: normal; }
+/* WO-03 G3 v2: a chart header with a legend: when both do not fit on one line the legend moves under the title, so the
+   title itself is not broken (「…落點噴流」 stays whole). */
+html.ui-flight main div.flex.items-center.justify-between.border-b.pb-2 { flex-wrap: wrap; row-gap: 6px; }
+/* WO-03 G3 v2: 雙人比較 intro breaks only after 「、」, never inside a word such as 「雷達」. */
+html.ui-flight #panelCompare section p.text-xs.text-slate-400.mt-1 { word-break: keep-all; overflow-wrap: anywhere; }

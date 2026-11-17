@@ -112,6 +112,16 @@
     // The browser drops a smooth scroll when the layout shifts meanwhile (a web font arriving, say): finish it directly.
     setTimeout(() => { if (identity.isConnected && hidden()) identity.scrollIntoView({block:'center',behavior:'auto'}); }, 700);
   });
+  // WO-03 G3 v2: on phones the save bar is pinned to the bottom; a field that gets focus under it is scrolled to just above it.
+  form.addEventListener('focusin', event => {
+    const field = event.target, bar = form.querySelector('.fl-health-actions');
+    if (!bar || !field.matches('input, select, textarea')) return;
+    requestAnimationFrame(() => {
+      if (!matchMedia('(max-width: 767px)').matches || getComputedStyle(bar).position !== 'sticky') return;
+      const b = bar.getBoundingClientRect(), r = field.getBoundingClientRect();
+      if (r.bottom > b.top - 12) window.scrollBy(0, r.bottom - b.top + 16);
+    });
+  });
   form.addEventListener('input',() => {dirty=true; birth(); state();});
   form.addEventListener('change',() => {dirty=true; birth(); state();});
   panel.querySelector('[data-health-reset]').addEventListener('click',() => {dirty=false; fill(); state();});
