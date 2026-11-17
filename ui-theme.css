@@ -1985,7 +1985,9 @@ html.ui-flight main :is(select, input[type="text"], input[type="number"], input[
 html.ui-flight main button.bg-emerald-600, html.ui-flight main button.bg-sky-600, html.ui-flight main button.bg-slate-800 { min-height: 44px; }
 /* Small controls inside running text or a row of pills keep their look; a transparent 44 px band takes the tap. */
 html.ui-flight #panelRecords [data-record-player] { min-height: 44px; }
-html.ui-flight #panelRecords :is(span.basis-full, .leading-tight) [data-record-player] { min-height: 0; } /* names in running text: the 44 px band below takes the tap, the line keeps its height */
+@media (min-width: 1280px) { /* desktop (mouse): names in running text keep their line height; touch sizes keep the 44 px target */
+  html.ui-flight #panelRecords :is(span.basis-full, .leading-tight) [data-record-player] { min-height: 0; }
+}
 html.ui-flight :is([data-record-player], #playerProfileBio .pf-tags button[onclick^="addPlayerTag"]) { position: relative; }
 html.ui-flight :is([data-record-player], #playerProfileBio .pf-tags button[onclick^="addPlayerTag"])::after {
   content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%);
