@@ -159,7 +159,7 @@
     + '<div class="v2l-padwrap"></div>'
     + '<div class="v2l-snack" role="status" aria-live="assertive" hidden></div>'
     + '<div class="v2l-warnbar" role="alert" hidden><p>這台裝置的儲存空間滿了，紀錄可能沒存進本機。請先上傳本局。</p><button type="button" data-act="upload">上傳本局</button></div>'
-    + '<div class="v2l-lock" role="status" aria-live="polite" hidden><span class="v2l-spin" aria-hidden="true"></span><p>日誌同步中…<small>完成後直接打開覆盤</small></p></div>'
+    + '<div class="v2l-lock" role="status" aria-live="polite" hidden><div class="v2l-lockbox"><span class="v2l-spin" aria-hidden="true"></span><p>日誌同步中…<small>完成後直接打開覆盤</small></p></div></div>'
     + '<div class="v2l-setup" hidden></div>'
     + '<div class="v2l-layer" hidden><div class="v2l-scrim" data-act="close"></div><div class="v2l-sheet" role="dialog" aria-modal="true"></div></div>';
   document.body.append(root);
@@ -411,6 +411,7 @@
     for (const part of LIVE_PARTS()) part.inert = locked;
     els.lock.hidden = !locked;
     els.warn.hidden = !ui.storageFull;
+    root.classList.toggle('v2l-warning', ui.storageFull);
     els.field.classList.remove('v2l-tiny');
     requestAnimationFrame(fitField);
     if (ui.sheet) drawSheet();
@@ -418,7 +419,7 @@
   function storageFull() {
     if (ui.storageFull) return;
     ui.storageFull = true;
-    if (shown) { els.warn.hidden = false; haptics.fire('error'); }
+    if (shown) { els.warn.hidden = false; root.classList.add('v2l-warning'); haptics.fire('error'); }
   }
 
   // ---------- 回饋（PO-40 §0b） ----------
@@ -848,7 +849,7 @@
       + `<button type="button" class="v2u-dh" role="switch" aria-checked="${s.dh}" data-act="su-dh"><span>DH</span><small>${s.dh ? '11 人' : '10 人'}</small></button></div>`
       + '</div>'
       + '<section class="v2u-lineup" aria-label="先發打線">'
-      + `<div class="v2u-lhead"><h3>先發打線</h3><small data-v2-from>${s.from ? `帶入上一場 ${esc(shortDate(s.from.date))} vs ${esc(s.from.opponent)}${s.posGuess ? '・守位請確認' : ''}` : '沒有上一場，請逐棒選'}</small>`
+      + `<div class="v2u-lhead"><h3>先發打線</h3><small data-v2-from>${s.from ? `帶入上一場 ${esc(shortDate(s.from.date))}${s.posGuess ? '・守位請確認' : ` vs ${esc(s.from.opponent)}`}` : '沒有上一場，請逐棒選'}</small>`
       + `<button type="button" class="v2u-clear" data-act="su-clear"${filled ? '' : ' disabled'}>清空</button></div>`
       + `<ol class="v2u-list">${rows}</ol></section>`
       + `<p class="v2u-err" role="alert"${s.error ? '' : ' hidden'}>${esc(s.error)}</p>`

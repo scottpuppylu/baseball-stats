@@ -300,10 +300,15 @@ body.v2-live-on { overflow: hidden; }
 .v2l-more .v2l-newdot { position: absolute; top: 6px; right: 6px; }
 .v2s-new { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 14px; border: 2px solid var(--v2-on); font-size: 14px; color: var(--v2-ink-2); }
 .v2s-new b { display: block; font-size: 16px; color: var(--v2-on); }
+.v2-live .v2s-new:not(#v2-x) { align-items: flex-start; margin: 0 0 10px; padding: 12px 14px; line-height: 1.45; }
+.v2s-new .v2l-newdot { width: 12px; height: 12px; margin-top: 6px; border: 0; }
+.v2s-new b { margin-bottom: 2px; }
 .v2s-warn { font-size: 16px; font-weight: 800; color: var(--v2-out); padding: 0 6px; }
 
 /* ---- CP-20 儲存空間滿：不打斷，提示條貼在記分區上方 ---- */
-.v2l-warnbar { grid-area: main; align-self: start; z-index: 3; position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px; border-radius: 14px; background: var(--v2-run); color: var(--v2-dark); border: 3px solid var(--v2-white); }
+/* CP-20 提示條自己一列（不蓋打者卡）：只有出現時才多這一列。 */
+.v2-live.v2l-warning { grid-template-rows: auto auto auto minmax(0, 1fr) auto; grid-template-areas: "head" "board" "warn" "main" "pad"; }
+.v2l-warnbar { grid-area: warn; z-index: 3; position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px; border-radius: 14px; background: var(--v2-run); color: var(--v2-dark); border: 3px solid var(--v2-white); }
 .v2l-warnbar[hidden] { display: none; }
 .v2l-warnbar p { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.35; }
 .v2l-warnbar button { flex: 0 0 auto; min-height: 44px; padding: 0 12px; border-radius: 10px; border: 2px solid var(--v2-dark); background: var(--v2-dark); color: var(--v2-white); font-size: 15px; font-weight: 800; white-space: nowrap; }
@@ -311,6 +316,7 @@ body.v2-live-on { overflow: hidden; }
 /* ---- A7 結束並同步中：鎖住記分（和舊版 setScorerLocked 相同），顯示「日誌同步中」 ---- */
 .v2l-lock { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(11, 13, 17, .86); text-align: center; padding: 24px; }
 .v2l-lock[hidden] { display: none; }
+.v2l-lockbox { display: flex; flex-direction: column; align-items: center; gap: 14px; min-width: min(100%, 300px); padding: 24px 28px; border-radius: 20px; background: var(--v2-panel); border: 1px solid var(--v2-line); box-shadow: 0 16px 48px rgba(0, 0, 0, .5); }
 .v2l-lock .v2l-spin { width: 36px; height: 36px; border-width: 4px; color: var(--v2-on); }
 .v2l-lock p { font-size: 24px; font-weight: 800; }
 .v2l-lock small { display: block; margin-top: 4px; font-size: 15px; font-weight: 600; color: var(--v2-ink-2); }
@@ -409,6 +415,7 @@ body.v2-live-on .ui-app-bar, body.v2-setup-on .ui-app-bar { display: none !impor
   .v2l-field { grid-column: 1; grid-row: 3; }
   .v2l-three { flex: 1 1 auto; align-content: center; }
   .v2l-snack { grid-area: main; }
+  .v2-live.v2l-warning { grid-template-rows: auto auto auto minmax(0, 1fr); grid-template-areas: "head head" "board pad" "warn pad" "main pad"; }
 }
 @media (min-width: 1280px) {
   .v2-live { max-width: 1440px; margin: 0 auto; }
@@ -439,8 +446,8 @@ body.v2-live-on .ui-app-bar, body.v2-setup-on .ui-app-bar { display: none !impor
   .v2l-setup {
     max-width: 1200px; display: grid; column-gap: 20px; row-gap: 10px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
-    grid-template-areas: "head head" "form lineup" "err lineup" ". lineup" "start lineup";
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "head head" "form lineup" ". lineup" "err lineup" "start lineup";
   }
   .v2l-setup > .v2l-head { grid-area: head; }
   .v2u-form { grid-area: form; grid-template-columns: minmax(0, 1fr); }
