@@ -678,6 +678,36 @@
     done('record', 'white', `${name}${g.currentBases[key] ? '有人' : '無人'}`, null, '');
     return true;
   }
+  // 對手分數直接改：和舊版 ± 鈕同一個函式 adjustOpponentScore（也調整對手半局的 runs，我方進攻時記到對手最近一個半局）。
+  function adjustOpp(delta, button) {
+    const g = live();
+    if (!g) return false;
+    const before = g.finalScore.opp || 0;
+    quiet(() => adjustOpponentScore(delta));
+    if ((g.finalScore.opp || 0) === before) { fail('對手已經 0 分', button); return false; }
+    done('record', 'white', `對手分數改成 ${g.finalScore.opp}`, null, '');
+    return true;
+  }
+  // 改目前打者：和舊版「跳下一棒」同一個函式 changeCurrentBatterIndex。
+  function setBatter(index, button) {
+    const g = live();
+    if (!g) return;
+    quiet(() => changeCurrentBatterIndex(index));
+    if (g.currentBatterIdx !== index) { fail('沒有改成功', button); return; }
+    hold();
+    closeSheet();
+    done('record', 'white', `目前打者：第 ${index + 1} 棒 ${g.lineup[index]}`, null, '');
+  }
+  // 換人時新增支援選手：和舊版換人選單「＋ 快速新增非隊員/支援選手」同一條路（askNewGuest → 換上）。
+  async function substituteGuest() {
+    const index = ui.sub;
+    if (index == null) return;
+    closeSheet();
+    let guest = null;
+    try { guest = await askNewGuest('友軍支援', '新增支援選手並換上場'); } catch (error) { guest = null; }
+    if (!guest || !live()) return;
+    substitute(index, guest.name, null);
+  }
 
   // ---------- 全部紀錄：改結果 ----------
   function paDesc(p) { // 和 submitBattedBallPlay（9737-9746）同一套句子
@@ -983,7 +1013,7 @@
       const sw = (act, label, on, note, disabled) => `<button type="button" class="v2s-item v2s-switch" role="switch" aria-checked="${on}" data-act="${act}"${disabled ? ' disabled' : ''}><span>${label}</span>${note ? `<small>${esc(note)}</small>` : ''}<i aria-hidden="true"></i></button>`;
       return sheetHead('更多操作')
         + (ui.update ? '<p class="v2s-new" data-v2-update-row><i class="v2l-newdot" aria-hidden="true"></i><span><b>有新版</b>比賽結束或離開場記後再更新，記分中不會重新整理。</span></p>' : '')
-        + '<p class="v2s-group">人員</p>' + item('pitcher', '換投', `目前 ${esc(g.pitcherName || '未選')}`) + item('sub', '換人', '代打、代跑、守備換人') + item('dh', 'DH 制', g.hasDh ? '目前：有 DH' : '目前：沒有 DH')
+        + '<p class="v2s-group">人員</p>' + item('pitcher', '換投', `目前 ${esc(g.pitcherName || '未選')}`) + item('sub', '換人', '代打、代跑、守備換人') + item('batter', '改目前打者', `目前第 ${(g.currentBatterIdx || 0) + 1} 棒 ${esc(g.lineup?.[g.currentBatterIdx] || '')}`) + item('dh', 'DH 制', g.hasDh ? '目前：有 DH' : '目前：沒有 DH')
         + '<p class="v2s-group">紀錄</p>' + item('all', '全部紀錄', '任一筆可改或刪') + item('inning-direct', '直接換局', '出局數沒記完整也能換') + item('upload', '上傳本局', ui.syncing ? '上傳中…' : navigator.onLine === false ? '連線後再按上傳本局' : '', '', !!ui.syncing)
         + '<p class="v2s-group">比賽</p>' + item('end', '結束比賽', '結束並同步')
         + sw('hc', '戶外高對比', root.classList.contains('hc'), '', false)
@@ -993,11 +1023,19 @@
     sit(g) {
       const b = g.currentBases || {};
       const base = (key, name) => `<button type="button" class="v2s-base${b[key] ? ' on' : ''}" aria-pressed="${!!b[key]}" data-act="base" data-base="${key}" data-v2-fb data-v2-hap><b>${name}</b><small>${b[key] ? '跑者' : '無人'}</small></button>`;
-      return sheetHead('出局與壘包')
+      return sheetHead('出局、壘包、對手分數')
         + `<div class="v2s-bases">${base('third', '三壘')}${base('second', '二壘')}${base('first', '一壘')}</div>`
         + `<div class="v2s-outs"><span class="v2s-runs-k">出局</span><button type="button" class="v2s-step" data-act="outs" data-d="-1" aria-label="少 1 個出局" data-v2-fb data-v2-hap>−</button>`
         + `<b data-v2-outs>${Math.min(3, g.currentOuts || 0)}</b><button type="button" class="v2s-step" data-act="outs" data-d="1" aria-label="多 1 個出局" data-v2-fb data-v2-hap>＋</button></div>`
-        + '<p class="v2s-hint">壘包只是備忘，記結果不會自動改。撤銷後出局數依紀錄重算。</p>';
+        + `<div class="v2s-outs"><span class="v2s-runs-k">對手分數</span><button type="button" class="v2s-step" data-act="opp" data-d="-1" aria-label="對手少 1 分" data-v2-fb data-v2-hap>−</button>`
+        + `<b data-v2-opp>${g.finalScore?.opp || 0}</b><button type="button" class="v2s-step" data-act="opp" data-d="1" aria-label="對手多 1 分" data-v2-fb data-v2-hap>＋</button></div>`
+        + '<p class="v2s-hint">壘包只是備忘，記結果不會自動改。撤銷後出局數依紀錄重算。對手分數隨時可改，我方進攻時也行。</p>';
+    },
+    batter(g) {
+      const pos = positions(g);
+      return sheetHead('改目前打者')
+        + '<p class="v2s-hint">打序跑掉時用：點的那一棒就是現在上場打擊的人。</p>'
+        + (g.lineup || []).map((n, i) => `<button type="button" class="v2s-item${i === g.currentBatterIdx ? ' on' : ''}" aria-current="${i === g.currentBatterIdx}" data-act="pick-batter" data-i="${i}" data-v2-fb data-v2-hap><span>第 ${i + 1} 棒 · ${playerName(n)}</span><small>${i === g.currentBatterIdx ? '目前' : pos[i] ? `守 ${esc(pos[i])}` : ''}</small></button>`).join('');
     },
     pitcher(g) {
       const {teamNames, guestNames} = getAllAvailablePlayerNames();
@@ -1029,6 +1067,7 @@
       const pool = [...teamNames, ...guestNames].filter((n, i, all) => n && !lineup.includes(n) && all.indexOf(n) === i);
       return sheetHead(`換下第 ${ui.sub + 1} 棒 ${esc(lineup[ui.sub])}`)
         + '<button type="button" class="v2s-secondary" data-act="sub-back">‹ 重選棒次</button>'
+        + '<button type="button" class="v2s-secondary" data-act="sub-guest">＋ 新增支援選手並換上</button>'
         + (pool.map(n => `<button type="button" class="v2s-item" data-act="sub-pick" data-name="${esc(n)}" data-v2-fb data-v2-hap><span>${playerName(n)}</span><small>${guestNames.includes(n) ? '支援' : '場下'}</small></button>`).join('') || '<p class="v2s-hint">沒有可以換上的球員</p>');
     },
     dh(g) {
@@ -1246,6 +1285,10 @@
     sub() { ui.sub = null; openSheet('sub'); },
     'sub-slot'(btn) { ui.sub = Number(btn.dataset.i); drawSheet(); },
     'sub-back'() { ui.sub = null; drawSheet(); },
+    'sub-guest'() { substituteGuest(); },
+    batter() { openSheet('batter'); },
+    'pick-batter'(btn) { setBatter(Number(btn.dataset.i), btn); },
+    opp(btn) { if (adjustOpp(Number(btn.dataset.d), btn) && ui.sheet === 'sit') drawSheet(); },
     'sub-pick'(btn) { substitute(ui.sub, btn.dataset.name, btn); },
     dh() { openSheet('dh'); },
     'dh-yes'(btn) { toggleDh(btn); },
@@ -1285,7 +1328,7 @@
     old() { closeSheet(); if (window.uiV2Flag) window.uiV2Flag.set(false); }
   };
   // 會寫入資料的動作：防連點 400 ms 內的第二下不處理、不給回饋。
-  const GUARDED = new Set(['off', 'def', 'pa-submit', 'snack-undo', 'undo-last', 'inning', 'inning-direct', 'pick-pitcher', 'pitcher-yes', 'sub-pick', 'dh-yes', 'outs', 'base', 'rec-save', 'rec-del', 'end-yes', 'clear-yes', 'upload', 'retry', 'su-start']);
+  const GUARDED = new Set(['off', 'def', 'pa-submit', 'snack-undo', 'undo-last', 'inning', 'inning-direct', 'pick-pitcher', 'pitcher-yes', 'sub-pick', 'dh-yes', 'outs', 'base', 'opp', 'pick-batter', 'rec-save', 'rec-del', 'end-yes', 'clear-yes', 'upload', 'retry', 'su-start']);
   root.addEventListener('click', event => {
     if (probe) ui.clickAt = event.timeStamp;
     const svg = event.target.closest('[data-v2-field]');
