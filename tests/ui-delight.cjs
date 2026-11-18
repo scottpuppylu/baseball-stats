@@ -25,6 +25,8 @@ const page$ = page => page.evaluate(() => document.body.dataset.page);
 
       // ---------- Home effects ----------
       assert.equal(await page$(page), 'Home');
+      // The split runs after the home panel paints: wait for it instead of reading the first frame (flaky on slow runs).
+      await page.waitForFunction(() => document.querySelectorAll('.fl-hero-title .fl-ch').length > 0, null, {timeout: 6000}).catch(() => {});
       const title = await page.locator('.fl-hero-title').evaluate(el => ({text: el.textContent, label: el.getAttribute('aria-label'), chars: el.querySelectorAll('.fl-ch').length}));
       assert.deepEqual(title, {text: '淡江航太系壘', label: '淡江航太系壘', chars: 6}, 'title split for the blur-in, text unchanged');
       assert.equal(await page.locator('.fl-hero > canvas.fl-stars').count(), 1, 'star field behind the hero');
