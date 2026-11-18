@@ -93,15 +93,43 @@
     legacyDirty = false;
     try { if (typeof window.renderLiveScorer === 'function') window.renderLiveScorer(); } catch (error) { console.warn('[ui-v2] legacy repaint', error); }
   }
+  // CP-20：本機存不進去時，舊版 storeLocal 會跳「本機暫存失敗」，有些地方直接 localStorage.setItem 會丟 QuotaExceededError。
+  // 兩種都不當成「沒記到」：紀錄已在畫面上的比賽裡，只提示空間滿、請先上傳本局，流程照走（不中斷）。
+  const STORAGE_FULL = /本機暫存失敗/;
+  const isQuota = error => !!error && (error.name === 'QuotaExceededError' || error.code === 22 || error.code === 1014 || /quota/i.test(String(error.message || '')));
   function quiet(fn) {
     const original = window.showToast;
     const messages = [];
     window.showToast = (message, type = 'info') => { messages.push({message: String(message), type}); };
     let result;
-    try { result = deferLegacyPaint(fn); } finally { window.showToast = original; }
-    const error = messages.find(m => m.type === 'error' || /失敗|錯誤/.test(m.message));
+    try { result = deferLegacyPaint(fn); } catch (error) { if (!isQuota(error)) throw error; messages.push({message: '本機暫存失敗', type: 'error'}); } finally { window.showToast = original; }
+    if (messages.some(m => STORAGE_FULL.test(m.message))) storageFull();
+    const error = messages.find(m => (m.type === 'error' || /失敗|錯誤/.test(m.message)) && !STORAGE_FULL.test(m.message));
     return {result, messages, error: error ? error.message : ''};
   }
+  // 上傳本局、結束並同步是非同步的：期間舊版的 toast（「正在同步…」「同步失敗…」）改由新版的膠囊、sheet 表達，先收進 sink。
+  // 用一層常駐的轉接，重疊的兩次上傳各收各的，不會互相把 showToast 換錯。
+  const sinks = [];
+  let realToast = null;
+  function captureToasts(fn) {
+    const sink = [];
+    if (!realToast && typeof window.showToast === 'function') {
+      realToast = window.showToast;
+      window.showToast = function (message, type) {
+        if (sinks.length) { sinks[sinks.length - 1].push({message: String(message), type: type || 'info'}); return; }
+        return realToast.apply(this, arguments);
+      };
+    }
+    sinks.push(sink);
+    let promise;
+    try { promise = Promise.resolve(fn()); } catch (error) { promise = Promise.reject(error); }
+    return promise.catch(error => { console.warn('[ui-v2] upload', error); }).then(() => {
+      const i = sinks.indexOf(sink); if (i >= 0) sinks.splice(i, 1);
+      if (sink.some(m => STORAGE_FULL.test(m.message))) storageFull();
+      return sink;
+    });
+  }
+  const toast = (message, type) => (realToast || window.showToast)(message, type);
   // 舊版在這幾個地方用瀏覽器原生 confirm()。新版先用自己的 sheet 問過（或依規則不必問），再呼叫舊函式時代答。
   function answered(answer, fn) {
     const original = window.confirm;
@@ -130,11 +158,15 @@
     + '<div class="v2l-main"><div class="v2l-card"></div><ol class="v2l-recent" aria-label="本半局"></ol><div class="v2l-field" aria-hidden="true"></div></div>'
     + '<div class="v2l-padwrap"></div>'
     + '<div class="v2l-snack" role="status" aria-live="assertive" hidden></div>'
+    + '<div class="v2l-warnbar" role="alert" hidden><p>這台裝置的儲存空間滿了，紀錄可能沒存進本機。請先上傳本局。</p><button type="button" data-act="upload">上傳本局</button></div>'
+    + '<div class="v2l-lock" role="status" aria-live="polite" hidden><span class="v2l-spin" aria-hidden="true"></span><p>日誌同步中…<small>完成後直接打開覆盤</small></p></div>'
+    + '<div class="v2l-setup" hidden></div>'
     + '<div class="v2l-layer" hidden><div class="v2l-scrim" data-act="close"></div><div class="v2l-sheet" role="dialog" aria-modal="true"></div></div>';
   document.body.append(root);
   const $ = sel => root.querySelector(sel);
   const els = {head: $('.v2l-head'), board: $('.v2l-board'), card: $('.v2l-card'), recent: $('.v2l-recent'), field: $('.v2l-field'),
-    pad: $('.v2l-padwrap'), snack: $('.v2l-snack'), layer: $('.v2l-layer'), sheet: $('.v2l-sheet')};
+    pad: $('.v2l-padwrap'), snack: $('.v2l-snack'), layer: $('.v2l-layer'), sheet: $('.v2l-sheet'),
+    warn: $('.v2l-warnbar'), lock: $('.v2l-lock'), setup: $('.v2l-setup')};
   try { if (localStorage.getItem(HC_KEY) === '1') root.classList.add('hc'); } catch (error) { /* 沒有儲存空間：預設關 */ }
 
   // ---------- 球場（和舊版同一套 400×400 座標；落點存成 0–1，toFixed(3)） ----------
@@ -177,19 +209,83 @@
     syncing: 0,         // 上傳中的數量
     syncGen: 0,         // 每次上傳 +1；6 秒復原只在還沒上傳時可按
     downAt: 0,          // 最近一次 pointerdown 的 event.timeStamp（量測用）
-    sheetAt: 0
+    sheetAt: 0,
+    // B4
+    ending: false,      // 結束並同步上傳中（A7：鎖住記分區，顯示「日誌同步中」）
+    failed: '',         // 上一次上傳沒成功：'upload'｜'end'｜'end-offline'（膠囊轉紅，sheet 說明＋重試）
+    storageFull: false, // 本機存不進去（CP-20）：不中斷，頁首下方一條提示＋上傳本局
+    update: false,      // 有新版在等（記分中不跳更新，只在 ⋯ 標記）
+    setup: null,        // 開賽設定的暫存 {date, opponent, tag, role, dh, lineup, pos, from, touched, error}
+    pick: -1            // 開賽設定：正在選第幾棒
   };
   // v1：pointerdown→按下狀態畫出；v2：放開（click，紀錄成立）→比分板閃色畫出；v2Down：同一筆從 pointerdown 起算（含手指停留時間，只供參考）。
   const probe = PROBE ? (window.__v2fb = {v1: [], v2: [], v2Down: []}) : null;
   const afterTwoFrames = fn => requestAnimationFrame(() => requestAnimationFrame(fn));
 
   // ---------- 繪製 ----------
+  // ---------- 同步膠囊（B4；D14：每種狀態都有文字或形狀，不只靠顏色） ----------
+  // 已同步＝雲端最後一次確認的這場（舊版 cloudBase，上傳成功才更新）和這台裝置的一樣。待上傳 N＝不一樣的紀錄筆數
+  // （打席＋防守事件；只改了換局、換投等非紀錄欄位時只寫「待上傳」）。只讀，不寫任何東西。
+  const epoch = () => { try { return writeEpoch[GAMES_FILE_PATH] || 0; } catch (error) { return 0; } };
+  let cloudMemo = {json: null, map: null};
+  function cloudCopy(id) {
+    let entry = null;
+    try { entry = cloudBase[GAMES_FILE_PATH]; } catch (error) { return null; }
+    if (!entry || typeof entry.json !== 'string') return null;
+    if (cloudMemo.json !== entry.json) {
+      let list = [];
+      try { list = JSON.parse(entry.json); } catch (error) { list = []; }
+      cloudMemo = {json: entry.json, map: new Map((Array.isArray(list) ? list : []).filter(Boolean).map(x => [x.id, {game: x, text: JSON.stringify(x)}]))};
+    }
+    return cloudMemo.map.get(id) || null;
+  }
+  function recordKeys(g) {
+    const out = [];
+    for (const inn of g.innings || []) {
+      const at = `${inn.inningNum}${inn.topBottom}`;
+      for (const p of inn.plateAppearances || []) out.push(`${at}p${JSON.stringify(p)}`);
+      for (const e of inn.defensiveEvents || []) out.push(`${at}d${JSON.stringify(e)}`);
+    }
+    return out;
+  }
+  function unsent(g) {
+    const cloud = cloudCopy(g.id);
+    if (cloud && cloud.text === JSON.stringify(g)) return 0;
+    const left = new Map();
+    for (const key of cloud ? recordKeys(cloud.game) : []) left.set(key, (left.get(key) || 0) + 1);
+    let n = 0;
+    for (const key of recordKeys(g)) { const c = left.get(key); if (c) left.set(key, c - 1); else n += 1; }
+    for (const c of left.values()) n += c;
+    return n || -1; // -1：有差異，但不是紀錄本身
+  }
+  const writing = () => ui.syncing > 0 || (typeof gamesWritesInFlight !== 'undefined' && gamesWritesInFlight > 0);
+  function syncState(g) {
+    if (writing()) return {key: 'busy', text: '上傳中', label: '上傳中'};
+    if (navigator.onLine === false) return {key: 'off', text: '離線', label: '離線：紀錄先存在這台裝置'};
+    if (ui.failed) return {key: 'fail', text: '重試', label: '上傳失敗，按一下看說明並重試'};
+    const n = unsent(g);
+    if (!n) { return {key: 'ok', text: '已同步', label: '已同步：雲端和這台裝置一樣'}; }
+    return {key: 'pend', text: n > 0 ? `待上傳 ${n}` : '待上傳', label: n > 0 ? `${n} 筆紀錄還沒上傳` : '有變更還沒上傳'};
+  }
+  const CAPSULE_ICON = {
+    ok: '<i class="v2c-dot" aria-hidden="true"></i>',
+    pend: '<i class="v2c-dot" aria-hidden="true"></i>',
+    busy: '<i class="v2c-spin" aria-hidden="true"></i>',
+    off: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M5.5 8.5a4 4 0 0 1 5 0M3 6a7.5 7.5 0 0 1 3-1.7M10.5 4.4A7.5 7.5 0 0 1 13 6M8 12h0"/></svg>',
+    fail: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v6M8 12.5h0"/></svg>'
+  };
+  function capsule(g) {
+    const s = syncState(g);
+    return `<button type="button" class="v2l-cap v2c-${s.key}" data-act="sync" data-v2-cap="${s.key}" aria-label="${esc(s.label)}"${s.key === 'busy' ? ' aria-disabled="true"' : ''}>${CAPSULE_ICON[s.key]}<span>${esc(s.text)}</span></button>`;
+  }
+  // 有新版在等：舊版 pwa.js 的「新版本已完整下載」提示條，或 service worker 已有 waiting。記分中不跳，只在 ⋯ 加小圓點。
+  const hasUpdate = () => !!document.getElementById('uiUpdateBar') || !!(window.__pwaRegistration && window.__pwaRegistration.waiting);
   function renderHead(g) {
+    ui.update = hasUpdate();
     els.head.innerHTML = '<button type="button" class="v2l-icon" data-act="leave" aria-label="離開場記（比賽保留）">‹</button>'
       + `<p class="v2l-vs"><span class="v2-nb">淡江航太</span> <span class="v2l-vs-sep">vs</span> <span class="v2-nb">${esc(g.opponent || '對手')}</span></p>`
-      + `<span class="v2l-pill" data-v2-pill${ui.syncing ? '' : ' hidden'}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13h10"/></svg>上傳中…</span>`
-      + `<span class="v2l-pill v2l-offline" role="status"${navigator.onLine === false ? '' : ' hidden'}>離線・先存本機</span>`
-      + '<button type="button" class="v2l-icon" data-act="menu" aria-label="更多操作" aria-haspopup="dialog">⋯</button>';
+      + capsule(g)
+      + `<button type="button" class="v2l-icon v2l-more" data-act="menu" aria-label="${ui.update ? '更多操作（有新版）' : '更多操作'}" aria-haspopup="dialog">⋯${ui.update ? '<i class="v2l-newdot" data-v2-update aria-hidden="true"></i>' : ''}</button>`;
   }
   function renderBoard(g) {
     const bat = weBat(g);
@@ -254,7 +350,7 @@
         + (bat ? '' : '<div class="v2l-three-row v2l-three-runs">' + DEF_PAD.filter(d => d[3] === 'RUN').map(([code, big]) =>
           `<button type="button" class="tone-run" data-act="def" data-code="${esc(code)}" data-v2-fb data-v2-hap>補記${esc(big)}</button>`).join('') + '</div>')
         + `<button type="button" class="v2l-big" data-act="inning" data-v2-fb data-v2-hap>換到 ${esc(halfLabel(nh.num, nh.half))} · ${nextBat ? '進攻' : '防守'}</button>`
-        + '<div class="v2l-three-row"><button type="button" data-act="upload" data-v2-fb data-v2-hap>上傳本局</button>'
+        + `<div class="v2l-three-row"><button type="button" data-act="upload" data-v2-fb data-v2-hap${ui.syncing ? ' disabled' : ''}>上傳本局</button>`
         + '<button type="button" data-act="undo-last" data-v2-fb data-v2-hap>復原上一筆</button>'
         + '<button type="button" data-act="end" data-v2-fb data-v2-hap>結束比賽</button></div></div>';
     } else if (bat) {
@@ -283,20 +379,46 @@
     els.field.classList.toggle('v2l-tiny', window.innerWidth < 768 && h > 0 && h < 150);
   }
 
-  let shown = false;
+  let shown = false;      // 新版場記（有進行中的比賽）
+  let setupShown = false; // 新版開賽設定（場記頁、沒有比賽）
+  const LIVE_PARTS = () => [els.head, els.board, els.card.parentElement, els.pad, els.snack, els.warn];
   function render() {
     const g = live();
-    const want = !!g && document.body.dataset.page === 'Scorebook';
+    const onPage = document.body.dataset.page === 'Scorebook';
+    const want = !!g && onPage;
+    // 結束並同步上傳中（舊版成功後才清掉 activeGame 並切到覆盤）不顯示開賽設定，免得閃一下。
+    const wantSetup = !g && onPage && !ui.ending && !finalizing();
     document.body.classList.toggle('v2-live-on', want);
-    root.hidden = !want;
-    if (!want) { if (shown) { closeSheet(); setSnack(null); } shown = false; repaintLegacy(); return; }
+    document.body.classList.toggle('v2-setup-on', wantSetup);
+    root.hidden = !want && !wantSetup;
+    root.classList.toggle('v2l-setupmode', wantSetup);
+    if (!want) {
+      if (shown) { closeSheet(); setSnack(null); ui.failed = ''; ui.storageFull = false; }
+      shown = false;
+      repaintLegacy();
+    }
+    if (wantSetup) { if (!setupShown && ui.sheet) closeSheet(); setupShown = true; renderSetup(); if (ui.sheet) drawSheet(); return; }
+    if (setupShown) { setupShown = false; if (ui.sheet && SETUP_SHEETS.has(ui.sheet)) closeSheet(); els.setup.hidden = true; els.setup.innerHTML = ''; }
+    if (!want) return;
     shown = true;
+    els.setup.hidden = true;
     root.classList.toggle('v2l-bat', weBat(g));
     root.classList.toggle('v2l-def', !weBat(g));
     renderHead(g); renderBoard(g); renderCard(g); renderRecent(g); renderField(g); renderPad(g); renderSnack();
+    // A7：結束並同步上傳中照舊版鎖住（記分盤、頁首按鈕、清單都不能點），顯示「日誌同步中」。
+    const locked = ui.ending || finalizing();
+    root.classList.toggle('v2l-locked', locked);
+    for (const part of LIVE_PARTS()) part.inert = locked;
+    els.lock.hidden = !locked;
+    els.warn.hidden = !ui.storageFull;
     els.field.classList.remove('v2l-tiny');
     requestAnimationFrame(fitField);
     if (ui.sheet) drawSheet();
+  }
+  function storageFull() {
+    if (ui.storageFull) return;
+    ui.storageFull = true;
+    if (shown) { els.warn.hidden = false; haptics.fire('error'); }
   }
 
   // ---------- 回饋（PO-40 §0b） ----------
@@ -611,28 +733,200 @@
   }
 
   // ---------- 上傳、結束、清除、離開 ----------
+  // 語意照舊（B4）：只在按「上傳本局」「結束並同步」時呼叫舊版的同一個函式寫雲端；新版只負責顯示結果。
+  // 上傳成功與否看舊版的 writeEpoch（PUT 成功才 +1），不另外判斷。
   function upload() {
     const g = live();
-    if (!g) return;
-    ui.syncing += 1; ui.syncGen += 1;
+    if (!g || ui.syncing || ui.ending) return;
+    const before = epoch();
+    ui.syncing += 1; ui.syncGen += 1; ui.failed = '';
     render();
     haptics.fire('record');
-    Promise.resolve(syncCurrentInningToCloud()).catch(() => fail('上傳失敗，資料還在這台裝置，稍後再按一次')).finally(() => { ui.syncing -= 1; render(); });
+    captureToasts(() => syncCurrentInningToCloud()).then(() => {
+      ui.syncing -= 1;
+      const ok = epoch() > before;
+      if (ok) ui.storageFull = false;
+      else if (navigator.onLine === false) setSnack({text: '離線中：連線後再按上傳本局', tone: 'error'});
+      else { ui.failed = 'upload'; if (shown && !ui.sheet) openSheet('fail'); }
+      render();
+    });
   }
   function endGame() {
-    if (!live() || finalizing()) return;
-    ui.syncing += 1; ui.syncGen += 1;
+    if (!live() || finalizing() || ui.ending) return;
+    ui.ending = true; ui.syncing += 1; ui.syncGen += 1; ui.failed = '';
     closeSheet();
     render();
     haptics.fire('record');
-    Promise.resolve(answered(true, () => finishActiveGameAndSyncLogs())).finally(() => { ui.syncing -= 1; render(); });
+    captureToasts(() => answered(true, () => finishActiveGameAndSyncLogs())).then(sink => {
+      ui.ending = false; ui.syncing -= 1;
+      if (!live()) {
+        // 成功：舊版已清掉進行中的比賽並切到覆盤（2 下：結束比賽 → 結束並同步）。舊版的完賽訊息照常顯示。
+        const last = sink.filter(m => m.type !== 'error').pop();
+        if (last) toast(last.message, last.type);
+        render();
+        return;
+      }
+      if (sink.some(m => m.type === 'warning')) setSnack({text: '結束時比賽內容有變動，比賽保持進行中，確認後再按一次結束', tone: 'error'});
+      else if (navigator.onLine === false) { ui.failed = 'end-offline'; openSheet('fail'); }
+      else { ui.failed = 'end'; openSheet('fail'); }
+      render();
+    });
   }
+  // A8：照現況，確認後立即生效、立即同步（舊版 discardActiveGame 有上傳過才寫雲端），沒有 10 秒復原。
   function clearGame() {
     closeSheet();
     answered(true, () => discardActiveGame());
+    ui.failed = ''; ui.storageFull = false;
     render();
   }
   function leave() { closeSheet(); switchMainTab('tabHome'); }
+
+  // ---------- 開賽設定（B4；PO-30a／F2：先發打線預設帶入上一場，沒有上一場就手排，不預設最佳推薦） ----------
+  // 只在畫面上暫存；按「開始比賽」時才把欄位與打線交給舊版開賽表單，呼叫同一個 startNewGameFromSetup（檢查、紀錄格式都照舊）。
+  const POS_KEYS = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'SF', 'RC', 'RF'];
+  const POS_SHORT = {...POS_NAME, DH: '指打'};
+  const SETUP_SHEETS = new Set(['su-player', 'su-pos']);
+  const valueOf = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const today = () => { try { return getTaipeiDateString(); } catch (error) { return new Date().toISOString().slice(0, 10); } };
+  function lastGame() {
+    const list = typeof allGames !== 'undefined' && Array.isArray(allGames) ? allGames : [];
+    const withLineup = list.filter(x => x && Array.isArray(x.startingLineup || x.lineup) && (x.startingLineup || x.lineup).length >= 10);
+    // 和舊版覆盤清單同一個順序（日期新到舊、同日期再比 id）。
+    withLineup.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || String(b.id || '').localeCompare(String(a.id || '')));
+    return withLineup[0] || null;
+  }
+  function initSetup() {
+    const prev = lastGame();
+    const s = {date: valueOf('setup_game_date') || today(), opponent: '', tag: valueOf('setup_game_tag'), role: valueOf('setup_game_role') || '先攻',
+      dh: false, lineup: [], pos: [], from: null, touched: false, error: ''};
+    if (prev) {
+      const names = (prev.startingLineup || prev.lineup).slice();
+      s.dh = names.length >= 11 && !!prev.hasDh;
+      const size = s.dh ? 11 : 10;
+      s.lineup = names.slice(0, size);
+      s.pos = normalizeLineupPositions(s.lineup, (prev.startingPositions || prev.lineupPositions || []).slice(0, size), s.dh);
+      if (s.pos.every(p => !p)) {
+        // 舊紀錄沒存守位：和舊版開賽表單載入打線時一樣（suggestSetupPositions），只替這幾位配守位，不換人、不改棒次。
+        try {
+          const assigned = matchPositionsForLineup(s.lineup.map(name => ({name})), s.dh, s.dh ? s.lineup[(prev.dhSlot || 4) - 1] : null);
+          s.pos = normalizeLineupPositions(s.lineup, s.lineup.map(name => (assigned[name] && assigned[name].posKey) || ''), s.dh);
+          s.posGuess = s.pos.some(Boolean);
+        } catch (error) { /* 配不出來就手選 */ }
+      }
+      s.from = {date: prev.date || '', opponent: prev.opponent || ''};
+    } else {
+      s.dh = typeof isDhEnabled !== 'undefined' ? !!isDhEnabled : false;
+      s.lineup = Array(s.dh ? 11 : 10).fill('');
+      s.pos = Array(s.dh ? 11 : 10).fill('');
+    }
+    ui.setup = s;
+  }
+  const shortDate = d => { const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(d || ''); return m ? `${Number(m[1])}/${Number(m[2])}` : (d || ''); };
+  function renderSetup() {
+    if (!ui.setup || (!ui.setup.touched && !ui.setup.from && lastGame())) initSetup();
+    const s = ui.setup;
+    const size = s.dh ? 11 : 10;
+    const update = hasUpdate();
+    const filled = s.lineup.filter(Boolean).length;
+    const rows = s.lineup.slice(0, size).map((name, i) => {
+      const pos = s.pos[i] || '';
+      return `<li class="v2u-row"><b class="v2u-n" aria-hidden="true">${i + 1}</b>`
+        + `<button type="button" class="v2u-name${name ? '' : ' empty'}" data-act="su-player" data-i="${i}" aria-label="第 ${i + 1} 棒：${esc(name || '未選')}">${name ? playerName(name) : '選球員'}</button>`
+        + `<button type="button" class="v2u-pos${pos ? '' : ' empty'}" data-act="su-pos" data-i="${i}" aria-label="第 ${i + 1} 棒守位：${esc(pos ? POS_SHORT[pos] : '未指定')}">${pos ? `<b>${esc(pos)}</b> ${esc(POS_SHORT[pos])}` : '守位'}</button></li>`;
+    }).join('');
+    const role = r => `<button type="button" role="radio" aria-checked="${s.role === r}" data-act="su-role" data-v="${r}">${r}</button>`;
+    els.setup.innerHTML = '<header class="v2l-head"><button type="button" class="v2l-icon" data-act="leave" aria-label="離開場記">‹</button>'
+      + '<h2 class="v2l-vs v2u-title">開賽設定</h2>'
+      + (navigator.onLine === false ? '<span class="v2l-cap v2c-off" role="status">' + CAPSULE_ICON.off + '<span>離線</span></span>' : '')
+      + (update ? '<button type="button" class="v2l-cap v2c-new" data-act="su-update" data-v2-update><i class="v2l-newdot" aria-hidden="true"></i><span>有新版・更新</span></button>' : '')
+      + '<button type="button" class="v2u-old" data-act="old">舊版</button></header>'
+      + '<div class="v2u-form">'
+      + `<label class="v2u-f v2u-date"><span>日期</span><input type="date" data-su="date" value="${esc(s.date)}"></label>`
+      + `<label class="v2u-f v2u-opp"><span>對手</span><input type="text" data-su="opponent" value="${esc(s.opponent)}" placeholder="對手隊名" maxlength="40" autocomplete="off"></label>`
+      + `<label class="v2u-f v2u-tag"><span>賽事</span><input type="text" data-su="tag" value="${esc(s.tag)}" placeholder="系壘例行賽" maxlength="40" autocomplete="off"></label>`
+      + `<div class="v2u-seg2"><div class="v2u-seg" role="radiogroup" aria-label="先攻或後攻">${role('先攻')}${role('後攻')}</div>`
+      + `<button type="button" class="v2u-dh" role="switch" aria-checked="${s.dh}" data-act="su-dh"><span>DH</span><small>${s.dh ? '11 人' : '10 人'}</small></button></div>`
+      + '</div>'
+      + '<section class="v2u-lineup" aria-label="先發打線">'
+      + `<div class="v2u-lhead"><h3>先發打線</h3><small data-v2-from>${s.from ? `帶入上一場 ${esc(shortDate(s.from.date))} vs ${esc(s.from.opponent)}${s.posGuess ? '・守位請確認' : ''}` : '沒有上一場，請逐棒選'}</small>`
+      + `<button type="button" class="v2u-clear" data-act="su-clear"${filled ? '' : ' disabled'}>清空</button></div>`
+      + `<ol class="v2u-list">${rows}</ol></section>`
+      + `<p class="v2u-err" role="alert"${s.error ? '' : ' hidden'}>${esc(s.error)}</p>`
+      + '<button type="button" class="v2s-primary tone-white v2u-start" data-act="su-start" data-v2-fb data-v2-hap>開始比賽</button>';
+    els.setup.hidden = false;
+    haptics.attach(els.setup);
+  }
+  function setupError(text, button) {
+    ui.setup.error = text;
+    renderSetup();
+    haptics.fire('error');
+    if (button) { const b = els.setup.querySelector(`[data-act="${button.dataset.act}"]`); if (b) { b.classList.add('v2-err'); setTimeout(() => b.classList.remove('v2-err'), 1200); } }
+  }
+  function setupTouch() { ui.setup.touched = true; ui.setup.error = ''; }
+  function setupDh() {
+    const s = ui.setup;
+    setupTouch();
+    s.dh = !s.dh;
+    if (s.dh) { while (s.lineup.length < 11) s.lineup.push(''); while (s.pos.length < 11) s.pos.push(''); }
+    else { s.lineup = s.lineup.slice(0, 10); s.pos = s.pos.slice(0, 10).map(p => (p === 'DH' ? '' : p)); }
+    renderSetup();
+  }
+  function setupPickPlayer(name) {
+    const s = ui.setup, i = ui.pick;
+    if (i < 0) return;
+    setupTouch();
+    // 和舊版 updateSetupLineupSlot 一樣：選了已在別棒的人就兩棒對調（守位跟著棒次不動）。
+    const other = name ? s.lineup.indexOf(name) : -1;
+    if (other >= 0 && other !== i) s.lineup[other] = s.lineup[i] || '';
+    s.lineup[i] = name;
+    closeSheet();
+    renderSetup();
+  }
+  function setupPickPos(pos) {
+    const s = ui.setup, i = ui.pick;
+    if (i < 0) return;
+    setupTouch();
+    swapLineupPosition(s.pos, i, pos); // 舊版同一個函式：守位被別棒佔了就對調
+    closeSheet();
+    renderSetup();
+  }
+  async function setupAddGuest() {
+    const i = ui.pick;
+    closeSheet();
+    let guest = null;
+    try { guest = await askNewGuest('友軍支援', `新增支援選手（第 ${i + 1} 棒）`); } catch (error) { guest = null; }
+    if (!guest || !ui.setup) return;
+    ui.pick = i;
+    setupPickPlayer(guest.name);
+  }
+  function startFromSetup(button) {
+    const s = ui.setup;
+    const size = s.dh ? 11 : 10;
+    const lineup = s.lineup.slice(0, size);
+    if (lineup.some(n => !n)) { setupError(`還有 ${lineup.filter(n => !n).length} 棒沒選球員`, button); return; }
+    if (normalizeLineupPositions(lineup, s.pos, s.dh).some(p => !p)) { setupError('每一棒都要指定守位（不能重複）', button); return; }
+    const put = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
+    put('setup_game_date', s.date || today());
+    put('setup_game_opponent', s.opponent);
+    put('setup_game_tag', s.tag);
+    put('setup_game_role', s.role);
+    const result = quiet(() => {
+      if (typeof isDhEnabled !== 'undefined' && isDhEnabled !== s.dh) setDhRule(s.dh); // 和舊版按 DH 鈕相同（記住 rebas_has_dh）
+      setupLineupList = lineup.slice();
+      setupLineupPositions = s.pos.slice(0, size);
+      startNewGameFromSetup();
+    });
+    if (!live()) { setupError(result.error || '沒有開始，請檢查欄位', button); return; }
+    haptics.fire('record');
+    ui.setup = null; ui.pick = -1;
+    render();
+  }
+  els.setup.addEventListener('input', event => {
+    const key = event.target.dataset && event.target.dataset.su;
+    if (!key || !ui.setup) return;
+    ui.setup[key] = event.target.value;
+    ui.setup.touched = true;
+  });
 
   // ---------- Sheet ----------
   const SHEET_WIDE = new Set(['pa', 'all']);
@@ -656,9 +950,8 @@
   const sheetHead = (title, tone) => `<div class="v2s-head${tone ? ` tone-${tone}` : ''}"><h3 class="v2s-title">${title}</h3><button type="button" class="v2l-icon v2s-x" data-act="close" aria-label="關閉">×</button></div>`;
   function drawSheet() {
     const g = live();
-    if (!g) { closeSheet(); return; }
     const draw = SHEETS[ui.sheet];
-    if (!draw) { closeSheet(); return; }
+    if (!draw || (!g && !SETUP_SHEETS.has(ui.sheet)) || (g && SETUP_SHEETS.has(ui.sheet))) { closeSheet(); return; }
     els.sheet.innerHTML = draw(g);
     els.sheet.setAttribute('aria-label', els.sheet.querySelector('.v2s-title')?.textContent || '');
     haptics.attach(els.sheet);
@@ -685,11 +978,12 @@
     menu(g) {
       const hapNote = haptics.note();
       const hapOff = haptics.mode === 'none';
-      const item = (act, label, sub, extra = '') => `<button type="button" class="v2s-item${extra}" data-act="${act}"><span>${label}</span>${sub ? `<small>${sub}</small>` : ''}</button>`;
+      const item = (act, label, sub, extra = '', off = false) => `<button type="button" class="v2s-item${extra}" data-act="${act}"${off ? ' disabled' : ''}><span>${label}</span>${sub ? `<small>${sub}</small>` : ''}</button>`;
       const sw = (act, label, on, note, disabled) => `<button type="button" class="v2s-item v2s-switch" role="switch" aria-checked="${on}" data-act="${act}"${disabled ? ' disabled' : ''}><span>${label}</span>${note ? `<small>${esc(note)}</small>` : ''}<i aria-hidden="true"></i></button>`;
       return sheetHead('更多操作')
+        + (ui.update ? '<p class="v2s-new" data-v2-update-row><i class="v2l-newdot" aria-hidden="true"></i><span><b>有新版</b>比賽結束或離開場記後再更新，記分中不會重新整理。</span></p>' : '')
         + '<p class="v2s-group">人員</p>' + item('pitcher', '換投', `目前 ${esc(g.pitcherName || '未選')}`) + item('sub', '換人', '代打、代跑、守備換人') + item('dh', 'DH 制', g.hasDh ? '目前：有 DH' : '目前：沒有 DH')
-        + '<p class="v2s-group">紀錄</p>' + item('all', '全部紀錄', '任一筆可改或刪') + item('inning-direct', '直接換局', '出局數沒記完整也能換') + item('upload', '上傳本局', ui.syncing ? '上傳中…' : '')
+        + '<p class="v2s-group">紀錄</p>' + item('all', '全部紀錄', '任一筆可改或刪') + item('inning-direct', '直接換局', '出局數沒記完整也能換') + item('upload', '上傳本局', ui.syncing ? '上傳中…' : navigator.onLine === false ? '連線後再按上傳本局' : '', '', !!ui.syncing)
         + '<p class="v2s-group">比賽</p>' + item('end', '結束比賽', '結束並同步')
         + sw('hc', '戶外高對比', root.classList.contains('hc'), '', false)
         + sw('haptics', '觸覺回饋', !hapOff && haptics.enabled, hapNote, hapOff)
@@ -750,9 +1044,57 @@
     },
     clear(g) {
       return sheetHead('清除此場？', 'out')
-        + `<p class="v2s-body">刪掉和 ${esc(g.opponent || '對手')} 的這場比賽（含已記的紀錄），不能復原；雲端有的話也會一起刪。</p>`
+        + `<p class="v2s-body">刪掉和 ${esc(g.opponent || '對手')} 的這場比賽（含已記的紀錄）；雲端有的話也會一起刪。</p>`
+        + '<p class="v2s-warn" data-v2-irrev>確認後立即生效，不能復原</p>'
         + '<button type="button" class="v2s-primary tone-out" data-act="clear-yes">清除這場</button>'
         + '<button type="button" class="v2s-secondary" data-act="close" data-autofocus>不要清除</button>';
+    },
+    'su-player'() {
+      const s = ui.setup, i = ui.pick;
+      const {teamNames, guestNames} = getAllAvailablePlayerNames();
+      const chip = name => {
+        const at = s.lineup.indexOf(name);
+        return `<button type="button" class="v2u-pick${at === i ? ' on' : ''}" data-act="su-pick" data-name="${esc(name)}" aria-pressed="${at === i}">${playerName(name)}${at >= 0 && at !== i ? `<small>第 ${at + 1} 棒・對調</small>` : ''}</button>`;
+      };
+      return sheetHead(`第 ${i + 1} 棒`)
+        + `<div class="v2u-picks">${teamNames.map(chip).join('')}</div>`
+        + (guestNames.length ? `<p class="v2s-group">支援選手</p><div class="v2u-picks">${guestNames.map(chip).join('')}</div>` : '')
+        + '<button type="button" class="v2s-secondary" data-act="su-guest">＋ 新增支援選手</button>'
+        + (s.lineup[i] ? '<button type="button" class="v2s-secondary" data-act="su-pick" data-name="">清空這一棒</button>' : '');
+    },
+    'su-pos'() {
+      const s = ui.setup, i = ui.pick;
+      const keys = POS_KEYS.concat(s.dh ? ['DH'] : []);
+      return sheetHead(`第 ${i + 1} 棒守位${s.lineup[i] ? ` · ${esc(s.lineup[i])}` : ''}`)
+        + '<div class="v2u-picks v2u-posgrid">' + keys.map(k => {
+          const at = s.pos.indexOf(k);
+          return `<button type="button" class="v2u-pick${at === i ? ' on' : ''}" data-act="su-setpos" data-pos="${k}" aria-pressed="${at === i}"><b>${k}</b> ${esc(POS_SHORT[k])}${at >= 0 && at !== i ? `<small>${esc(s.lineup[at] || `第 ${at + 1} 棒`)}・對調</small>` : ''}</button>`;
+        }).join('') + '</div>'
+        + (s.pos[i] ? '<button type="button" class="v2s-secondary" data-act="su-setpos" data-pos="">未指定</button>' : '');
+    },
+    // B4：上傳失敗（膠囊轉紅）、結束時離線。紀錄都還在這台裝置。
+    fail() {
+      if (ui.failed === 'end-offline') {
+        return sheetHead('比賽還沒結束')
+          + '<p class="v2s-body"><b>比賽還沒結束，紀錄都留在這台裝置。</b><br>現在離線，連線後再按一次「結束比賽」。</p>'
+          + '<button type="button" class="v2s-primary tone-white" data-act="close" data-autofocus>知道了，繼續記錄</button>';
+      }
+      const end = ui.failed === 'end';
+      return sheetHead(end ? '結束比賽沒有完成' : '上傳失敗', 'out')
+        + `<p class="v2s-body"><b>紀錄在這台裝置，沒有遺失。</b><br>${end ? '比賽還在進行中，可以重試結束，或先繼續記錄。' : '可以現在重試，或繼續記錄、之後再上傳本局。'}</p>`
+        + `<button type="button" class="v2s-primary tone-white" data-act="retry" data-v2-fb data-v2-hap data-autofocus>${end ? '重試結束並同步' : '重試上傳'}</button>`
+        + '<button type="button" class="v2s-secondary" data-act="close">稍後再說</button>';
+    },
+    // 點膠囊：說明現在的狀態，給「上傳本局」（只在按下時上傳，語意不變）。
+    sync(g) {
+      const s = syncState(g);
+      const off = s.key === 'off';
+      const text = {ok: '這場的紀錄都已經在雲端。', pend: `${s.label}。紀錄都存在這台裝置，按「上傳本局」才會寫到雲端。`,
+        off: '現在離線。紀錄照常記，先存在這台裝置；連線後再按上傳本局。', busy: '正在上傳本局。'}[s.key] || '';
+      return sheetHead(s.key === 'ok' ? '已同步' : s.key === 'off' ? '離線' : s.key === 'busy' ? '上傳中' : '還沒上傳')
+        + `<p class="v2s-body">${esc(text)}</p>`
+        + `<button type="button" class="v2s-primary tone-white" data-act="upload"${off || s.key === 'busy' ? ' disabled' : ''} data-v2-fb data-v2-hap>${off ? '連線後再按上傳本局' : '上傳本局'}</button>`
+        + '<button type="button" class="v2s-secondary" data-act="close" data-autofocus>關閉</button>';
     },
     all(g) {
       const rows = (g.innings || []).map((inn, ii) => {
@@ -875,6 +1217,18 @@
     inning(btn) { changeInning(btn); },
     'inning-direct'(btn) { changeInning(btn); },
     upload() { closeSheet(); upload(); },
+    sync() { const g = live(); if (!g || writing()) return; openSheet(syncState(g).key === 'fail' ? 'fail' : 'sync'); },
+    retry() { const kind = ui.failed; closeSheet(); if (kind === 'end') endGame(); else upload(); },
+    'su-role'(btn) { setupTouch(); ui.setup.role = btn.dataset.v; renderSetup(); },
+    'su-dh'() { setupDh(); },
+    'su-clear'() { setupTouch(); const n = ui.setup.dh ? 11 : 10; ui.setup.lineup = Array(n).fill(''); ui.setup.pos = Array(n).fill(''); ui.setup.from = null; renderSetup(); },
+    'su-player'(btn) { ui.pick = Number(btn.dataset.i); openSheet('su-player'); },
+    'su-pos'(btn) { ui.pick = Number(btn.dataset.i); openSheet('su-pos'); },
+    'su-pick'(btn) { setupPickPlayer(btn.dataset.name); },
+    'su-setpos'(btn) { setupPickPos(btn.dataset.pos); },
+    'su-guest'() { setupAddGuest(); },
+    'su-start'(btn) { startFromSetup(btn); },
+    'su-update'() { const b = document.querySelector('#uiUpdateBar [data-act="update"]'); if (b) b.click(); },
     end() { openSheet('end'); },
     'end-yes'() { endGame(); },
     clear() { openSheet('clear'); },
@@ -930,7 +1284,7 @@
     old() { closeSheet(); if (window.uiV2Flag) window.uiV2Flag.set(false); }
   };
   // 會寫入資料的動作：防連點 400 ms 內的第二下不處理、不給回饋。
-  const GUARDED = new Set(['off', 'def', 'pa-submit', 'snack-undo', 'undo-last', 'inning', 'inning-direct', 'pick-pitcher', 'pitcher-yes', 'sub-pick', 'dh-yes', 'outs', 'base', 'rec-save', 'rec-del', 'end-yes', 'clear-yes', 'upload']);
+  const GUARDED = new Set(['off', 'def', 'pa-submit', 'snack-undo', 'undo-last', 'inning', 'inning-direct', 'pick-pitcher', 'pitcher-yes', 'sub-pick', 'dh-yes', 'outs', 'base', 'rec-save', 'rec-del', 'end-yes', 'clear-yes', 'upload', 'retry', 'su-start']);
   root.addEventListener('click', event => {
     if (probe) ui.clickAt = event.timeStamp;
     const svg = event.target.closest('[data-v2-field]');
@@ -1001,7 +1355,27 @@
   if (liveBox) new MutationObserver(() => { if (!!live() !== shown) render(); }).observe(liveBox, {attributes: true, attributeFilter: ['class']});
   let resizeTimer = 0;
   // 全站離線提示條在新版底下看不到，離線與否改由頁首小標籤顯示。
-  ['online', 'offline'].forEach(type => window.addEventListener(type, () => { const g = live(); if (shown && g) renderHead(g); }));
+  // 同步膠囊、「有新版」標記跟著連線、待上傳、版本狀態變：只重畫頁首（記分中）或開賽設定。
+  const refreshChrome = () => { const g = live(); if (shown && g) renderHead(g); else if (setupShown && !ui.sheet) renderSetup(); };
+  ['online', 'offline', 'pendingsync:change'].forEach(type => window.addEventListener(type, refreshChrome));
+  // CP-20：本機快取寫不進去（儲存空間滿）也顯示同一條不打斷的提示。
+  window.addEventListener('localcache:status', event => { if (event.detail && event.detail.failed && live()) storageFull(); });
+  // 記分中不跳更新／安裝提示（CSS 藏 .ui-app-bar），只在「⋯」放「有新版」標記；pwa.js 把更新條加進 body 時重畫。
+  let updateSeen = hasUpdate();
+  new MutationObserver(() => { const now = hasUpdate(); if (now !== updateSeen) { updateSeen = now; refreshChrome(); } }).observe(document.body, {childList: true});
+  // CP-19：覆盤編輯不能改到記分中的那一場（兩邊同時改會互相覆蓋）。
+  const guardReview = (name, idOf) => {
+    const original = window[name];
+    if (typeof original !== 'function') return;
+    window[name] = function (...args) {
+      const g = live();
+      const id = idOf(args);
+      if (g && id != null && String(id) === String(g.id)) { toast('這場比賽還在記錄中：請在場記修改；結束比賽後才能在覆盤編輯。', 'warning'); return undefined; }
+      return original.apply(this, args);
+    };
+  };
+  guardReview('toggleEditCurrentReviewGame', () => (typeof selectedReviewGameId !== 'undefined' ? selectedReviewGameId : null));
+  guardReview('saveEditedReviewGame', args => args[0]);
   window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (shown) render(); }, 120); });
   showFor();
 })();

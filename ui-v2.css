@@ -282,6 +282,89 @@ body.v2-live-on { overflow: hidden; }
 .v2s-chip { min-height: 48px; border-radius: 12px; border: 2px solid var(--v2-tone, var(--v2-line)); background: var(--v2-panel-2); font-size: 15px; font-weight: 800; white-space: nowrap; }
 .v2s-chip[aria-pressed="true"] { background: var(--v2-tone); color: var(--v2-dark); border-color: var(--v2-white); }
 
+/* ---- B4 同步膠囊（和離線狀態合併；每個狀態都有字或形狀，不只靠顏色，D14） ---- */
+.v2l-cap { flex: 0 0 auto; min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 999px; border: 2px solid var(--v2-cap, var(--v2-line)); background: var(--v2-panel-2); color: var(--v2-ink); font-size: 14px; font-weight: 800; white-space: nowrap; }
+.v2l-cap svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.v2c-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--v2-cap); }
+.v2c-ok { --v2-cap: var(--v2-hit); }
+.v2c-pend { --v2-cap: var(--v2-run); color: var(--v2-run); }
+.v2c-pend .v2c-dot { border-radius: 2px; transform: rotate(45deg); }
+.v2c-busy { --v2-cap: var(--v2-on); color: var(--v2-on); cursor: progress; }
+.v2c-off { --v2-cap: var(--v2-ink-3); color: var(--v2-ink-2); border-style: dashed; }
+.v2c-fail { --v2-cap: var(--v2-out); background: var(--v2-out); color: var(--v2-dark); border-color: var(--v2-white); }
+.v2c-new { --v2-cap: var(--v2-on); color: var(--v2-on); }
+.v2c-spin, .v2l-spin { flex: 0 0 auto; display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid currentColor; border-right-color: transparent; animation: v2-spin 457ms linear infinite; }
+@keyframes v2-spin { to { transform: rotate(360deg); } }
+.v2l-more { position: relative; }
+.v2l-newdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--v2-on); border: 2px solid var(--v2-bg); flex: 0 0 auto; }
+.v2l-more .v2l-newdot { position: absolute; top: 6px; right: 6px; }
+.v2s-new { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 14px; border: 2px solid var(--v2-on); font-size: 14px; color: var(--v2-ink-2); }
+.v2s-new b { display: block; font-size: 16px; color: var(--v2-on); }
+.v2s-warn { font-size: 16px; font-weight: 800; color: var(--v2-out); padding: 0 6px; }
+
+/* ---- CP-20 儲存空間滿：不打斷，提示條貼在記分區上方 ---- */
+.v2l-warnbar { grid-area: main; align-self: start; z-index: 3; position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px; border-radius: 14px; background: var(--v2-run); color: var(--v2-dark); border: 3px solid var(--v2-white); }
+.v2l-warnbar[hidden] { display: none; }
+.v2l-warnbar p { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.35; }
+.v2l-warnbar button { flex: 0 0 auto; min-height: 44px; padding: 0 12px; border-radius: 10px; border: 2px solid var(--v2-dark); background: var(--v2-dark); color: var(--v2-white); font-size: 15px; font-weight: 800; white-space: nowrap; }
+
+/* ---- A7 結束並同步中：鎖住記分（和舊版 setScorerLocked 相同），顯示「日誌同步中」 ---- */
+.v2l-lock { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(11, 13, 17, .86); text-align: center; padding: 24px; }
+.v2l-lock[hidden] { display: none; }
+.v2l-lock .v2l-spin { width: 36px; height: 36px; border-width: 4px; color: var(--v2-on); }
+.v2l-lock p { font-size: 24px; font-weight: 800; }
+.v2l-lock small { display: block; margin-top: 4px; font-size: 15px; font-weight: 600; color: var(--v2-ink-2); }
+
+/* ---- B4 開賽設定：一屏不捲 ---- */
+body.v2-setup-on { overflow: hidden; }
+body.v2-live-on .ui-app-bar, body.v2-setup-on .ui-app-bar { display: none !important; }
+.v2l-setup[hidden] { display: none !important; }
+.v2-live.v2l-setupmode { display: flex; flex-direction: column; }
+.v2-live.v2l-setupmode > :not(.v2l-setup):not(.v2l-layer):not(.v2-hap) { display: none !important; }
+.v2l-setup { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.v2u-title { color: var(--v2-ink); font-size: 18px; font-weight: 800; margin: 0; }
+.v2u-old { flex: 0 0 auto; min-height: 44px; padding: 0 12px; border-radius: 14px; border: 1px solid var(--v2-line); background: var(--v2-panel); color: var(--v2-ink-2); font-size: 14px; font-weight: 700; white-space: nowrap; }
+.v2u-form { flex: 0 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.v2u-date { grid-column: 1; } .v2u-opp { grid-column: 2; }
+.v2u-tag { grid-column: 1; }
+.v2u-f { min-height: 52px; display: flex; flex-direction: column; justify-content: center; padding: 3px 10px; border-radius: 12px; border: 1px solid var(--v2-line); background: var(--v2-panel); min-width: 0; }
+.v2u-f > span { font-size: 12px; font-weight: 700; color: var(--v2-ink-3); line-height: 1.2; }
+/* :not(#v2-x)：比全站主題的 html.ui-flight input:not(...) 規則權重高，輸入框不要再套一層框和底色。 */
+.v2-live .v2u-f input:not(#v2-x) { width: 100%; min-width: 0; min-height: 28px; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; outline: none; color: var(--v2-ink); font: inherit; font-size: 16px; font-weight: 700; -webkit-user-select: text; user-select: text; color-scheme: dark; }
+.v2u-f input:focus { outline: none; }
+.v2u-f:focus-within { border-color: var(--v2-on); box-shadow: 0 0 0 2px var(--v2-on); }
+.v2u-f input::placeholder { color: var(--v2-ink-3); font-weight: 500; }
+.v2u-seg2 { grid-column: 2; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; min-width: 0; }
+.v2u-seg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px; padding: 3px; border-radius: 12px; border: 1px solid var(--v2-line); background: var(--v2-panel); }
+.v2u-seg button { min-height: 44px; border-radius: 9px; border: 0; background: transparent; font-size: 15px; font-weight: 800; color: var(--v2-ink-2); white-space: nowrap; }
+.v2u-seg button[aria-checked="true"] { background: var(--v2-white); color: var(--v2-dark); }
+.v2u-dh { min-height: 52px; min-width: 60px; padding: 0 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; border: 2px solid var(--v2-line); background: var(--v2-panel); }
+.v2u-dh span { font-size: 15px; font-weight: 800; }
+.v2u-dh small { font-size: 12px; color: var(--v2-ink-3); }
+.v2u-dh[aria-checked="true"] { background: var(--v2-hit); border-color: var(--v2-white); color: var(--v2-dark); }
+.v2u-dh[aria-checked="true"] small { color: var(--v2-dark); }
+.v2u-lineup { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
+.v2u-lhead { display: flex; align-items: center; gap: 8px; min-height: 44px; padding-left: 4px; }
+.v2u-lhead h3 { flex: 0 0 auto; font-size: 16px; font-weight: 800; margin: 0; }
+.v2u-lhead small { flex: 1 1 auto; min-width: 0; font-size: 13px; color: var(--v2-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v2u-clear { flex: 0 0 auto; min-height: 44px; min-width: 56px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--v2-line); background: var(--v2-panel); color: var(--v2-ink-2); font-size: 14px; font-weight: 700; }
+.v2u-list { list-style: none; display: grid; grid-auto-rows: minmax(44px, 1fr); gap: 2px; min-height: 0; flex: 1 1 auto; }
+.v2u-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) minmax(96px, auto); align-items: stretch; gap: 6px; min-height: 44px; }
+.v2u-n { align-self: center; text-align: center; font-family: var(--fl-mincho, serif); font-size: 17px; font-weight: 800; color: var(--v2-ink-3); font-variant-numeric: tabular-nums; }
+.v2u-name, .v2u-pos { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--v2-line); background: var(--v2-panel); font-size: 16px; font-weight: 700; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v2u-pos { text-align: center; font-size: 15px; color: var(--v2-ink-2); }
+.v2u-pos b { color: var(--v2-ink); }
+.v2u-name.empty, .v2u-pos.empty { border-style: dashed; color: var(--v2-ink-3); font-weight: 600; }
+.v2u-err { flex: 0 0 auto; font-size: 15px; font-weight: 800; color: var(--v2-out); padding: 0 4px; }
+.v2u-err[hidden] { display: none; }
+.v2u-start { flex: 0 0 auto; min-height: 56px; }
+.v2u-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+.v2u-pick { min-height: 52px; padding: 4px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; border: 2px solid var(--v2-line); background: var(--v2-panel-2); font-size: 16px; font-weight: 800; white-space: nowrap; }
+.v2u-pick small { font-size: 12px; font-weight: 600; color: var(--v2-ink-3); }
+.v2u-pick.on { background: var(--v2-white); color: var(--v2-dark); border-color: var(--v2-white); }
+.v2u-pick.on small { color: var(--v2-dark); }
+.v2u-posgrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+
 /* iPhone 觸覺疊層（scorebook-v2-haptics.js）：透明的 switch 疊在按鈕上，位置由 JS 對齊按鈕。 */
 .v2-hap { position: absolute; z-index: 1; opacity: .011; margin: 0; overflow: hidden; }
 .v2-hap[hidden] { display: none; }
@@ -343,4 +426,27 @@ body.v2-live-on { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   /* 全站規則把時間縮成 .01ms 仍會產生過渡；新版直接不用。 */
   .v2-live, .v2-live *, .v2-live *::before, .v2-live *::after { transition: none !important; animation: none !important; }
+}
+
+/* ---- B4 開賽設定：平板、橫式、桌機 ---- */
+@media (min-width: 768px) {
+  .v2l-setup { gap: 10px; width: 100%; max-width: 760px; margin: 0 auto; }
+  .v2u-list { grid-auto-rows: minmax(48px, 72px); align-content: start; gap: 4px; }
+  .v2u-name, .v2u-pos { font-size: 17px; }
+  .v2u-row { grid-template-columns: 32px minmax(0, 1fr) minmax(128px, auto); }
+}
+@media (min-width: 1024px), (min-width: 768px) and (orientation: landscape) {
+  .v2l-setup {
+    max-width: 1200px; display: grid; column-gap: 20px; row-gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "head head" "form lineup" "err lineup" ". lineup" "start lineup";
+  }
+  .v2l-setup > .v2l-head { grid-area: head; }
+  .v2u-form { grid-area: form; grid-template-columns: minmax(0, 1fr); }
+  .v2u-date, .v2u-opp, .v2u-tag, .v2u-seg2 { grid-column: 1; }
+  .v2u-lineup { grid-area: lineup; min-height: 0; }
+  .v2u-list { grid-auto-rows: minmax(44px, 1fr); }
+  .v2u-err { grid-area: err; }
+  .v2u-start { grid-area: start; }
 }

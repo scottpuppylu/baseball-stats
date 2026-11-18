@@ -8,7 +8,7 @@
 // 框架：
 // - 情境（SCENARIOS）是一串抽象操作，例如 {op: 'startGame'}、{op: 'result', code: 'GO', at: [x, y]}。
 // - 每種 UI 有一個 driver：legacy 走舊版場記的現有函式；v2 點新版場記自己的按鈕（V2_OPS），
-//   還沒做的操作（目前只剩開賽設定，B4 才換）退回舊版函式，結果裡標成 fallback。
+//   還沒做的操作退回舊版函式，結果裡標成 fallback（B4 起開賽也走新版開賽設定，目前沒有 fallback）。
 // - 比對：normalize() 去掉時間戳與 id 後的 activeGame、allGames、待上傳佇列，加上統計（打者彙總、投手彙總、球隊紀錄）。
 //
 // 刻意不同（不進一致比對，另有新版專屬檢查）：
@@ -236,6 +236,27 @@ const V2_OPS = {
     await tap(page, '.v2l-sheet [data-act="dh"]');
     await tap(page, '.v2l-sheet [data-act="dh-yes"]');
   },
+  // 開賽（B4）：走新版開賽設定的「開始比賽」。一致比對要同一批人，所以打線、守位、DH 用舊版開賽表單同一份
+  // （舊版 driver 開賽時用的就是它）；新版「帶入上一場」的預設另由 tests/ui-v2-b4.cjs 檢查。
+  async startGame(page, {opponent, date}) {
+    await page.evaluate(() => switchMainTab('tabScorebook'));
+    await page.waitForFunction(() => document.body.classList.contains('v2-setup-on') && document.querySelector('.v2l-setup [data-su="opponent"]'));
+    await page.evaluate(({opponent, date}) => {
+      if (typeof renderSetupLineupGrid === 'function') renderSetupLineupGrid();
+      const s = window.uiV2.live.state.setup;
+      s.dh = !!isDhEnabled;
+      const n = s.dh ? 11 : 10;
+      s.lineup = setupLineupList.slice(0, n);
+      s.pos = setupLineupPositions.slice(0, n);
+      s.touched = true;
+      window.uiV2.live.render();
+      const set = (key, value) => { const el = document.querySelector(`.v2l-setup [data-su="${key}"]`); el.value = value; el.dispatchEvent(new Event('input', {bubbles: true})); };
+      set('date', date);
+      set('opponent', opponent);
+    }, {opponent, date});
+    await tap(page, '[data-act="su-start"]');
+    await page.waitForFunction(() => document.body.classList.contains('v2-live-on'));
+  },
   // 復原：大字列上的「復原」（主要路徑）；大字列已換成錯誤訊息時，用三出局卡上的「復原上一筆」。
   async undoLast(page) {
     if (await has(page, '[data-act="snack-undo"]')) return tap(page, '[data-act="snack-undo"]');
@@ -346,9 +367,11 @@ const VIBRATE_MOCK = () => {
       await on.page.waitForFunction(() => window.uiV2);
       await on.page.evaluate(() => switchMainTab('tabScorebook'));
       await on.page.waitForFunction(() => document.body.dataset.page === 'Scorebook');
-      const noGame = await on.page.evaluate(() => ({legacySetup: document.getElementById('panelScorebook').getClientRects().length > 0, live: document.body.classList.contains('v2-live-on'),
+      await on.page.waitForFunction(() => document.body.classList.contains('v2-setup-on'));
+      // B4 起：旗標開、沒有比賽時，場記是新版開賽設定（B1 時這裡還是舊版開賽表單）。
+      const noGame = await on.page.evaluate(() => ({v2Setup: document.querySelector('.v2l-setup')?.getClientRects().length > 0, live: document.body.classList.contains('v2-live-on'),
         seg: document.querySelectorAll('.v2-seg, [data-v2-go]').length}));
-      assert.deepEqual(noGame, {legacySetup: true, live: false, seg: 0}, 'flag on, no game: 場記 shows the old setup (B4 replaces it); no 實況／覆盤 switch');
+      assert.deepEqual(noGame, {v2Setup: true, live: false, seg: 0}, 'flag on, no game: 場記 shows the v2 setup (B4); no 實況／覆盤 switch');
       await on.page.evaluate(() => switchMainTab('tabGames'));
       await on.page.waitForFunction(() => document.querySelector('.v2-shell[data-v2-view="review"]')?.getClientRects().length);
       assert.equal(await on.page.evaluate(() => document.getElementById('panelGames').getClientRects().length), 0, 'flag on: the old 覆盤 panel is hidden');
