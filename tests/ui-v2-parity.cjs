@@ -173,11 +173,11 @@ const LEGACY_OPS = {
 // 新版：點新版場記的按鈕（事件委派在 .v2-live 根節點）。每一下先清掉 400 ms 防連點，測的是資料不是手速。
 const tap = (page, selector) => page.evaluate(selector => {
   window.uiV2.live.state.busyUntil = 0;
-  const el = document.querySelector(`.v2-live ${selector}`);
+  const el = (document.querySelector(`.v2-live ${selector}`) || document.querySelector(`.v2-setup-host ${selector}`));
   if (!el) throw new Error(`v2: missing ${selector}`);
   el.click();
 }, selector);
-const has = (page, selector) => page.evaluate(selector => !!document.querySelector(`.v2-live ${selector}`), selector);
+const has = (page, selector) => page.evaluate(selector => !!(document.querySelector(`.v2-live ${selector}`) || document.querySelector(`.v2-setup-host ${selector}`)), selector);
 // 點球場：用 SVG 的 getScreenCTM 把 400 座標換成螢幕座標，發一個真的 click（新版 pickSpot 反算回 400 座標）。
 const tapField = (page, [x, y]) => page.evaluate(([x, y]) => {
   const svg = document.querySelector('.v2l-sheet [data-v2-field]');
@@ -621,7 +621,7 @@ const VIBRATE_MOCK = () => {
       const sample = () => page.evaluate(() => document.getAnimations().filter(a => a.effect?.target && document.querySelector('.v2-live').contains(a.effect.target)).map(a => {
         const t = a.effect.getTiming();
         const k = a.effect.getKeyframes ? a.effect.getKeyframes() : [];
-        return {name: a.animationName || a.transitionProperty, dur: t.duration, easing: t.easing === 'linear' && k[0] && k[0].easing ? k[0].easing : t.easing};
+        return {name: a.animationName || a.transitionProperty || a.id, dur: t.duration, easing: t.easing === 'linear' && k[0] && k[0].easing ? k[0].easing : t.easing};
       }));
       const seen = [];
       await tap(page, '[data-act="off"][data-code="2H"]');
@@ -631,19 +631,21 @@ const VIBRATE_MOCK = () => {
       seen.push(...await sample());
       await page.waitForTimeout(340);
       seen.push(...await sample());
-      const allowed = a => (a.name === 'v2-rise' && a.dur === 240 && a.easing === 'ease-out') || (a.name === 'v2-drain' && a.dur === 6000) || (a.name === 'background-color' && a.dur <= 120);
+      // WO-06：進出全螢幕的轉場（Web Animations，id v2-enter／v2-exit）≤280 ms，也在白名單裡（只在進出那一下出現）。
+      const allowed = a => (a.name === 'v2-rise' && a.dur === 240 && a.easing === 'ease-out') || (a.name === 'v2-drain' && a.dur === 6000) || (a.name === 'background-color' && a.dur <= 120)
+        || (/^v2-(enter|exit)$/.test(a.name) && a.dur <= 280);
       assert.deepEqual(seen.filter(a => !allowed(a)), [], `only the whitelisted animations run (${JSON.stringify(seen)})`);
       assert.ok(seen.some(a => a.name === 'v2-rise') && seen.some(a => a.name === 'v2-drain') && seen.some(a => a.name === 'background-color'), 'the three allowed animations were actually observed');
       await context.close();
       // FB-6：減少動態：sheet 原地出現、沒有倒數條（改成文字）、閃色與大字與震動照常、沒有 transform 動畫。
       const rm = await startV2({vibrate: true, reducedMotion: 'reduce'});
       await tap(rm.page, '[data-act="off"][data-code="1H"]');
-      const sheetAnims = await rm.page.evaluate(() => document.getAnimations().filter(a => document.querySelector('.v2-live').contains(a.effect?.target)).map(a => a.animationName || a.transitionProperty));
+      const sheetAnims = await rm.page.evaluate(() => document.getAnimations().filter(a => !/^v2-(enter|exit)$/.test(a.id) && document.querySelector('.v2-live').contains(a.effect?.target)).map(a => a.animationName || a.transitionProperty));
       assert.deepEqual(sheetAnims, [], 'reduced motion: the sheet appears in place');
       await tapField(rm.page, [245, 118]);
       await tap(rm.page, '.v2l-sheet [data-act="pa-submit"]');
       const rmState = await rm.page.evaluate(() => ({
-        anims: document.getAnimations().filter(a => document.querySelector('.v2-live').contains(a.effect?.target)).map(a => a.animationName || a.transitionProperty),
+        anims: document.getAnimations().filter(a => !/^v2-(enter|exit)$/.test(a.id) && document.querySelector('.v2-live').contains(a.effect?.target)).map(a => a.animationName || a.transitionProperty),
         drainText: document.querySelector('.v2-live .v2l-drain-txt')?.textContent || '', drainBar: !!document.querySelector('.v2-live .v2l-drain'),
         flash: document.querySelector('.v2-live [data-v2-board]').classList.contains('v2-flash'), vib: JSON.stringify(window.__vib)}));
       assert.deepEqual(rmState, {anims: [], drainText: '6 秒內可復原', drainBar: false, flash: true, vib: '[10,40,40]'}, 'reduced motion keeps V1/V2/haptics, no moving animation, drain bar becomes text');

@@ -160,14 +160,28 @@
     + '<div class="v2l-snack" role="status" aria-live="assertive" hidden></div>'
     + '<div class="v2l-warnbar" role="alert" hidden><p>這台裝置的儲存空間滿了，紀錄可能沒存進本機。請先上傳本局。</p><button type="button" data-act="upload">上傳本局</button></div>'
     + '<div class="v2l-lock" role="status" aria-live="polite" hidden><div class="v2l-lockbox"><span class="v2l-spin" aria-hidden="true"></span><p>日誌同步中…<small>完成後直接打開覆盤</small></p></div></div>'
-    + '<div class="v2l-setup" hidden></div>'
     + '<div class="v2l-layer" hidden><div class="v2l-scrim" data-act="close"></div><div class="v2l-sheet" role="dialog" aria-modal="true"></div></div>';
   document.body.append(root);
+  // WO-06（PO-44）：開賽設定不再蓋滿整頁，放在場記頁裡（網站標題列、導覽照常），外觀和網站其他頁同一種卡片。
+  // 掛在 #panelScorebook 最前面；div 不用 section（全站 `main section` 的樣式會蓋掉卡片）。選人／守位的 sheet 仍在 root 的圖層。
+  const setupHost = document.createElement('div');
+  setupHost.className = 'v2-setup-host';
+  setupHost.setAttribute('data-sb-v2', '');
+  setupHost.hidden = true;
+  setupHost.innerHTML = '<div class="v2l-setup" role="region" aria-label="新版開賽設定" hidden></div>';
+  const scorebookPanel = document.getElementById('panelScorebook');
+  if (scorebookPanel) scorebookPanel.prepend(setupHost); else main.prepend(setupHost);
+  // 進出全螢幕記分的轉場：背景網站淡出模糊的那一層（只在轉場中出現；記分畫面本身不透明，平常不用模糊）。
+  const veil = document.createElement('div');
+  veil.className = 'v2-veil';
+  veil.setAttribute('aria-hidden', 'true');
+  veil.hidden = true;
+  document.body.append(veil);
   const $ = sel => root.querySelector(sel);
   const els = {head: $('.v2l-head'), board: $('.v2l-board'), card: $('.v2l-card'), recent: $('.v2l-recent'), field: $('.v2l-field'),
     pad: $('.v2l-padwrap'), snack: $('.v2l-snack'), layer: $('.v2l-layer'), sheet: $('.v2l-sheet'),
-    warn: $('.v2l-warnbar'), lock: $('.v2l-lock'), setup: $('.v2l-setup')};
-  try { if (localStorage.getItem(HC_KEY) === '1') root.classList.add('hc'); } catch (error) { /* 沒有儲存空間：預設關 */ }
+    warn: $('.v2l-warnbar'), lock: $('.v2l-lock'), setup: setupHost.querySelector('.v2l-setup')};
+  try { if (localStorage.getItem(HC_KEY) === '1') { root.classList.add('hc'); setupHost.classList.add('hc'); } } catch (error) { /* 沒有儲存空間：預設關 */ }
 
   // ---------- 球場（和舊版同一套 400×400 座標；落點存成 0–1，toFixed(3)） ----------
   // 守位判斷照抄 index.html detectPositionFromCoords（9453）。
@@ -382,16 +396,86 @@
   let shown = false;      // 新版場記（有進行中的比賽）
   let setupShown = false; // 新版開賽設定（場記頁、沒有比賽）
   const LIVE_PARTS = () => [els.head, els.board, els.card.parentElement, els.pad, els.snack, els.warn];
+  // ---------- 進出全螢幕記分的轉場（WO-06／PO-44） ----------
+  // 進入：記分畫面從原位置（開賽設定卡，或網站內容區）展開成全螢幕，背景網站淡出模糊；離開時反向收回。
+  // 時間照全站 1.75×：展開 490 → 280 ms、收回 420 → 240 ms（ease 同網站 --fl-ease）；減少動態時只淡入淡出 280 → 160 ms。
+  // 展開期間記分盤照常可點（沒有 inert），280 ms 內完成。用 Web Animations（不靠 CSS animation，減少動態的全域規則不會把它縮成 1 ms）。
+  const FX = {enter: 280, exit: 240, fade: 160, ease: 'cubic-bezier(.2, .8, .2, 1)', radius: 22};
+  let fx = null; // {kind: 'enter'|'exit', anims}
+  function viewRect(rect) {
+    const w = window.innerWidth, h = window.innerHeight;
+    if (!rect || rect.width < 8 || rect.height < 8) return null;
+    const left = Math.max(0, Math.min(w - 8, rect.left)), top = Math.max(0, Math.min(h - 8, rect.top));
+    const right = Math.max(left + 8, Math.min(w, rect.right)), bottom = Math.max(top + 8, Math.min(h, rect.bottom));
+    return {left, top, right, bottom};
+  }
+  // 網站內容區（換頁進來、離開到別頁時的起點／終點）：main 在畫面裡的那一塊，四邊再收一點。
+  function contentRect() {
+    const r = viewRect(main.getBoundingClientRect()) || {left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight};
+    const pad = 12;
+    return {left: r.left + pad, top: r.top + pad, right: Math.max(r.left + pad + 8, r.right - pad), bottom: Math.max(r.top + pad + 8, r.bottom - pad)};
+  }
+  const insetOf = r => `inset(${Math.round(r.top)}px ${Math.round(window.innerWidth - r.right)}px ${Math.round(window.innerHeight - r.bottom)}px ${Math.round(r.left)}px round ${FX.radius}px)`;
+  const FULL = 'inset(0px 0px 0px 0px round 0px)';
+  function stopFx() {
+    if (!fx) return;
+    const old = fx; fx = null;
+    old.anims.forEach(a => { try { a.cancel(); } catch (error) { /* 已結束 */ } });
+    veil.hidden = true;
+    root.classList.remove('v2l-leaving');
+    document.body.classList.remove('v2-fx');
+  }
+  function playFx(kind, rect) {
+    stopFx();
+    if (typeof root.animate !== 'function') return;
+    const reduce = reducedMotion.matches;
+    const enter = kind === 'enter';
+    const timing = {duration: reduce ? FX.fade : enter ? FX.enter : FX.exit, easing: FX.ease, fill: enter ? 'none' : 'forwards', id: `v2-${kind}`};
+    const clip = insetOf(rect || contentRect());
+    const frames = reduce ? {opacity: enter ? [0, 1] : [1, 0]}
+      : enter ? {clipPath: [clip, FULL], opacity: [0.4, 1]} : {clipPath: [FULL, clip], opacity: [1, 0]};
+    veil.hidden = false;
+    document.body.classList.add('v2-fx');
+    if (!enter) root.classList.add('v2l-leaving');
+    const anims = [root.animate(frames, timing), veil.animate({opacity: enter ? [0, 1] : [1, 0]}, timing)];
+    const current = {kind, anims};
+    fx = current;
+    anims[0].finished.then(() => {
+      if (fx !== current) return;
+      fx = null;
+      veil.hidden = true;
+      root.classList.remove('v2l-leaving');
+      document.body.classList.remove('v2-fx');
+      syncRoot();
+      anims.forEach(a => { try { a.cancel(); } catch (error) { /* 已結束 */ } });
+    }).catch(() => {});
+  }
+  const leaving = () => !!fx && fx.kind === 'exit';
+  // 根節點什麼時候看得到：記分中、收回轉場中、或開賽設定開著選人／守位的 sheet（這時只顯示 sheet 圖層）。
+  function syncRoot() {
+    const live = shown || leaving();
+    root.hidden = !live && !(setupShown && ui.sheet);
+    root.classList.toggle('v2l-setupmode', !live);
+  }
+
   function render() {
     const g = live();
     const onPage = document.body.dataset.page === 'Scorebook';
     const want = !!g && onPage;
     // 結束並同步上傳中（舊版成功後才清掉 activeGame 並切到覆盤）不顯示開賽設定，免得閃一下。
     const wantSetup = !g && onPage && !ui.ending && !finalizing();
+    const wasShown = shown;
+    // 從開賽設定按開始：起點是設定卡（要在藏起來之前量）。
+    const origin = want && !wasShown && setupShown ? viewRect(els.setup.getBoundingClientRect()) : null;
+    paint(g, want, wantSetup);
+    if (want && !wasShown) playFx('enter', origin);
+    else if (!want && wasShown) playFx('exit', wantSetup ? viewRect(els.setup.getBoundingClientRect()) : null);
+    syncRoot();
+  }
+  function paint(g, want, wantSetup) {
     document.body.classList.toggle('v2-live-on', want);
     document.body.classList.toggle('v2-setup-on', wantSetup);
-    root.hidden = !want && !wantSetup;
-    root.classList.toggle('v2l-setupmode', wantSetup);
+    setupHost.hidden = !wantSetup;
     if (!want) {
       if (shown) { closeSheet(); setSnack(null); ui.failed = ''; ui.storageFull = false; }
       shown = false;
@@ -401,7 +485,6 @@
     if (setupShown) { setupShown = false; if (ui.sheet && SETUP_SHEETS.has(ui.sheet)) closeSheet(); els.setup.hidden = true; els.setup.innerHTML = ''; }
     if (!want) return;
     shown = true;
-    els.setup.hidden = true;
     root.classList.toggle('v2l-bat', weBat(g));
     root.classList.toggle('v2l-def', !weBat(g));
     renderHead(g); renderBoard(g); renderCard(g); renderRecent(g); renderField(g); renderPad(g); renderSnack();
@@ -866,8 +949,8 @@
         + `<button type="button" class="v2u-pos${pos ? '' : ' empty'}" data-act="su-pos" data-i="${i}" aria-label="第 ${i + 1} 棒守位：${esc(pos ? POS_SHORT[pos] : '未指定')}">${pos ? `<b>${esc(pos)}</b> ${esc(POS_SHORT[pos])}` : '守位'}</button></li>`;
     }).join('');
     const role = r => `<button type="button" role="radio" aria-checked="${s.role === r}" data-act="su-role" data-v="${r}">${r}</button>`;
-    els.setup.innerHTML = '<header class="v2l-head"><button type="button" class="v2l-icon" data-act="leave" aria-label="離開場記">‹</button>'
-      + '<h2 class="v2l-vs v2u-title">開賽設定</h2>'
+    // WO-06：放在場記頁裡，網站標題列與導覽都在，不需要自己的「‹ 離開」。
+    els.setup.innerHTML = '<header class="v2u-head"><h2 class="v2u-title">開賽設定</h2>'
       + (navigator.onLine === false ? '<span class="v2l-cap v2c-off" role="status">' + CAPSULE_ICON.off + '<span>離線</span></span>' : '')
       + (update ? '<button type="button" class="v2l-cap v2c-new" data-act="su-update" data-v2-update><i class="v2l-newdot" aria-hidden="true"></i><span>有新版・更新</span></button>' : '')
       + '<button type="button" class="v2u-old" data-act="old">舊版</button></header>'
@@ -878,10 +961,10 @@
       + `<div class="v2u-seg2"><div class="v2u-seg" role="radiogroup" aria-label="先攻或後攻">${role('先攻')}${role('後攻')}</div>`
       + `<button type="button" class="v2u-dh" role="switch" aria-checked="${s.dh}" data-act="su-dh"><span>DH</span><small>${s.dh ? '11 人' : '10 人'}</small></button></div>`
       + '</div>'
-      + '<section class="v2u-lineup" aria-label="先發打線">'
+      + '<div class="v2u-lineup" role="group" aria-label="先發打線">'
       + `<div class="v2u-lhead"><h3>先發打線</h3><small data-v2-from>${s.from ? `帶入上一場 ${esc(shortDate(s.from.date))}${s.posGuess ? '・守位請確認' : ` vs ${esc(s.from.opponent)}`}` : '沒有上一場，請逐棒選'}</small>`
       + `<button type="button" class="v2u-clear" data-act="su-clear"${filled ? '' : ' disabled'}>清空</button></div>`
-      + `<ol class="v2u-list">${rows}</ol></section>`
+      + `<ol class="v2u-list">${rows}</ol></div>`
       + `<p class="v2u-err" role="alert"${s.error ? '' : ' hidden'}>${esc(s.error)}</p>`
       + '<button type="button" class="v2s-primary tone-white v2u-start" data-act="su-start" data-v2-fb data-v2-hap>開始比賽</button>';
     els.setup.hidden = false;
@@ -966,6 +1049,7 @@
     ui.sheetAt = performance.now();
     els.layer.hidden = false;
     els.layer.dataset.sheet = name;
+    syncRoot();
     // ⋯ 選單 0 ms 出現；其他 sheet 240 ms ease-out 升起（減少動態時原地出現）。
     els.layer.classList.toggle('v2l-rise', name !== 'menu' && !reducedMotion.matches);
     els.sheet.classList.toggle('wide', SHEET_WIDE.has(name));
@@ -977,6 +1061,7 @@
     ui.sheet = null; ui.pa = null; ui.rec = null; ui.sub = null;
     els.layer.hidden = true;
     els.sheet.innerHTML = '';
+    syncRoot();
   }
   const sheetHead = (title, tone) => `<div class="v2s-head${tone ? ` tone-${tone}` : ''}"><h3 class="v2s-title">${title}</h3><button type="button" class="v2l-icon v2s-x" data-act="close" aria-label="關閉">×</button></div>`;
   function drawSheet() {
@@ -1170,7 +1255,9 @@
   // ---------- 點擊 ----------
   // ui-theme.js 的全站按下漣漪、壓縮與 vibrate(6) 掛在 document 的 pointerdown（冒泡）；在新版場記裡由 V1＋觸覺表取代，
   // 所以在根節點擋下（不改 ui-theme.js）。
-  root.addEventListener('pointerdown', event => {
+  // WO-06：開賽設定搬到場記頁裡（setupHost），同一組事件也掛在它上面。
+  const hosts = [root, setupHost];
+  const onDown = event => {
     event.stopPropagation();
     if (event.button > 0) return;
     const button = event.target.closest('[data-v2-fb]');
@@ -1179,9 +1266,12 @@
     ui.downAt = event.timeStamp;
     button.classList.add('v2-down');
     if (probe) { const t0 = event.timeStamp; afterTwoFrames(() => probe.v1.push(performance.now() - t0)); }
+  };
+  const release = () => hosts.forEach(host => host.querySelectorAll('.v2-down').forEach(el => el.classList.remove('v2-down')));
+  hosts.forEach(host => {
+    host.addEventListener('pointerdown', onDown);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(type => host.addEventListener(type, release));
   });
-  const release = () => root.querySelectorAll('.v2-down').forEach(el => el.classList.remove('v2-down'));
-  ['pointerup', 'pointercancel', 'pointerleave'].forEach(type => root.addEventListener(type, release));
   window.addEventListener('blur', release);
   root.addEventListener('keydown', event => {
     if (event.key === 'Escape' && ui.sheet) { event.preventDefault(); closeSheet(); }
@@ -1321,6 +1411,7 @@
     },
     hc() {
       const on = root.classList.toggle('hc');
+      setupHost.classList.toggle('hc', on);
       try { if (on) localStorage.setItem(HC_KEY, '1'); else localStorage.removeItem(HC_KEY); } catch (error) { /* 只在本次有效 */ }
       drawSheet();
     },
@@ -1329,18 +1420,19 @@
   };
   // 會寫入資料的動作：防連點 400 ms 內的第二下不處理、不給回饋。
   const GUARDED = new Set(['off', 'def', 'pa-submit', 'snack-undo', 'undo-last', 'inning', 'inning-direct', 'pick-pitcher', 'pitcher-yes', 'sub-pick', 'dh-yes', 'outs', 'base', 'opp', 'pick-batter', 'rec-save', 'rec-del', 'end-yes', 'clear-yes', 'upload', 'retry', 'su-start']);
-  root.addEventListener('click', event => {
+  const onClick = event => {
     if (probe) ui.clickAt = event.timeStamp;
     const svg = event.target.closest('[data-v2-field]');
     if (svg) { pickSpot(event, svg); return; }
     const btn = event.target.closest('[data-act]');
-    if (!btn || !root.contains(btn) || btn.disabled) return;
+    if (!btn || !event.currentTarget.contains(btn) || btn.disabled) return;
     const act = btn.dataset.act;
     if (GUARDED.has(act) && busy()) return;
     if (GUARDED.has(act) && ui.syncing && finalizing()) { fail('正在結束比賽，請稍候', btn); return; }
     const fn = ACTIONS[act];
     if (fn) fn(btn);
-  });
+  };
+  hosts.forEach(host => host.addEventListener('click', onClick));
 
   // ---------- 外殼（覆盤頁；B5 起放內容） ----------
   // 2026/11/18（總監 REVISION 2 追加 3）：外殼不再有「實況／覆盤」切換，進出都走既有的「比賽」群組分頁（場記／覆盤／打線）。

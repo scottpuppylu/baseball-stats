@@ -28,11 +28,11 @@ function startPreview(port) {
 }
 const tap = (page, selector) => page.evaluate(selector => {
   window.uiV2.live.state.busyUntil = 0;
-  const el = document.querySelector(`.v2-live ${selector}`);
+  const el = (document.querySelector(`.v2-live ${selector}`) || document.querySelector(`.v2-setup-host ${selector}`));
   if (!el) throw new Error(`v2: missing ${selector}`);
   el.click();
 }, selector);
-const has = (page, selector) => page.evaluate(selector => !!document.querySelector(`.v2-live ${selector}`), selector);
+const has = (page, selector) => page.evaluate(selector => !!(document.querySelector(`.v2-live ${selector}`) || document.querySelector(`.v2-setup-host ${selector}`)), selector);
 // 寫入都送完：舊版的寫入佇列空了，而且 400 ms 內沒有新的寫入。
 async function settle(page) {
   let last = -1;
@@ -196,13 +196,19 @@ const games = page => page.evaluate(() => ({live: !!activeGame, status: activeGa
           const setup = document.querySelector('.v2l-setup');
           const start = setup.querySelector('.v2u-start').getBoundingClientRect();
           return {expected, shown, from: setup.querySelector('[data-v2-from]').textContent, text: setup.textContent,
-            fits: start.bottom <= innerHeight && setup.scrollHeight <= setup.clientHeight + 1 && document.querySelector('.v2-live').scrollHeight <= innerHeight,
+            // WO-06（PO-44）：開賽設定放在場記頁裡（網站標題列、導覽照常），手機上卡片會捲；開始鍵貼在畫面下緣，一直看得到，且不被底部導覽列蓋住。
+            fits: (() => {
+              const nav = [...document.querySelectorAll('.ui-mobile-nav')].map(n => n.getBoundingClientRect()).find(r => r.height > 0);
+              const title = document.getElementById('uiPageTitle');
+              return start.top >= 0 && start.bottom <= (nav ? nav.top : innerHeight) && document.documentElement.scrollWidth <= innerWidth
+                && !!title && title.getClientRects().length > 0 && setup.closest('#panelScorebook') !== null;
+            })(),
             legacy: !!document.getElementById('panelScorebook').offsetParent && !!document.getElementById('setupGameContainer')?.offsetParent};
         });
         assert.deepEqual(s.shown, s.expected, `${name}: setup defaults to the previous game's starting lineup`);
         assert.match(s.from, /^帶入上一場 /);
         assert.doesNotMatch(s.text, /最佳推薦|推薦打線/, 'no recommended lineup in the setup');
-        assert.equal(s.fits, true, `${name}: setup fits one screen without scrolling`);
+        assert.equal(s.fits, true, `${name}: setup sits in the site page (title and nav kept), start button always visible, no sideways scroll`);
         fits.push(name);
         if (name === 'phone-390') {
           const none = await page.evaluate(() => {

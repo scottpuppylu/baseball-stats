@@ -23,7 +23,7 @@ function startPreview(port) {
 }
 const tap = (page, selector) => page.evaluate(selector => {
   window.uiV2.live.state.busyUntil = 0;
-  const el = document.querySelector(`.v2-live ${selector}`);
+  const el = (document.querySelector(`.v2-live ${selector}`) || document.querySelector(`.v2-setup-host ${selector}`));
   if (!el) throw new Error(`v2: missing ${selector}`);
   el.click();
 }, selector);
