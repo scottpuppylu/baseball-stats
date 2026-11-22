@@ -541,9 +541,10 @@ const VIBRATE_MOCK = () => {
       assert.equal(await page.evaluate(() => window.uiV2Haptics.mode), 'vibrate');
       const lastVib = () => page.evaluate(() => JSON.stringify(window.__vib[window.__vib.length - 1]));
       const board = () => page.evaluate(() => { const b = document.querySelector('.v2-live [data-v2-board]'); return {flash: b.classList.contains('v2-flash'), tone: b.dataset.flash || '', big: b.dataset.big || ''}; });
-      // V1：按下就變實色（pointerdown 當下），放開就回來。
+      // V1：按下就變實色（pointerdown 當下），放開就回來。WO-09 起 3px 框只在高對比模式；一般模式（R7 brightness＋scale）在 ui-v2-premium.cjs 驗。
       const v1 = await page.evaluate(() => {
         window.uiV2.live.state.busyUntil = 0;
+        const live = document.querySelector('.v2-live'); const hadHc = live.classList.contains('hc'); live.classList.add('hc');
         const key = document.querySelector('.v2-live [data-act="off"][data-code="GO"]');
         key.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, button: 0, pointerType: 'touch'}));
         const down = key.classList.contains('v2-down');
@@ -551,9 +552,11 @@ const VIBRATE_MOCK = () => {
         const border = style.borderTopWidth;
         const transition = style.transitionDuration;
         key.dispatchEvent(new PointerEvent('pointerup', {bubbles: true, button: 0, pointerType: 'touch'}));
-        return {down, border, transition, up: !key.classList.contains('v2-down')};
+        const up = !key.classList.contains('v2-down');
+        if (!hadHc) live.classList.remove('hc');
+        return {down, border, transition, up};
       });
-      assert.deepEqual(v1, {down: true, border: '3px', transition: '0s', up: true}, 'V1: solid press state with a 3px border, no transition, released on pointerup');
+      assert.deepEqual(v1, {down: true, border: '3px', transition: '0s', up: true}, 'V1 (high contrast): solid press state with a 3px border, no transition, released on pointerup');
       // ① 選取（開打席 sheet）
       await tap(page, '[data-act="off"][data-code="1H"]');
       assert.equal(await lastVib(), '10', '① select = 10');

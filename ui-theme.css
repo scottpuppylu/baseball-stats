@@ -1010,7 +1010,7 @@ html.fl-booting body::after {
 
 /* ---------- Page scenes (2026/10/26): every page except 場記 sits on its own space scene (scripts/build-backgrounds.py),
    a fixed full-screen layer that fades in on page change; content panels are liquid glass over it. Portrait crops for phones
-   and portrait tablets. Home keeps its hero; 場記 stays plain so nothing competes with live scoring. ---------- */
+   and portrait tablets. Home keeps its hero. 場記 has no page scene here: since PO-48 (WO-09) the live scorer (.v2-live in ui-v2.css) draws the Overview scene under a darker veil itself, normal mode only; high contrast stays solid black. ---------- */
 html.ui-flight body[data-page]::before { content: none; }
 html.ui-flight body[data-page="Overview"]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 11, 14, .16), rgba(10, 11, 14, .24) 55%, rgba(10, 11, 14, .44)), url("assets/bg-overview.webp") center / cover no-repeat, #0a0b0e; animation: fl-scene-overview .8s var(--fl-ease) both; }
 @keyframes fl-scene-overview { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
@@ -1441,7 +1441,7 @@ html.ui-flight #flPull.is-ready { color: var(--fl-accent); }
 html.ui-flight #flPull.is-busy svg { animation: fl-spin .8s linear infinite; }
 @keyframes fl-spin { to { rotate: 360deg; } }
 /* ---------- Redesign (2026/11/03): data pages that read like Apple's product pages instead of a spreadsheet ----------
-   Every page except Home (its own design) and 場記 (scoring stays plain). Numbers lead: large, bright, with a faint glow;
+   Every page except Home (its own design) and 場記 (its normal mode follows this look since PO-48, styled in ui-v2.css). Numbers lead: large, bright, with a faint glow;
    their labels step back (small, tracked, dimmer). Boxes inside boxes lose their frames and become soft glass tints
    separated by hairlines; tag pills become glass chips; section titles share one white-to-ice gradient (colour stays on
    the small tags); tables lose the grid; fields are glass wells with a light ring on focus. Colours of numbers are kept. */

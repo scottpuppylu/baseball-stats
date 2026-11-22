@@ -103,7 +103,7 @@ const LONG_NAME = '司馬歐陽長名字測試員';
       await page.evaluate(() => { const g = activeGame; g.currentBatterIdx = 0; window.uiV2.live.render(); });
       await page.waitForTimeout(450);
       // ---------- A3／A4／A5／A6 結構與外觀 ----------
-      const look = await page.evaluate(() => {
+      const lookOf = () => page.evaluate(() => {
         const live = document.querySelector('.v2-live');
         const cs = el => getComputedStyle(el);
         const keys = [...live.querySelectorAll('.v2l-pad [data-act="off"]')];
@@ -132,49 +132,20 @@ const LONG_NAME = '司馬歐陽長名字測試員';
           overflowX: document.documentElement.scrollWidth > innerWidth || live.scrollWidth > live.clientWidth + 1
         };
       });
+      const look = await lookOf();
       assert.deepEqual(look.order, ['1H', '2H', '3H', 'HR', 'BB', 'GO', 'FO', 'LO', 'K', 'E', 'DP', 'FC', 'SF', '界外K', 'RO'], `${name}: pad slots fixed, hits → other on-base → outs`);
       for (const [i, code] of look.order.entries()) if (['GO', 'FO', 'LO', 'K', 'DP', 'FC', 'SF', '界外K', 'RO'].includes(code)) assert.equal(look.tones[i], 'tone-out', `${name}: ${code} is in the red (out) family`);
       assert.ok(look.minH >= 60, `${name}: keys ≥60 px tall (${look.minH})`);
       assert.ok(look.gap >= 7 && look.gap <= 8, `${name}: key gap 7–8 px (${look.gap})`);
       assert.equal(look.radius, '12px', `${name}: key radius 12`);
-      assert.equal(look.keyBg, 'rgb(20, 24, 33)', `${name}: keys are solid #141821`);
       assert.deepEqual([look.stacked, look.baseline, look.scoreRight], [true, [true, true], true], `${name}: two teams stacked, name and score on one line, scores right-aligned`);
       assert.equal(look.capFull, true, `${name}: sync capsule shows its full text`);
       assert.equal(look.card, true, `${name}: batter card has two lines (name / this game's stats)`);
       assert.ok(look.stats.length >= 1, `${name}: this-game stat tag shown`);
-      for (const s of look.stats) assert.equal(s.bg, 'rgb(20, 24, 33)', `${name}: stat tag solid fill`);
-      for (const bg of look.tagBg) assert.equal(bg, 'rgb(20, 24, 33)', `${name}: result tag solid fill`);
       assert.ok(look.field.h >= 60, `${name}: spray field visible (${Math.round(look.field.h)} px)`);
-      assert.equal(look.field.bg, 'rgb(20, 24, 33)', `${name}: field solid dark`);
       assert.deepEqual(look.field.dirs, ['左外野', '中外野', '右外野'], `${name}: outfield direction labels`);
       assert.equal(look.liveBlur, 0, `${name}: no backdrop blur inside the live screen`);
       assert.equal(look.overflowX, false, `${name}: no horizontal overflow`);
-
-      // ---------- AC-5 對比（實際合成色） ----------
-      const con = await page.evaluate(() => {
-        const parse = s => { const m = s.match(/rgba?\(([^)]+)\)/); const p = m[1].split(',').map(Number); return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]; };
-        const lum = ([r, g, b]) => { const c = [r, g, b].map(v => v / 255).map(x => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
-        const over = (fg, bg) => [0, 1, 2].map(i => fg[i] * fg[3] + bg[i] * (1 - fg[3]));
-        // 元素實際底色：往上把半透明底色一層層疊到不透明為止（最底是頁面底色）。
-        const bgOf = el => { const stack = []; for (let e = el; e; e = e.parentElement) { const c = parse(getComputedStyle(e).backgroundColor); if (c[3] > 0) stack.push(c); if (c[3] >= 1) break; } let base = [10, 11, 14]; for (const c of stack.reverse()) base = over(c, base); return base; };
-        const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
-        const measure = el => { const fg = parse(getComputedStyle(el).color); return Math.round(ratio(over(fg, bgOf(el)), bgOf(el)) * 100) / 100; };
-        const out = {};
-        for (const el of document.querySelectorAll('.v2-live .v2l-recent .v2l-tag, .v2-live .v2l-card .v2l-stat, .v2-live .v2l-pad [data-act="off"] b')) {
-          const key = (el.classList.contains('v2l-tag') ? 'tag ' : el.classList.contains('v2l-stat') ? 'stat ' : 'key ') + ([...(el.closest('[class*="tone-"]') || el).classList].find(c => c.startsWith('tone-')) || '');
-          out[key] = Math.min(out[key] ?? 99, measure(el));
-        }
-        // 閃色：記分板整塊變語意色、字變 --v2-dark（同 V2 規則；只量，不觸發）。
-        const dark = [11, 13, 16, 1];
-        for (const t of ['out', 'hit', 'on', 'run', 'white']) {
-          const probe = document.createElement('i'); probe.style.color = `var(--v2-${t})`; document.querySelector('.v2-live').appendChild(probe);
-          out['flash ' + t] = Math.round(ratio(parse(getComputedStyle(probe).color), dark) * 100) / 100; probe.remove();
-        }
-        return out;
-      });
-      for (const [k, r] of Object.entries(con)) assert.ok(r >= 7, `${name}: ${k} contrast ${r}:1 ≥ 7:1`);
-      for (const tone of ['tone-out', 'tone-hit', 'tone-on']) assert.ok(con['key ' + tone] && con['tag ' + tone], `${name}: measured keys and tags in ${tone}`);
-      contrastLog[name] = con;
 
       // ---------- AC-3 壓力狀態下記分盤鍵位不動 ----------
       const normal = await keyRects(page);
@@ -220,8 +191,53 @@ const LONG_NAME = '司馬歐陽長名字測試員';
       });
       assert.equal(sheet.radius, '24px', `${name}: sheet top radius 24`);
       for (const hh of sheet.h) assert.ok(hh >= 52 && hh <= 56, `${name}: roster row 52–56 px (${hh})`);
-      assert.deepEqual(sheet.bg, ['rgb(20, 24, 33)'], `${name}: roster rows solid fill`);
       assert.deepEqual([sheet.onIdx, sheet.on], [sheet.cur, 'rgb(124, 192, 255)'], `${name}: current batter has a blue border`);
+      await tap(page, '.v2l-sheet [data-act="close"]');
+
+      // ---------- 高對比模式（WO-09 起，實底與 ≥7:1 只在高對比模式檢查（高對比本來就是 #000）；一般模式由 ui-v2-premium.cjs 依 R4～R9 檢查） ----------
+      await page.waitForFunction(() => !window.uiV2.live.state.sheet);
+      await tap(page, '.v2-live [data-act="menu"]');
+      await tap(page, '.v2l-sheet [data-act="hc"]');
+      if (await page.$('.v2l-sheet [data-act="close"]')) await tap(page, '.v2l-sheet [data-act="close"]');
+      await page.waitForFunction(() => document.querySelector('.v2-live').classList.contains('hc') && !window.uiV2.live.state.sheet);
+      await page.waitForTimeout(450);
+      const hcLook = await lookOf();
+      assert.equal(hcLook.keyBg, 'rgb(0, 0, 0)', `${name}: high contrast: keys are solid #000`);
+      assert.ok(hcLook.stats.length >= 1, `${name}: high contrast: this-game stat tag shown`);
+      for (const s of hcLook.stats) assert.equal(s.bg, 'rgb(0, 0, 0)', `${name}: high contrast: stat tag solid fill`);
+      for (const bg of hcLook.tagBg) assert.equal(bg, 'rgb(0, 0, 0)', `${name}: high contrast: result tag solid fill`);
+      assert.equal(hcLook.field.bg, 'rgb(0, 0, 0)', `${name}: high contrast: field solid black`);
+      assert.equal(hcLook.radius, '12px', `${name}: high contrast: key radius 12`);
+      // ---------- AC-5 對比（實際合成色） ----------
+      const con = await page.evaluate(() => {
+        const parse = s => { const m = s.match(/rgba?\(([^)]+)\)/); const p = m[1].split(',').map(Number); return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]; };
+        const lum = ([r, g, b]) => { const c = [r, g, b].map(v => v / 255).map(x => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+        const over = (fg, bg) => [0, 1, 2].map(i => fg[i] * fg[3] + bg[i] * (1 - fg[3]));
+        // 元素實際底色：往上把半透明底色一層層疊到不透明為止（最底是頁面底色）。
+        const bgOf = el => { const stack = []; for (let e = el; e; e = e.parentElement) { const c = parse(getComputedStyle(e).backgroundColor); if (c[3] > 0) stack.push(c); if (c[3] >= 1) break; } let base = [10, 11, 14]; for (const c of stack.reverse()) base = over(c, base); return base; };
+        const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+        const measure = el => { const fg = parse(getComputedStyle(el).color); return Math.round(ratio(over(fg, bgOf(el)), bgOf(el)) * 100) / 100; };
+        const out = {};
+        for (const el of document.querySelectorAll('.v2-live .v2l-recent .v2l-tag, .v2-live .v2l-card .v2l-stat, .v2-live .v2l-pad [data-act="off"] b')) {
+          const key = (el.classList.contains('v2l-tag') ? 'tag ' : el.classList.contains('v2l-stat') ? 'stat ' : 'key ') + ([...(el.closest('[class*="tone-"]') || el).classList].find(c => c.startsWith('tone-')) || '');
+          out[key] = Math.min(out[key] ?? 99, measure(el));
+        }
+        // 閃色：記分板整塊變語意色、字變 --v2-dark（同 V2 規則；只量，不觸發）。
+        const dark = [11, 13, 16, 1];
+        for (const t of ['out', 'hit', 'on', 'run', 'white']) {
+          const probe = document.createElement('i'); probe.style.color = `var(--v2-${t})`; document.querySelector('.v2-live').appendChild(probe);
+          out['flash ' + t] = Math.round(ratio(parse(getComputedStyle(probe).color), dark) * 100) / 100; probe.remove();
+        }
+        return out;
+      });
+      for (const [k, r] of Object.entries(con)) assert.ok(r >= 7, `${name}: high contrast: ${k} contrast ${r}:1 ≥ 7:1`);
+      for (const tone of ['tone-out', 'tone-hit', 'tone-on']) assert.ok(con['key ' + tone] && con['tag ' + tone], `${name}: high contrast: measured keys and tags in ${tone}`);
+      contrastLog[name] = con;
+
+      await tap(page, '.v2-live [data-act="menu"]');
+      await tap(page, '.v2l-sheet [data-act="sub"]');
+      const hcSheet = await page.evaluate(() => [...new Set([...document.querySelectorAll('.v2-live .v2l-sheet .v2s-item')].map(i => getComputedStyle(i).backgroundColor))]);
+      assert.deepEqual(hcSheet, ['rgb(0, 0, 0)'], `${name}: high contrast: roster rows solid black`);
       await tap(page, '.v2l-sheet [data-act="close"]');
 
       // ---------- A9 全螢幕時底下 inert；離開後還原 ----------
@@ -229,10 +245,10 @@ const LONG_NAME = '司馬歐陽長名字測試員';
       assert.deepEqual(inert, {main: true, live: false}, `${name}: the site under the full-screen scorebook is inert`);
       await context.close();
     }
-    passed.push('A3–A7 4 尺寸：記分盤固定位置（安打→上壘→出局、出局全紅）、鍵高 ≥60、間距 7–8、圓角 12、實底 #141821；兩隊上下排比分右齊；膠囊全文；打者卡兩行＋本場成績實底標籤；球場在、左中右外野；名單 sheet 圓角 24、列高 52–56、目前打者藍框；記分畫面內 0 個 backdrop blur');
+    passed.push('A3–A7 4 尺寸：記分盤固定位置（安打→上壘→出局、出局全紅）、鍵高 ≥60、間距 7–8、圓角 12、實底（WO-09 起只檢查高對比模式，實底 #000）；兩隊上下排比分右齊；膠囊全文；打者卡兩行＋本場成績實底標籤；球場在、左中右外野；名單 sheet 圓角 24、列高 52–56、目前打者藍框、列實底 #000（只檢查高對比模式）；記分畫面內 0 個 backdrop blur');
     passed.push('AC-3 兩位數比分＋「待上傳 99」＋最長姓名：4 尺寸記分盤每顆鍵位置 0 px 差、膠囊與比分不截斷、無溢出');
     const flat = Object.values(contrastLog).flatMap(c => Object.values(c));
-    passed.push(`AC-5 結果標籤、本場成績、記分盤字、閃色對比最低 ${Math.min(...flat)}:1（全部 ≥7:1，合成後實際顏色）`);
+    passed.push(`AC-5 結果標籤、本場成績、記分盤字、閃色對比最低 ${Math.min(...flat)}:1（高對比模式，全部 ≥7:1，合成後實際顏色；一般模式見 ui-v2-premium）`);
     fs.writeFileSync(path.join(process.env.UI_QA_OUTPUT || require('node:os').tmpdir(), 'ui-v2-art-contrast.json'), JSON.stringify(contrastLog, null, 2));
 
     // ---------- A9 轉場：轉向立即結束；離開還原 inert 與焦點；捲走設定卡後原地淡出 ----------

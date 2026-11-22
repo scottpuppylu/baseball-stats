@@ -556,3 +556,181 @@ body.v2-live-on .ui-app-bar { display: none !important; }
   .v2u-err { grid-area: err; }
   .v2u-start { grid-area: start; align-self: start; margin-top: 4px; }
 }
+
+/* ===================== WO-09（PO-48）一般模式鏡片玻璃 =====================
+   只套在 .v2-live:not(.hc)：高對比完全不動；旗標關（v1）不載入本檔。
+   尺寸、邊框寬、格線一律不變（記分盤鍵位、sheet 列位置 0 px），只換材質、字型、顏色；髮絲線用 box-shadow，不佔高度。 */
+.tone-out { --tone-rgb: 255, 139, 139; }
+.tone-hit { --tone-rgb: 111, 219, 166; }
+.tone-on { --tone-rgb: 124, 192, 255; }
+.tone-run { --tone-rgb: 243, 199, 102; }
+.tone-white { --tone-rgb: 242, 244, 247; }
+.tone-neutral { --tone-rgb: 160, 168, 180; }
+.tone-error { --tone-rgb: 255, 139, 139; }
+.v2-live:not(.hc) {
+  /* 半透明厚材質（外層 Home 同值）：場景圖從容器後面透出來；字的對比以實際像素驗收（AC-3）。 */
+  --v2-mat: linear-gradient(180deg, rgba(28, 32, 40, .7), rgba(16, 18, 24, .72));
+  --v2-mat-edge: inset 0 1px 0 rgba(255, 255, 255, .09), inset 0 0 0 .5px rgba(255, 255, 255, .06), 0 22px 44px -30px rgba(0, 0, 0, .95);
+  /* R7 鍵帽：不透明深色底（鍵面平均 ≤ #262b35）＋上緣高光＋外層卡片同款落影。 */
+  --v2-cap-face: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .035) 44%, rgba(255, 255, 255, .015) 56%, rgba(255, 255, 255, .05)), linear-gradient(180deg, #1b1f27, #13161c);
+  --v2-cap-sh: inset 0 1px 0 rgba(255, 255, 255, .2), inset 0 -1px 0 rgba(255, 255, 255, .045), 0 1px 1px rgba(0, 0, 0, .4), 0 12px 26px -14px rgba(0, 0, 0, .9);
+  --v2-sep: var(--fl-separator, rgba(255, 255, 255, .085));
+  /* R1 背景：總覽頁同一張場景圖；暗幕比外層深（戶外字多），星點回到外層亮度。不做 scale；整層淡入沿用進場轉場。 */
+  --v2-veil: linear-gradient(180deg, rgba(10, 11, 14, .42), rgba(10, 11, 14, .6) 55%, rgba(10, 11, 14, .8));
+  --v2-stars:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, .5), transparent 60%) 0 0 / 340px 340px,
+    radial-gradient(1px 1px at 68% 42%, rgba(255, 255, 255, .35), transparent 60%) 0 0 / 340px 340px,
+    radial-gradient(1.2px 1.2px at 38% 76%, rgba(200, 220, 255, .4), transparent 60%) 0 0 / 520px 520px,
+    radial-gradient(1px 1px at 86% 8%, rgba(255, 255, 255, .3), transparent 60%) 0 0 / 520px 520px;
+  background: var(--v2-stars), var(--v2-veil), url("assets/bg-overview.webp") center / cover no-repeat, var(--v2-bg);
+}
+@media (orientation: portrait) {
+  .v2-live:not(.hc) { background: var(--v2-stars), var(--v2-veil), url("assets/bg-overview-portrait.webp") center / cover no-repeat, var(--v2-bg); }
+}
+.v2-live.v2l-setupmode:not(.hc) { background: transparent; }
+
+/* R2 容器：比分板、打者卡、本半局、球場、常駐打序都是同一種厚材質，圓角 22；邊框寬不變、只變透明。閃色時讓實色蓋過去。 */
+.v2-live:not(.hc) :is(.v2l-board:not(.v2-flash), .v2l-card, .v2l-recent, .v2l-field, .v2l-order) {
+  --v2-sh: var(--v2-mat-edge);
+  background: var(--v2-mat); box-shadow: var(--v2-sh); border-radius: 22px;
+}
+.v2-live:not(.hc) .v2l-board:not([data-flash]), .v2-live:not(.hc) .v2l-card { border-color: transparent; }
+.v2-live:not(.hc) .v2l-sit { background: rgba(255, 255, 255, .045); border-color: transparent; border-radius: 16px; box-shadow: none; }
+.v2-live:not(.hc) .v2l-score { border-left-color: var(--v2-sep); border-right-color: var(--v2-sep); }
+
+/* R3 頂列：返回、更多、同步膠囊是外層同款 lens（彩虹邊在 ::before）；待上傳染琥珀；失敗維持實色。 */
+.v2-live:not(.hc) :is(.v2l-icon, .v2l-cap:not(.v2c-fail), .v2l-pill) {
+  position: relative;
+  background: var(--lens-fill, linear-gradient(180deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .045) 44%, rgba(255, 255, 255, .02) 56%, rgba(255, 255, 255, .06))), var(--lens-floor, rgba(14, 16, 21, .42));
+  box-shadow: var(--lens-shadow, inset 0 1px 0 rgba(255, 255, 255, .2), 0 12px 28px -16px rgba(0, 0, 0, .85));
+}
+.v2-live:not(.hc) :is(.v2l-icon, .v2l-cap:not(.v2c-fail), .v2l-pill)::before {
+  content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none;
+  background: var(--lens-rim, linear-gradient(155deg, rgba(255, 255, 255, .62), rgba(var(--fl-tint, 190, 215, 255), .34) 24%, rgba(255, 255, 255, .07) 50%, rgba(var(--fl-tint, 255, 210, 170), .22) 80%, rgba(255, 255, 255, .38)));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.v2-live:not(.hc) .v2l-cap:not(.v2c-fail):not(.v2c-off) { border-color: transparent; }
+.v2-live:not(.hc) .v2c-ok { --fl-tint: 111, 219, 166; }
+.v2-live:not(.hc) :is(.v2c-pend, .v2l-pill.v2l-offline) { --fl-tint: 243, 199, 102; }
+.v2-live:not(.hc) :is(.v2c-busy, .v2c-new) { --fl-tint: 124, 192, 255; }
+
+/* R4 比分板：數字 Serif Flight 700；我方比分白→冰藍漸層字；標籤小字 500 加字距；出局燈去白框、加紅光；壘包細線＋琥珀光。 */
+.v2-live:not(.hc) :is(.v2l-inn b, .v2l-score b) { font-family: var(--fl-font, system-ui, sans-serif); font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.v2-live:not(.hc) .v2l-board:not(.v2-flash) [data-v2-us] { background: linear-gradient(180deg, #fff 30%, #c9dcf5); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.v2-live:not(.hc) .v2l-inn span { font-size: 13px; font-weight: 500; letter-spacing: .08em; color: var(--v2-ink-2); }
+.v2-live:not(.hc) .v2l-inn small { font-size: 12px; font-weight: 500; letter-spacing: .08em; }
+.v2-live:not(.hc) .v2l-sit-txt { font-weight: 500; letter-spacing: .08em; color: var(--v2-ink-2); }
+.v2-live:not(.hc) .v2l-team { font-weight: 600; }
+.v2-live:not(.hc) .v2l-out { border-width: 1.5px; border-color: rgba(255, 255, 255, .45); }
+.v2-live:not(.hc) .v2l-out.on { border-color: transparent; box-shadow: 0 0 0 2px rgba(255, 139, 139, .28), 0 0 10px rgba(255, 139, 139, .35); }
+.v2-live:not(.hc) .v2l-board:not(.v2-flash) .v2l-mini rect { stroke: rgba(255, 255, 255, .45); stroke-width: 1.5; }
+.v2-live:not(.hc) .v2l-board:not(.v2-flash) .v2l-mini rect.on { stroke: rgba(255, 255, 255, .7); filter: drop-shadow(0 0 4px rgba(243, 199, 102, .5)); }
+
+/* R5 打者卡：背號藍、Serif Flight 600；標籤小字 500；本場成績改膠囊（語意色 12% 底＋35% 內框）。D2：不加頭像。 */
+.v2-live:not(.hc) .v2l-card-no { font-family: var(--fl-font, system-ui, sans-serif); font-weight: 600; color: var(--v2-on); }
+.v2-live:not(.hc) :is(.v2l-card-k, .v2l-stat-k, .v2l-stat-more, .v2l-stat-none, .v2l-card-next) { font-weight: 500; letter-spacing: .06em; color: var(--v2-ink-2); }
+.v2-live:not(.hc) :is(.v2l-stat, .v2l-tag) { border-radius: 999px; background: rgba(var(--tone-rgb, 232, 235, 240), .12); box-shadow: inset 0 0 0 1px rgba(var(--tone-rgb, 232, 235, 240), .35); }
+
+/* R6 本半局：膠囊標籤、名字 ink-2 15/500、列間髮絲線（最後一列不加）。 */
+.v2-live:not(.hc) .v2l-recent li:not(:last-child) { box-shadow: inset 0 -1px 0 var(--v2-sep); }
+.v2-live:not(.hc) .v2l-who { font-weight: 500; }
+
+/* R8＋PO-49 落點球場（彩色、壓暗）：外野草地暗綠；內野整片紅土（暗土色，REVISION 4：壘間、投手丘一帶也是土，沒有內野草地），
+   菱形只留壘線不填色，讓底下的紅土透出；
+   顏色略透一點讓容器材質透上來，和玻璃搭；細線、位置字 600、方向字 500 加字距、落點環帶光。 */
+.v2-live:not(.hc) .v2f-grass { fill: rgba(30, 66, 44, .9); stroke: rgba(255, 255, 255, .5); stroke-width: 1.5; }
+.v2-live:not(.hc) .v2f-dirt { fill: rgba(84, 54, 36, .94); stroke: rgba(255, 255, 255, .34); stroke-width: 1.5; }
+.v2-live:not(.hc) .v2f-line { stroke: rgba(255, 255, 255, .55); stroke-width: 1.5; }
+.v2-live:not(.hc) .v2f-diamond { fill: none; stroke: rgba(255, 255, 255, .72); stroke-width: 1.75; }
+.v2-live:not(.hc) .v2f-label { font-size: 14px; font-weight: 600; }
+.v2-live:not(.hc) .v2f-dir { font-size: 12px; font-weight: 500; letter-spacing: .12em; }
+/* 字壓到界外線、弧線時也讀得清楚：字後面一圈深色描邊（paint-order，不改位置）。 */
+.v2-live:not(.hc) :is(.v2f-label, .v2f-dir) { paint-order: stroke; stroke: rgba(12, 14, 19, .88); stroke-width: 3px; stroke-linejoin: round; }
+.v2-live:not(.hc) .v2f-dot { stroke: rgba(10, 11, 14, .6); stroke-width: 1.5; filter: drop-shadow(0 0 4px rgba(var(--tone-rgb, 124, 192, 255), .6)); }
+.v2-live:not(.hc) .v2f-mark .v2f-ring { stroke-width: 3; filter: drop-shadow(0 0 6px rgba(124, 192, 255, .55)); }
+.v2-live:not(.hc) .v2s-field { background: linear-gradient(180deg, #1a1e26, #12151b); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), inset 0 0 0 .5px rgba(255, 255, 255, .06); }
+
+/* R7 結果鍵（＋三出局小鍵、步進、次要鍵、壘包、名單小鍵、常駐打序格）：不透明鍵帽＋上緣高光＋落影；1 px 彩虹邊染語意色，取代頂端 2 px 色條。
+   拉丁縮寫落 Serif Flight、中文落黑體（--fl-font 的 CJK 後援），700。 */
+.v2-live:not(.hc) :is(.v2l-key, .v2l-three-row button, .v2s-step, .v2s-secondary, .v2s-base:not(.on), .v2s-lbtn, .v2s-rec, .v2l-ord) {
+  --fl-tint: var(--tone-rgb, 255, 255, 255); --v2-sh: var(--v2-cap-sh);
+  position: relative; background: var(--v2-cap-face); border-color: transparent; box-shadow: var(--v2-sh);
+}
+.v2-live:not(.hc) .v2l-three-runs button { --fl-tint: 243, 199, 102; }
+.v2-live:not(.hc) .v2s-danger { --fl-tint: 255, 139, 139; }
+.v2-live:not(.hc) .v2l-ord.on { border-color: var(--v2-on); --fl-tint: 124, 192, 255; }
+.v2-live:not(.hc) :is(.v2l-key, .v2l-three-row button, .v2s-step, .v2s-secondary, .v2s-base:not(.on), .v2s-lbtn, .v2s-rec, .v2l-ord:not(.on))::before {
+  content: ""; position: absolute; left: -1px; right: -1px; top: -1px; bottom: -1px; height: auto; padding: 1px; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(155deg, rgba(255, 255, 255, .62), rgba(var(--fl-tint), .62) 24%, rgba(255, 255, 255, .08) 50%, rgba(var(--fl-tint), .36) 80%, rgba(255, 255, 255, .38));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.v2-live:not(.hc) .v2l-key b { font-family: var(--fl-font, system-ui, sans-serif); font-weight: 700; }
+.v2-live:not(.hc) .v2l-key small { font-weight: 500; }
+
+/* R9 Sheet：液態玻璃色疊在不透明底上（不 blur）、頂部彩虹邊＋把手；標題前導線；分組清單、lens 開關、分段滑塊；送出是白色 CTA（D3）。 */
+.v2-live:not(.hc) .v2l-scrim { background: linear-gradient(180deg, rgba(6, 7, 10, .55), rgba(6, 7, 10, .72)); }
+.v2-live:not(.hc) .v2l-sheet {
+  background: var(--fl-liquid, linear-gradient(180deg, rgba(30, 34, 42, .58), rgba(18, 21, 27, .66))), #13161c;
+  box-shadow: var(--fl-liquid-shadow, inset 0 1px 0 rgba(255, 255, 255, .14), 0 30px 60px -28px rgba(0, 0, 0, .9)), 0 -18px 48px -24px rgba(0, 0, 0, .9);
+}
+.v2-live:not(.hc) .v2l-sheet::before {
+  content: ""; position: absolute; left: 22px; right: 22px; top: 0; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .5) 18%, rgba(160, 200, 255, .4) 45%, rgba(255, 205, 160, .3) 75%, transparent);
+}
+.v2-live:not(.hc) .v2l-sheet::after { content: ""; position: absolute; left: 50%; top: 4px; width: 36px; height: 5px; margin-left: -18px; border-radius: 999px; background: rgba(255, 255, 255, .28); pointer-events: none; }
+.v2-live:not(.hc) .v2s-head {
+  border-left-color: transparent; border-radius: 0;
+  background: linear-gradient(180deg, var(--v2-tone, var(--v2-on)), transparent) 0 50% / 2px 24px no-repeat border-box;
+}
+.v2-live:not(.hc) .v2s-group { font-weight: 500; color: var(--v2-ink-2); letter-spacing: .08em; }
+.v2-live:not(.hc) .v2s-item { --v2-sh: var(--v2-mat-edge); background: var(--v2-mat); border-color: transparent; box-shadow: var(--v2-sh); }
+.v2-live:not(.hc) .v2s-item.on { border-color: var(--v2-on); background: linear-gradient(rgba(124, 192, 255, .08), rgba(124, 192, 255, .08)), var(--v2-mat); }
+.v2-live:not(.hc) .v2s-item > small, .v2-live:not(.hc) .v2s-lpos { font-weight: 500; }
+.v2-live:not(.hc) :is(.v2s-lno, .v2s-runs b, .v2s-outs b) { font-family: var(--fl-font, system-ui, sans-serif); font-weight: 700; }
+.v2-live:not(.hc) .v2s-lno { font-size: 18px; letter-spacing: -.04em; white-space: nowrap; }
+.v2-live:not(.hc) .v2s-jersey { color: var(--v2-on); }
+.v2-live:not(.hc) .v2s-seg button { background: rgba(255, 255, 255, .045); border-color: transparent; color: var(--v2-ink-2); font-weight: 700; }
+.v2-live:not(.hc) .v2s-seg button[aria-checked="true"] {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .04) 50%, rgba(255, 255, 255, .07)), rgba(255, 255, 255, .06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 0 0 1px rgba(255, 255, 255, .14), 0 8px 18px -12px rgba(0, 0, 0, .9);
+  color: var(--v2-ink); border-color: transparent;
+}
+.v2-live:not(.hc) .v2s-switch > i { background: rgba(255, 255, 255, .12); border-color: transparent; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); }
+.v2-live:not(.hc) .v2s-switch > i::after { background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .45); }
+.v2-live:not(.hc) .v2s-switch[aria-checked="true"] > i { background: rgba(111, 219, 166, .7); border-color: transparent; }
+.v2-live:not(.hc) .v2s-switch[aria-checked="true"] > i::after { background: #fff; }
+.v2-live:not(.hc) .v2s-primary:not(.tone-out) {
+  --v2-sh: inset 0 1px 0 #fff, 0 10px 30px -12px rgba(124, 192, 255, .55);
+  background: linear-gradient(180deg, #ffffff, #dfe9f7); color: var(--v2-dark); border-color: transparent; border-radius: 999px; box-shadow: var(--v2-sh);
+}
+.v2-live:not(.hc) .v2s-primary.tone-out { --v2-sh: 0 10px 30px -12px rgba(255, 139, 139, .5); border-color: transparent; border-radius: 999px; box-shadow: var(--v2-sh); }
+.v2-live:not(.hc) .v2s-chip:not([aria-pressed="true"]) { background: var(--v2-cap-face); border-color: rgba(var(--tone-rgb, 255, 255, 255), .5); box-shadow: var(--v2-cap-sh); }
+.v2-live:not(.hc) .v2s-new { border-color: rgba(124, 192, 255, .5); background: rgba(124, 192, 255, .06); }
+
+/* R10 大字列、三出局：snackbar 與閃色維持實色，只把 3 px 白框換成 1 px 內框＋柔影；三出局卡是厚材質＋紅色彩虹邊，「換局」維持白實底。 */
+.v2-live:not(.hc) .v2l-snack { border-color: transparent; border-radius: 22px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5), 0 18px 40px -20px rgba(0, 0, 0, .85); }
+.v2-live:not(.hc) .v2l-three {
+  border-color: transparent;
+  background: linear-gradient(180deg, #1b1f27, #111318) padding-box, linear-gradient(155deg, rgba(255, 255, 255, .5), rgba(255, 139, 139, .75) 24%, rgba(255, 139, 139, .18) 50%, rgba(255, 139, 139, .5) 80%, rgba(255, 255, 255, .35)) border-box;
+  box-shadow: var(--v2-mat-edge);
+}
+.v2-live:not(.hc) .v2l-big { --v2-sh: inset 0 1px 0 #fff, 0 10px 30px -12px rgba(124, 192, 255, .5); background: linear-gradient(180deg, #ffffff, #dfe9f7); border-color: transparent; box-shadow: var(--v2-sh); }
+
+/* 按下（一般模式，R7）：同一幀變亮＋縮 .97，只用 transform／filter，不動框寬與內距（排版 0 變化）；放開 80 ms 回彈。
+   高對比維持 V1 的 3 px 框（上面 .v2-down 規則）。錯誤震動 .v2-err 兩種模式相同。 */
+.v2-live:not(.hc) .v2-down:not(.v2-err) {
+  border-width: var(--v2-bw, 1px) !important; border-style: solid !important; border-color: transparent !important;
+  box-shadow: var(--v2-sh, none) !important;
+  filter: brightness(1.18) !important; transform: scale(.97) !important; transition: none !important;
+}
+.v2-live:not(.hc) :is(.v2s-primary, .v2s-base.on) { --v2-bw: 3px; }
+.v2-live:not(.hc) :is(.v2l-big, .v2s-chip, .v2l-ord.on) { --v2-bw: 2px; }
+.v2-live:not(.hc) .v2s-base.on.v2-down:not(.v2-err) { border-color: var(--v2-white) !important; }
+.v2-live:not(.hc) .v2l-ord.on.v2-down:not(.v2-err) { border-color: var(--v2-on) !important; }
+.v2-live:not(.hc) .v2l-card.v2-down { padding: 8px 14px 10px; }
+.v2-live:not(.hc) .v2-down::before { filter: brightness(1.4); }
+@media (prefers-reduced-motion: no-preference) {
+  .v2-live:not(.hc) :is([data-v2-fb], .v2l-card):not(.v2-down) { transition: transform 80ms var(--fl-ease, cubic-bezier(.2, .8, .2, 1)), filter 80ms var(--fl-ease, cubic-bezier(.2, .8, .2, 1)) !important; }
+}
