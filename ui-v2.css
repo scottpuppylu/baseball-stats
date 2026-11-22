@@ -478,13 +478,14 @@ body.v2-live-on .ui-app-bar { display: none !important; }
   .v2l-setup {
     display: grid; column-gap: 24px; row-gap: 12px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "head head" "form lineup" ". lineup" "err lineup" "start lineup";
+    /* 開始鍵緊接在左欄表單下方（PO-44 回饋：中間不留大塊空白），剩下的高度放在左欄最底下。 */
+    grid-template-rows: auto auto auto auto minmax(0, 1fr);
+    grid-template-areas: "head head" "form lineup" "err lineup" "start lineup" ". lineup";
   }
   .v2u-head { grid-area: head; }
   .v2u-form { grid-area: form; grid-template-columns: minmax(0, 1fr); align-content: start; }
   .v2u-date, .v2u-opp, .v2u-tag, .v2u-seg2 { grid-column: 1; }
   .v2u-lineup { grid-area: lineup; }
   .v2u-err { grid-area: err; }
-  .v2u-start { grid-area: start; align-self: end; }
+  .v2u-start { grid-area: start; align-self: start; margin-top: 4px; }
 }

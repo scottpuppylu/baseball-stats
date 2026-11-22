@@ -402,6 +402,13 @@
   // 展開期間記分盤照常可點（沒有 inert），280 ms 內完成。用 Web Animations（不靠 CSS animation，減少動態的全域規則不會把它縮成 1 ms）。
   const FX = {enter: 280, exit: 240, fade: 160, ease: 'cubic-bezier(.2, .8, .2, 1)', radius: 22};
   let fx = null; // {kind: 'enter'|'exit', anims}
+  // 從開賽設定按開始：設定卡內容會被清掉，先留一份靜態複本在原位，記分畫面從 0 透明度疊上去展開，第一格和按下前一樣。
+  let ghost = null;
+  function dropGhost() {
+    if (!ghost) return;
+    ghost.remove(); ghost = null;
+    setupHost.hidden = !document.body.classList.contains('v2-setup-on');
+  }
   function viewRect(rect) {
     const w = window.innerWidth, h = window.innerHeight;
     if (!rect || rect.width < 8 || rect.height < 8) return null;
@@ -424,6 +431,7 @@
     veil.hidden = true;
     root.classList.remove('v2l-leaving');
     document.body.classList.remove('v2-fx');
+    dropGhost();
   }
   function playFx(kind, rect) {
     stopFx();
@@ -433,7 +441,7 @@
     const timing = {duration: reduce ? FX.fade : enter ? FX.enter : FX.exit, easing: FX.ease, fill: enter ? 'none' : 'forwards', id: `v2-${kind}`};
     const clip = insetOf(rect || contentRect());
     const frames = reduce ? {opacity: enter ? [0, 1] : [1, 0]}
-      : enter ? {clipPath: [clip, FULL], opacity: [0.4, 1]} : {clipPath: [FULL, clip], opacity: [1, 0]};
+      : enter ? [{clipPath: clip, opacity: 0}, {opacity: 1, offset: 0.55}, {clipPath: FULL, opacity: 1}] : {clipPath: [FULL, clip], opacity: [1, 0]};
     veil.hidden = false;
     document.body.classList.add('v2-fx');
     if (!enter) root.classList.add('v2l-leaving');
@@ -446,6 +454,7 @@
       veil.hidden = true;
       root.classList.remove('v2l-leaving');
       document.body.classList.remove('v2-fx');
+      dropGhost();
       syncRoot();
       anims.forEach(a => { try { a.cancel(); } catch (error) { /* 已結束 */ } });
     }).catch(() => {});
@@ -467,8 +476,13 @@
     const wasShown = shown;
     // 從開賽設定按開始：起點是設定卡（要在藏起來之前量）。
     const origin = want && !wasShown && setupShown ? viewRect(els.setup.getBoundingClientRect()) : null;
+    const copy = origin && typeof root.animate === 'function' ? els.setup.cloneNode(true) : null;
     paint(g, want, wantSetup);
     if (want && !wasShown) playFx('enter', origin);
+    if (copy && fx && fx.kind === 'enter') {
+      copy.classList.add('v2-ghost'); copy.setAttribute('aria-hidden', 'true'); copy.inert = true; copy.hidden = false;
+      setupHost.appendChild(copy); setupHost.hidden = false; ghost = copy;
+    }
     else if (!want && wasShown) playFx('exit', wantSetup ? viewRect(els.setup.getBoundingClientRect()) : null);
     syncRoot();
   }
