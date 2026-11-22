@@ -424,7 +424,7 @@ const VIBRATE_MOCK = () => {
         return {codes: keys.map(k => k.dataset.code), tones: Object.fromEntries(keys.map(k => [k.dataset.code, [...k.classList].find(c => c.startsWith('tone-'))])),
           padText: keys[0].parentElement.textContent, hasMore: [...keys[0].parentElement.querySelectorAll('button')].some(b => /更多/.test(b.textContent + (b.getAttribute('aria-label') || '')))};
       });
-      assert.deepEqual(pad.codes, ['1H', '2H', '3H', 'HR', 'BB', 'GO', 'FO', 'LO', 'K', '界外K', 'DP', 'FC', 'SF', 'RO', 'E'], 'offense pad: 15 result keys, nothing hidden');
+      assert.deepEqual(pad.codes, ['1H', '2H', '3H', 'HR', 'BB', 'GO', 'FO', 'LO', 'K', 'E', 'DP', 'FC', 'SF', '界外K', 'RO'], 'offense pad: 15 result keys, nothing hidden');
       assert.equal(pad.hasMore, false, 'offense pad: no 更多 key');
       const TONE = {'1H': 'hit', '2H': 'hit', '3H': 'hit', HR: 'hit', BB: 'on', E: 'on', GO: 'out', FO: 'out', LO: 'out', K: 'out', '界外K': 'out', DP: 'out', FC: 'out', SF: 'out', RO: 'out'};
       assert.deepEqual(pad.tones, Object.fromEntries(Object.entries(TONE).map(([k, v]) => [k, `tone-${v}`])), 'result tones: out red, hit green, on-base blue');

@@ -37,11 +37,15 @@
   };
   const DEF_NAME = {K: '三振', GO: '滾地刺殺', FO: '接殺', DP: '雙殺', '界外K': '界外K', RUNNER_OUT: '跑者出局', BB: '保送', HIT: '被安打', RUN: '失分'};
   // 進攻 5×3：所有結果都在主盤，沒有「更多」（PO-35／F7）。[代碼, 大字, 小字]
+  // WO-06 R2（C1）：固定格位、同類相鄰——安打在第一列左四格，其他上壘（保送、失誤）是右上直排，出局全在左下一塊（K 和界外K 上下相鄰）。
   const OFF_PAD = [
     ['1H', '1H', '一安'], ['2H', '2H', '二安'], ['3H', '3H', '三安'], ['HR', 'HR', '全壘打'], ['BB', 'BB', '保送'],
-    ['GO', '滾地', '出局'], ['FO', '飛球', '接殺'], ['LO', '平飛', '接殺'], ['K', 'K', '三振'], ['界外K', '界外K', '三振'],
-    ['DP', '雙殺', '兩出局'], ['FC', '野選', '出局'], ['SF', '犧飛', '出局'], ['RO', '跑者', '出局'], ['E', '失誤', '上壘']
+    ['GO', '滾地', '出局'], ['FO', '飛球', '接殺'], ['LO', '平飛', '接殺'], ['K', 'K', '三振'], ['E', '失誤', '上壘'],
+    ['DP', '雙殺', '兩出局'], ['FC', '野選', '出局'], ['SF', '犧飛', '出局'], ['界外K', '界外K', '三振'], ['RO', '跑者', '出局']
   ];
+  // 打者卡第二行「本場成績」小標籤用的短名。
+  const CARD_SHORT = {'1H': '一安', '2H': '二安', '3H': '三安', HR: '全壘打', BB: '保送', GO: '滾地', FO: '飛球', LO: '平飛', K: '三振', '界外K': '界外K',
+    DP: '雙殺', FC: '野選', SF: '犧飛', RO: '跑者出局', OUT: '跑者出局', E: '失誤'};
   const QUICK = new Set(['K', '界外K', 'BB', 'RO']); // 不用落點與型態，按下就記
   // 防守 4×3（含換投、跑者出局）。[代碼, 大字, 小字, 事件型別, 失分]
   const DEF_PAD = [
@@ -205,8 +209,10 @@
       + '<line class="v2f-line" x1="200" y1="370" x2="4.1" y2="174.1"/><line class="v2f-line" x1="200" y1="370" x2="395.9" y2="174.1"/>'
       + '<polygon class="v2f-diamond" points="200,370 282.5,287.5 200,205 117.5,287.5"/>'
       + LABELS.map(([k, x, y]) => `<text class="v2f-label" x="${x}" y="${y}" text-anchor="middle">${k}</text>`).join('')
+      // WO-06 R2（D）：外野方向字，放在全壘打牆外，不擋守位字與落點。
+      + [['左外野', 50, 104], ['中外野', 200, 76], ['右外野', 350, 104]].map(([t, x, y]) => `<text class="v2f-dir" x="${x}" y="${y}" text-anchor="middle">${t}</text>`).join('')
       + dotMarks
-      + (interactive ? '<g class="v2f-mark" hidden><line x1="-22" y1="0" x2="22" y2="0"/><line x1="0" y1="-22" x2="0" y2="22"/><circle r="13"/></g>' : '')
+      + (interactive ? '<g class="v2f-mark" hidden><circle class="v2f-ring" r="14"/><circle class="v2f-core" r="3.5"/></g>' : '')
       + '</svg>';
   }
 
@@ -307,8 +313,10 @@
     const b = g.currentBases || {};
     const baseNames = [['first', '一壘'], ['second', '二壘'], ['third', '三壘']].filter(([k]) => b[k]).map(([, n]) => n);
     const lights = [1, 2, 3].map(i => `<i class="v2l-out${i <= outs ? ' on' : ''}"></i>`).join('');
+    // WO-06 R2（A2）：兩隊上下排，隊名和比分同一基線、比分右齊（固定兩位數寬）；局數寫「上／下」。
     els.board.innerHTML = `<div class="v2l-inn"><b>${esc(g.currentInning)}</b><span>局${g.currentHalf === 'top' ? '上' : '下'}</span><small>${bat ? '進攻' : '防守'}</small></div>`
-      + `<div class="v2l-score"><span class="v2l-team">航太</span><b data-v2-us>${esc(g.finalScore?.us ?? 0)}</b><i>:</i><b data-v2-opp>${esc(g.finalScore?.opp ?? 0)}</b><span class="v2l-team">${esc(g.opponent || '對手')}</span></div>`
+      + `<div class="v2l-score"><span class="v2l-team v2l-us">淡江航太</span><b data-v2-us>${esc(g.finalScore?.us ?? 0)}</b>`
+      + `<span class="v2l-team">${esc(g.opponent || '對手')}</span><b data-v2-opp>${esc(g.finalScore?.opp ?? 0)}</b></div>`
       + `<button type="button" class="v2l-sit" data-act="sit" aria-label="出局與壘包：${outs} 出局，${baseNames.length ? baseNames.join('、') + '有人' : '壘上無人'}">`
       + `<svg class="v2l-mini" viewBox="0 0 40 40" aria-hidden="true"><rect class="${b.second ? 'on' : ''}" x="15" y="3" width="10" height="10" transform="rotate(45 20 8)"/>`
       + `<rect class="${b.third ? 'on' : ''}" x="4" y="15" width="10" height="10" transform="rotate(45 9 20)"/><rect class="${b.first ? 'on' : ''}" x="26" y="15" width="10" height="10" transform="rotate(45 31 20)"/></svg>`
@@ -322,13 +330,34 @@
       const name = g.lineup[idx];
       const pos = positions(g)[idx] || '';
       const next = g.lineup[(idx + 1) % n];
-      els.card.innerHTML = `<p class="v2l-card-k">第 ${idx + 1} 棒${pos ? ` · ${esc(pos)}` : ''}</p><p class="v2l-card-name">${esc(jersey(name))}${esc(name)}</p>`
-        + `<p class="v2l-card-next">下一棒 <span class="v2-nb">${esc(next || '')}</span></p>`;
+      // WO-06 R2（B1）：兩行。第一行棒次＋姓名（最大）＋背號；第二行本場成績小標籤（實底），下一棒放第二行右側。
+      const pas = [];
+      for (const inn of g.innings || []) for (const p of inn.plateAppearances || []) if (p.batterName === name && !p.isRunnerOut) pas.push(p.result);
+      const tags = pas.slice(-cardTagMax()).map(code => `<span class="v2l-stat tone-${RESULT_TONE[code] || 'on'}">${esc(CARD_SHORT[code] || RESULT_NAME[code] || code)}</span>`).join('');
+      const more = pas.length > cardTagMax() ? `<span class="v2l-stat-more">+${pas.length - cardTagMax()}</span>` : '';
+      els.card.innerHTML = `<p class="v2l-card-l1"><span class="v2l-card-k">第 ${idx + 1} 棒${pos ? ` · ${esc(pos)}` : ''}</span><b class="v2l-card-name">${esc(name || '')}</b>`
+        + `<span class="v2l-card-no">${esc(jersey(name).trim())}</span></p>`
+        + `<p class="v2l-card-l2"><span class="v2l-stats" aria-label="本場成績"><span class="v2l-stat-k">本場</span>${pas.length ? more + tags : '<span class="v2l-stat-none">還沒打</span>'}</span>`
+        + `<span class="v2l-card-next">下一棒 <span class="v2-nb">${esc(next || '')}</span></span></p>`;
     } else {
-      els.card.innerHTML = `<p class="v2l-card-k">登板投手</p><p class="v2l-card-name">${g.pitcherName ? esc(jersey(g.pitcherName)) + esc(g.pitcherName) : '還沒選投手'}</p>`
-        + '<p class="v2l-card-next">換投在記分盤右下</p>';
+      const p = g.pitcherName;
+      const count = {K: 0, BB: 0, HIT: 0, RUN: 0};
+      for (const inn of g.innings || []) for (const e of inn.defensiveEvents || []) {
+        if (!p || e.pitcher !== p) continue;
+        if (e.type === 'K' || e.type === '界外K') count.K += 1;
+        else if (e.type === 'RUN') count.RUN += e.runs || 0;
+        else if (e.type in count) count[e.type] += 1;
+      }
+      const stat = (tone, text) => `<span class="v2l-stat tone-${tone}">${text}</span>`;
+      els.card.innerHTML = `<p class="v2l-card-l1"><span class="v2l-card-k">登板投手</span><b class="v2l-card-name">${p ? esc(p) : '還沒選投手'}</b>`
+        + `<span class="v2l-card-no">${p ? esc(jersey(p).trim()) : ''}</span></p>`
+        + `<p class="v2l-card-l2"><span class="v2l-stats" aria-label="本場成績"><span class="v2l-stat-k">本場</span>`
+        + (p ? stat('out', `${count.K} 三振`) + stat('on', `${count.BB} 保送`) + stat('hit', `${count.HIT} 被安`) + stat('run', `失 ${count.RUN} 分`) : '')
+        + '</span><span class="v2l-card-next">換投在記分盤右下</span></p>';
     }
   }
+  // 手機寬度只放得下最近 3 個標籤（多的寫 +N），平板以上 4 個。
+  const cardTagMax = () => (window.innerWidth < 768 ? 3 : 4);
   function halfRows(g, inn, bat) {
     if (!inn) return [];
     if (bat) return (inn.plateAppearances || []).map(p => ({tone: RESULT_TONE[p.isRunnerOut ? 'RO' : p.result] || 'on', label: RESULT_NAME[p.isRunnerOut ? 'RO' : p.result] || p.result, who: p.batterName, runs: p.runsScored || 0}));
@@ -433,10 +462,49 @@
     document.body.classList.remove('v2-fx');
     dropGhost();
   }
-  function playFx(kind, rect) {
+  // WO-06 R2（轉場加固）：卡片要大半在畫面裡才收回卡片，否則（捲走了、不存在）原地淡出，不飛到畫面邊緣。
+  function onScreenRect(el) {
+    if (!el || el.hidden) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width < 8 || r.height < 8) return null;
+    const w = window.innerWidth, h = window.innerHeight;
+    const vis = Math.max(0, Math.min(w, r.right) - Math.max(0, r.left)) * Math.max(0, Math.min(h, r.bottom) - Math.max(0, r.top));
+    return vis >= .3 * r.width * r.height ? viewRect(r) : null;
+  }
+  // 全螢幕時底下的網站設 inert（只設網站本身的層，搜尋、toast 等蓋在記分畫面上面的層不動）；離開時還原，焦點回原入口。
+  let inertSet = [];
+  function setUnderInert(on) {
+    if (!on) { inertSet.forEach(el => { el.inert = false; }); inertSet = []; return; }
+    if (inertSet.length) return;
+    for (const el of document.body.children) {
+      if (el === root || el === veil || el.inert || /^(SCRIPT|STYLE|TEMPLATE|LINK)$/.test(el.tagName)) continue;
+      const z = parseInt(getComputedStyle(el).zIndex, 10);
+      if (z > 92) continue;
+      el.inert = true; inertSet.push(el);
+    }
+  }
+  // 焦點回入口；入口不在了（或本來就在 body）就回開賽設定的開始鍵。開賽設定之後可能重畫（按鈕換新），收回結束時再補一次。
+  let focusBack = false;
+  function returnFocus() {
+    const entry = ui.entry && ui.entry !== document.body && ui.entry.isConnected && ui.entry.getClientRects().length ? ui.entry : null;
+    ui.entry = null;
+    focusBack = !entry;
+    const back = entry || (setupShown ? els.setup.querySelector('[data-act="su-start"]') : null);
+    if (back && typeof back.focus === 'function') { try { back.focus({preventScroll: true}); } catch (error) { /* 不能聚焦就算了 */ } }
+  }
+  function refocusSetup() {
+    if (!focusBack) return;
+    focusBack = false;
+    const lost = !document.activeElement || document.activeElement === document.body;
+    const start = setupShown && els.setup.querySelector('[data-act="su-start"]');
+    if (lost && start) { try { start.focus({preventScroll: true}); } catch (error) { /* 不能聚焦就算了 */ } }
+  }
+  // 轉場中改視窗大小或轉平板：動畫立即結束，貼齊新尺寸。
+  window.addEventListener('resize', () => { if (fx) fx.anims.forEach(a => { try { a.finish(); } catch (error) { /* 已結束 */ } }); });
+  function playFx(kind, rect, inPlace) {
     stopFx();
     if (typeof root.animate !== 'function') return;
-    const reduce = reducedMotion.matches;
+    const reduce = reducedMotion.matches || !!inPlace;
     const enter = kind === 'enter';
     const timing = {duration: reduce ? FX.fade : enter ? FX.enter : FX.exit, easing: FX.ease, fill: enter ? 'none' : 'forwards', id: `v2-${kind}`};
     const clip = insetOf(rect || contentRect());
@@ -446,7 +514,7 @@
     document.body.classList.add('v2-fx');
     if (!enter) root.classList.add('v2l-leaving');
     const anims = [root.animate(frames, timing), veil.animate({opacity: enter ? [0, 1] : [1, 0]}, timing)];
-    const current = {kind, anims};
+    const current = {kind, anims, clip: reduce ? null : clip};
     fx = current;
     anims[0].finished.then(() => {
       if (fx !== current) return;
@@ -457,7 +525,23 @@
       dropGhost();
       syncRoot();
       anims.forEach(a => { try { a.cancel(); } catch (error) { /* 已結束 */ } });
+      if (!enter) refocusSetup();
     }).catch(() => {});
+  }
+  // 收回剛開始的幾格內，網站別的程式（例如段落列）可能還在改版面：重量設定卡，位置變了就只改 clip 終點。
+  function retargetExit(cur) {
+    let frames = 0;
+    const step = () => {
+      if (fx !== cur || !cur.clip || frames++ > 6) return;
+      const r = onScreenRect(els.setup);
+      const clip = r ? insetOf(r) : null;
+      if (clip && clip !== cur.clip) {
+        cur.clip = clip;
+        try { cur.anims[0].effect.setKeyframes({clipPath: [FULL, clip], opacity: [1, 0]}); } catch (error) { /* 不支援就照原終點 */ }
+      }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
   const leaving = () => !!fx && fx.kind === 'exit';
   // 根節點什麼時候看得到：記分中、收回轉場中、或開賽設定開著選人／守位的 sheet（這時只顯示 sheet 圖層）。
@@ -477,13 +561,23 @@
     // 從開賽設定按開始：起點是設定卡（要在藏起來之前量）。
     const origin = want && !wasShown && setupShown ? viewRect(els.setup.getBoundingClientRect()) : null;
     const copy = origin && typeof root.animate === 'function' ? els.setup.cloneNode(true) : null;
+    if (want && !wasShown) { ui.entry = document.activeElement; ui.entryScroll = origin ? window.scrollY : null; }
     paint(g, want, wantSetup);
-    if (want && !wasShown) playFx('enter', origin);
+    if (want && !wasShown) { playFx('enter', origin); setUnderInert(true); }
     if (copy && fx && fx.kind === 'enter') {
       copy.classList.add('v2-ghost'); copy.setAttribute('aria-hidden', 'true'); copy.inert = true; copy.hidden = false;
       setupHost.appendChild(copy); setupHost.hidden = false; ghost = copy;
     }
-    else if (!want && wasShown) playFx('exit', wantSetup ? viewRect(els.setup.getBoundingClientRect()) : null);
+    else if (!want && wasShown) {
+      setUnderInert(false);
+      // 回開賽設定：捲回按開始時的位置（記分中頁面變短，捲動可能被夾掉），再重量設定卡；卡片不在畫面就原地淡出。
+      if (wantSetup && ui.entryScroll != null && Math.abs(window.scrollY - ui.entryScroll) > 1) window.scrollTo({top: ui.entryScroll, left: 0, behavior: 'instant'});
+      ui.entryScroll = null;
+      const back = wantSetup ? onScreenRect(els.setup) : null;
+      playFx('exit', back, wantSetup && !back);
+      if (back && fx && fx.kind === 'exit') retargetExit(fx);
+      returnFocus();
+    }
     syncRoot();
   }
   function paint(g, want, wantSetup) {
@@ -1159,7 +1253,7 @@
       if (ui.sub == null) {
         return sheetHead('換人：換下誰？')
           + '<p class="v2s-hint">代打、代跑、守備換人都在這裡；換上的人接手同一棒與守位。</p>'
-          + (g.lineup || []).map((n, i) => `<button type="button" class="v2s-item" data-act="sub-slot" data-i="${i}"><span>第 ${i + 1} 棒 · ${playerName(n)}</span>${pos[i] ? `<small>守 ${esc(pos[i])}</small>` : ''}</button>`).join('');
+          + (g.lineup || []).map((n, i) => `<button type="button" class="v2s-item${i === g.currentBatterIdx ? ' on' : ''}" data-act="sub-slot" data-i="${i}"><span>第 ${i + 1} 棒 · ${playerName(n)}</span>${pos[i] ? `<small>守 ${esc(pos[i])}</small>` : ''}</button>`).join('');
       }
       const {teamNames, guestNames} = getAllAvailablePlayerNames();
       const lineup = g.lineup || [];

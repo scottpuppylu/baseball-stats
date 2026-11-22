@@ -61,7 +61,14 @@ body.v2-live-on { overflow: hidden; }
   --v2-white: #f2f4f7;
   --v2-neutral: #2b2f36;
   --v2-dark: #0b0d10;
-  --v2-gap: 6px;
+  --v2-gap: 7px;
+  /* WO-06 R2：玻璃只給容器（--fl-glass 系列；高光壓在 8% 以內、只在外框，不穿過字）。
+     結果鍵、結果標籤、本場成績標籤、名單列、球場用深色實底 --v2-key，字用資料色或主字色；彩色字下面不鋪半透明同色。 */
+  --v2-glass: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .015) 48%, rgba(255, 255, 255, .01) 52%, rgba(255, 255, 255, .025)), rgba(17, 20, 26, .68);
+  --v2-glass-edge: inset 0 1px 0 rgba(255, 255, 255, .08), inset 0 0 0 .5px rgba(255, 255, 255, .06), 0 18px 40px -28px rgba(0, 0, 0, .9);
+  --v2-key: #141821;
+  --v2-key-edge: rgba(255, 255, 255, .08);
+  --v2-r-key: 12px;
 }
 .v2-live {
   position: fixed;
@@ -75,8 +82,17 @@ body.v2-live-on { overflow: hidden; }
   gap: 6px;
   padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   box-sizing: border-box;
-  /* 網站的深色底，頂端一抹跟網站一樣的冰藍光；記分畫面本身不透明、不模糊（省效能）。 */
-  background: radial-gradient(120% 60% at 50% -12%, rgba(124, 192, 255, .08), transparent 62%), var(--v2-bg);
+  /* WO-06 R2（A1）：網站同一種星空底（ui-theme.css body 背景，星點再淡一點），玻璃容器後面才看得到東西。
+     記分畫面本身不透明、不用 backdrop-filter：淡入時不會有「最後一格模糊才跳出來」，也省效能。 */
+  background:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, .34), transparent 60%) 0 0 / 340px 340px,
+    radial-gradient(1px 1px at 68% 42%, rgba(255, 255, 255, .24), transparent 60%) 0 0 / 340px 340px,
+    radial-gradient(1.2px 1.2px at 38% 76%, rgba(200, 220, 255, .28), transparent 60%) 0 0 / 520px 520px,
+    radial-gradient(1px 1px at 86% 8%, rgba(255, 255, 255, .22), transparent 60%) 0 0 / 520px 520px,
+    radial-gradient(1px 1px at 30% 60%, rgba(255, 255, 255, .2), transparent 60%) 0 0 / 260px 260px,
+    radial-gradient(140% 70% at 70% -32%, rgba(124, 192, 255, .09), rgba(124, 192, 255, .022) 45%, transparent 62%),
+    radial-gradient(900px 500px at -10% 110%, rgba(255, 196, 140, .035), transparent 60%),
+    var(--v2-bg);
   color: var(--v2-ink);
   font-family: var(--fl-font, system-ui, -apple-system, "Noto Sans TC", sans-serif);
   font-size: 15px;
@@ -106,7 +122,7 @@ body.v2-live-on { overflow: hidden; }
 
 /* ---- 頂列 ---- */
 .v2l-head { grid-area: head; display: flex; align-items: center; gap: 8px; min-height: 48px; }
-.v2l-icon { flex: 0 0 auto; width: 48px; height: 48px; border-radius: 999px; border: 0; background: var(--v2-panel-2); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .09), inset 0 0 0 .5px rgba(255, 255, 255, .1); font-size: 24px; font-weight: 700; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+.v2l-icon { flex: 0 0 auto; width: 48px; height: 48px; border-radius: 999px; border: 0; background: var(--v2-glass); box-shadow: var(--v2-glass-edge); font-size: 24px; font-weight: 700; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
 .v2l-vs { flex: 1 1 auto; min-width: 0; text-align: center; font-size: 15px; font-weight: 600; color: var(--v2-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .v2l-vs-sep { color: var(--v2-ink-3); font-weight: 500; }
 .v2l-pill { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: var(--v2-panel-2); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .1); color: var(--v2-on); font-size: 13px; font-weight: 700; white-space: nowrap; }
@@ -114,28 +130,28 @@ body.v2-live-on { overflow: hidden; }
 .v2l-pill.v2l-offline { color: var(--v2-run); }
 .v2l-pill svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* ---- 記分板（≥88 px；閃色在這裡） ---- */
+/* ---- 記分板（≥88 px；閃色在這裡）。WO-06 R2（A3）：局數｜兩隊上下排（隊名與比分同基線、比分右齊留兩位數寬）｜壘包與出局 ---- */
 .v2l-board {
   grid-area: board; position: relative; min-height: 88px;
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: 22px; background: var(--v2-panel); border: 1px solid transparent; box-shadow: var(--v2-edge);
+  padding: 8px 10px 8px 12px; border-radius: 22px; background: var(--v2-glass); border: 1px solid transparent; box-shadow: var(--v2-glass-edge);
 }
 .v2l-inn { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 2px; align-items: baseline; min-width: 58px; }
 .v2l-inn b { grid-row: 1 / 3; font-family: var(--fl-mincho, serif); font-size: 40px; line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums; }
 .v2l-inn span { font-size: 15px; font-weight: 700; }
-.v2l-inn small { font-size: 13px; color: var(--v2-ink-3); }
-.v2l-score { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
-.v2l-score b { font-family: var(--fl-mincho, serif); font-size: 40px; line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums; }
-.v2l-score i { font-style: normal; font-size: 28px; color: var(--v2-ink-3); }
-.v2l-team { display: none; font-size: 13px; color: var(--v2-ink-3); max-width: 5.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.v2l-sit { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; align-items: center; justify-items: center; column-gap: 8px; row-gap: 2px; min-width: 96px; min-height: 64px; padding: 6px 8px; border-radius: 16px; border: 1px solid transparent; background: var(--v2-panel-2); }
+.v2l-inn small { font-size: 13px; color: var(--v2-ink-2); }
+.v2l-score { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 10px; row-gap: 2px; min-width: 0; padding: 0 12px; border-left: 1px solid var(--v2-key-edge); border-right: 1px solid var(--v2-key-edge); }
+.v2l-score b { min-width: 2ch; text-align: right; font-family: var(--fl-mincho, serif); font-size: 30px; line-height: 1.05; font-weight: 900; font-variant-numeric: tabular-nums; }
+.v2l-team { min-width: 0; font-size: 15px; font-weight: 700; color: var(--v2-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v2l-team.v2l-us { color: var(--v2-ink); }
+.v2l-sit { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; align-items: center; justify-items: center; column-gap: 8px; row-gap: 2px; min-width: 96px; min-height: 64px; padding: 6px 8px; border-radius: var(--v2-r-key); border: 1px solid var(--v2-key-edge); background: var(--v2-key); }
 .v2l-mini { grid-row: 1 / 3; width: 40px; height: 40px; }
 .v2l-mini rect { fill: transparent; stroke: var(--v2-ink-2); stroke-width: 2; }
 .v2l-mini rect.on { fill: var(--v2-run); stroke: var(--v2-white); stroke-width: 2.5; }
 .v2l-lights { display: inline-flex; gap: 5px; }
 .v2l-out { display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--v2-ink-3); }
 .v2l-out.on { background: var(--v2-out); border-color: var(--v2-white); }
-.v2l-sit-txt { font-size: 13px; font-weight: 700; color: var(--v2-ink-2); white-space: nowrap; }
+.v2l-sit-txt { font-size: 13px; font-weight: 700; color: var(--v2-ink); white-space: nowrap; }
 /* V2 閃色：實色 300 ms，再 120 ms 淡回（JS 計時；淡回是唯一的 transition）。 */
 .v2l-board[data-flash] { border-color: var(--v2-white); border-width: 3px; }
 .v2l-board.v2-flash[data-flash="out"] { background: var(--v2-out); }
@@ -146,6 +162,7 @@ body.v2-live-on { overflow: hidden; }
 .v2l-board.v2-flash[data-flash="neutral"] { background: var(--v2-neutral); border-width: 4px; }
 .v2l-board.v2-flash:not([data-flash="neutral"]), .v2l-board.v2-flash:not([data-flash="neutral"]) * { color: var(--v2-dark); }
 .v2l-board.v2-flash:not([data-flash="neutral"]) .v2l-sit { background: transparent; border-color: var(--v2-dark); }
+.v2l-board.v2-flash:not([data-flash="neutral"]) .v2l-score { border-color: rgba(11, 13, 16, .3); }
 .v2l-board.v2-flash:not([data-flash="neutral"]) .v2l-mini rect { stroke: var(--v2-dark); }
 .v2l-board.v2-fade { transition: background-color 120ms ease-out, border-color 120ms ease-out; }
 .v2l-board[data-big]::after {
@@ -155,19 +172,26 @@ body.v2-live-on { overflow: hidden; }
 }
 .v2l-board.v2-flash[data-flash="neutral"][data-big]::after { color: var(--v2-white); }
 
-/* ---- 中段：打者／投手卡、本半局、球場 ---- */
+/* ---- 中段：打者／投手卡、本半局、球場。WO-06 R2（A4）：打者卡兩行——棒次＋姓名（最大）＋背號／本場成績小標籤 ---- */
 .v2l-main { grid-area: main; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
-.v2l-card { flex: 0 0 auto; padding: 8px 14px; border-radius: 18px; background: var(--v2-panel); border: 1px solid transparent; box-shadow: var(--v2-edge); display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "k next" "name name"; align-items: baseline; column-gap: 8px; }
-.v2l-card-k { grid-area: k; font-size: 13px; color: var(--v2-ink-3); }
-.v2l-card-name { grid-area: name; font-family: var(--fl-mincho, serif); font-size: 26px; line-height: 1.2; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.v2l-card-next { grid-area: next; font-size: 13px; color: var(--v2-ink-3); white-space: nowrap; }
-.v2l-recent { flex: 0 0 auto; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.v2l-card { flex: 0 0 auto; min-width: 0; padding: 8px 14px 10px; border-radius: 18px; background: var(--v2-glass); border: 1px solid transparent; box-shadow: var(--v2-glass-edge); display: flex; flex-direction: column; gap: 4px; }
+.v2l-card-l1 { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.v2l-card-l2 { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 28px; }
+.v2l-card-k { flex: 0 0 auto; font-size: 14px; font-weight: 700; color: var(--v2-ink-2); white-space: nowrap; }
+.v2l-card-name { flex: 0 1 auto; min-width: 0; font-family: var(--fl-mincho, serif); font-size: 28px; line-height: 1.15; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v2l-card-no { flex: 0 0 auto; font-size: 16px; font-weight: 800; color: var(--v2-ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.v2l-stats { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 5px; overflow: hidden; }
+.v2l-stat-k, .v2l-stat-more, .v2l-stat-none { flex: 0 0 auto; font-size: 13px; font-weight: 700; color: var(--v2-ink-2); white-space: nowrap; }
+.v2l-stat { flex: 0 0 auto; min-height: 26px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 8px; background: var(--v2-key); box-shadow: inset 0 0 0 1px var(--v2-key-edge); color: var(--v2-tone, var(--v2-ink)); font-size: 13px; font-weight: 800; white-space: nowrap; }
+.v2l-card-next { flex: 0 1 auto; min-width: 0; margin-left: auto; font-size: 13px; color: var(--v2-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 767px) { .v2l-def .v2l-card-next { display: none; } }
+.v2l-recent { flex: 0 0 auto; list-style: none; display: flex; flex-direction: column; gap: 2px; padding: 4px 8px; border-radius: 18px; background: var(--v2-glass); box-shadow: var(--v2-glass-edge); }
 .v2l-recent li { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 2px 4px; font-size: 15px; }
-.v2l-recent .v2l-empty { color: var(--v2-ink-3); font-size: 14px; }
-.v2l-tag { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: 4.6em; padding: 3px 8px; border-radius: 999px; font-size: 14px; font-weight: 800; color: var(--v2-dark); white-space: nowrap; }
+.v2l-recent .v2l-empty { color: var(--v2-ink-2); font-size: 14px; }
+.v2l-tag { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: 4.6em; min-height: 28px; padding: 0 8px; border-radius: 8px; font-size: 14px; font-weight: 800; white-space: nowrap; background: var(--v2-key); box-shadow: inset 0 0 0 1px var(--v2-key-edge); color: var(--v2-tone, var(--v2-on)); }
 .v2l-who { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--v2-ink-2); }
 .v2l-runs { flex: 0 0 auto; font-weight: 800; color: var(--v2-run); white-space: nowrap; }
-.v2l-field { flex: 1 1 0; min-height: 0; display: flex; justify-content: center; }
+.v2l-field { flex: 1 1 0; min-height: 0; display: flex; justify-content: center; padding: 4px; border-radius: 18px; background: var(--v2-key); box-shadow: inset 0 0 0 1px var(--v2-key-edge); }
 .v2l-field.v2l-tiny { display: none; }
 .v2l-field .v2f { width: 100%; height: 100%; }
 .tone-out { --v2-tone: var(--v2-out); }
@@ -177,48 +201,46 @@ body.v2-live-on { overflow: hidden; }
 .tone-white { --v2-tone: var(--v2-white); }
 .tone-neutral { --v2-tone: var(--v2-neutral); }
 .tone-error { --v2-tone: var(--v2-out); }
-.v2l-tag { background: var(--v2-tone, var(--v2-on)); }
 
-/* 球場（和舊版同一套幾何） */
+/* 球場（和舊版同一套幾何）。WO-06 R2（A6）：深色實底＋清楚的 2 px 邊線、外野方向字，取代飽和綠／棕；落點是 --fl-accent 環。 */
 .v2f { display: block; max-width: 100%; }
-.v2f-grass { fill: #12321f; stroke: rgba(255, 255, 255, .22); stroke-width: 1.5; }
-.v2f-dirt { fill: #4a3523; }
-.v2f-line { stroke: rgba(255, 255, 255, .7); stroke-width: 2; }
-.v2f-diamond { fill: none; stroke: rgba(255, 255, 255, .85); stroke-width: 2.5; }
-.v2f-label { fill: rgba(255, 255, 255, .78); font-size: 15px; font-weight: 800; font-family: var(--fl-font, system-ui, sans-serif); pointer-events: none; }
-.v2f-dot { fill: var(--v2-tone); stroke: var(--v2-dark); stroke-width: 2; }
+.v2f-grass { fill: #181d26; stroke: rgba(255, 255, 255, .55); stroke-width: 2; }
+.v2f-dirt { fill: #1e2430; stroke: rgba(255, 255, 255, .3); stroke-width: 2; }
+.v2f-line { stroke: rgba(255, 255, 255, .6); stroke-width: 2; }
+.v2f-diamond { fill: none; stroke: rgba(255, 255, 255, .85); stroke-width: 2; }
+.v2f-label { fill: var(--v2-ink-2); font-size: 15px; font-weight: 800; font-family: var(--fl-font, system-ui, sans-serif); pointer-events: none; }
+.v2f-dir { fill: var(--v2-ink-2); font-size: 15px; font-weight: 700; letter-spacing: .08em; font-family: var(--fl-font, system-ui, sans-serif); pointer-events: none; }
+.v2f-dot { fill: var(--v2-tone); stroke: var(--v2-key); stroke-width: 2.5; }
 .v2f-pick { cursor: crosshair; touch-action: none; }
-.v2f-mark line { stroke: var(--v2-white); stroke-width: 3; }
-.v2f-mark circle { fill: var(--v2-run); stroke: var(--v2-white); stroke-width: 4; }
+.v2f-mark .v2f-ring { fill: none; stroke: var(--v2-on); stroke-width: 4; }
+.v2f-mark .v2f-core { fill: var(--v2-on); }
 
-/* ---- 記分盤 ---- */
+/* ---- 記分盤。WO-06 R2（A5）：鍵帽深色實底、圓角 12、間距 7–8；組別用鍵頂一條 2 px 語意色，字是語意色（出局全紅） ---- */
 .v2l-padwrap { grid-area: pad; min-width: 0; }
 .v2l-pad { display: grid; gap: var(--v2-gap); }
 .v2l-pad5 { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-rows: minmax(60px, auto); }
 .v2l-pad4 { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(60px, auto); }
 .v2l-key {
-  position: relative; min-width: 0; min-height: 60px; padding: 4px 2px; border-radius: 16px;
+  position: relative; min-width: 0; min-height: 60px; padding: 4px 2px; border-radius: var(--v2-r-key);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-  /* 網站的玻璃材質，上面一層淡淡的語意色；框是語意色（70%），一眼分得出出局／安打／上壘。 */
-  background: linear-gradient(180deg, color-mix(in srgb, var(--v2-tone, transparent) 12%, transparent), color-mix(in srgb, var(--v2-tone, transparent) 5%, transparent)), var(--v2-panel);
-  border: 2px solid color-mix(in srgb, var(--v2-tone, var(--v2-line)) 70%, transparent); color: var(--v2-ink);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07);
+  background: var(--v2-key); border: 1px solid var(--v2-key-edge); color: var(--v2-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
 }
+.v2l-key::before { content: ""; position: absolute; left: 12px; right: 12px; top: 0; height: 2px; border-radius: 0 0 2px 2px; background: var(--v2-tone, transparent); pointer-events: none; }
 .v2l-key b { font-size: 20px; line-height: 1.1; font-weight: 800; color: var(--v2-tone, var(--v2-ink)); white-space: nowrap; }
 .v2l-key small { font-size: 12px; line-height: 1.2; color: var(--v2-ink-2); white-space: nowrap; }
 .v2l-key-wide { grid-column: span 2; }
 .v2l-pad4 .v2l-key-wide { grid-column: 3 / 5; }
-/* V1：按下的那一刻實色、反白字、3 px 白框，沒有過場。 */
-:is(.v2-live, .v2-setup-host) .v2-down { background: var(--v2-tone, var(--v2-white)) !important; border: 3px solid var(--v2-white) !important; color: var(--v2-dark) !important; }
-:is(.v2-live, .v2-setup-host) .v2-down * { color: var(--v2-dark) !important; }
+/* V1（WO-06 R2 改）：按下只做局部回饋——3 px 語意色框＋鍵面稍亮，字色不變、不閃整張卡；按下當下出現、放開就回來（一般點一下約 70–80 ms）。 */
+:is(.v2-live, .v2-setup-host) .v2-down { border: 3px solid var(--v2-tone, var(--v2-white)) !important; box-shadow: inset 0 0 0 100vmax rgba(255, 255, 255, .08) !important; }
 :is(.v2-live, .v2-setup-host) .v2-err { border: 3px solid var(--v2-out) !important; }
 
 /* 三出局卡 */
-.v2l-three { display: grid; gap: var(--v2-gap); padding: 10px; border-radius: 22px; background: var(--v2-panel); border: 3px solid var(--v2-out); box-shadow: var(--v2-edge); }
+.v2l-three { display: grid; gap: var(--v2-gap); padding: 10px; border-radius: 22px; background: var(--v2-glass); border: 2px solid var(--v2-out); box-shadow: var(--v2-glass-edge); }
 .v2l-three-t { text-align: center; font-family: var(--fl-mincho, serif); font-size: 19px; font-weight: 900; }
-.v2l-big { min-height: 64px; border-radius: 16px; border: 2px solid var(--v2-white); background: var(--v2-white); color: var(--v2-dark); font-size: 19px; font-weight: 800; }
+.v2l-big { min-height: 64px; border-radius: var(--v2-r-key); border: 2px solid var(--v2-white); background: var(--v2-white); color: var(--v2-dark); font-size: 19px; font-weight: 800; }
 .v2l-three-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--v2-gap); }
-.v2l-three-row button { min-height: 52px; border-radius: 16px; border: 2px solid var(--v2-line); background: var(--v2-panel-2); font-size: 15px; font-weight: 700; white-space: nowrap; }
+.v2l-three-row button { min-height: 52px; border-radius: var(--v2-r-key); border: 1px solid var(--v2-key-edge); background: var(--v2-key); font-size: 15px; font-weight: 700; white-space: nowrap; }
 .v2l-three-runs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .v2l-three-runs button { color: var(--v2-run); border-color: color-mix(in srgb, var(--v2-run) 55%, transparent); }
 
@@ -239,7 +261,7 @@ body.v2-live-on { overflow: hidden; }
 .v2l-drain-txt { grid-column: 1 / -1; font-size: 13px; font-weight: 700; }
 @keyframes v2-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
-/* ---- Sheet ---- */
+/* ---- Sheet。WO-06 R2（A7）：頂部 24 px 圓角玻璃、實底名單列 52–56 高、目前打者藍框；流程不變 ---- */
 .v2l-layer { position: absolute; inset: 0; z-index: 5; display: flex; align-items: flex-end; justify-content: center; }
 .v2l-layer[hidden] { display: none; }
 .v2l-scrim { position: absolute; inset: 0; background: rgba(6, 7, 10, .66); }
@@ -247,7 +269,7 @@ body.v2-live-on { overflow: hidden; }
   position: relative; width: 100%; max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
   display: flex; flex-direction: column; gap: 8px;
   padding: 10px 10px max(12px, env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0;
-  background: var(--v2-sheet); border: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .09), inset 0 0 0 .5px rgba(255, 255, 255, .06), 0 -18px 48px -24px rgba(0, 0, 0, .9);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015) 64px, rgba(255, 255, 255, 0) 160px), rgba(19, 22, 29, .95); border: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), inset 0 0 0 .5px rgba(255, 255, 255, .06), 0 -18px 48px -24px rgba(0, 0, 0, .9);
   -webkit-user-select: none; user-select: none;
 }
 .v2l-rise .v2l-sheet { animation: v2-rise 240ms ease-out both; }
@@ -255,25 +277,26 @@ body.v2-live-on { overflow: hidden; }
 .v2s-head { display: flex; align-items: center; gap: 8px; padding: 2px 2px 2px 8px; border-left: 6px solid var(--v2-tone, transparent); border-radius: 4px; }
 .v2s-title { flex: 1 1 auto; min-width: 0; font-family: var(--fl-mincho, serif); font-size: 21px; font-weight: 900; line-height: 1.25; }
 .v2s-x { width: 48px; height: 48px; }
-.v2s-field { width: 100%; display: flex; justify-content: center; background: #0d2416; border-radius: 16px; }
+.v2s-field { width: 100%; display: flex; justify-content: center; background: var(--v2-key); border-radius: 16px; box-shadow: inset 0 0 0 1px var(--v2-key-edge); }
 .v2s-field .v2f { width: 100%; height: auto; min-height: 260px; }
 .v2s-hint { font-size: 14px; color: var(--v2-ink-2); padding: 0 6px; }
 .v2s-body { font-size: 16px; line-height: 1.6; padding: 4px 6px; }
 .v2s-group { font-size: 13px; font-weight: 700; color: var(--v2-ink-3); padding: 6px 6px 0; letter-spacing: .06em; }
 .v2s-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.v2s-seg button { min-height: 52px; border-radius: 14px; border: 2px solid var(--v2-line); background: var(--v2-panel-2); font-size: 17px; font-weight: 800; }
+.v2s-seg button { min-height: 52px; border-radius: var(--v2-r-key); border: 1px solid var(--v2-key-edge); background: var(--v2-key); font-size: 17px; font-weight: 800; }
 .v2s-seg button[aria-checked="true"] { background: var(--v2-white); color: var(--v2-dark); border-color: var(--v2-white); }
 .v2s-runs, .v2s-outs { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0 4px; }
 .v2s-runs-k { font-size: 16px; font-weight: 700; }
 .v2s-runs b, .v2s-outs b { min-width: 1.6em; text-align: center; font-family: var(--fl-mincho, serif); font-size: 34px; font-weight: 900; font-variant-numeric: tabular-nums; }
 .v2s-runs-hint { flex: 1 1 10em; font-size: 13px; color: var(--v2-ink-3); }
-.v2s-step { width: 56px; height: 52px; border-radius: 14px; border: 2px solid var(--v2-line); background: var(--v2-panel-2); font-size: 26px; font-weight: 800; }
+.v2s-step { width: 56px; height: 52px; border-radius: var(--v2-r-key); border: 1px solid var(--v2-key-edge); background: var(--v2-key); font-size: 26px; font-weight: 800; }
 .v2s-primary { min-height: 60px; border-radius: 16px; border: 3px solid var(--v2-white); background: var(--v2-tone, var(--v2-white)); color: var(--v2-dark); font-size: 20px; font-weight: 800; }
-.v2s-secondary { min-height: 52px; border-radius: 16px; border: 2px solid var(--v2-line); background: var(--v2-panel-2); font-size: 16px; font-weight: 700; text-align: center; }
+.v2s-secondary { min-height: 52px; border-radius: var(--v2-r-key); border: 1px solid var(--v2-key-edge); background: var(--v2-key); font-size: 16px; font-weight: 700; text-align: center; }
 .v2s-danger { color: var(--v2-out); border-color: color-mix(in srgb, var(--v2-out) 50%, transparent); }
-.v2s-item { min-height: 56px; display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; row-gap: 0; padding: 6px 14px; border-radius: 16px; border: 1px solid transparent; background: var(--v2-panel-2); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06); text-align: left; }
+.v2s-item { min-height: 54px; display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; row-gap: 0; padding: 6px 14px; border-radius: var(--v2-r-key); border: 1px solid var(--v2-key-edge); background: var(--v2-key); box-shadow: none; text-align: left; }
+.v2s-item.on { border: 2px solid var(--v2-on); padding: 5px 13px; }
 .v2s-item > span { flex: 1 1 auto; min-width: 0; font-size: 17px; font-weight: 700; }
-.v2s-item > small { flex: 0 1 auto; font-size: 13px; color: var(--v2-ink-3); }
+.v2s-item > small { flex: 0 1 auto; font-size: 13px; color: var(--v2-ink-2); }
 .v2s-jersey { color: var(--v2-ink-3); font-variant-numeric: tabular-nums; }
 .v2s-switch { position: relative; padding-right: 76px; }
 .v2s-switch > i { position: absolute; right: 14px; top: 50%; width: 50px; height: 30px; margin-top: -15px; border-radius: 999px; background: var(--v2-neutral); border: 2px solid var(--v2-ink-3); }
@@ -281,18 +304,20 @@ body.v2-live-on { overflow: hidden; }
 .v2s-switch[aria-checked="true"] > i { background: var(--v2-hit); border-color: var(--v2-white); }
 .v2s-switch[aria-checked="true"] > i::after { left: 23px; background: var(--v2-dark); }
 .v2s-bases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.v2s-base { min-height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; border: 2px solid var(--v2-line); background: var(--v2-panel-2); }
+.v2s-base { min-height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--v2-r-key); border: 1px solid var(--v2-key-edge); background: var(--v2-key); }
 .v2s-base b { font-size: 18px; font-weight: 800; }
 .v2s-base small { font-size: 13px; color: var(--v2-ink-3); }
 .v2s-base.on { background: var(--v2-run); border: 3px solid var(--v2-white); color: var(--v2-dark); }
 .v2s-base.on small { color: var(--v2-dark); }
-.v2s-rec { min-height: 48px; display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 14px; border: 1px solid transparent; background: var(--v2-panel-2); text-align: left; }
+.v2s-rec { min-height: 48px; display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: var(--v2-r-key); border: 1px solid var(--v2-key-edge); background: var(--v2-key); text-align: left; }
 .v2s-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
-.v2s-chip { min-height: 48px; border-radius: 999px; border: 2px solid var(--v2-tone, var(--v2-line)); background: var(--v2-panel-2); font-size: 15px; font-weight: 800; white-space: nowrap; }
+.v2s-chip { min-height: 48px; border-radius: 999px; border: 2px solid var(--v2-tone, var(--v2-key-edge)); background: var(--v2-key); color: var(--v2-tone, var(--v2-ink)); font-size: 15px; font-weight: 800; white-space: nowrap; }
 .v2s-chip[aria-pressed="true"] { background: var(--v2-tone); color: var(--v2-dark); border-color: var(--v2-white); }
 
 /* ---- B4 同步膠囊（和離線狀態合併；每個狀態都有字或形狀，不只靠顏色，D14） ---- */
-.v2l-cap { flex: 0 0 auto; min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 999px; border: 2px solid color-mix(in srgb, var(--v2-cap, var(--v2-line)) 75%, transparent); background: var(--v2-panel-2); color: var(--v2-ink); font-size: 14px; font-weight: 800; white-space: nowrap; }
+.v2l-cap { flex: 0 0 auto; min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 999px; border: 2px solid transparent; background: var(--v2-glass); box-shadow: var(--v2-glass-edge); color: var(--v2-ink-2); font-size: 14px; font-weight: 800; white-space: nowrap; }
+/* 正常（已同步）是低調玻璃；異常（待上傳、上傳中、離線、新版本）實底＋色框；失敗整顆實色。 */
+.v2c-pend, .v2c-busy, .v2c-off, .v2c-new { background: var(--v2-key); box-shadow: none; border-color: var(--v2-cap); }
 .v2l-cap svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .v2c-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--v2-cap); }
 .v2c-ok { --v2-cap: var(--v2-hit); }
@@ -403,10 +428,13 @@ body.v2-live-on .ui-app-bar { display: none !important; }
 
 /* ---- 平板直式 ---- */
 @media (min-width: 768px) {
-  .v2-live { gap: 10px; padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); --v2-gap: 10px; }
+  .v2-live { gap: 10px; padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); --v2-gap: 8px; }
   .v2l-board { min-height: 104px; padding: 10px 18px; }
-  .v2l-inn b, .v2l-score b { font-size: 52px; }
-  .v2l-team { display: inline-block; font-size: 15px; max-width: 8em; }
+  .v2l-inn b { font-size: 52px; }
+  .v2l-score b { font-size: 40px; }
+  /* 寬畫面：隊名和比分不要被拉到兩端，整組置中（比分仍右齊、留兩位數寬）。 */
+  .v2l-score { grid-template-columns: minmax(0, 14em) auto; justify-content: center; column-gap: 28px; }
+  .v2l-team { font-size: 17px; }
   .v2l-vs { font-size: 17px; }
   /* 直式：打者卡和最近紀錄並排在上，球場吃下面整個寬度（不要擠在右半邊、左下留白）。 */
   .v2l-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 10px; }
@@ -414,13 +442,13 @@ body.v2-live-on .ui-app-bar { display: none !important; }
   .v2l-recent { grid-column: 2; grid-row: 1; overflow: hidden; }
   .v2l-field { grid-column: 1 / 3; grid-row: 2; }
   .v2l-pad5, .v2l-pad4 { grid-auto-rows: minmax(84px, auto); }
-  .v2l-key { min-height: 84px; border-radius: 18px; }
+  .v2l-key { min-height: 84px; }
   .v2l-key b { font-size: 28px; }
   .v2l-key small { font-size: 14px; }
   .v2l-snack { justify-self: center; width: min(100%, 640px); }
   .v2l-snack-t { font-size: 32px; }
   .v2l-layer { align-items: center; padding: 24px; }
-  .v2l-sheet { max-width: 560px; border-radius: 22px; border-bottom: 1px solid var(--v2-line); padding: 12px 12px 16px; }
+  .v2l-sheet { max-width: 560px; border-radius: 24px; border-bottom: 1px solid var(--v2-line); padding: 12px 12px 16px; }
   .v2l-sheet.wide { max-width: 720px; }
   .v2s-field .v2f { min-height: 320px; max-height: 52vh; }
 }
@@ -448,12 +476,14 @@ body.v2-live-on .ui-app-bar { display: none !important; }
 }
 
 /* ---- 戶外高對比（⋯ 選單）：純黑底、純白字、粗框 ---- */
-:is(.v2-live, .v2-setup-host).hc { --v2-bg: #000; --v2-panel: #000; --v2-panel-2: #000; --v2-sheet: #000; --v2-edge: none; --v2-line: #fff; --v2-ink: #fff; --v2-ink-2: #fff; --v2-ink-3: #e6e6e6; }
+:is(.v2-live, .v2-setup-host).hc { --v2-bg: #000; --v2-panel: #000; --v2-panel-2: #000; --v2-sheet: #000; --v2-edge: none; --v2-glass: #000; --v2-glass-edge: none; --v2-key: #000; --v2-key-edge: #fff; --v2-line: #fff; --v2-ink: #fff; --v2-ink-2: #fff; --v2-ink-3: #e6e6e6; }
 .v2-live.hc { background: #000; }
 .v2-live.hc .v2l-key, .v2-live.hc .v2l-board, .v2-live.hc .v2l-card, .v2-live.hc .v2s-item, .v2-live.hc .v2l-sit { border-width: 3px; border-color: var(--v2-line); }
 .v2-live.hc .v2l-key { background: #000; border-color: var(--v2-tone, #fff); }
 .v2-live.hc .v2l-key small { color: #fff; }
 .v2-live.hc .v2l-sheet, .v2-live.hc .v2l-icon, .v2-live.hc .v2l-cap { border: 2px solid #fff; box-shadow: none; }
+.v2-live.hc .v2l-sheet { background: #000; }
+.v2-live.hc .v2l-recent, .v2-live.hc .v2l-field { box-shadow: inset 0 0 0 2px #fff; }
 .v2-setup-host.hc .v2l-setup { border: 3px solid #fff; }
 .v2-setup-host.hc :is(.v2u-f, .v2u-seg, .v2u-dh, .v2u-name, .v2u-pos, .v2u-old, .v2u-clear) { border: 2px solid #fff; }
 
