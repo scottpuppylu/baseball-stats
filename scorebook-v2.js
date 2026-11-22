@@ -159,7 +159,9 @@
   root.setAttribute('aria-label', '新版場記');
   root.hidden = true;
   root.innerHTML = '<header class="v2l-head"></header><section class="v2l-board" data-v2-board aria-live="polite"></section>'
-    + '<div class="v2l-main"><div class="v2l-card"></div><ol class="v2l-recent" aria-label="本半局"></ol><div class="v2l-field" aria-hidden="true"></div></div>'
+    // WO-08（PO-47）：打者卡／投手卡整張是「打序」入口（只開 sheet，不記任何東西）；平板直式在卡片下方常駐一條打序。
+    + '<div class="v2l-main"><div class="v2l-card" role="button" tabindex="0" data-act="lineup" data-v2-fb aria-haspopup="dialog"></div><ol class="v2l-recent" aria-label="本半局"></ol>'
+    + '<div class="v2l-order" role="group" aria-label="打序"></div><div class="v2l-field" aria-hidden="true"></div></div>'
     + '<div class="v2l-padwrap"></div>'
     + '<div class="v2l-snack" role="status" aria-live="assertive" hidden></div>'
     + '<div class="v2l-warnbar" role="alert" hidden><p>這台裝置的儲存空間滿了，紀錄可能沒存進本機。請先上傳本局。</p><button type="button" data-act="upload">上傳本局</button></div>'
@@ -182,7 +184,7 @@
   veil.hidden = true;
   document.body.append(veil);
   const $ = sel => root.querySelector(sel);
-  const els = {head: $('.v2l-head'), board: $('.v2l-board'), card: $('.v2l-card'), recent: $('.v2l-recent'), field: $('.v2l-field'),
+  const els = {head: $('.v2l-head'), board: $('.v2l-board'), card: $('.v2l-card'), recent: $('.v2l-recent'), order: $('.v2l-order'), field: $('.v2l-field'),
     pad: $('.v2l-padwrap'), snack: $('.v2l-snack'), layer: $('.v2l-layer'), sheet: $('.v2l-sheet'),
     warn: $('.v2l-warnbar'), lock: $('.v2l-lock'), setup: setupHost.querySelector('.v2l-setup')};
   try { if (localStorage.getItem(HC_KEY) === '1') { root.classList.add('hc'); setupHost.classList.add('hc'); } } catch (error) { /* 沒有儲存空間：預設關 */ }
@@ -331,13 +333,11 @@
       const pos = positions(g)[idx] || '';
       const next = g.lineup[(idx + 1) % n];
       // WO-06 R2（B1）：兩行。第一行棒次＋姓名（最大）＋背號；第二行本場成績小標籤（實底），下一棒放第二行右側。
-      const pas = [];
-      for (const inn of g.innings || []) for (const p of inn.plateAppearances || []) if (p.batterName === name && !p.isRunnerOut) pas.push(p.result);
-      const tags = pas.slice(-cardTagMax()).map(code => `<span class="v2l-stat tone-${RESULT_TONE[code] || 'on'}">${esc(CARD_SHORT[code] || RESULT_NAME[code] || code)}</span>`).join('');
-      const more = pas.length > cardTagMax() ? `<span class="v2l-stat-more">+${pas.length - cardTagMax()}</span>` : '';
+      const pas = batterPas(g, name);
+      els.card.setAttribute('aria-label', `打序：目前第 ${idx + 1} 棒 ${name || ''}。點一下看全部棒次、換人、改目前打者`);
       els.card.innerHTML = `<p class="v2l-card-l1"><span class="v2l-card-k">第 ${idx + 1} 棒${pos ? ` · ${esc(pos)}` : ''}</span><b class="v2l-card-name">${esc(name || '')}</b>`
-        + `<span class="v2l-card-no">${esc(jersey(name).trim())}</span></p>`
-        + `<p class="v2l-card-l2"><span class="v2l-stats" aria-label="本場成績"><span class="v2l-stat-k">本場</span>${pas.length ? more + tags : '<span class="v2l-stat-none">還沒打</span>'}</span>`
+        + `<span class="v2l-card-no">${esc(jersey(name).trim())}</span>${CARD_GO}</p>`
+        + `<p class="v2l-card-l2"><span class="v2l-stats" aria-label="本場成績"><span class="v2l-stat-k">本場</span>${pas.length ? statTags(pas, cardTagMax()) : '<span class="v2l-stat-none">還沒打</span>'}</span>`
         + `<span class="v2l-card-next">下一棒 <span class="v2-nb">${esc(next || '')}</span></span></p>`;
     } else {
       const p = g.pitcherName;
@@ -349,12 +349,40 @@
         else if (e.type in count) count[e.type] += 1;
       }
       const stat = (tone, text) => `<span class="v2l-stat tone-${tone}">${text}</span>`;
+      els.card.setAttribute('aria-label', `打序：登板投手 ${p || '未選'}。點一下看全部棒次、防守換人、換投`);
       els.card.innerHTML = `<p class="v2l-card-l1"><span class="v2l-card-k">登板投手</span><b class="v2l-card-name">${p ? esc(p) : '還沒選投手'}</b>`
-        + `<span class="v2l-card-no">${p ? esc(jersey(p).trim()) : ''}</span></p>`
+        + `<span class="v2l-card-no">${p ? esc(jersey(p).trim()) : ''}</span>${CARD_GO}</p>`
         + `<p class="v2l-card-l2"><span class="v2l-stats" aria-label="本場成績"><span class="v2l-stat-k">本場</span>`
         + (p ? stat('out', `${count.K} 三振`) + stat('on', `${count.BB} 保送`) + stat('hit', `${count.HIT} 被安`) + stat('run', `失 ${count.RUN} 分`) : '')
-        + '</span><span class="v2l-card-next">換投在記分盤右下</span></p>';
+        + '</span><span class="v2l-card-next">換投在打序或記分盤右下</span></p>';
     }
+  }
+  const CARD_GO = '<span class="v2l-card-go" aria-hidden="true">打序 ›</span>';
+  // 本場成績（打者卡、打序 sheet 共用）：這位打者本場的打席結果，照時間順序；放不下的寫 +N。
+  function batterPas(g, name) {
+    const pas = [];
+    for (const inn of g.innings || []) for (const p of inn.plateAppearances || []) if (p.batterName === name && !p.isRunnerOut) pas.push(p.result);
+    return pas;
+  }
+  const statTags = (pas, max) => (pas.length > max ? `<span class="v2l-stat-more">+${pas.length - max}</span>` : '')
+    + pas.slice(-max).map(code => `<span class="v2l-stat tone-${RESULT_TONE[code] || 'on'}">${esc(CARD_SHORT[code] || RESULT_NAME[code] || code)}</span>`).join('');
+  // 目前／下一棒標記（打序 sheet、常駐打序共用）。防守時目前那棒是下個進攻半局先打的人。
+  function orderMark(g, i) {
+    const n = (g.lineup || []).length || 1;
+    const cur = (g.currentBatterIdx || 0) % n;
+    if (i === cur) return weBat(g) ? '目前' : '下局先打';
+    return weBat(g) && i === (cur + 1) % n ? '下一棒' : '';
+  }
+  // WO-08（A2）：平板直式在卡片下方常駐一條打序（CSS 只在那個版面顯示）。點任一棒打開打序 sheet，停在那一棒。
+  function renderOrder(g) {
+    const lineup = g.lineup || [];
+    const cur = (g.currentBatterIdx || 0) % (lineup.length || 1);
+    els.order.style.setProperty('--v2-n', String(Math.max(1, lineup.length)));
+    els.order.innerHTML = lineup.map((name, i) => {
+      const mark = orderMark(g, i);
+      return `<button type="button" class="v2l-ord${i === cur ? ' on' : ''}" data-act="lineup" data-i="${i}" data-v2-fb`
+        + ` aria-label="第 ${i + 1} 棒 ${esc(name || '')}${mark ? `（${mark}）` : ''}：打開打序"><small>${i + 1}${mark ? ` ${mark}` : ''}</small><b>${esc(name || '—')}</b></button>`;
+    }).join('');
   }
   // 手機寬度只放得下最近 3 個標籤（多的寫 +N），平板以上 4 個。
   const cardTagMax = () => (window.innerWidth < 768 ? 3 : 4);
@@ -595,7 +623,7 @@
     shown = true;
     root.classList.toggle('v2l-bat', weBat(g));
     root.classList.toggle('v2l-def', !weBat(g));
-    renderHead(g); renderBoard(g); renderCard(g); renderRecent(g); renderField(g); renderPad(g); renderSnack();
+    renderHead(g); renderBoard(g); renderCard(g); renderRecent(g); renderOrder(g); renderField(g); renderPad(g); renderSnack();
     // A7：結束並同步上傳中照舊版鎖住（記分盤、頁首按鈕、清單都不能點），顯示「日誌同步中」。
     const locked = ui.ending || finalizing();
     root.classList.toggle('v2l-locked', locked);
@@ -1171,6 +1199,18 @@
     els.sheet.innerHTML = '';
     syncRoot();
   }
+  // 打序 sheet：打開後捲到要看的那一棒（預設目前打者）；從常駐打序點進來時焦點放在那一棒的「從這棒打」。
+  function openLineup(at) {
+    const g = live();
+    if (!g) return;
+    ui.sub = null;
+    openSheet('lineup');
+    const i = at != null ? at : (g.currentBatterIdx || 0) % ((g.lineup || []).length || 1);
+    const row = els.sheet.querySelector(`[data-v2-row="${i}"]`);
+    if (!row) return;
+    row.scrollIntoView({block: 'nearest'});
+    if (at != null) row.querySelector('[data-act="pick-batter"]')?.focus({preventScroll: true});
+  }
   const sheetHead = (title, tone) => `<div class="v2s-head${tone ? ` tone-${tone}` : ''}"><h3 class="v2s-title">${title}</h3><button type="button" class="v2l-icon v2s-x" data-act="close" aria-label="關閉">×</button></div>`;
   function drawSheet() {
     const g = live();
@@ -1224,12 +1264,6 @@
         + `<b data-v2-opp>${g.finalScore?.opp || 0}</b><button type="button" class="v2s-step" data-act="opp" data-d="1" aria-label="對手多 1 分" data-v2-fb data-v2-hap>＋</button></div>`
         + '<p class="v2s-hint">壘包只是備忘，記結果不會自動改。撤銷後出局數依紀錄重算。對手分數隨時可改，我方進攻時也行。</p>';
     },
-    batter(g) {
-      const pos = positions(g);
-      return sheetHead('改目前打者')
-        + '<p class="v2s-hint">打序跑掉時用：點的那一棒就是現在上場打擊的人。</p>'
-        + (g.lineup || []).map((n, i) => `<button type="button" class="v2s-item${i === g.currentBatterIdx ? ' on' : ''}" aria-current="${i === g.currentBatterIdx}" data-act="pick-batter" data-i="${i}" data-v2-fb data-v2-hap><span>第 ${i + 1} 棒 · ${playerName(n)}</span><small>${i === g.currentBatterIdx ? '目前' : pos[i] ? `守 ${esc(pos[i])}` : ''}</small></button>`).join('');
-    },
     pitcher(g) {
       const {teamNames, guestNames} = getAllAvailablePlayerNames();
       const lineup = g.lineup || [];
@@ -1248,20 +1282,36 @@
         + `<button type="button" class="v2s-primary tone-white" data-act="pitcher-yes" data-v2-fb data-v2-hap data-autofocus>確定換投</button>`
         + '<button type="button" class="v2s-secondary" data-act="close">不換</button>';
     },
-    sub(g) {
-      const pos = positions(g);
-      if (ui.sub == null) {
-        return sheetHead('換人：換下誰？')
-          + '<p class="v2s-hint">代打、代跑、守備換人都在這裡；換上的人接手同一棒與守位。</p>'
-          + (g.lineup || []).map((n, i) => `<button type="button" class="v2s-item${i === g.currentBatterIdx ? ' on' : ''}" data-act="sub-slot" data-i="${i}"><span>第 ${i + 1} 棒 · ${playerName(n)}</span>${pos[i] ? `<small>守 ${esc(pos[i])}</small>` : ''}</button>`).join('');
-      }
-      const {teamNames, guestNames} = getAllAvailablePlayerNames();
+    // WO-08（A3）：打序。一列一棒：棒次、姓名、守位、本場成績；每列「從這棒打」（= 改目前打者）、「換人」（棒次已選好，下一步就是選球員）。
+    // 底部「換投」「DH 制」。⋯ 的「換人」「改目前打者」也打開這裡，只有一套流程。
+    lineup(g) {
       const lineup = g.lineup || [];
-      const pool = [...teamNames, ...guestNames].filter((n, i, all) => n && !lineup.includes(n) && all.indexOf(n) === i);
-      return sheetHead(`換下第 ${ui.sub + 1} 棒 ${esc(lineup[ui.sub])}`)
-        + '<button type="button" class="v2s-secondary" data-act="sub-back">‹ 重選棒次</button>'
-        + '<button type="button" class="v2s-secondary" data-act="sub-guest">＋ 新增支援選手並換上</button>'
-        + (pool.map(n => `<button type="button" class="v2s-item" data-act="sub-pick" data-name="${esc(n)}" data-v2-fb data-v2-hap><span>${playerName(n)}</span><small>${guestNames.includes(n) ? '支援' : '場下'}</small></button>`).join('') || '<p class="v2s-hint">沒有可以換上的球員</p>');
+      if (ui.sub != null) {
+        const {teamNames, guestNames} = getAllAvailablePlayerNames();
+        const pool = [...teamNames, ...guestNames].filter((n, i, all) => n && !lineup.includes(n) && all.indexOf(n) === i);
+        return sheetHead(`換下第 ${ui.sub + 1} 棒 ${esc(lineup[ui.sub])}`)
+          + '<p class="v2s-hint">換上的人接手同一棒與守位。</p>'
+          + '<button type="button" class="v2s-secondary" data-act="sub-back">‹ 回打序</button>'
+          + '<button type="button" class="v2s-secondary" data-act="sub-guest">＋ 新增支援選手並換上</button>'
+          + (pool.map(n => `<button type="button" class="v2s-item" data-act="sub-pick" data-name="${esc(n)}" data-v2-fb data-v2-hap><span>${playerName(n)}</span><small>${guestNames.includes(n) ? '支援' : '場下'}</small></button>`).join('') || '<p class="v2s-hint">沒有可以換上的球員</p>');
+      }
+      const pos = positions(g);
+      const cur = (g.currentBatterIdx || 0) % (lineup.length || 1);
+      const max = window.innerWidth < 768 ? 2 : 4;
+      const rows = lineup.map((name, i) => {
+        const mark = orderMark(g, i);
+        const pas = batterPas(g, name);
+        return `<div class="v2s-item v2s-lrow${i === cur ? ' on' : ''}" data-v2-row="${i}">`
+          + `<b class="v2s-lno" aria-hidden="true">${i + 1}</b>`
+          + `<span class="v2s-lwho"><span class="v2s-lname"><span class="v2s-lnm">${playerName(name)}</span>${pos[i] ? `<span class="v2s-lpos">${esc(pos[i])}</span>` : ''}</span>`
+          + `<span class="v2s-ltags" aria-label="本場成績">${mark ? `<span class="v2s-lmark${i === cur ? ' cur' : ''}">${mark}</span>` : ''}${pas.length ? statTags(pas, max) : '<span class="v2l-stat-none">還沒打</span>'}</span></span>`
+          + `<button type="button" class="v2s-lbtn" data-act="pick-batter" data-i="${i}" aria-current="${i === cur}" aria-label="從第 ${i + 1} 棒 ${esc(name || '')} 打" data-v2-fb data-v2-hap>從這棒打</button>`
+          + `<button type="button" class="v2s-lbtn" data-act="sub-slot" data-i="${i}" aria-label="換下第 ${i + 1} 棒 ${esc(name || '')}" data-v2-fb>換人</button></div>`;
+      }).join('');
+      return sheetHead('打序') + rows
+        + '<p class="v2s-group">投手與 DH</p>'
+        + `<button type="button" class="v2s-item" data-act="pitcher"><span>換投</span><small>目前 ${esc(g.pitcherName || '未選')}</small></button>`
+        + `<button type="button" class="v2s-item" data-act="dh"><span>DH 制</span><small>${g.hasDh ? '目前：有 DH' : '目前：沒有 DH'}</small></button>`;
     },
     dh(g) {
       return sheetHead(g.hasDh ? '取消 DH 制？' : '改用 DH 制？')
@@ -1383,6 +1433,8 @@
   window.addEventListener('blur', release);
   root.addEventListener('keydown', event => {
     if (event.key === 'Escape' && ui.sheet) { event.preventDefault(); closeSheet(); }
+    // 打者卡是 div[role=button]：Enter／空白鍵和點一下一樣，打開打序。
+    if ((event.key === 'Enter' || event.key === ' ') && event.target === els.card && !ui.sheet) { event.preventDefault(); openLineup(null); }
   });
 
   // 落點：getScreenCTM().inverse() 換算成 400 座標（放大後也準），存法和舊版 handleFieldClick 一樣。
@@ -1480,11 +1532,13 @@
       changePitcher(name, btn);
     },
     'pitcher-yes'(btn) { changePitcher(ui.pitcher, btn); },
-    sub() { ui.sub = null; openSheet('sub'); },
+    // WO-08：主畫面打者卡／投手卡、平板常駐打序、⋯ 的「換人」「改目前打者」都打開同一個打序 sheet。
+    lineup(btn) { openLineup(btn && btn.dataset.i != null ? Number(btn.dataset.i) : null); },
+    sub() { openLineup(null); },
     'sub-slot'(btn) { ui.sub = Number(btn.dataset.i); drawSheet(); },
     'sub-back'() { ui.sub = null; drawSheet(); },
     'sub-guest'() { substituteGuest(); },
-    batter() { openSheet('batter'); },
+    batter() { openLineup(null); },
     'pick-batter'(btn) { setBatter(Number(btn.dataset.i), btn); },
     opp(btn) { if (adjustOpp(Number(btn.dataset.d), btn) && ui.sheet === 'sit') drawSheet(); },
     'sub-pick'(btn) { substitute(ui.sub, btn.dataset.name, btn); },

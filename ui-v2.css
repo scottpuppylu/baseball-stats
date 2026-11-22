@@ -185,6 +185,13 @@ body.v2-live-on { overflow: hidden; }
 .v2l-stat { flex: 0 0 auto; min-height: 26px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 8px; background: var(--v2-key); box-shadow: inset 0 0 0 1px var(--v2-key-edge); color: var(--v2-tone, var(--v2-ink)); font-size: 13px; font-weight: 800; white-space: nowrap; }
 .v2l-card-next { flex: 0 1 auto; min-width: 0; margin-left: auto; font-size: 13px; color: var(--v2-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 767px) { .v2l-def .v2l-card-next { display: none; } }
+/* WO-08（PO-47）：打者卡／投手卡整張是「打序」按鈕。右上角小字「打序 ›」；按下 3 px 色框，內距同步縮 2 px，卡片高度不變（記分盤不動）。 */
+.v2l-card { cursor: pointer; text-align: left; color: inherit; }
+.v2l-card.v2-down { padding: 6px 12px 8px; }
+.v2l-card:focus-visible { outline: 2px solid var(--v2-on); outline-offset: 2px; }
+.v2l-card-go { flex: 0 0 auto; margin-left: auto; padding: 1px 0 1px 6px; font-size: 13px; font-weight: 800; color: var(--v2-on); white-space: nowrap; align-self: center; }
+/* 常駐打序（只在平板直式顯示，見下方 media） */
+.v2l-order { display: none; }
 .v2l-recent { flex: 0 0 auto; list-style: none; display: flex; flex-direction: column; gap: 2px; padding: 4px 8px; border-radius: 18px; background: var(--v2-glass); box-shadow: var(--v2-glass-edge); }
 .v2l-recent li { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 2px 4px; font-size: 15px; }
 .v2l-recent .v2l-empty { color: var(--v2-ink-2); font-size: 14px; }
@@ -298,6 +305,24 @@ body.v2-live-on { overflow: hidden; }
 .v2s-item > span { flex: 1 1 auto; min-width: 0; font-size: 17px; font-weight: 700; }
 .v2s-item > small { flex: 0 1 auto; font-size: 13px; color: var(--v2-ink-2); }
 .v2s-jersey { color: var(--v2-ink-3); font-variant-numeric: tabular-nums; }
+/* WO-08（A3）打序列：一列一棒，左邊棒次＋姓名／守位＋目前／下一棒＋本場成績，右邊「從這棒打」「換人」兩顆實心鍵。列高 54（52–56）。 */
+.v2s-lrow { flex-wrap: nowrap; height: 54px; min-height: 54px; padding: 4px 6px 4px 10px; column-gap: 8px; }
+.v2s-lrow.on { padding: 3px 5px 3px 9px; }
+.v2s-lno { flex: 0 0 22px; text-align: center; font-family: var(--fl-mincho, serif); font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--v2-ink-2); }
+.v2s-lrow.on .v2s-lno { color: var(--v2-on); }
+.v2s-item > .v2s-lwho { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 16px; }
+.v2s-lname { display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; line-height: 1.2; }
+.v2s-lnm { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.v2s-lpos { flex: 0 0 auto; font-size: 13px; font-weight: 700; color: var(--v2-ink-2); }
+.v2s-ltags { display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.v2s-ltags .v2l-stat { min-height: 20px; padding: 0 6px; font-size: 12px; }
+.v2s-ltags .v2l-stat-none, .v2s-ltags .v2l-stat-more { font-size: 12px; }
+.v2s-lmark { flex: 0 0 auto; font-size: 12px; font-weight: 800; color: var(--v2-ink-2); }
+.v2s-lmark.cur { color: var(--v2-on); }
+.v2s-lbtn { flex: 0 0 auto; height: 44px; padding: 0 12px; border-radius: var(--v2-r-key); border: 1px solid var(--v2-line); background: var(--v2-neutral); color: var(--v2-ink); font-size: 15px; font-weight: 800; white-space: nowrap; }
+.v2s-lbtn[data-act="pick-batter"] { padding: 0 10px; }
+.v2-live.hc .v2s-lbtn { background: var(--v2-key); border: 2px solid var(--v2-line); }
+@media (max-width: 359px) { .v2s-lbtn { padding: 0 8px; font-size: 14px; } }
 .v2s-switch { position: relative; padding-right: 76px; }
 .v2s-switch > i { position: absolute; right: 14px; top: 50%; width: 50px; height: 30px; margin-top: -15px; border-radius: 999px; background: var(--v2-neutral); border: 2px solid var(--v2-ink-3); }
 .v2s-switch > i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--v2-ink-2); }
@@ -442,6 +467,16 @@ body.v2-live-on .ui-app-bar { display: none !important; }
   .v2l-recent { grid-column: 2; grid-row: 1; overflow: hidden; }
   .v2l-field { grid-column: 1 / 3; grid-row: 2; }
   .v2l-pad5, .v2l-pad4 { grid-auto-rows: minmax(84px, auto); }
+  /* WO-08（A2）：常駐打序（直式）。卡片＋本半局下面一條，一棒一格；只吃球場的高度，記分盤不動。橫式另在下面關掉。 */
+  .v2l-main { grid-template-rows: auto auto minmax(0, 1fr); }
+  .v2l-order { grid-column: 1 / 3; grid-row: 2; display: grid; grid-template-columns: repeat(var(--v2-n, 10), minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 18px; background: var(--v2-glass); box-shadow: var(--v2-glass-edge); }
+  .v2l-field { grid-row: 3; }
+  .v2l-ord { min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 2px 3px; border-radius: var(--v2-r-key); border: 1px solid var(--v2-key-edge); background: var(--v2-key); color: var(--v2-ink); }
+  .v2l-ord small { font-size: 11px; font-weight: 700; line-height: 1.2; color: var(--v2-ink-2); white-space: nowrap; overflow: hidden; max-width: 100%; }
+  .v2l-ord b { max-width: 100%; font-size: 14px; font-weight: 800; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .v2l-ord.on { border: 2px solid var(--v2-on); }
+  .v2l-ord.on small { color: var(--v2-on); }
+  .v2-live.hc .v2l-ord { border: 2px solid var(--v2-line); }
   .v2l-key { min-height: 84px; }
   .v2l-key b { font-size: 28px; }
   .v2l-key small { font-size: 14px; }
@@ -466,6 +501,8 @@ body.v2-live-on .ui-app-bar { display: none !important; }
   .v2l-card { grid-column: 1; grid-row: 1; }
   .v2l-recent { grid-column: 1; grid-row: 2; }
   .v2l-field { grid-column: 1; grid-row: 3; }
+  /* 橫式、桌機：左欄放不下常駐打序（會把球場壓掉），照手機做法——點打者卡開打序。 */
+  .v2l-order { display: none; }
   .v2l-three { flex: 1 1 auto; align-content: center; }
   .v2l-snack { grid-area: main; }
   .v2-live.v2l-warning { grid-template-rows: auto auto auto minmax(0, 1fr); grid-template-areas: "head head" "board pad" "warn pad" "main pad"; }
