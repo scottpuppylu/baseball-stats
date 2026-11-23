@@ -215,3 +215,22 @@ test('the recommendation search gives bit-identical results on the page and afte
     assert.deepStrictEqual(structuredClone(M.simulateRecommendation(structuredClone(input))), expected);
   }
 });
+test('WO-05 B7: a recommendation computed later, on demand, is identical to one computed at page load', () => {
+  // PO-30a moves the search behind 「更多 → 建議打線 → 計算」. The search keeps no state between calls, so running it
+  // after other model work (what the page does before 計算 is pressed) must give the same batting order and runs.
+  const mk = (name, h, bb) => ({name, pa: 42, bb, k: 4, h1: h, h2: 3, h3: 1, hr: h > 10 ? 1 : 0, gb: 9, fb: 6, ld: 5, pu: 2});
+  const players = [...Array(10)].map((_, i) => mk('q' + i, 5 + i, 1 + (i % 4)));
+  const team = M.teamRates(players), models = players.map(p => M.batterModel(p, team));
+  const input = {models, team, settings: {}, lineupSize: 10, history: {games: 3, average: 4.2},
+    historyFormat: {timeLimit: 90, rule: 'noNewInning', maxInnings: 7}, legacyStarts: [[...Array(10).keys()]], lockEntries: [[0, 3]], legacyModels: models};
+  const eager = M.simulateRecommendation(structuredClone(input));
+  // Unrelated work in between (other tabs, a custom order evaluated, a different recommendation).
+  const cfg = M.makeConfig({}, team, 10);
+  M.evaluateOrder(models, [...Array(10).keys()].reverse(), cfg);
+  M.slotSensitivity(models, [...Array(10).keys()], cfg, new Map());
+  M.simulateRecommendation({...structuredClone(input), lockEntries: []});
+  const deferred = M.simulateRecommendation(structuredClone(input));
+  assert.deepStrictEqual(deferred.order, eager.order, 'same batting order slot by slot');
+  assert.equal(deferred.order[0], 3, 'the lock still holds');
+  assert.deepStrictEqual(deferred, eager);
+});
