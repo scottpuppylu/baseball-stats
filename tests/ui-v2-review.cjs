@@ -329,9 +329,17 @@ function diffPaths(a, b, at = '') {
           rec('download', [name, hash]);
         };
       });
+      // 賽後圖的字型由共用的 prepareAssets 最多等 2.5 秒；機器忙時一邊等到、一邊沒等到，PNG 就會不同（與新舊版無關）。
+      // 選場前兩邊都先把同樣的字型載好、預覽圖檔先進快取，比的才是同一份輸入。
+      const warm = page => page.evaluate(async () => {
+        await Promise.all(['900 40px "TK Mincho"', '600 24px "Serif Flight"', '700 24px "TK Gothic"'].map(f => document.fonts.load(f, '淡江航太系壘第局出局安打10123456789')));
+        await document.fonts.ready;
+        await Promise.all(['assets/logo-256.webp', 'assets/bg-orbit-portrait.webp'].map(u => fetch(u).then(r => r.blob()).catch(() => {})));
+      });
       const calls = async page => { await page.waitForFunction(n => window.__calls.length >= n, 4, {timeout: 60000}); return page.evaluate(() => window.__calls.slice().sort((a, b) => a[0].localeCompare(b[0]))); };
 
       const L = await open('');
+      await warm(L.page);
       await L.page.evaluate(id => { switchMainTab('tabGames'); gameAnalysis.choose(id); }, id);
       await L.page.waitForFunction(() => window.spray3d && window.gameVideo && window.teamInsights && document.querySelector('#panelGames [data-ga="replay"]'));
       await spy(L.page);
@@ -342,6 +350,7 @@ function diffPaths(a, b, at = '') {
       const N = await open('?ui=v2');
       const ui = v2(N.page);
       await N.page.evaluate(() => Promise.all([window.reviewV2.need('spray3d', 'spray3d.js'), window.reviewV2.need('gameVideo', 'game-video.js')]));
+      await warm(N.page);
       await ui.choose(id);
       await spy(N.page);
       for (const act of ['replay', 'image', 'video']) await ui.tap(`.v2r [data-r="${act}"]`);
