@@ -11,6 +11,16 @@ const {chromium} = require('playwright');
 // Defense in depth: never persist a credential or its legacy declaration if a failing assertion quotes page source.
 const redact = value => String(value).replace(/const GITHUB_TOKEN = [^;]*;/g, 'const GITHUB_TOKEN = [REDACTED];')
   .replace(/gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/g, '[REDACTED]');
+// A failing browser test: keep its error message as well as the tail, so CI shows what actually failed
+// (the last 12 lines alone are usually the stack and hide the assertion's message).
+function failureDetail(text) {
+  const lines = text.trim().split('\n');
+  const first = lines.findIndex(line => /Error|assert|✖|not ok/i.test(line));
+  if (lines.length <= 60 || first < 0) return redact(lines.slice(-60).join('\n'));
+  const head = lines.slice(first, first + 30);
+  const tail = lines.slice(Math.max(first + 30, lines.length - 12));
+  return redact([...head, ...(first + 30 < lines.length - 12 ? ['…'] : []), ...tail].join('\n'));
+}
 
 const root = path.resolve(__dirname, '..');
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
@@ -102,7 +112,7 @@ function run(args, env) {
         UI_PREVIEW_URL: `http://127.0.0.1:${port}`, UI_CDP_URL: `http://127.0.0.1:${cdpPort}`, UI_QA_OUTPUT: output
       });
       const last = text.trim().split('\n').slice(-1)[0] || '';
-      results.push({name, ok: code === 0, detail: code === 0 ? last.slice(0, 140) : text.trim().split('\n').slice(-12).join('\n')});
+      results.push({name, ok: code === 0, detail: code === 0 ? last.slice(0, 140) : failureDetail(text)});
     } catch (error) {
       results.push({name, ok: false, detail: redact(error.message + (preview.diagnostics() ? `\n${preview.diagnostics()}` : ''))});
     } finally {

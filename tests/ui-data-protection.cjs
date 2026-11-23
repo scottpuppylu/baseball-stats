@@ -75,7 +75,7 @@ async function d1(browser, engine) {
   assert.equal(ok, true, `${engine}: retry succeeds`);
   assert.deepEqual((await cloud(page, 'data/games.json')).find(g => g.id === id).finalScore, {us: 12, opp: 8}, `${engine}: the cloud has the edit`);
   assert.equal(await notice(page, 'pending'), '', `${engine}: notice clears`);
-  assert.deepEqual(errors, []);
+  assert.deepEqual(errors, [], `${engine}: page errors ${JSON.stringify(errors)}`);
   await context.close();
 }
 
@@ -120,7 +120,7 @@ async function d2(browser, engine) {
   assert.equal(await page.evaluate(id => allGames.find(g => g.id === id).status, id), 'in_progress', `${engine}: history not marked finished`);
   assert.equal(await page.evaluate(() => document.getElementById('scoreSubPanelLive').inert), false, `${engine}: scorer usable after a failure`);
   await page.evaluate(() => { window.__previewFailWrites = false; });
-  assert.deepEqual(errors, []);
+  assert.deepEqual(errors, [], `${engine}: page errors ${JSON.stringify(errors)}`);
   await context.close();
 }
 
@@ -146,7 +146,7 @@ async function d3(browser, engine) {
   // The retried value is really in IndexedDB (read directly, not through the page's memory copy). Chrome only: a second
   // IndexedDB connection opened from the test intermittently crashes Playwright's WebKit build (whenPersisted above
   // already confirms the write there).
-  if (engine !== 'chrome') { assert.deepEqual(errors, []); await context.close(); return; }
+  if (engine !== 'chrome') { assert.deepEqual(errors, [], `${engine}: page errors ${JSON.stringify(errors)}`); await context.close(); return; }
   const stored = await page.evaluate(() => new Promise((resolve, reject) => {
     const request = indexedDB.open('rebas-cache', 1);
     request.onerror = () => reject(request.error);
@@ -157,7 +157,7 @@ async function d3(browser, engine) {
     };
   }));
   assert.equal(stored, '儲存測試', `${engine}: the retried value is stored in IndexedDB`);
-  assert.deepEqual(errors, []);
+  assert.deepEqual(errors, [], `${engine}: page errors ${JSON.stringify(errors)}`);
   await context.close();
 }
 
@@ -174,7 +174,7 @@ async function d4(browser, engine) {
   assert.equal(result.hasX, false, `${engine}: no coordinates on a review play`);
   assert.equal(result.after, result.before, `${engine}: spray point count unchanged`);
   assert.equal(result.location, 'LF');
-  assert.deepEqual(errors, []);
+  assert.deepEqual(errors, [], `${engine}: page errors ${JSON.stringify(errors)}`);
   await context.close();
 }
 
