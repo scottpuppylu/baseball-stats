@@ -15,6 +15,19 @@ const cloud = (page, file) => page.evaluate(async file => {
   return res.ok ? JSON.parse(base64ToUtf8((await res.json()).content)) : null;
 }, file);
 
+// Signals that WebKit cancelled a script load from this preview (see device()): each returns the .js file, else null.
+const origin = new URL(url).origin;
+const cancelLog = text => {
+  const match = /^Cannot load (https?:\/\/[^/\s]+)\/([^?\s]+\.js)(?:\?\S*)? due to access control checks\.$/.exec(text);
+  return match && match[1] === origin ? match[2] : null;
+};
+const cancelRequest = (address, errorText) => {
+  const where = new URL(address);
+  return where.origin === origin && where.pathname.endsWith('.js') && errorText === 'Load request cancelled' ? where.pathname.slice(1) : null;
+};
+const ignoreCancelledScript = (engine, e, last, now) => engine === 'webkit' && e.name === 'NetworkError' && e.message === 'Load failed'
+  && !e.stack && Boolean(last) && now - last.at >= 0 && now - last.at <= 200;
+
 async function device(browser, width = 1280) {
   const context = await browser.newContext({viewport: {width, height: 900}, serviceWorkers: 'block'});
   await context.addInitScript(() => { window.confirm = () => true; window.alert = () => {}; });
@@ -26,22 +39,19 @@ async function device(browser, width = 1280) {
   // (it happened 1 run in 3, whenever the reload landed during the startup reads). Only that exact message is ignored.
   const cancelledByReload = message => /^(?:Fetch API cannot load https?:\/)?\/127\.0\.0\.1:\d+\/__mock-api\/\S+ due to access control checks\.$/.test(message); // Playwright may drop the "Fetch API cannot load http:/" prefix
   // WebKit also reports a page script whose load a reload cancels (seen for lineup-model.js, before and after WO-05 B7):
-  // it logs "Cannot load http://127.0.0.1:<port>/<file>.js?… due to access control checks." and then a page error
-  // NetworkError "Load failed" with no stack. WebKit only, and only when that log came from this preview, for a .js file,
-  // within 200 ms before the error; each one ignored is printed. Anything else (a page Error, a NetworkError with a stack,
-  // one without that log) still fails the test; probeErrors() below checks that.
-  const isWebkit = browser.browserType().name() === 'webkit';
-  const origin = new URL(url).origin;
+  // it reports a page error NetworkError "Load failed" with no stack, right after either (a) the log "Cannot load
+  // http://127.0.0.1:<port>/<file>.js?… due to access control checks." or (b) a failed request for that .js file with
+  // "Load request cancelled". WebKit only, and only when (a) or (b) came from this preview, for a .js file, within 200 ms
+  // before the error; each one ignored is printed with its signal. Anything else (a page Error, a NetworkError with a
+  // stack, one without (a) or (b)) still fails the test; probeErrors() below checks that.
+  const engine = browser.browserType().name();
   let lastCancel = null;
-  page.on('console', message => {
-    const match = /^Cannot load (https?:\/\/[^/\s]+)\/([^?\s]+\.js)(?:\?\S*)? due to access control checks\.$/.exec(message.text());
-    if (match && match[1] === origin) lastCancel = {file: match[2], at: Date.now()};
-  });
+  page.on('console', message => { const file = cancelLog(message.text()); if (file) lastCancel = {file, at: Date.now(), via: 'a console'}; });
+  page.on('requestfailed', request => { const file = cancelRequest(request.url(), request.failure()?.errorText); if (file) lastCancel = {file, at: Date.now(), via: 'b requestfailed'}; });
   const cancelledScript = e => {
-    if (!isWebkit || e.name !== 'NetworkError' || e.message !== 'Load failed' || e.stack || !lastCancel) return false;
+    if (!ignoreCancelledScript(engine, e, lastCancel, Date.now())) return false;
     const gap = Date.now() - lastCancel.at;
-    if (gap > 200) return false;
-    console.log(`webkit: ignored cancelled script load ${lastCancel.file} (${gap} ms after its log)`);
+    console.log(`webkit: ignored cancelled script load ${lastCancel.file} (${lastCancel.via}, ${gap} ms before the error)`);
     lastCancel = null;
     return true;
   };
@@ -208,8 +218,25 @@ async function probeErrors(browser, engine) {
     setTimeout(() => { const e = new Error('Load failed'); e.name = 'NetworkError'; e.stack = ''; throw e; });
   });
   await page.waitForTimeout(500);
+  // Playwright fills in a stack for a thrown error, so the no-stack cases are checked on the rule itself as well.
+  const cancelled = {name: 'NetworkError', message: 'Load failed', stack: ''};
+  const signal = {file: 'lineup-model.js', at: 1000};
+  assert.equal(ignoreCancelledScript('webkit', cancelled, signal, 1010), true, 'rule: ignored right after a signal');
+  assert.equal(ignoreCancelledScript('webkit', cancelled, null, 1010), false, 'rule: no (a) or (b) signal is reported');
+  assert.equal(ignoreCancelledScript('webkit', cancelled, signal, 1201), false, 'rule: a signal over 200 ms before is reported');
+  assert.equal(ignoreCancelledScript('chromium', cancelled, signal, 1010), false, 'rule: WebKit only');
+  assert.equal(ignoreCancelledScript('webkit', {...cancelled, stack: 'at x'}, signal, 1010), false, 'rule: a NetworkError with a stack is reported');
+  assert.equal(ignoreCancelledScript('webkit', {...cancelled, name: 'TypeError'}, signal, 1010), false, 'rule: other errors are reported');
+  assert.equal(ignoreCancelledScript('webkit', {...cancelled, message: 'Load failed!'}, signal, 1010), false, 'rule: exact message only');
+  assert.equal(cancelLog(`Cannot load ${origin}/lineup-model.js?v=1 due to access control checks.`), 'lineup-model.js', 'signal a: this preview, .js');
+  assert.equal(cancelLog('Cannot load http://example.com/lineup-model.js?v=1 due to access control checks.'), null, 'signal a: other sites do not count');
+  assert.equal(cancelLog(`Cannot load ${origin}/data/games.json due to access control checks.`), null, 'signal a: .js only');
+  assert.equal(cancelRequest(`${origin}/lineup-model.js?v=1`, 'Load request cancelled'), 'lineup-model.js', 'signal b: this preview, .js, cancelled');
+  assert.equal(cancelRequest(`${origin}/lineup-model.js?v=1`, 'net::ERR_ABORTED'), null, 'signal b: exact errorText only');
+  assert.equal(cancelRequest(`${origin}/__mock-api/data/games.json`, 'Load request cancelled'), null, 'signal b: .js only');
+  assert.equal(cancelRequest('http://example.com/a.js', 'Load request cancelled'), null, 'signal b: other sites do not count');
   assert.ok(errors.includes('probe: page error'), `${engine}: a page Error is still reported ${JSON.stringify(errors)}`);
-  assert.equal(errors.filter(m => m === 'Load failed').length, 2, `${engine}: NetworkErrors without a cancelled-load log are still reported ${JSON.stringify(errors)}`);
+  assert.equal(errors.filter(m => m === 'Load failed').length, 2, `${engine}: a NetworkError with a stack, and one with no stack but no (a) or (b) signal, are still reported ${JSON.stringify(errors)}`);
   await context.close();
 }
 
