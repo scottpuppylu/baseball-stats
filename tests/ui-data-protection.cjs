@@ -25,7 +25,27 @@ async function device(browser, width = 1280) {
   // that sent it, and Playwright's WebKit reports that log as a page error, although the page handles the failed request
   // (it happened 1 run in 3, whenever the reload landed during the startup reads). Only that exact message is ignored.
   const cancelledByReload = message => /^(?:Fetch API cannot load https?:\/)?\/127\.0\.0\.1:\d+\/__mock-api\/\S+ due to access control checks\.$/.test(message); // Playwright may drop the "Fetch API cannot load http:/" prefix
-  page.on('pageerror', e => { if (!cancelledByReload(e.message)) errors.push(e.message); });
+  // WebKit also reports a page script whose load a reload cancels (seen for lineup-model.js, before and after WO-05 B7):
+  // it logs "Cannot load http://127.0.0.1:<port>/<file>.js?… due to access control checks." and then a page error
+  // NetworkError "Load failed" with no stack. WebKit only, and only when that log came from this preview, for a .js file,
+  // within 200 ms before the error; each one ignored is printed. Anything else (a page Error, a NetworkError with a stack,
+  // one without that log) still fails the test; probeErrors() below checks that.
+  const isWebkit = browser.browserType().name() === 'webkit';
+  const origin = new URL(url).origin;
+  let lastCancel = null;
+  page.on('console', message => {
+    const match = /^Cannot load (https?:\/\/[^/\s]+)\/([^?\s]+\.js)(?:\?\S*)? due to access control checks\.$/.exec(message.text());
+    if (match && match[1] === origin) lastCancel = {file: match[2], at: Date.now()};
+  });
+  const cancelledScript = e => {
+    if (!isWebkit || e.name !== 'NetworkError' || e.message !== 'Load failed' || e.stack || !lastCancel) return false;
+    const gap = Date.now() - lastCancel.at;
+    if (gap > 200) return false;
+    console.log(`webkit: ignored cancelled script load ${lastCancel.file} (${gap} ms after its log)`);
+    lastCancel = null;
+    return true;
+  };
+  page.on('pageerror', e => { if (!cancelledByReload(e.message) && !cancelledScript(e)) errors.push(e.message); });
   await page.goto(url);
   await ready(page);
   await page.evaluate(() => localCache.ready);
@@ -178,6 +198,21 @@ async function d4(browser, engine) {
   await context.close();
 }
 
+// The page-error filter above still catches real errors: an Error the page throws, a NetworkError "Load failed" that has
+// a stack, and one with no stack but no cancelled-load log before it.
+async function probeErrors(browser, engine) {
+  const {context, page, errors} = await device(browser);
+  await page.evaluate(() => {
+    setTimeout(() => { throw new Error('probe: page error'); });
+    setTimeout(() => { const e = new Error('Load failed'); e.name = 'NetworkError'; throw e; });
+    setTimeout(() => { const e = new Error('Load failed'); e.name = 'NetworkError'; e.stack = ''; throw e; });
+  });
+  await page.waitForTimeout(500);
+  assert.ok(errors.includes('probe: page error'), `${engine}: a page Error is still reported ${JSON.stringify(errors)}`);
+  assert.equal(errors.filter(m => m === 'Load failed').length, 2, `${engine}: NetworkErrors without a cancelled-load log are still reported ${JSON.stringify(errors)}`);
+  await context.close();
+}
+
 (async () => {
   for (const [engine, type] of [['chrome', chromium], ['webkit', webkit]]) {
     const browser = await (engine === 'chrome' ? type.launch({channel: 'chrome', headless: true}) : type.launch());
@@ -186,6 +221,7 @@ async function d4(browser, engine) {
       await d2(browser, engine);
       await d3(browser, engine);
       await d4(browser, engine);
+      await probeErrors(browser, engine);
       console.log(`${engine}: D1 drafts, D2 finish lock, D3 storage failure, D4 review points PASS`);
     } finally { await browser.close(); }
   }

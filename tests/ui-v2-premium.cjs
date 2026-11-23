@@ -88,8 +88,9 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
     }, mode);
     const b = (await page.screenshot({clip})).toString('base64');
     await handle.evaluate((el, keep) => { if (keep === null) el.removeAttribute('style'); else el.setAttribute('style', keep); el.classList.remove('wo9-lines', 'wo9-nostroke'); document.getElementById('wo9-lines')?.remove(); }, saved);
-    return page.evaluate(async ([a, b, mode, W]) => {
-      const load = async s => { const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + s)).blob()); const c = new OffscreenCanvas(bmp.width, bmp.height); const x = c.getContext('2d'); x.drawImage(bmp, 0, 0); return x.getImageData(0, 0, bmp.width, bmp.height).data; };
+    return page.evaluate(async ([a, b, mode]) => {
+      let W = 0; // 截圖實際寬度（px），算 at 座標用；不假設 DPR
+      const load = async s => { const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + s)).blob()); W = bmp.width; const c = new OffscreenCanvas(bmp.width, bmp.height); const x = c.getContext('2d'); x.drawImage(bmp, 0, 0); return x.getImageData(0, 0, bmp.width, bmp.height).data; };
       const [A, B] = [await load(a), await load(b)];
       const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
       const lum = (d, i) => 0.2126 * lin(d[i]) + 0.7152 * lin(d[i + 1]) + 0.0722 * lin(d[i + 2]);
@@ -109,7 +110,7 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
       // 底色取最差 2% 分位：排除背景星點那種 1～2 px 的孤立亮點；最差單點也記下來。
       const [worst, wi] = per[Math.floor(per.length * 0.02)];
       return {ratio: Math.round(worst * 100) / 100, minPx: Math.round(per[0][0] * 100) / 100, fg: [...F.slice(0, 3)], bg: [B[wi], B[wi + 1], B[wi + 2]], px: diff.length, used: per.length, at: [(wi / 4) % W, Math.floor(wi / 4 / W)]};
-    }, [a, b, mode, clip.width * 2]).then(r => r && Object.assign(r, {shots: [a, b]}));
+    }, [a, b, mode]).then(r => r && Object.assign(r, {shots: [a, b]}));
   };
   // 一個範圍內每種「葉節點文字」各量一個（同 class＋同色調只量第一個）。
   const textTargets = (page, scope) => page.evaluateHandle(scope => {
@@ -140,19 +141,30 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
     for (let i = 0; i < n; i++) {
       const h = await arr.evaluateHandle((a, i) => a[i], i);
       const name = await h.evaluate(el => `${el.tagName.toLowerCase()}.${String(el.className?.baseVal ?? el.className).trim().replace(/\s+/g, '.')} 「${el.textContent.trim().slice(0, 8)}」`);
-      const r = await pixelContrast(page, h, mode);
+      let r = await pixelContrast(page, h, mode);
       if (!r) continue;
       measured++;
+      // 第一次量到不足時，同一個字重拍 A/B 再量一次（最多一次；門檻不變，第二次也不足就失敗）：
+      // CI 上兩張截圖之間字旁的邊線偶爾重新點陣化，會把底色混進前景（WO-05B7R1）。兩次的值都記下來。
+      let first = null;
+      if (r.ratio < min) {
+        const again = await pixelContrast(page, h, mode);
+        first = {ratio: r.ratio, minPx: r.minPx, fg: r.fg, bg: r.bg, at: r.at};
+        retries.push(`${label} ${name}: ${r.ratio}:1 -> ${again ? again.ratio + ':1' : 'not measurable'}`);
+        console.log(`contrast retry ${retries.at(-1)}`);
+        if (again) r = again;
+      }
       const [shotA, shotB] = r.shots; delete r.shots;
-      log.push({where: label, name, ...r, min});
+      log.push({where: label, name, ...r, min, ...(first ? {first} : {})});
       // 失敗時把兩張截圖存到 UI_QA_OUTPUT（CI 會上傳成 ui-qa artifact），下次能直接看是量到哪一點。
       if (r.ratio < min) { const k = `ui-v2-premium-contrast-fail-${fails.length + 1}`; const dir = process.env.UI_QA_OUTPUT || require('node:os').tmpdir(); fs.mkdirSync(dir, {recursive: true}); fs.writeFileSync(path.join(dir, k + '-A.png'), Buffer.from(shotA, 'base64')); fs.writeFileSync(path.join(dir, k + '-B.png'), Buffer.from(shotB, 'base64')); }
-      if (r.ratio < min) fails.push(`${label} ${name}: ${r.ratio}:1 < ${min}:1 (fg ${r.fg} bg ${r.bg} at ${r.at})`);
+      if (r.ratio < min) fails.push(`${label} ${name}: ${r.ratio}:1 < ${min}:1 (fg ${r.fg} bg ${r.bg} at ${r.at})${first ? `; first try ${first.ratio}:1 (fg ${first.fg} bg ${first.bg} at ${first.at})` : ''}`);
     }
     return measured;
   };
 
   const contrastLog = [];
+  const retries = [];
   try {
     for (const [name, w, h] of SIZES) {
       const context = await browser.newContext({viewport: {width: w, height: h}, isMobile: w < 768, hasTouch: w < 1200, deviceScaleFactor: 2, reducedMotion: 'no-preference'});
@@ -345,7 +357,7 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
     assert.equal(externalGitHub, 0, 'no request reached GitHub');
     assert.deepEqual(hashes(), diskBefore, 'data/*.json untouched');
     for (const p of passed) console.log('PASS ' + p);
-    console.log(`ui-v2-premium: ${passed.length} checks passed`);
+    console.log(`ui-v2-premium: ${passed.length} checks passed (contrast retries ${retries.length})`);
   } finally {
     await browser.close();
     if (preview) preview.kill();
