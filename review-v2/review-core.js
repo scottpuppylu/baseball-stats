@@ -156,7 +156,8 @@
       const mid = (cu + co) / 2, usTop = last.us >= last.opp;
       cu = mid + (usTop ? -14 : 14); co = mid + (usTop ? 14 : -14);
     }
-    const lo = T + 4, hi = H - B + 4;
+    // 下限 H - B：0 分的標籤中心對齊 0 線，不往下壓到 x 軸的「2上」；線尾標籤離最後一點（逐局記到的虛線）9。
+    const lo = T + 4, hi = H - B, EX = W - R + 9;
     const shift = Math.max(0, lo - Math.min(cu, co)) - Math.max(0, Math.max(cu, co) - hi);
     const endY = key => (key === 'us' ? cu : co) + shift + 5.5;
     const usPts = pts('us'), oppPts = pts('opp');
@@ -170,15 +171,32 @@
       <path d="${path('us')}" class="v2r-l-us" data-line="us"/>
       ${oppPts.map(([px, py], i) => halves[i].runs && !halves[i].ours ? `<rect x="${(px - 4.5).toFixed(1)}" y="${(py - 4.5).toFixed(1)}" width="9" height="9" class="v2r-m-opp"/>` : '').join('')}
       ${usPts.map(([px, py], i) => halves[i].runs && halves[i].ours ? `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5" class="v2r-m-us"/>` : '').join('')}
-      <text x="${W - R + 6}" y="${endY('us').toFixed(1)}" class="v2r-end v2r-end-us">${US} ${last.us}</text>
-      <text x="${W - R + 6}" y="${endY('opp').toFixed(1)}" class="v2r-end v2r-end-opp">對 ${last.opp}</text>
+      <text x="${EX}" y="${endY('us').toFixed(1)}" class="v2r-end v2r-end-us">${US} ${last.us}</text>
+      <text x="${EX}" y="${endY('opp').toFixed(1)}" class="v2r-end v2r-end-opp">對 ${last.opp}</text>
     </svg>
     <div class="v2r-legend"><span><i class="v2r-k-us" aria-hidden="true"></i>${TEAM}（實線、圓點）</span><span><i class="v2r-k-opp" aria-hidden="true"></i>${esc(oppName)}（虛線、方點）</span><span>點：該半局得分</span></div>${gp ? `<p class="v2r-note v2r-gap">走勢只畫到 ${halfLabel(halves[n - 1])}（逐局 ${last.us}:${last.opp}）；最終比分 ${s.score.us}:${s.score.opp}，其餘得分沒有逐局紀錄。</p>` : ''}`;
+  }
+  // 關鍵時刻的字不拆開：「簡承均（第 1 局全壘打，2 分）」這種一段一個不斷行單位，段與段（「、」）之間才換行；
+  // 其他地方的「第 N 局（上／下）」也整組不斷。分段只看括號外的分隔符號。
+  function keepTogether(text) {
+    const inning = t => esc(t).replace(/第 \d+ 局[上下]?/g, m => `<span class="v2-nb">${m}</span>`);
+    // 段內的「第 N 局」也包一層：全站 ui-comfort.js 的 markNote 會把「字（短括號）」結尾的文字節點改成小字註解（換行），
+    // 拆開後段尾的文字節點不再是「（…）」整句，就不會被改。
+    const nb = t => `<span class="v2-nb">${inning(t)}</span>`;
+    const parts = []; let cur = '', depth = 0;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '（') depth++; else if (ch === '）') depth = Math.max(0, depth - 1);
+      cur += ch;
+      if (!depth && ch === '、') { parts.push(cur); cur = ''; }
+    }
+    if (cur) parts.push(cur);
+    return parts.length > 1 || /（/.test(text) ? parts.map(p => /（/.test(p) ? nb(p) : inning(p)).join('') : inning(text);
   }
   function summaryPanel(g, s) {
     const mvp = s.mvp ? `<div class="v2r-mvp v2r-card"><span class="v2r-kicker">本場 MVP</span><b>${esc(s.mvp.name)}</b><span>${esc(s.mvp.line)}${s.mvp.tags.length ? `・${esc(s.mvp.tags.join('、'))}` : ''}</span></div>` : '';
     const moments = s.moments.length
-      ? `<ul class="v2r-moments">${s.moments.map(m => `<li class="tone-${m.tone}"><b>${esc(m.title)}</b><span>${esc(m.text)}</span></li>`).join('')}</ul>`
+      ? `<ul class="v2r-moments">${s.moments.map(m => `<li class="tone-${m.tone}"><b>${keepTogether(m.title)}</b><span>${keepTogether(m.text)}</span></li>`).join('')}</ul>`
       : '<p class="v2r-empty">這場比賽沒有特別的紀錄。</p>';
     return `${mvp}<section class="v2r-card"><h3 class="v2r-h">關鍵時刻</h3>${moments}</section>`
       + `<section class="v2r-card"><h3 class="v2r-h">比分走勢</h3>${scoreChart(s, g.opponent || '對手')}</section>`;

@@ -661,7 +661,7 @@ body.v2-live-on .ui-app-bar { display: none !important; }
 .v2r-moments { list-style: none; display: grid; gap: 8px; }
 .v2r-moments li { display: grid; gap: 2px; padding: 8px 10px 8px 12px; border-radius: 12px; background: rgba(255, 255, 255, .03); box-shadow: inset 3px 0 0 rgb(var(--tone-rgb, 160, 168, 180)); }
 .v2r-moments b { font-size: 14.5px; font-weight: 700; }
-.v2r-moments span { font-size: 13.5px; color: var(--v2-ink-2); }
+.v2r-moments li > span { font-size: 13.5px; color: var(--v2-ink-2); }
 .v2r-chart { display: block; width: 100%; height: auto; max-height: 260px; }
 .v2r-grid { stroke: var(--v2-line); stroke-width: 1; }
 .v2r-cx { fill: var(--v2-ink-3); font-size: 15.5px; }
