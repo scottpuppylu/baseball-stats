@@ -664,14 +664,16 @@ body.v2-live-on .ui-app-bar { display: none !important; }
 .v2r-moments span { font-size: 13.5px; color: var(--v2-ink-2); }
 .v2r-chart { display: block; width: 100%; height: auto; max-height: 260px; }
 .v2r-grid { stroke: var(--v2-line); stroke-width: 1; }
-.v2r-cx { fill: var(--v2-ink-3); font-size: 11px; }
+.v2r-cx { fill: var(--v2-ink-3); font-size: 15.5px; }
 .v2r-cx-us { fill: var(--v2-ink-2); }
-.v2r-cv { fill: var(--v2-ink); font-size: 12px; font-weight: 700; }
+.v2r-cv { fill: var(--v2-ink); font-size: 16px; font-weight: 700; }
 .v2r-l-us { fill: none; stroke: var(--v2-on); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
 .v2r-l-opp { fill: none; stroke: var(--v2-out); stroke-width: 2.5; stroke-dasharray: 7 5; stroke-linejoin: round; }
 .v2r-m-us { fill: var(--v2-on); stroke: var(--v2-dark); stroke-width: 1.5; }
 .v2r-m-opp { fill: var(--v2-out); stroke: var(--v2-dark); stroke-width: 1.5; }
-.v2r-end { font-size: 12px; font-weight: 700; }
+.v2r-end { font-size: 16px; font-weight: 700; }
+.v2r-stop { stroke: var(--v2-ink-3); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.v2r-stop-t { fill: var(--v2-ink-2); font-size: 15.5px; font-weight: 600; }
 .v2r-end-us { fill: var(--v2-on); }
 .v2r-end-opp { fill: var(--v2-out); }
 .v2r-bar { fill: var(--v2-hit); opacity: .85; }
@@ -686,7 +688,7 @@ body.v2-live-on .ui-app-bar { display: none !important; }
 .v2r-half-n { font-family: var(--fl-mincho, serif); font-size: 17px; font-weight: 700; }
 .v2r-half-k { flex: 1 1 auto; min-width: 0; font-size: 13px; color: var(--v2-ink-2); }
 .v2r-half-us .v2r-half-n { color: var(--v2-on); }
-.v2r-add { min-height: 44px; min-width: 76px; padding: 0 12px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--v2-on); }
+.v2r-add { min-height: 48px; min-width: 76px; padding: 0 12px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--v2-on); }
 .v2r-rows { display: grid; gap: 6px; }
 .v2r-row { min-height: 56px; width: 100%; display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 8px; border-radius: 14px; text-align: left; }
 .v2r-slot { flex: 0 0 28px; text-align: center; font-family: var(--fl-mincho, serif); font-size: 16px; font-weight: 700; color: var(--v2-ink-3); }

@@ -84,19 +84,29 @@
   function listMarkup(list) {
     return list.map(g => `<button type="button" class="v2r-gitem${String(g.id) === String(ui.id) ? ' on' : ''}" data-r="game" data-id="${esc(g.id)}"${String(g.id) === String(ui.id) ? ' aria-current="true"' : ''}>${gameLine(g)}</button>`).join('');
   }
+  // 逐局紀錄不完整（例如只記到第 2 局，總比分卻是 10:6）：不改資料，畫面上說清楚逐局只記到哪裡。
+  function gapOf(s) {
+    if (!s.scored || !s.halves.length || ['none', 'live'].includes(s.result)) return null;
+    const sum = ours => s.halves.filter(h => h.ours === ours).reduce((t, h) => t + h.runs, 0);
+    const us = sum(true), opp = sum(false);
+    if (us === s.score.us && opp === s.score.opp) return null;
+    return {us, opp, last: Math.max(...s.halves.map(h => h.num))};
+  }
+  const gapNote = s => { const gp = gapOf(s); return gp ? `<p class="v2r-note v2r-gap">逐局只記到第 ${gp.last} 局，其餘得分沒有逐局紀錄（逐局合計 ${gp.us}:${gp.opp}，總比分 ${s.score.us}:${s.score.opp}）。</p>` : ''; };
   function lineScore(g, s) {
     const nums = [...new Set(s.halves.map(h => h.num))].sort((x, y) => x - y);
     const row = (ours, name) => {
       const cells = nums.map(n => { const h = s.halves.find(z => z.num === n && z.ours === ours); return `<td>${h ? (s.scored ? h.runs : h.hits) : '–'}</td>`; }).join('');
       const halves = s.halves.filter(h => h.ours === ours);
       const total = s.scored ? (ours ? s.score.us : s.score.opp) : halves.reduce((t, h) => t + h.hits, 0);
-      const hits = halves.reduce((t, h) => t + h.hits, 0);
+      // 這一隊完全沒有逐局紀錄時，安打數是「沒記」而不是 0。
+      const hits = halves.length ? halves.reduce((t, h) => t + h.hits, 0) : '–';
       return `<tr class="${ours ? 'v2r-us' : ''}"><th scope="row">${esc(name)}</th>${cells}<td class="v2r-tot">${total}</td><td>${hits}</td></tr>`;
     };
     const first = g.ourRole === '先攻';
     const opp = String(g.opponent || '對手');
     const body = first ? row(true, US) + row(false, opp) : row(false, opp) + row(true, US);
-    return `<div class="v2r-line" role="region" aria-label="每局比分" tabindex="0"><table><thead><tr><th scope="col">${s.scored ? '局' : '安打'}</th>${nums.map(n => `<th scope="col">${n}</th>`).join('')}<th scope="col">${s.scored ? 'R' : '計'}</th><th scope="col">H</th></tr></thead><tbody>${body}</tbody></table></div>`;
+    return `<div class="v2r-line" role="region" aria-label="每局比分" tabindex="0"><table><thead><tr><th scope="col">${s.scored ? '局' : '安打'}</th>${nums.map(n => `<th scope="col">${n}</th>`).join('')}<th scope="col">${s.scored ? 'R' : '計'}</th><th scope="col">H</th></tr></thead><tbody>${body}</tbody></table></div>${gapNote(s)}`;
   }
   function hero(g, s) {
     const r = s.result;
@@ -116,14 +126,19 @@
   function scoreChart(s, oppName) {
     const halves = s.halves, n = halves.length;
     if (!n) return '<p class="v2r-empty">沒有逐局紀錄。</p>';
-    const W = 420, H = 200, L = 30, R = 52, T = 16, B = 30;
+    // 字級在 SVG 單位裡放大，讓手機 390 寬（圖約 310 px）時軸字仍 ≥ 11 px。
+    const W = 420, H = 210, L = 34, R = 68, T = 28, B = 32;
     const x = i => L + (W - L - R) * (n === 1 ? 0.5 : i / (n - 1));
+    // 半局多、間距不夠放「7下」時，每隔幾個才標一次；最後一個一定標。
+    const gapX = n > 1 ? (W - L - R) / (n - 1) : W;
+    const stride = Math.max(1, Math.ceil(30 / gapX));
+    const showX = i => i === n - 1 || (i % stride === 0 && n - 1 - i >= stride);
     if (!s.scored) {
       const ours = halves.filter(h => h.ours), max = Math.max(1, ...ours.map(h => h.hits));
       const bw = (W - L - R) / Math.max(1, ours.length) * 0.5;
       return `<svg class="v2r-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="本隊每局安打">${ours.map((h, i) => {
         const cx = L + (W - L - R) * (i + 0.5) / ours.length, bh = (H - T - B) * h.hits / max;
-        return `<rect x="${(cx - bw / 2).toFixed(1)}" y="${(H - B - bh).toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="5" class="v2r-bar"/><text x="${cx.toFixed(1)}" y="${(H - B - bh - 6).toFixed(1)}" text-anchor="middle" class="v2r-cv">${h.hits}</text><text x="${cx.toFixed(1)}" y="${H - 9}" text-anchor="middle" class="v2r-cx">${h.num} 局</text>`;
+        return `<rect x="${(cx - bw / 2).toFixed(1)}" y="${(H - B - bh).toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="5" class="v2r-bar"/><text x="${cx.toFixed(1)}" y="${(H - B - bh - 6).toFixed(1)}" text-anchor="middle" class="v2r-cv">${h.hits}</text>${(W - L - R) / ours.length >= 36 || i % 2 === 0 || i === ours.length - 1 ? `<text x="${cx.toFixed(1)}" y="${H - 9}" text-anchor="middle" class="v2r-cx">${h.num} 局</text>` : ''}`;
       }).join('')}</svg><p class="v2r-note">這場沒有記錄比分，改顯示本隊每局安打。</p>`;
     }
     const max = Math.max(1, s.score.us, s.score.opp, ...halves.map(h => Math.max(h.after.us, h.after.opp)));
@@ -135,11 +150,22 @@
     const grid = []; for (let v = 0; v <= max; v += step) grid.push(v);
     const last = halves[n - 1].after;
     const tie = last.us === last.opp;
-    const endY = key => y(last[key]) + OFF[key] + (tie ? (key === 'us' ? -9 : 11) : 4);
+    // 線尾標籤：中心至少相隔 28（字 16，字框約 22 高，留 4 以上的空隙），分數高的在上、同分時本隊在上，避免兩個標籤或標籤和線擠在一起。
+    let cu = y(last.us) + OFF.us, co = y(last.opp) + OFF.opp;
+    if (tie || Math.abs(cu - co) < 28) {
+      const mid = (cu + co) / 2, usTop = last.us >= last.opp;
+      cu = mid + (usTop ? -14 : 14); co = mid + (usTop ? 14 : -14);
+    }
+    const lo = T + 4, hi = H - B + 4;
+    const shift = Math.max(0, lo - Math.min(cu, co)) - Math.max(0, Math.max(cu, co) - hi);
+    const endY = key => (key === 'us' ? cu : co) + shift + 5.5;
     const usPts = pts('us'), oppPts = pts('opp');
+    const gp = gapOf(s), halfLabel = h => `${h.num}${h.half === 'top' ? '上' : '下'}`;
+    const stop = gp ? `<line x1="${x(n - 1).toFixed(1)}" x2="${x(n - 1).toFixed(1)}" y1="${T - 6}" y2="${H - B}" class="v2r-stop"/><text x="${(x(n - 1) - 6).toFixed(1)}" y="${T - 10}" text-anchor="end" class="v2r-stop-t">逐局記到 ${halfLabel(halves[n - 1])}</text>` : '';
     return `<svg class="v2r-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="比分走勢：${US} ${last.us}、${esc(oppName)} ${last.opp}">
       ${grid.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="v2r-grid"/><text x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" class="v2r-cx">${v}</text>`).join('')}
-      ${halves.map((h, i) => `<text x="${x(i).toFixed(1)}" y="${H - 9}" text-anchor="middle" class="v2r-cx${h.ours ? ' v2r-cx-us' : ''}">${h.num}${h.half === 'top' ? '上' : '下'}</text>`).join('')}
+      ${halves.map((h, i) => showX(i) ? `<text x="${x(i).toFixed(1)}" y="${H - 9}" text-anchor="middle" class="v2r-cx${h.ours ? ' v2r-cx-us' : ''}">${halfLabel(h)}</text>` : '').join('')}
+      ${stop}
       <path d="${path('opp')}" class="v2r-l-opp" data-line="opp"/>
       <path d="${path('us')}" class="v2r-l-us" data-line="us"/>
       ${oppPts.map(([px, py], i) => halves[i].runs && !halves[i].ours ? `<rect x="${(px - 4.5).toFixed(1)}" y="${(py - 4.5).toFixed(1)}" width="9" height="9" class="v2r-m-opp"/>` : '').join('')}
@@ -147,7 +173,7 @@
       <text x="${W - R + 6}" y="${endY('us').toFixed(1)}" class="v2r-end v2r-end-us">${US} ${last.us}</text>
       <text x="${W - R + 6}" y="${endY('opp').toFixed(1)}" class="v2r-end v2r-end-opp">對 ${last.opp}</text>
     </svg>
-    <div class="v2r-legend"><span><i class="v2r-k-us" aria-hidden="true"></i>${TEAM}（實線、圓點）</span><span><i class="v2r-k-opp" aria-hidden="true"></i>${esc(oppName)}（虛線、方點）</span><span>點：該半局得分</span></div>`;
+    <div class="v2r-legend"><span><i class="v2r-k-us" aria-hidden="true"></i>${TEAM}（實線、圓點）</span><span><i class="v2r-k-opp" aria-hidden="true"></i>${esc(oppName)}（虛線、方點）</span><span>點：該半局得分</span></div>${gp ? `<p class="v2r-note v2r-gap">走勢只畫到 ${halfLabel(halves[n - 1])}（逐局 ${last.us}:${last.opp}）；最終比分 ${s.score.us}:${s.score.opp}，其餘得分沒有逐局紀錄。</p>` : ''}`;
   }
   function summaryPanel(g, s) {
     const mvp = s.mvp ? `<div class="v2r-mvp v2r-card"><span class="v2r-kicker">本場 MVP</span><b>${esc(s.mvp.name)}</b><span>${esc(s.mvp.line)}${s.mvp.tags.length ? `・${esc(s.mvp.tags.join('、'))}` : ''}</span></div>` : '';
@@ -179,7 +205,7 @@
     const order = inningOrder(g);
     if (!order.length) return '<p class="v2r-empty">沒有逐局紀錄。</p>';
     const editable = !isLive(g.id);
-    return order.map(idx => {
+    return gapNote(s) + order.map(idx => {
       const inn = g.innings[idx], ours = ourBat(g, inn);
       const list = ours ? (inn.plateAppearances || []) : (inn.defensiveEvents || []);
       const head = `<div class="v2r-half-h"><span class="v2r-half-n">${halfName(inn.inningNum, inn.topBottom)}</span>`
@@ -315,7 +341,11 @@
   }
   const sheetHead = (title, tone) => `<div class="v2s-head${tone ? ` tone-${tone}` : ''}"><h3 class="v2s-title">${title}</h3><button type="button" class="v2s-x v2r-x" data-r="close" aria-label="關閉">×</button></div>`;
   const sheetHandlers = {};
+  // 全站的點擊光暈（ui-theme.js 的 #flRipple，560 ms）蓋在最上層、固定在按下的位置。sheet 內容一換，按下的按鈕
+  // 已經不在那裡，光暈會變成浮在別的控制項（例如「無」和得分列）上的白霧，所以開新 sheet（含「編輯」換成表單）時一併收掉；表單內點選項（setSheet，原位重畫）照常保留光暈。
+  const dropRipple = () => { try { const o = document.getElementById('flRipple'); if (o) o.getAnimations({subtree: true}).forEach(a => a.cancel()); } catch (error) { /* ignore */ } };
   function openSheet(name, html, handlers) {
+    dropRipple();
     ensureLayer();
     ui.layer.classList.toggle('hc', hc());
     ui.sheetName = name;
