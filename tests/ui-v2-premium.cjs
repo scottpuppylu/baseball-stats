@@ -88,7 +88,7 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
     }, mode);
     const b = (await page.screenshot({clip})).toString('base64');
     await handle.evaluate((el, keep) => { if (keep === null) el.removeAttribute('style'); else el.setAttribute('style', keep); el.classList.remove('wo9-lines', 'wo9-nostroke'); document.getElementById('wo9-lines')?.remove(); }, saved);
-    return page.evaluate(async ([a, b, mode]) => {
+    return page.evaluate(async ([a, b, mode, W]) => {
       const load = async s => { const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + s)).blob()); const c = new OffscreenCanvas(bmp.width, bmp.height); const x = c.getContext('2d'); x.drawImage(bmp, 0, 0); return x.getImageData(0, 0, bmp.width, bmp.height).data; };
       const [A, B] = [await load(a), await load(b)];
       const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
@@ -102,11 +102,14 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
       const fg = [0, 0, 0]; for (const [i] of core) { fg[0] += A[i]; fg[1] += A[i + 1]; fg[2] += A[i + 2]; }
       const F = Uint8ClampedArray.from(fg.map(v => Math.round(v / core.length)).concat(255));
       const lf = lum(F, 0);
-      const per = diff.map(([i]) => [ratio(lf, lum(B, i)), i]).sort((p, q) => p[0] - q[0]);
+      // 只算「畫上目標後往前景色靠近」的像素：目標蓋到的底，畫上去一定更接近前景。
+      // 字旁邊的其他線（例如全壘打牆）在兩張截圖之間可能重新點陣化、邊緣差一點；那些像素不是字的底，不算（WO-09R2 第 2 輪）。
+      const toward = diff.filter(([i]) => Math.abs(lum(A, i) - lf) < Math.abs(lum(B, i) - lf));
+      const per = (toward.length ? toward : diff).map(([i]) => [ratio(lf, lum(B, i)), i]).sort((p, q) => p[0] - q[0]);
       // 底色取最差 2% 分位：排除背景星點那種 1～2 px 的孤立亮點；最差單點也記下來。
       const [worst, wi] = per[Math.floor(per.length * 0.02)];
-      return {ratio: Math.round(worst * 100) / 100, minPx: Math.round(per[0][0] * 100) / 100, fg: [...F.slice(0, 3)], bg: [B[wi], B[wi + 1], B[wi + 2]], px: diff.length};
-    }, [a, b, mode]);
+      return {ratio: Math.round(worst * 100) / 100, minPx: Math.round(per[0][0] * 100) / 100, fg: [...F.slice(0, 3)], bg: [B[wi], B[wi + 1], B[wi + 2]], px: diff.length, used: per.length, at: [(wi / 4) % W, Math.floor(wi / 4 / W)]};
+    }, [a, b, mode, clip.width * 2]).then(r => r && Object.assign(r, {shots: [a, b]}));
   };
   // 一個範圍內每種「葉節點文字」各量一個（同 class＋同色調只量第一個）。
   const textTargets = (page, scope) => page.evaluateHandle(scope => {
@@ -140,8 +143,11 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
       const r = await pixelContrast(page, h, mode);
       if (!r) continue;
       measured++;
+      const [shotA, shotB] = r.shots; delete r.shots;
       log.push({where: label, name, ...r, min});
-      if (r.ratio < min) fails.push(`${label} ${name}: ${r.ratio}:1 < ${min}:1 (fg ${r.fg} bg ${r.bg})`);
+      // 失敗時把兩張截圖存到 UI_QA_OUTPUT（CI 會上傳成 ui-qa artifact），下次能直接看是量到哪一點。
+      if (r.ratio < min) { const k = `ui-v2-premium-contrast-fail-${fails.length + 1}`; const dir = process.env.UI_QA_OUTPUT || require('node:os').tmpdir(); fs.mkdirSync(dir, {recursive: true}); fs.writeFileSync(path.join(dir, k + '-A.png'), Buffer.from(shotA, 'base64')); fs.writeFileSync(path.join(dir, k + '-B.png'), Buffer.from(shotB, 'base64')); }
+      if (r.ratio < min) fails.push(`${label} ${name}: ${r.ratio}:1 < ${min}:1 (fg ${r.fg} bg ${r.bg} at ${r.at})`);
     }
     return measured;
   };
