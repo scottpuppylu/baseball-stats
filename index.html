@@ -11279,7 +11279,7 @@ function renderCustomChart(agg) {
       css.rel = 'stylesheet';
       css.href = 'ui-v2.css';
       document.head.append(css);
-      for (const file of ['scorebook-v2-haptics.js', 'scorebook-v2.js', 'review-v2/review-v2.js']) {
+      for (const file of ['scorebook-v2-haptics.js', 'scorebook-v2.js', 'review-v2/review-cache.js', 'review-v2/review-core.js', 'review-v2/review-v2.js']) {
         const script = document.createElement('script');
         script.src = file;
         script.async = false;

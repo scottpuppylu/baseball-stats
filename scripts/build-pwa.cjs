@@ -9,7 +9,7 @@ const SCENES = ['overview', 'analytics', 'pitching', 'records', 'leaderboard', '
 const publicOnly = SCENES.flatMap(name => [`assets/bg-${name}.webp`, `assets/bg-${name}-portrait.webp`]);
 // WO-05: new scorebook/review UI. index.html loads these only when the rebas_ui_v2 flag is on (created by script, so the
 // tag scan above never sees them); listed here so they are published and precached, and the flag works offline too.
-const lazy = ['ui-v2.css', 'scorebook-v2-haptics.js', 'scorebook-v2.js', 'review-v2/review-v2.js'];
+const lazy = ['ui-v2.css', 'scorebook-v2-haptics.js', 'scorebook-v2.js', 'review-v2/review-v2.js', 'review-v2/review-cache.js', 'review-v2/review-core.js', 'review-v2/review-detail.js', 'review-v2/review-edit.js'];
 function build(read) {
   let html = read('index.html').toString().replace(/\r\n/g, '\n');
   html = html.replace(/\s*<meta name="baseball-release" content="[^"]+">/g, '');
