@@ -56,7 +56,9 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
   let externalGitHub = 0;
   const tap = (page, sel) => page.evaluate(sel => { window.uiV2.live.state.busyUntil = 0; const b = document.querySelector(sel); if (!b) throw new Error('missing ' + sel); b.click(); }, sel);
   const clickField = (page, [x, y]) => page.evaluate(([x, y]) => { const svg = document.querySelector('.v2l-sheet [data-v2-field]'); const p = new DOMPoint(x, y).matrixTransform(svg.getScreenCTM()); svg.dispatchEvent(new MouseEvent('click', {bubbles: true, clientX: p.x, clientY: p.y})); }, [x, y]);
-  const settle = page => page.waitForFunction(() => !document.querySelector('.v2-live').getAnimations({subtree: true}).filter(a => a.playState === 'running').length).then(() => page.waitForTimeout(150));
+  // The board's result flash is held by a 300 ms timer, not a CSS animation (scorebook-v2.js flash()), so wait for it explicitly too.
+  const settle = page => page.waitForFunction(() => !document.querySelector('.v2-live').getAnimations({subtree: true}).filter(a => a.playState === 'running').length
+    && !document.querySelector('.v2-live .v2-flash, .v2-live .v2-fade, .v2-live [data-flash]')).then(() => page.waitForTimeout(150));
   const closeSheet = async page => { await tap(page, '.v2l-sheet [data-act="close"]'); await page.waitForFunction(() => !window.uiV2.live.state.sheet); await settle(page); };
 
   // 像素對比：同一塊截兩張（原樣／目標變透明），差異像素就是字（或線）；
@@ -181,7 +183,7 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
         const cs = (el, p) => getComputedStyle(el, p);
         const key = live.querySelector('.v2l-pad [data-act="off"][data-code="GO"]');
         const before = cs(key, '::before');
-        const mat = ['.v2l-board', '.v2l-card', '.v2l-recent', '.v2l-field'].map(s => { const e = live.querySelector(s); return [s, cs(e).backgroundImage.includes('rgba(28, 32, 40, 0.7)'), cs(e).borderTopLeftRadius]; });
+        const mat = ['.v2l-board', '.v2l-card', '.v2l-recent', '.v2l-field'].map(s => { const e = live.querySelector(s); return [s, cs(e).backgroundImage.includes('rgba(28, 32, 40, 0.7)'), cs(e).borderTopLeftRadius, {bg: cs(e).backgroundImage.slice(0, 160), cls: e.className, flash: e.dataset.flash || ''}]; });
         const fams = cs(key.querySelector('b')).fontFamily;
         return {
           bg: cs(live).backgroundImage,
@@ -203,11 +205,11 @@ const splitSel = x => { const o = []; let d = 0, c = ''; for (const ch of x) { i
         };
       });
       assert.match(look.bg, /bg-overview/, `${name}: R1 background is the Overview scene`);
-      for (const [s, glass, radius] of look.mat) assert.deepEqual([glass, radius], [true, '22px'], `${name}: R2 ${s} translucent material, radius 22`);
+      for (const [s, glass, radius, seen] of look.mat) assert.deepEqual([glass, radius], [true, '22px'], `${name}: R2 ${s} translucent material, radius 22 — actual ${JSON.stringify([glass, radius, seen])}`);
       assert.deepEqual(look.us, [true, '700'], `${name}: R4 score in Serif Flight 700`);
       assert.ok(look.stat.length >= 1 && look.stat.every(r => r === '999px'), `${name}: R5 stat chips are capsules`);
       assert.deepEqual(look.key, {radius: '12px', layers: 2, inset: true, drop: true, rim: true}, `${name}: R7 keycap (two-layer face, rim mask, top highlight + drop shadow), radius stays 12`);
-      assert.deepEqual(look.font, {first: 'Serif Flight', gothicBeforeMincho: true, weight: '700', small: '500', loaded: [true, true], check: [true, true]}, `${name}: AC-7 key fonts (D4)`);
+      assert.deepEqual(look.font, {first: 'Serif Flight', gothicBeforeMincho: true, weight: '700', small: '500', loaded: [true, true], check: [true, true]}, `${name}: AC-7 key fonts (D4) — actual ${JSON.stringify(look.font)}`);
       assert.deepEqual([look.line, look.diamond], ['1.5px', '1.75px'], `${name}: R8 field lines 1.5 / infield 1.75`);
       // PO-49（REVISION 4）：外野草地綠；內野整片紅土（菱形不填色，壘間與投手丘都是土），都壓暗。
       const rgb = c => c.match(/[\d.]+/g).map(Number);

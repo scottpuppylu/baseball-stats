@@ -19,7 +19,12 @@ const totals = page => page.evaluate(() => ({games: allGames.length, pa: getFull
     try {
       const context = await browser.newContext({serviceWorkers: 'block'});
       const page = await context.newPage(), errors = [];
-      page.on('pageerror', e => errors.push(e.message));
+      // WebKit logs a request that a reload cancels as "… due to access control checks." and Playwright's WebKit reports that
+      // log as a page error although the page handles the failed request (index.html mergeLegacyMainWrites try/catch).
+      // Same rule and regex as tests/ui-data-protection.cjs:24-27 (45b8516); seen here 1 run in 10 at CPU 4x
+      // (WO-09R2 evidence: out/WO-09R2/evidence/ac2-local-cache-08-webkit-pageerror.log). Every other page error still fails.
+      const cancelledByReload = message => /^(?:Fetch API cannot load https?:\/)?\/127\.0\.0\.1:\d+\/__mock-api\/\S+ due to access control checks\.$/.test(message); // Playwright may drop the "Fetch API cannot load http:/" prefix
+      page.on('pageerror', e => { if (!cancelledByReload(e.message)) errors.push(e.message); });
       // 1. A device from the previous version: its localStorage copy is the startup data and is copied to IndexedDB.
       await page.goto(url); await ready(page);
       const cloud = await totals(page);
@@ -61,7 +66,10 @@ const totals = page => page.evaluate(() => ({games: allGames.length, pa: getFull
       await page.reload(); await ready(page);
       await page.waitForFunction(n => allGames.length === n, cloud.games);
       assert.deepEqual(await totals(page), cloud, 'offline reopen shows the same totals from IndexedDB');
-      assert.match(await page.evaluate(() => syncStatusBadge.textContent), /本機快取/);
+      // After a cache fallback the page re-reads the cloud once (index.html retryCloudRead), so the badge passes through
+      // 「連線同步中」 again; read the status once it has settled instead of at an arbitrary moment.
+      const status = await (await page.waitForFunction(() => !syncStatusBadge.textContent.includes('連線同步中') && syncStatusBadge.textContent)).jsonValue();
+      assert.match(status, /本機快取/);
       assert.equal(await page.evaluate(() => { try { localStorage.setItem('rebas_active_game', JSON.stringify({id: 'probe'})); localStorage.removeItem('rebas_active_game'); return true; } catch (e) { return false; } }), true);
       const stored = await idb(page);
       assert.ok(stored.rebas_logs && stored.rebas_player_avatars !== undefined);
