@@ -12,6 +12,8 @@ const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
       await page.goto(url);
       await page.waitForFunction(() => window.teamRecords && !syncStatusBadge.textContent.includes('連線同步中'));
       assert.equal(await page.evaluate(() => document.body.dataset.page), 'Home', 'the app opens on Home');
+      // fl-booting hides the page until the next frame, so innerText is empty until it is gone (WO-05B7R4).
+      await page.waitForFunction(() => !document.documentElement.classList.contains('fl-booting'), null, {timeout: 3000}).catch(() => {});
       // Home links to the current version's notes.
       const version = await page.evaluate(() => document.body.innerText.match(/v\d{6}\.\d{4}/)[0]);
       const homeLink = page.locator('#panelHome .fl-home-foot [data-go="Changelog"]');

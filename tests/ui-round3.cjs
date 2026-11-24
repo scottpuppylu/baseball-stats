@@ -42,6 +42,8 @@ const cloudWrite = (page, file, data, ref) => page.evaluate(async ([file, data, 
     await page.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//, r => { externalGitHub++; return r.abort(); });
     await page.goto(url);
     await ready(page);
+    // fl-booting hides the page until the next frame, so innerText is empty until it is gone (WO-05B7R4).
+    await page.waitForFunction(() => !document.documentElement.classList.contains('fl-booting'), null, {timeout: 3000}).catch(() => {});
     return {context, page};
   };
   const checks = [];

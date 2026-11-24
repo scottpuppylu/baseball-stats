@@ -1,3 +1,4 @@
+// Not run by run-all since WO-05B7R4: B7's on-demand suggested lineup was taken back from the site; kept for when it returns.
 // WO-05 B7 建議打線按需計算（PO-30a）：新版打線頁不直接顯示、也不計算建議打線，「更多 → 建議打線 → 計算」才載入算法。
 //   AC-2 新版打線頁第一次載入：lineup-recommender.js 請求 0 次、算法（LineupModel 搜尋與評估函式、analyzeLineupOrder）呼叫 0 次；
 //        建議打線區塊藏起來，只看得到「更多」。

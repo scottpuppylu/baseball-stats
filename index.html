@@ -11229,21 +11229,7 @@ function renderCustomChart(agg) {
   <script src="game-video.js"></script>
   <script src="game-analysis.js"></script>
   <script src="lineup-model.js?v=20261010-pa3"></script>
-  <script type="text/plain" data-v2-lazy-file="lineup-recommender" src="lineup-recommender.js?v=20261011-auditfixes"></script>
-  <script>
-    // WO-05 B7（PO-30a）：新版（旗標 rebas_ui_v2 開）的打線頁不載入建議打線算法，等「更多 → 建議打線 → 計算」才載入。
-    // 旗標關時照舊在這個位置同步載入同一個檔（順序、時機不變）；旗標判斷和頁尾的旗標程式相同。
-    // 上面 type="text/plain" 的標籤只帶檔名：瀏覽器不會下載它，發版時 build-pwa 照樣換成內容雜湊網址並預先快取（離線也能算）。
-    (function () {
-      const param = new URLSearchParams(location.search).get('ui');
-      let stored = null;
-      try { stored = localStorage.getItem('rebas_ui_v2'); } catch (error) { /* 私密模式：當作關 */ }
-      if (param === 'v2' || (param !== 'v1' && stored === '1')) return;
-      const tag = document.createElement('script');
-      tag.src = document.querySelector('script[data-v2-lazy-file="lineup-recommender"]').getAttribute('src');
-      document.write(tag.outerHTML);
-    })();
-  </script>
+  <script src="lineup-recommender.js?v=20261011-auditfixes"></script>
   <script src="player-diagnostics.js?v=20261010-diag3"></script>
   <script src="team-records.js?v=20261011-audit2"></script>
   <script src="ui-theme.js"></script>
@@ -11298,116 +11284,6 @@ function renderCustomChart(agg) {
         script.src = file;
         script.async = false;
         document.body.append(script);
-      }
-      lineupV2();
-
-      // WO-05 B7（PO-30a）：打線頁不直接顯示、也不計算建議打線。頁首「更多 → 建議打線 → 計算」才載入 lineup-recommender.js
-      // （旗標關時頁面原本就載入的同一個檔，算法不變）；載入後它照舊接手打線頁，結果畫面、帶入自訂分析和旗標關時相同。
-      // 建議打線區塊（舊版程式照舊填資料）在按「計算」前藏起來；算過之後這次開頁一直顯示，之後資料變動也跟著重算（和旗標關時相同）。
-      function lineupV2() {
-        const panel = document.getElementById('panelLineup');
-        const table = document.getElementById('recommendedLineupBody');
-        const section = table && table.closest('section');
-        const file = document.querySelector('script[data-v2-lazy-file="lineup-recommender"]');
-        if (!panel || !section || !file) return;
-        const hc = () => { try { return localStorage.getItem('rebas_ui_v2_hc') === '1'; } catch (error) { return false; } };
-        const reduced = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches: false};
-        const state = {loaded: false, loading: null, layer: null, back: null};
-        section.classList.add('hidden');
-        section.dataset.v2Rec = 'waiting';
-        const bar = document.createElement('div');
-        bar.className = 'v2lu-bar';
-        bar.innerHTML = '<button type="button" class="v2lu-more" data-lu="more" aria-haspopup="dialog"><span aria-hidden="true">⋯</span>更多</button>';
-        panel.prepend(bar);
-        bar.addEventListener('click', event => { if (event.target.closest('[data-lu="more"]')) openSheet('menu'); });
-
-        function load() {
-          if (state.loaded) return Promise.resolve();
-          if (!state.loading) {
-            state.loading = new Promise((resolve, reject) => {
-              const script = document.createElement('script');
-              script.src = file.getAttribute('src');
-              script.dataset.v2Lazy = 'lineup-recommender';
-              script.onload = () => (typeof window.analyzeLineupOrder === 'function' ? resolve() : reject(new Error('lineup-recommender did not start')));
-              script.onerror = () => { script.remove(); reject(new Error('lineup-recommender not loaded')); };
-              document.body.append(script);
-            }).then(() => { state.loaded = true; }, error => { state.loading = null; throw error; });
-          }
-          return state.loading;
-        }
-        const head = title => `<div class="v2s-head"><h3 class="v2s-title">${title}</h3><button type="button" class="v2s-x v2r-x" data-lu="close" aria-label="關閉">×</button></div>`;
-        const SHEETS = {
-          menu: () => head('打線・更多') + '<div class="v2r-menu"><button type="button" class="v2s-item" data-lu="rec"><span>建議打線</span><small>依目前出席與 DH 設定排出棒次和守位</small></button></div>',
-          rec: () => head('建議打線')
-            + `<p class="v2s-hint v2lu-hint">${state.loaded ? '已經算過，結果在打線頁。資料或出席有變動會自動重算；也可以再算一次。' : '打線頁不會自動算。按「計算」才載入算法，依目前的出席名單和 DH 設定排出棒次與守位，結果顯示在打線頁。'}</p>`
-            + '<p class="v2lu-status" role="status" aria-live="polite"></p>'
-            + `<div class="v2r-sheet-foot"><button type="button" class="v2s-secondary" data-lu="back">返回</button><button type="button" class="v2s-primary" data-lu="calc">${state.loaded ? '重新計算' : '計算'}</button></div>`
-        };
-        function openSheet(name) {
-          // 全站點擊光暈（ui-theme.js 的 #flRipple）固定在按下的位置；sheet 內容一換就會浮在別的按鍵上，所以一起收掉（同覆盤 sheet）。
-          try { const ripple = document.getElementById('flRipple'); if (ripple) ripple.getAnimations({subtree: true}).forEach(a => a.cancel()); } catch (error) { /* ignore */ }
-          if (!state.layer) {
-            const layer = document.createElement('div');
-            layer.className = 'v2r-layer v2lu-layer';
-            layer.innerHTML = '<div class="v2r-scrim" data-lu="close"></div><div class="v2r-sheet" role="dialog" aria-modal="true"></div>';
-            layer.addEventListener('click', onSheetClick);
-            layer.addEventListener('keydown', event => { if (event.key === 'Escape') closeSheet(); });
-            document.body.append(layer);
-            state.layer = layer;
-            state.back = document.activeElement;
-            document.body.classList.add('v2r-sheet-on');
-          }
-          const layer = state.layer, sheet = layer.querySelector('.v2r-sheet');
-          layer.classList.toggle('hc', hc());
-          layer.classList.toggle('v2r-rise', !reduced.matches);
-          layer.dataset.sheet = name;
-          sheet.innerHTML = SHEETS[name]();
-          sheet.setAttribute('aria-label', sheet.querySelector('.v2s-title').textContent);
-          const first = sheet.querySelector(name === 'rec' ? '[data-lu="calc"]' : '.v2s-item');
-          if (first) first.focus({preventScroll: true});
-        }
-        // 開著的 sheet 整個拿掉（不留在頁面上，免得和覆盤自己的 .v2r-layer 混在一起）。
-        function closeSheet(focusTarget) {
-          if (!state.layer) return;
-          state.layer.remove();
-          state.layer = null;
-          if (!document.querySelector('.v2r-layer:not([hidden])')) document.body.classList.remove('v2r-sheet-on');
-          const back = focusTarget || state.back;
-          state.back = null;
-          if (back && document.body.contains(back)) back.focus({preventScroll: true});
-        }
-        function onSheetClick(event) {
-          const act = event.target.closest('[data-lu]')?.dataset.lu;
-          if (act === 'close') closeSheet();
-          else if (act === 'rec') openSheet('rec');
-          else if (act === 'back') openSheet('menu');
-          else if (act === 'calc') calculate(event.target.closest('[data-lu]'));
-        }
-        async function calculate(button) {
-          const status = state.layer.querySelector('.v2lu-status');
-          button.disabled = true;
-          button.textContent = '計算中…';
-          status.textContent = state.loaded ? '' : '載入算法…';
-          // 先讓「計算中…」畫出來，再做同步的計算。
-          await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
-          try {
-            const first = !state.loaded;
-            await load();
-            // 第一次載入時 lineup-recommender.js 自己就用目前資料重畫打線頁（打線頁開著，直接用模型算）；之後按「重新計算」再畫一次。
-            if (!first) renderLineupAnalysis(getFullAgg());
-          } catch (error) {
-            button.disabled = false;
-            button.textContent = '計算';
-            status.textContent = '算法載入失敗，請連線後再試一次。';
-            return;
-          }
-          section.classList.remove('hidden');
-          section.dataset.v2Rec = 'shown';
-          const title = document.getElementById('recLineupTitle');
-          if (title && !title.hasAttribute('tabindex')) title.setAttribute('tabindex', '-1');
-          closeSheet(title);
-          section.scrollIntoView({block: 'start'});
-        }
       }
     })();
   </script>
