@@ -61,10 +61,13 @@ const SIZES = [['phone-390', 390, 844], ['tablet-portrait', 820, 1180], ['tablet
     window.uiV2.live.state.busyUntil = 0;
     const t0 = performance.now();
     start.click();
+    const clickSyncMs = performance.now() - t0; // the click handler's own synchronous work
     const live = document.querySelector('.v2-live');
     const anim = live.getAnimations().find(a => a.id === 'v2-enter');
     const veil = document.querySelector('.v2-veil');
-    const info = {hasAnim: !!anim, veilShown: !veil.hidden, setupHidden: document.querySelector('.v2-setup-host').hidden, origin: [r0.top, r0.bottom]};
+    const info = {hasAnim: !!anim, veilShown: !veil.hidden, setupHidden: document.querySelector('.v2-setup-host').hidden, origin: [r0.top, r0.bottom], clickSyncMs};
+    // When the animation really starts: startTime is on the document timeline, the same clock as performance.now().
+    if (anim) anim.ready.then(() => { info.animStartMs = anim.startTime - t0; });
     if (anim) {
       const t = anim.effect.getTiming();
       info.dur = t.duration; info.easing = t.easing;
@@ -81,6 +84,7 @@ const SIZES = [['phone-390', 390, 844], ['tablet-portrait', 820, 1180], ['tablet
         info.duringAnim = !!anim && anim.playState === 'running';
         (anim ? anim.finished : Promise.resolve()).then(() => {
           info.doneMs = performance.now() - t0;
+          if (info.animStartMs != null) info.animRunMs = info.doneMs - info.animStartMs;
           requestAnimationFrame(() => { info.veilAfter = !veil.hidden; info.fxAfter = document.body.classList.contains('v2-fx'); info.left = live.getAnimations().map(a => a.id || a.animationName); resolve(info); });
         });
         return;
@@ -94,6 +98,8 @@ const SIZES = [['phone-390', 390, 844], ['tablet-portrait', 820, 1180], ['tablet
     // ---------- B2：開賽設定在網站頁面裡，4 種尺寸 ----------
     for (const [name, w, h] of SIZES) {
       const {context, page} = await open(w, h);
+      // fl-booting hides the page until the next frame, so the header reads as hidden until it is gone (WO-05B7R5).
+      await page.waitForFunction(() => !document.documentElement.classList.contains('fl-booting'), null, {timeout: 3000}).catch(() => {});
       const s = await page.evaluate(() => {
         const vis = el => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
         const setup = document.querySelector('.v2l-setup');
@@ -157,10 +163,15 @@ const SIZES = [['phone-390', 390, 844], ['tablet-portrait', 820, 1180], ['tablet
     }
 
     // ---------- B3：進入／離開轉場（手機、平板） ----------
+    const timing = [];
     for (const [name, w, h] of [SIZES[0], SIZES[1]]) {
       const {context, page} = await open(w, h);
       await fillSetup(page);
       const m = await startAndMeasure(page);
+      const ms = v => v == null ? null : Math.round(v);
+      timing.push({name, clickSyncMs: ms(m.clickSyncMs), animStartMs: ms(m.animStartMs), animRunMs: ms(m.animRunMs), doneMs: ms(m.doneMs), clickableMs: ms(m.clickableMs)});
+      console.log(`v2-look timing ${JSON.stringify(timing.at(-1))}`);
+      fs.writeFileSync(path.join(process.env.UI_QA_OUTPUT || require('node:os').tmpdir(), 'ui-v2-look-timing.json'), JSON.stringify(timing, null, 2));
       assert.equal(m.hasAnim, true, `${name}: entering plays v2-enter`);
       assert.equal(m.dur, 280, `${name}: enter 490 ms ÷ 1.75 = 280 ms`);
       assert.match(m.easing, /cubic-bezier\(0\.2, 0\.8, 0\.2, 1\)/, `${name}: site easing`);
