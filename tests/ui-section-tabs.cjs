@@ -122,6 +122,9 @@ const pickStart = () => {
       await page.waitForTimeout(500);
       await page.evaluate(() => switchMainTab('tabProfile'));
       await page.waitForTimeout(700);
+      // WO-05B7R3: on a slow runner the page's section chips may not be selected yet after 700 ms (CI read -1). Wait until one
+      // is selected, then check it is the one left last, as before.
+      await page.waitForFunction(() => document.querySelector('.ui-section-bar button[aria-selected="true"]'), null, {timeout: 3000}).catch(() => {});
       assert.equal((await state()).chips.indexOf(true), 1, 'reopens on the section left last');
       // Scroll-in motion leaves nothing hidden once it has played.
       await page.evaluate(() => switchMainTab('tabRecords'));

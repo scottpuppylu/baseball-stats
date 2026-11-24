@@ -47,6 +47,9 @@ async function tapPoint(page, chartVar, index, pointerType, hasTouch) {
       await page.goto(url);
       await page.waitForFunction(() => window.teamRecords && !syncStatusBadge.textContent.includes('連線同步中'));
       assert.equal(await page.evaluate(() => window.__bootProbe), true, 'the half-built page is hidden behind the splash');
+      // WO-05B7R3: ui-app.js drops fl-booting in the next animation frame after the shell is arranged; a slow runner may not
+      // have run that frame yet when the data is ready. Wait for it (well before boot.js's 6 s safety net), then check as before.
+      await page.waitForFunction(() => !document.documentElement.classList.contains('fl-booting'), null, {timeout: 3000}).catch(() => {});
       assert.equal(await page.evaluate(() => document.documentElement.classList.contains('fl-booting')), false, 'the boot splash is gone once the shell is ready');
       // Home is the landing page, fully open, with live numbers and working links.
       assert.equal(await page$(page), 'Home');
