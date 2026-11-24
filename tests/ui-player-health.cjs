@@ -1,6 +1,7 @@
 // UI + cloud + statistics integration, isolated in-memory preview only.
 const assert = require('node:assert/strict'), fs=require('node:fs'), path=require('node:path'), os=require('node:os'), crypto=require('node:crypto');
 const {chromium,webkit}=require('playwright');
+const {watchCancelledScripts}=require('./helpers/webkit-cancelled-script.cjs');
 const url=process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const output=process.env.UI_QA_OUTPUT || path.join(os.tmpdir(),'baseball-ui-qa');
 const formal=path.join(__dirname,'../data');
@@ -22,7 +23,9 @@ async function save(p,bats) {
     try {
       const c=await browser.newContext({viewport:{width,height:900},hasTouch:width<1024});
       let external=0;await c.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//,r=>{external++;return r.abort();});
-      const p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(url);await ready(p);await open(p);
+      const p=await c.newPage(),errors=[];
+      // WebKit's reload-cancelled script loads (lineup-model.js): shared rule, tests/helpers/webkit-cancelled-script.cjs.
+      const cancelledScript=watchCancelledScripts(p,browser.browserType().name(),url);p.on('pageerror',e=>{if(!cancelledScript(e))errors.push(e.message);});await p.goto(url);await ready(p);await open(p);
       const name=await player(p);await p.locator('[data-health-player]').selectOption(name);
       const identityPhoto=p.locator('[data-health-identity] > :first-child');
       assert.deepEqual(await identityPhoto.evaluate(e=>[e.offsetWidth,e.offsetHeight]),[96,96],'health editor avatar is enlarged');

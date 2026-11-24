@@ -17,6 +17,20 @@
   <script src="local-cache.js"></script>
   <script src="app-config.js?v=20261016-pwa1"></script>
   <script src="pwa.js?v=20261016-pwa1"></script>
+  <!-- WO-05B7R2：旗標關時頁尾用 document.write 同步載入 lineup-recommender.js（B7），預先掃描看不到它，下載比 2e494ba 晚、串在後面。
+       這裡先預載同一個網址，下載時機回到和其他 script 並行；執行位置仍在頁尾原處。沒有 rel 的 link 不會下載，旗標開時打線頁照樣不請求。 -->
+  <link data-v2-lazy-preload="lineup-recommender" href="lineup-recommender.js?v=20261011-auditfixes">
+  <script data-v2-lazy-preload-flag>
+    (function () {
+      const param = new URLSearchParams(location.search).get('ui');
+      let stored = null;
+      try { stored = localStorage.getItem('rebas_ui_v2'); } catch (error) { /* 私密模式：當作關 */ }
+      if (param === 'v2' || (param !== 'v1' && stored === '1')) return;
+      const link = document.querySelector('link[data-v2-lazy-preload="lineup-recommender"]');
+      link.as = 'script';
+      link.rel = 'preload';
+    })();
+  </script>
   <style>
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }

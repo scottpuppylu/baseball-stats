@@ -1,6 +1,7 @@
 // Isolated preview only: the large local caches move to IndexedDB, survive a full localStorage, and keep startup behaviour.
 const assert = require('node:assert/strict');
 const {chromium, webkit} = require('playwright');
+const {watchCancelledScripts} = require('./helpers/webkit-cancelled-script.cjs');
 const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const idb = page => page.evaluate(() => new Promise(resolve => {
   const request = indexedDB.open('rebas-cache', 1);
@@ -24,7 +25,9 @@ const totals = page => page.evaluate(() => ({games: allGames.length, pa: getFull
       // Same rule and regex as tests/ui-data-protection.cjs:24-27 (45b8516); seen here 1 run in 10 at CPU 4x
       // (WO-09R2 evidence: out/WO-09R2/evidence/ac2-local-cache-08-webkit-pageerror.log). Every other page error still fails.
       const cancelledByReload = message => /^(?:Fetch API cannot load https?:\/)?\/127\.0\.0\.1:\d+\/__mock-api\/\S+ due to access control checks\.$/.test(message); // Playwright may drop the "Fetch API cannot load http:/" prefix
-      page.on('pageerror', e => { if (!cancelledByReload(e.message)) errors.push(e.message); });
+      // WebKit's reload-cancelled script loads (lineup-model.js): shared rule, tests/helpers/webkit-cancelled-script.cjs.
+      const cancelledScript = watchCancelledScripts(page, browser.browserType().name(), url);
+      page.on('pageerror', e => { if (!cancelledByReload(e.message) && !cancelledScript(e)) errors.push(e.message); });
       // 1. A device from the previous version: its localStorage copy is the startup data and is copied to IndexedDB.
       await page.goto(url); await ready(page);
       const cloud = await totals(page);

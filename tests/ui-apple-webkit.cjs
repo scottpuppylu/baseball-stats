@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const {webkit} = require('playwright');
+const {watchCancelledScripts} = require('./helpers/webkit-cancelled-script.cjs');
 const base = process.env.UI_PREVIEW_URL;
 const output = process.env.UI_QA_OUTPUT || os.tmpdir();
 const ready = page => page.waitForFunction(() => window.teamRecords && !/連線同步中/.test(syncStatusBadge.textContent));
@@ -20,7 +21,9 @@ const ready = page => page.waitForFunction(() => window.teamRecords && !/連線�
   for (const [width,height] of [[390,844],[844,390],[768,1024],[1024,768],[507,1024],[1440,900]]) {
    const context = await browser.newContext({viewport:{width,height},hasTouch:width<1280,acceptDownloads:true});
    await context.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//,r=>{externalRequests++;return r.abort();});
-   const page = await context.newPage(); page.on('pageerror',e=>errors.push(e.message));
+   const page = await context.newPage();
+   // WebKit's reload-cancelled script loads (lineup-model.js): shared rule, tests/helpers/webkit-cancelled-script.cjs.
+   const cancelledScript = watchCancelledScripts(page, 'webkit', base); page.on('pageerror',e=>{ if (!cancelledScript(e)) errors.push(e.message); });
    page.on('dialog',d=>d.accept());
    await page.goto(base + '/baseball-stats/?pwa'); await ready(page);
    assert.equal(await page.locator('meta[name="apple-mobile-web-app-title"]').getAttribute('content'),'航太系壘');

@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const {chromium, webkit} = require('playwright');
+const {watchCancelledScripts} = require('./helpers/webkit-cancelled-script.cjs');
 const output = process.env.UI_QA_OUTPUT || path.join(os.tmpdir(), 'baseball-ui-qa');
 const url = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:54321';
 const state = page => page.evaluate(() => JSON.parse(localStorage.getItem('rebas_active_game')));
@@ -45,7 +46,9 @@ async function newGame(page, dh, role = '先攻') {
       const context = await browser.newContext({viewport:{width,height},hasTouch:width<1024});
       await context.route(/https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//, route => route.abort());
       const page = await context.newPage(), errors = [];
-      page.on('pageerror', e => errors.push(e.message));
+      // WebKit's reload-cancelled script loads (lineup-model.js): shared rule, tests/helpers/webkit-cancelled-script.cjs.
+      const cancelledScript = watchCancelledScripts(page, browser.browserType().name(), url);
+      page.on('pageerror', e => { if (!cancelledScript(e)) errors.push(e.message); });
       page.on('dialog', d => d.accept());
       await page.goto(url);
       await page.waitForFunction(() => window.LineupModel && allLogs.some(l => String(l.id).startsWith('log_game_')));
