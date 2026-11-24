@@ -100,8 +100,9 @@ const SIZES = [['phone-390', 390, 844], ['tablet-portrait', 820, 1180], ['tablet
       const {context, page} = await open(w, h);
       // fl-booting hides the page until the next frame, so the header reads as hidden until it is gone (WO-05B7R5).
       await page.waitForFunction(() => !document.documentElement.classList.contains('fl-booting'), null, {timeout: 3000}).catch(() => {});
-      // ui-v2.css gives .v2u-old min-height 44 px; on a slow machine it can be read before the style applies (WO-05B7R5).
-      await page.waitForFunction(() => document.querySelector('.v2u-old')?.getBoundingClientRect().height >= 44, null, {timeout: 3000}).catch(() => {});
+      // Right after switchMainTab the 場記 panel still slides in (a translateY on #panelScorebook); on a slow machine the
+      // 44 px controls then measure 43.99997 px. Wait for that page animation to end before the 44 px check (WO-05B7R5).
+      await page.waitForFunction(() => document.getElementById('panelScorebook').getAnimations().every(a => a.playState !== 'running'), null, {timeout: 3000}).catch(() => {});
       const s = await page.evaluate(() => {
         const vis = el => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
         const setup = document.querySelector('.v2l-setup');
